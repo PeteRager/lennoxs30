@@ -21,7 +21,7 @@ lennoxs30:
 ```
 # Behavior
 
-This integration will automatically detect all the  home, systems and zones in your account and add a Climate Entity for each discovered zone.
+This integration will automatically detect all the  homes, systems and zones in your account and add a Climate Entity for each discovered zone.
 
 # Functions
 
