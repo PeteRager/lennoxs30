@@ -25,7 +25,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
+#_LOGGER.setLevel(logging.DEBUG)
 
 # HA doesn't have a 'circulate' state defined for fan.
 FAN_CIRCULATE = 'circulate'
