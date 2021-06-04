@@ -13,11 +13,20 @@ Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_c
 
 # Configuration
 ### Example configuation
+
+Use your login information.  Please enabled debug when reporting issues or providing suggestions on missing capability.
+
 ```yaml
 lennoxs30:
    email: myemail@myemail.com
    password: mypassword
-  
+
+logger:
+  default: info
+  logs:
+    custom_components.lennoxs30.s30api_async: debug
+    custom_components.lennoxs30: debug
+    custom_components.lennoxs30.climate: debug
 ```
 # Behavior
 
