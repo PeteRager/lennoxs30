@@ -20,8 +20,7 @@ from homeassistant.components.climate.const import (
     FAN_ON, FAN_AUTO, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH,
     PRESET_NONE,
 )
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # HA doesn't have a 'circulate' state defined for fan.
 FAN_CIRCULATE = 'circulate'
+
+PRESET_CANCEL_HOLD = 'Cancel Hold'
+PRESET_SCHEDULE_OVERRIDE = 'Schedule Override'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_TARGET_TEMPERATURE_RANGE |
@@ -53,11 +55,6 @@ TEMP_UNITS = [
 
 DOMAIN = "lennoxs30"
 
-_LOGGER = logging.getLogger(__name__)
-
-#def setup(hass, config):
-#    print("setup")
-#    return True
 
 from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD)
 
@@ -102,17 +99,15 @@ class S30Climate(ClimateEntity):
         self._min_temp = 60
         self._max_temp = 80
         self._myname = self._system.name + '_' + self._zone.name
-        #self.unique_id = self._system.sysId + '_' + str(self._zone.id)
         s = 'climate' + "." +  self._system.sysId + '-' + str(self._zone.id)
         s = s.replace("-","")
-        #self.entity_id = s
 
     @property
     def unique_id(self) -> str:
         return (self._system.sysId + '_' + str(self._zone.id)).replace("-","")
 
     def update_callback(self):
-        _LOGGER.warning("update_callback myname [" + self._myname + "]")
+        _LOGGER.info("update_callback myname [" + self._myname + "]")
         self.async_schedule_update_ha_state()
 
     @property
@@ -166,7 +161,7 @@ class S30Climate(ClimateEntity):
 
         maxTemp = None
         if self._zone.heatingOption == True:
-            minTemp = self._zone.maxHsp
+            maxTemp = self._zone.maxHsp
         if self._zone.coolingOption == True:
             if maxTemp == None:
                 maxTemp = self._zone.maxCsp
@@ -237,15 +232,37 @@ class S30Climate(ClimateEntity):
 
     @property
     def preset_mode(self):
-        """Return the current preset mode."""
-#       if self._api.away_mode == 1:
-#            return PRESET_AWAY
-        return None
+        if self._zone.overrideActive == True:
+            return PRESET_SCHEDULE_OVERRIDE
+        scheduleId = self._zone.scheduleId
+        if scheduleId is None:
+            return None
+        schedule = self._system.getSchedule(scheduleId)
+        if schedule is None:
+            return None
+        return schedule.name
 
     @property
     def preset_modes(self):
-        """Return a list of available preset modes."""
-        return [PRESET_NONE, PRESET_AWAY]
+        presets = []
+        for schedule in self._system.getSchedules():
+            # Everything above 16 seems to be internal schedules
+            if schedule.id >= 16:
+                continue
+            presets.append(schedule.name)
+        presets.append(PRESET_CANCEL_HOLD)
+        return presets
+
+    async def async_set_preset_mode(self, preset_mode):
+        if preset_mode == PRESET_CANCEL_HOLD:
+            return await self._zone.setScheduleHold(False)
+        await self._zone.setSchedule(preset_mode)
+        
+#        if preset_mode == PRESET_AWAY:
+#            self._turn_away_mode_on()
+#        else:
+#            self._turn_away_mode_off()
+
 
     @property
     def is_away_mode_on(self):
@@ -278,15 +295,7 @@ class S30Climate(ClimateEntity):
         else:
             csp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             hsp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            await self._system.setHeatCoolSPF(hsp, csp)
-#            if self.hvac_mode == HVAC_MODE_COOL:
-#                _LOGGER.info("set_temperature system in cool mode, setting csp [" + str(csp) + "]")
-#                await self._system.setCoolSPF(csp)
-#            elif self.hvac_mode == HVAC_MODE_HEAT:
-#                _LOGGER.info("set_temperature system in heat mode, setting hsp [" + str(hsp) + "]")
-#                await self._system.setHeatSPF(hsp)
-#            else:
-#                _LOGGER.error("set_temperature System Mode is [" + self.hvac_mode + "] unable to set temperature" )
+            await self._zone.setHeatCoolSPF(hsp, csp)
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
@@ -304,21 +313,13 @@ class S30Climate(ClimateEntity):
                 return
         _LOGGER.info("async_set_hvac_mode - unabled to retrieve change with fast poll")
 
-    def set_preset_mode(self, preset_mode):
-        """Set new preset mode."""
-        print("TODO")
-        
-#        if preset_mode == PRESET_AWAY:
-#            self._turn_away_mode_on()
-#        else:
-#            self._turn_away_mode_off()
 
     def _turn_away_mode_on(self):
-        print("TODO")
+        raise NotImplementedError
 #        """Turn away mode on."""
 #        self._api.away_mode = 1
 
     def _turn_away_mode_off(self):
-        print("TODO")
+        raise NotImplementedError
 #        """Turn away mode off."""
 #        self._api.away_mode = 0
