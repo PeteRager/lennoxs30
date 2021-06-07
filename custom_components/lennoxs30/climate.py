@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 FAN_CIRCULATE = 'circulate'
 
 PRESET_CANCEL_HOLD = 'Cancel Hold'
-PRESET_SCHEDULE_OVERRIDE = 'Schedule Override'
+PRESET_SCHEDULE_OVERRIDE = 'Schedule Hold'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_TARGET_TEMPERATURE_RANGE |
@@ -299,11 +299,11 @@ class S30Climate(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        await self._system.setFanMode(fan_mode)
+        await self._zone.setFanMode(fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new hvac operation mode."""
-        await self._system.setHVACMode(hvac_mode)
+        await self._zone.setHVACMode(hvac_mode)
         # We'll do a couple polls until we get the state
         for x in range(1, 10):
             await asyncio.sleep(0.5)

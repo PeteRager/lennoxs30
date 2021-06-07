@@ -313,7 +313,7 @@ class s30api_async(object):
                 _LOGGER.error('setModeHelper - invalide mode target [' + str(modeTarget) + '] requested, must be in [' + str(HVAC_MODE_TARGETS) + ']')
                 return False
             data = '"Data":{"schedules":[{"schedule":{"periods":[{"id":0,"period":{"' + modeTarget + '":"' + str(mode) + '"}'
-            data += '}]},"id":16}]}'
+            data += '}]},"id":' + str(scheduleId) + '}]}'
             _LOGGER.debug('setmode message [' + data + ']')
             await self.publishMessageHelper(sysId, data)
         except Exception as e:
@@ -510,10 +510,10 @@ class lennox_system(object):
         return self._zoneList
 
 
-    async def setHVACMode(self, mode, scheduleId=16):
+    async def setHVACMode(self, mode, scheduleId):
         return await self.api.setHVACMode(self.sysId, mode, scheduleId)
 
-    async def setFanMode(self, mode, scheduleId=16):
+    async def setFanMode(self, mode, scheduleId):
         return await self.api.setFanMode(self.sysId, mode, scheduleId)
 
     def convertFtoC(self, tempF):
@@ -524,7 +524,6 @@ class lennox_system(object):
 
     async def setSchedule(self, zoneId, scheduleId):
         data = '"Data":{"zones":[{"config":{"scheduleId":' + str(scheduleId) + '},"id":' + str(zoneId) + '}]}'
-#       data += '}'
         return await self.api.publishMessageHelper(self.sysId, data)
 
     async def setpointHelper(self, zoneId, scheduleId, hsp,hspC,csp,cspC):
@@ -854,6 +853,36 @@ class lennox_zone(object):
             return False
 
         return await self._system.setSchedule(self.id, scheduleId)
+
+    async def setFanMode(self,fan_mode):
+        if self.isZoneManualMode() == True:
+            return await self._system.setFanMode(fan_mode, self.getManualModeScheduleId())
+        if self.isZoneOveride() == False:
+            data = '"Data":{"schedules":[{"schedule":{"periods":[{"id":0,"period":'
+            data += '{"desp":' + str(self.desp) + ','
+            data += '"hsp":' + str(self.hsp) + ','
+            data += '"cspC":' + str(self.cspC) + ','
+            data += '"sp":' + str(self.sp) + ','
+            data += '"husp":' + str(self.husp) + ','
+            data += '"humidityMode":"' + str(self.humidityMode) + '",'
+            data += '"systemMode":"' + str(self.systemMode) + '",'
+            data += '"spC":' + str(self.spC) + ','
+            data += '"hspC":' + str(self.hspC) + ','
+            data += '"csp":' + str(self.csp) + ','
+            data += '"startTime":' + str(self.startTime) + ','
+            data += '"fanMode":"' + self.fanMode + '"}'
+            data += '}]},"id":' + str(self.getOverdideScheduleId()) + '}]}'        
+
+            await self._system.api.publishMessageHelper(self._system.sysId, data)
+            await self.setScheduleHold(True)
+        return await self._system.setFanMode(fan_mode, self.getOverdideScheduleId())
+
+    async def setHVACMode(self, hvac_mode):
+        if (self.isZoneManualMode() == False):
+            await self._system.setSchedule(self.id, self.getManualModeScheduleId())
+        await self._system.setHVACMode(hvac_mode, self.getManualModeScheduleId())
+
+     
 
 class lennox_schedule(object):
     def __init__(self, id):
