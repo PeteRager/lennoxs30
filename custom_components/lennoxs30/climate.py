@@ -5,7 +5,7 @@ from . import s30api_async
 from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, HVAC_MODE_DRY,
-    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL,
+    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, ATTR_HVAC_MODE,
     HVAC_MODE_HEAT_COOL, PRESET_AWAY, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_PRESET_MODE, SUPPORT_FAN_MODE,
     FAN_ON, FAN_AUTO, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH,
@@ -251,9 +251,12 @@ class S30Climate(ClimateEntity):
                 continue
             presets.append(schedule.name)
         presets.append(PRESET_CANCEL_HOLD)
+        _LOGGER.debug("climate:preset_modes name[" + self._myname + "] presets[" + str(presets) + "]")
         return presets
 
     async def async_set_preset_mode(self, preset_mode):
+        _LOGGER.info("climate:async_set_preset_mode name[" + self._myname + "] preset_mode [" + preset_mode + "]")
+
         if preset_mode == PRESET_CANCEL_HOLD:
             return await self._zone.setScheduleHold(False)
         await self._zone.setSchedule(preset_mode)
@@ -282,27 +285,79 @@ class S30Climate(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature"""
+
+        r_hvacMode = None
+        if kwargs.get(ATTR_HVAC_MODE) is not None:
+            r_hvacMode = kwargs.get(ATTR_HVAC_MODE) 
+        r_temperature = None
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            sp = kwargs.get(ATTR_TEMPERATURE)
+            r_temperature = kwargs.get(ATTR_TEMPERATURE) 
+        r_csp = None
+        if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None:
+            r_csp = kwargs.get(ATTR_TARGET_TEMP_HIGH) 
+        r_hsp = None
+        if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
+            r_hsp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+
+        _LOGGER.info("climate:async_set_temperature zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+
+        # A temperature must be specified
+        if r_temperature is None and r_csp is None and r_hsp is None:
+            _LOGGER.error("climate:async_set_temperature - no temperature given zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+            return
+
+        # Either provide temperature or high/low but not both
+        if r_temperature != None and (r_csp != None or r_hsp != None):
+            _LOGGER.error("climate:async_set_temperature - pass either temperature or temp_high / low - zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+            return
+
+        # If no temperature, must specify both high and low 
+        if r_temperature == None and (r_csp == None or r_hsp == None):
+            _LOGGER.error("climate:async_set_temperature - must provide both temp_high / low - zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+            return
+
+        # If an HVAC mode is requested; and we are not in that mode, then the first step
+        # is to switch the zone into that mode before setting the temperature
+        if (r_hvacMode != None and r_hvacMode != self.hvac_mode):
+            _LOGGER.info("climate:async_set_temperature zone [" + self._myname + "] setting hvacMode [" + str(r_hvacMode) + "]")
+            result = await self.async_set_hvac_mode(r_hvacMode)
+            if result == False:
+                _LOGGER.error("climate:async_set_temperature zone [" + self._myname + "] failed setting hvacMode [" + str(r_hvacMode) + "]")
+                return
+
+        if (r_hvacMode == None):
+            r_hvacMode = self.hvac_mode
+
+        if r_temperature is not None:
             if self.hvac_mode == HVAC_MODE_COOL:
-                _LOGGER.info("set_temperature system in cool mode, setting csp [" + str(sp) + "]")
-                await self._system.setCoolSPF(sp)
+                _LOGGER.info("climate:async_set_temperature set_temperature system in cool mode - zone [" + self._myname + "] temperature [" + str(r_temperature) + "]")
+                result = await self._zone.setCoolSPF(r_temperature)
+                if result == False:
+                    _LOGGER.error("climate:async_set_temperature - failed - zone [" + self._myname + "] temperature [" + str(r_temperature) + "]")
+                    return False
+                return True
             elif self.hvac_mode == HVAC_MODE_HEAT:
-                _LOGGER.info("set_temperature system in heat mode, setting hsp [" + str(sp) + "]")
-                await self._system.setCoolSPF(sp)
+                _LOGGER.info("climate:async_set_temperature set_temperature system in heat mode - zone [" + self._myname + "] sp [" + str(r_temperature) + "]")
+                result = await self._zone.setCoolSPF(r_temperature)
+                if result == False:
+                    _LOGGER.error("climate:async_set_temperature - failed - zone [" + self._myname + "] temperature [" + str(r_temperature) + "]")
+                    return False
+                return True
             else:
-                _LOGGER.error("set_temperature System Mode is [" + self.hvac_mode + "] unable to set temperature" )
+                _LOGGER.error("set_temperature System Mode is [" + r_hvacMode + "] unable to set temperature")
+                return False
         else:
-            csp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            hsp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            await self._zone.setHeatCoolSPF(hsp, csp)
+            _LOGGER.info("climate:async_set_temperature zone [" + self._myname + "] csp [" + str(r_csp) + "] hsp [" + str(r_hsp) + "]")
+            result = await self._zone.setHeatCoolSPF(r_hsp, r_csp)
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
+        _LOGGER.info("climate:async_set_temperature name[" + self._myname + "] fanMode [ " + str(fan_mode) + "]")
         await self._zone.setFanMode(fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new hvac operation mode."""
+        _LOGGER.info("climate:async_set_hvac_mode name[" + self._myname + "] fanMode [ " + str(hvac_mode) + "]")
         await self._zone.setHVACMode(hvac_mode)
         # We'll do a couple polls until we get the state
         for x in range(1, 10):

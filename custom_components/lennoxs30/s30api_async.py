@@ -58,7 +58,7 @@ HVAC_MODE_TARGETS = {'fanMode', 'systemMode'}
 # Because the topic also contains e-mail this has a chance to work, but running this program more the once using the same account and email will result in missed messages
 #
 # So, we do need a mechanism to generate a unique APPLICATION_ID that does work reliably.
-APPLICATION_ID = "mapp079372367644467046827096"
+APPLICATION_ID = "mapp079372367644467046827099"
 
 # This appears to be a certificate that is installed as part of the App.  The same cert was presented from both Android and IOS apps.  Fortunately it is being passed; rather than used by the app to encrypt a request.
 CERTIFICATE = "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"
@@ -406,7 +406,7 @@ class lennox_system(object):
                 self.processSchedules(data['schedules'])
             self.executeOnUpdateCallbacks()
         except Exception as e:
-            _LOGGER.error("requestDataHelper - Exception " + str(e))
+            _LOGGER.error("processMessage - Exception " + str(e))
             return False
 
     def getOrCreateSchedule(self, id):
@@ -434,11 +434,15 @@ class lennox_system(object):
                     if 'name' in schedule['schedule']:
                         lschedule = self.getOrCreateSchedule(id)
                         lschedule.update(schedule)
+                        # In manual mode, the updates only hit the schedulde rather than the period within the status.
+                        # So here, we look for changes to these schedules and route them to the zone but only
+                        # if it is in manual mode.
                         if schedule['id'] in (16, 17, 18, 19):  # Manual Mode Zones 1 .. 4
                             zone_id = id - 16
                             period = schedule['schedule']['periods'][0]['period']
-                            zone = self.getZone(zone_id)
-                            zone.processPeriodMessage(period)
+                            zone:lennox_zone = self.getZone(zone_id)
+                            if zone.isZoneManualMode():
+                                zone.processPeriodMessage(period)
         except Exception as e:
             _LOGGER.error("processSchedules - failed " + str(e))
 
@@ -492,7 +496,7 @@ class lennox_system(object):
             # Sometimes a change to system mode is not reflected back into the individual zones; rather it is reflected here as a
             # change to schedule 16.  So we will pass this messages to each zone.
         except Exception as e:
-            _LOGGER.error("requestDataHelper - Exception " + str(e))
+            _LOGGER.error("processSystemMessage - Exception " + str(e))
             return False
 
     def getZone(self, id):
@@ -593,7 +597,7 @@ class lennox_system(object):
                 if (lzone != None):
                     lzone.processMessage(zone)
         except Exception as e:
-            _LOGGER.error("requestDataHelper - Exception " + str(e))
+            _LOGGER.error("processZonesMessage - Exception " + str(e))
             return False
 
 class lennox_zone(object):
@@ -680,10 +684,11 @@ class lennox_zone(object):
             if ('scheduleHold' in config):
                 scheduleHold = config['scheduleHold']
                 found = False
-                if scheduleHold['scheduleId'] == self.getOverdideScheduleId():
-                    if scheduleHold['enabled'] == True:
-                        self.overrideActive = True
-                        found = True
+                if 'scheduleId' in scheduleHold:
+                    if scheduleHold['scheduleId'] == self.getOverdideScheduleId():
+                        if scheduleHold['enabled'] == True:
+                            self.overrideActive = True
+                            found = True
                 if found is False:
                     self.overrideActive = False
 
@@ -781,14 +786,19 @@ class lennox_zone(object):
 
 
     async def setHeatCoolSPF(self, r_hsp, r_csp):
+        _LOGGER.info("lennox_zone:setHeatCoolSPF  id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
         # If the zone is in manual mode, the temperature can just be set.
         if self.isZoneManualMode() == True:
+            _LOGGER.info("lennox_zone:setHeatCoolSPF zone in manual mode id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
             return await self._system.setHeatCoolSPF(self.id, self.getManualModeScheduleId(), r_hsp, r_csp)
         # If the zone is already over-ridden then we can just set the temperature
         if self.isZoneOveride() == True:
+            _LOGGER.info("lennox_zone:setHeatCoolSPF zone in override mode id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
             return await self._system.setHeatCoolSPF(self.id, self.getOverdideScheduleId(), r_hsp, r_csp)
+
         # Otherwise, we are following a schedule and need to switch into manual over-ride
         # Copy all the data over from the current executing period
+        _LOGGER.info("lennox_zone:setHeatCoolSPF zone following schedule, adjusting override schedule [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
         hsp = str(int(r_hsp))
         hspC = str(self._system.convertFtoC(r_hsp))
         csp = str(int(r_csp))
@@ -809,36 +819,63 @@ class lennox_zone(object):
         data += '"fanMode":"' + self.fanMode + '"}'
         data += '}]},"id":' + str(self.getOverdideScheduleId()) + '}]}'
 
-        await self._system.api.publishMessageHelper(self._system.sysId, data)
+        result = await self._system.api.publishMessageHelper(self._system.sysId, data)
+        if result is False:
+            _LOGGER.error("lennox_zone:setHeatCoolSPF failed to create override - zone [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
+            return False
 
+        _LOGGER.info("lennox_zone:setHeatCoolSPF placing zone in override hold - zone [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
         # Add a schedule hold to the zone, for now all hold will expire on next period
         data = '"Data":{"zones":[{"config":{"scheduleHold":'
         data += '{"scheduleId":' + str(self.getOverdideScheduleId()) + ','
         data += '"exceptionType":"hold","enabled":true,"expiresOn":"0","expirationMode":"nextPeriod"}'
         data += '},"id":' + str(self.id) + '}]}'
 
-        return await self.setScheduleHold(True)
+        result = await self.setScheduleHold(True)
+        if result is False:
+            _LOGGER.error("lennox_zone:setHeatCoolSPF failed to create schedule hold - zone [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
+            return False
+        return True
 
     async def setScheduleHold(self, hold:bool) -> bool:
         if hold == True:
             strHold = 'true'
         else:
             strHold = 'false'
+
+        _LOGGER.info("lennox_zone:setScheduleHold zone [" + str(self.id) + "] hold [" + str(strHold) + "]") 
+
         # Add a schedule hold to the zone, for now all hold will expire on next period
         data = '"Data":{"zones":[{"config":{"scheduleHold":'
         data += '{"scheduleId":' + str(self.getOverdideScheduleId()) + ','
         data += '"exceptionType":"hold","enabled":' + strHold + ','
         data += '"expiresOn":"0","expirationMode":"nextPeriod"}'
         data += '},"id":' + str(self.id) + '}]}'
-        return await self._system.api.publishMessageHelper(self._system.sysId, data)
+        result =  await self._system.api.publishMessageHelper(self._system.sysId, data)
+        if result is False:
+            _LOGGER.error("lennox_zone:setScheduleHold failed zone [" + str(self.id) + "] hold [" + str(strHold) + "]") 
+            return False
+        return True
 
     async def setCoolSPF(self, r_csp):
-        if self.isZoneManualMode() == True:
-            return await self._system.setCoolSPF(self.id, self.getManualModeScheduleId(), r_csp)
+        _LOGGER.info("lennox_zone:setCoolSPF  id [" + str(self.id) + "] csp [" + str(r_csp) + "]") 
+        # Lennox API always sends both values, snag the current
+        r_hsp = self.hsp
+        result = await self.setHeatCoolSPF(r_hsp, r_csp)
+        if result is False:
+            _LOGGER.error("lennox_zone:setCoolSPF failed zone [" + str(self.id) + "] csp [" + str(r_csp) + "]")
+            return False
+        return True
 
     async def setHeatSPF(self, r_hsp):
-        if self.isZoneManualMode() == True:
-            return await self._system.setHeatSPF(self.id, self.getManualModeScheduleId(), r_hsp)
+        _LOGGER.info("lennox_zone:setHeatSPF  id [" + str(self.id) + "] hsp [" + str(r_hsp) + "]") 
+        # Lennox API always sends both values, snag the current
+        r_csp = self.csp
+        result = await self.setHeatCoolSPF(r_hsp, r_csp)
+        if result is False:
+            _LOGGER.error("lennox_zone:setHeatSPF failed id [" + str(self.id) + "] hsp [" + str(r_hsp) + "]")
+            return False
+        return True
 
     async def setSchedule(self, scheduleName):
         scheduleId = None
