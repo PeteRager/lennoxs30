@@ -12,7 +12,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 The 0.0.2 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
 
-The 0.0.2 release is not hardened for failure.  Internet failures may cause the system to disconnect and not recover.  The login session may expire and this will cause the system to disconnect.  Hardening is the main focus of release 0.0.3.  If any of these happen please report and capture the log files.
+The 0.0.2 release is not hardened for failure.  Internet failures may cause the system to disconnect and not recover.  The login session may expire and this will cause the system to disconnect.  If these occur, Home Assistant will need to be restarted.  Clearly this is not ideal.  Hardening is the main focus of release 0.0.3.  If any of these happen please report and capture the log files.
 
 Recommended Usage:  Evaluation and Testing.  See if this works with your system, report the issues so we can get it solid.
 
