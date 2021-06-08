@@ -13,30 +13,35 @@ from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD)
 
 async def async_setup(hass, config):
     hass.states.async_set("lennox30.state", "Running")
-    print("async_setup config [" + str(config) + "]")
+    _LOGGER.info("__init__:async_setup config")
 
     email = config.get(DOMAIN).get(CONF_EMAIL)
     password = config.get(DOMAIN).get(CONF_PASSWORD)
 
-    print("email [" +str(email) + "] password [" + str(password) + "]")
-
     s30api = s30api_async.s30api_async(email, password)
 
     if await s30api.serverConnect() == False:
-        print("Connection Failed")
+        _LOGGER.error("__init__:async_setup connection failed")
         return False
 
     for lsystem in s30api.getSystems():
         if await s30api.subscribe(lsystem) == False:
-            print("Data Subscription Failed lsystem [" + str(lsystem) + "]")
+            _LOGGER.error("__init__:async_setup config Data Subscription Failed lsystem [" + lsystem.sysId + "]")
             return False
-    count = 0
-    while (count == 0):
+    
+    # Wait for zones to appear on each system
+    sytemsWithZones = 0
+    numOfSystems = len(s30api.getSystems())
+    while (sytemsWithZones < numOfSystems):
+        _LOGGER.debug("__init__:async_setup waiting for zone config to arrive numSystems [" + str(numOfSystems) + "] sytemsWithZonze [" + str(sytemsWithZones) + "]")
+        sytemsWithZones = 0
+        await asyncio.sleep(1)
         await s30api.retrieve()
         for lsystem in s30api.getSystems():
-                for zone in lsystem.getZoneList():
-                    count += 1
-        await asyncio.sleep(1)
+                numZones = len(lsystem.getZoneList())
+                _LOGGER.debug("__init__:async_setup wait for zones system [" + lsystem.sysId + "] numZone [" + str(numZones) + "]")
+                if numZones > 0:
+                    sytemsWithZones += 1
 
     # Launch the retrieve loop
     asyncio.create_task(retrieve_task(s30api))
