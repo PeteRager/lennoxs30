@@ -44,7 +44,9 @@ logger:
 
 This integration will automatically detect all the homes, systems and zones in your account and add a Climate Entity for each discovered zone.  The names of the climate entities will be climate.<system_name>_<zone_name>.
 
-System name is the name you gave to your S30
+System name is the name you gave to your S30.  By default Lennox names the Zones - "Zone 1", "Zone 2", "Zone 3", "Zone 4"
+
+The integration creates internal Entity_Ids using the GUID of your S30 plus the zone index (0,1,2,3).  Hence renaming your zone or system in the S30 should not cause duplicates.
 
 # Functions
 
