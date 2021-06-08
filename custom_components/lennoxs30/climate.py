@@ -208,6 +208,8 @@ class S30Climate(ClimateEntity):
     def hvac_mode(self):
         """Return the current hvac operation mode."""
         r = self._zone.getSystemMode()
+        if r == s30api_async.LENNOX_HVAC_HEAT_COOL:
+            r = HVAC_MODE_HEAT_COOL
         _LOGGER.debug("climate:hvac_mode name[" + self._myname + "] mode [" + r + "]")
         return r
 
@@ -222,7 +224,28 @@ class S30Climate(ClimateEntity):
             modes.append(HVAC_MODE_HEAT)
         if self._zone.dehumidificationOption == True:
             modes.append(HVAC_MODE_DRY)
+        if self._zone.coolingOption == True and self._zone.heatingOption == True:
+            modes.append(HVAC_MODE_HEAT_COOL)
         return modes
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new hvac operation mode."""
+        t_hvac_mode = hvac_mode
+        # Only this mode needs to be mapped
+        if t_hvac_mode == HVAC_MODE_HEAT_COOL:
+            t_hvac_mode = s30api_async.LENNOX_HVAC_HEAT_COOL
+        _LOGGER.info("climate:async_set_hvac_mode zone [" + self._myname + "] ha_mode [" + str(hvac_mode) + "] lennox_mode [" + t_hvac_mode + "]")
+        await self._zone.setHVACMode(t_hvac_mode)
+        # We'll do a couple polls until we get the state
+        for x in range(1, 10):
+            await asyncio.sleep(0.5)
+            await self._s30api.retrieve()
+            if self._zone.getSystemMode() == hvac_mode:
+                _LOGGER.info("async_set_hvac_mode - got change with fast poll iteration [" + str(x) + "]")
+                return
+        _LOGGER.info("async_set_hvac_mode - unabled to retrieve change with fast poll")
+
+
 
     @property
     def hvac_action(self):
@@ -354,20 +377,6 @@ class S30Climate(ClimateEntity):
         """Set new fan mode."""
         _LOGGER.info("climate:async_set_temperature name[" + self._myname + "] fanMode [ " + str(fan_mode) + "]")
         await self._zone.setFanMode(fan_mode)
-
-    async def async_set_hvac_mode(self, hvac_mode):
-        """Set new hvac operation mode."""
-        _LOGGER.info("climate:async_set_hvac_mode name[" + self._myname + "] fanMode [ " + str(hvac_mode) + "]")
-        await self._zone.setHVACMode(hvac_mode)
-        # We'll do a couple polls until we get the state
-        for x in range(1, 10):
-            await asyncio.sleep(0.5)
-            await self._s30api.retrieve()
-            if self._zone.getSystemMode() == hvac_mode:
-                _LOGGER.info("async_set_hvac_mode - got change with fast poll iteration [" + str(x) + "]")
-                return
-        _LOGGER.info("async_set_hvac_mode - unabled to retrieve change with fast poll")
-
 
     def _turn_away_mode_on(self):
         raise NotImplementedError
