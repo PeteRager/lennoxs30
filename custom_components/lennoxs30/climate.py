@@ -270,12 +270,16 @@ class S30Climate(ClimateEntity):
             if ho == s30api_async.LENNOX_HUMID_OPERATION_DEHUMID:
                 return CURRENT_HVAC_DRY
             return ho 
+        if to == 'off' and self._zone.systemMode != 'off':
+            return CURRENT_HVAC_IDLE
         return to
 
     @property
     def preset_mode(self):
         if self._zone.overrideActive == True:
             return PRESET_SCHEDULE_OVERRIDE
+        if self._zone.isZoneManualMode() == True:
+            return ""
         scheduleId = self._zone.scheduleId
         if scheduleId is None:
             return None
