@@ -19,12 +19,19 @@ v0.2.0 - Initial Release
 
 """
 
+from aiohttp.client import ClientSession
+from homeassistant.components.lennoxs30.api.s30exception import EC_AUTHENTICATE, EC_BAD_PARAMETERS, EC_COMMS_ERROR, EC_LOGIN, EC_NEGOTIATE, EC_NO_SCHEDULE, EC_PROCESS_MESSAGE, EC_PUBLISH_MESSAGE, EC_REQUEST_DATA_HELPER, EC_RETRIEVE, EC_SETMODE_HELPER, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
+from datetime import datetime
 import logging
 import json
 import uuid
 import aiohttp
 
 from urllib.parse import quote
+from typing import List
+from .lennox_period import lennox_period
+from .lennox_schedule import lennox_schedule 
+from .lennox_home import lennox_home
 
 _LOGGER = logging.getLogger(__name__)
 #_LOGGER.setLevel(logging.DEBUG)
@@ -34,16 +41,27 @@ AUTHENTICATE_URL = "https://ic3messaging.myicomfort.com/v1/mobile/authenticate"
 LOGIN_URL = "https://ic3messaging.myicomfort.com/v2/user/login"
 NEGOTIATE_URL = "https://icnotificationservice.myicomfort.com/LennoxNotificationServer/negotiate"
 RETRIEVE_URL = 'https://icretrieveapi.myicomfort.com/v1/messages/retrieve?LongPollingTimeout=0&StartTime=1&Direction=Oldest-to-Newest&MessageCount=10'
+#                https://icretrieveapi.myicomfort.com/v1/messages/retrieve?LongPollingTimeout=0&direction=Oldest-to-Newest&messageCount=10&startTime=1
 IC3_MESSAGING_REQUEST_URL = "https://ic3messaging.myicomfort.com/v1/messages/requestData"
 REQUESTDATA_URL = "https://icrequestdataapi.myicomfort.com/v1/Messages/RequestData"
 PUBLISH_URL = "https://icpublishapi.myicomfort.com/v1/messages/publish"
 
+# May need to update as the version of API increases
+USER_AGENT:str = "lx_ic3_mobile_appstore/3.75.218 (iPad; iOS 14.4.1; Scale/2.00)"
 
-LENNOX_HVAC_HEAT_COOL = 'heat and cool'
+LENNOX_HVAC_OFF = 'off'
+LENNOX_HVAC_COOL = 'cool'
+LENNOX_HVAC_HEAT = 'heat'
+LENNOX_HVAC_HEAT_COOL = 'heat and cool'            # validated
 
-HVAC_MODES = {'off', 'cool', 'heat', LENNOX_HVAC_HEAT_COOL}
+LENNOX_HUMID_OPERATION_DEHUMID = 'dehumidifying'   # validated
+LENNOX_HUMID_OPERATION_HUMID = 'humidifying'       # a guess
+
+HVAC_MODES = {LENNOX_HVAC_OFF, LENNOX_HVAC_COOL, LENNOX_HVAC_HEAT, LENNOX_HVAC_HEAT_COOL}
 FAN_MODES = {'on', 'auto', 'circulate'}
 HVAC_MODE_TARGETS = {'fanMode', 'systemMode'}
+
+LENNOX_MANUAL_MODE_SCHEDULE_START_INDEX: int = 16
 
 # NOTE:  This application id is super important and a point of brittleness.  You can find this in the burp logs between the mobile app and the Lennox server.  
 # If we start getting reports of missesd message, this is the place to look....
@@ -71,69 +89,106 @@ class s30api_async(object):
     _username: str = None
     _password: str = None
     _applicationid: str = APPLICATION_ID
-    _systemList = []
     _publishMessageId: int = 1
+    _session:ClientSession = None
+
+    _homeList: List[lennox_home]= []
+    _systemList: List['lennox_system'] = []
+    messagesProcessed: int = 0
+    lastProcessedMessageDateTime: datetime = None
 
     """Representation of the Lennox S30/E30 thermostat."""
     def __init__(self, username: str, password : str):
         """Initialize the API interface."""
         _LOGGER.info('__init__ S30TStat  applicationId [' + APPLICATION_ID + ']')
-
         self._username = username
         self._password = password
-        self._applicationid = APPLICATION_ID
-        self._systemList = []
-        self._publishMessageId = 1
-        self.session = aiohttp.ClientSession()
 
     def getClientId(self) -> str:
         return self._applicationid + "_" + self._username
 
     async def serverConnect(self) -> bool:
+        # On a reconnect we will close down the old session and get a new one
         _LOGGER.info("serverLogin - Entering")
-        result = await self.authenticate()
-        if result == False:
-            _LOGGER.info("serverLogin:authenticate - failed")
-            return False
-        result = await self.login()
-        if result == False:
-            _LOGGER.info("serverLogin:login - failed")
-            return False
-        result = await self.negotiate()
-        if result == False:
-            _LOGGER.info("serverLogin:negotiate - failed")
-            return False
+        if self._session != None:
+            try:
+                await self._session.close()
+            except Exception as e:
+                _LOGGER.error("serverConnect - failed to close session [" + str(e))
+        self._session = aiohttp.ClientSession()
+
+        _LOGGER.info("serverLogin - Entering")
+        await self.authenticate()
+        await self.login()
+        await self.negotiate()
         _LOGGER.info("serverLogin - Complete")
-        return True
+
+    AUTHENTICATE_RETRIES:int = 5
 
     async def authenticate(self) -> bool:
+        """Authenticate with Lennox Server by presenting a certificate.  Throws S30Exception on failure"""
         # The only reason this function would fail is if the certificate is no longer valid or the URL is not longer valid.
-        _LOGGER.info("Authenticate - Enter")
+        _LOGGER.info("authenticate - Enter")
         url = AUTHENTICATE_URL
         body = CERTIFICATE
+        err_msg: str = None
         try:
             # I did see this fail due to an active directory error on Lennox side.  I saw the same failure in the Burp log for the App and saw that it repeatedly retried
             # until success, so this must be a known / re-occuring issue that they have solved via retries.  When this occured the call hung for a while, hence there
             # appears to be no reason to sleep between retries.
-            for x in range(1, 5):
-                resp = await self.session.post(url, data=body)
+            for retry in range(1, self.AUTHENTICATE_RETRIES):
+                resp = await self._session.post(url, data=body)
                 if resp.status == 200:
                     resp_json = await resp.json()
                     _LOGGER.debug(json.dumps(resp_json, indent=4))
                     self.authBearerToken = resp_json['serverAssigned']['security']['certificateToken']['encoded']
                     _LOGGER.info("authenticate success")
-                    return True
+                    # Success branch - return from here
+                    return
                 else:
                     # There is often useful diag information in the txt, so grab it and log it                    
                     txt = await resp.text()
-                    _LOGGER.error('authenticate failed response code [' + str(resp.status) + '] text [' + str(txt) + ']')
-                _LOGGER.info("authenticate retry [" + str(x) + "]")
-            return False
+                    err_msg = f"authenticate failed  - retrying [{retry}] of [{self.AUTHENTICATE_RETRIES}] response code [{resp.status}] text [{txt}]"
+                    _LOGGER.warning(err_msg)
+            raise S30Exception(err_msg, EC_AUTHENTICATE, 1) 
         except Exception as e:
             _LOGGER.error("authenticate exception " + str(e))
-            return False
+            raise S30Exception("Authentication Failed", EC_AUTHENTICATE, 2)
 
-    async def login(self) -> bool:
+    def getHome(self, homeId) -> lennox_home:
+        for home in self._homeList:
+            if home.id == homeId:
+                return home
+        return None
+ 
+    def getOrCreateHome(self, homeId):
+        home = self.getHome(id)
+        if home != None:
+            return home
+        home = lennox_home(id)
+        self._homeList.append(home)
+        return home
+
+    def getHome(self, homeId) -> lennox_home:
+        for home in self._homeList:
+            if home.id == homeId:
+                return home
+        return None
+
+    def getHomes(self):
+        return self._homeList
+
+    def getOrCreateHome(self, homeId):
+        home = self.getHome(id)
+        if home != None:
+            return home
+        home = lennox_home(id)
+        self._homeList.append(home)
+        return home
+
+
+    async def login(self) -> None:
+        """Login to Lennox Server using provided email and password.  Throws S30Exception on failure"""
         _LOGGER.info("login - Enter")
         url:str = LOGIN_URL
         try:
@@ -141,13 +196,14 @@ class s30api_async(object):
             headers = {
                 'Authorization': self.authBearerToken,
                 'Content-Type': 'text/plain',
-                'User-Agent': 'lx_ic3_mobile_appstore/3.75.218 (iPad; iOS 14.4.1; Scale/2.00)'
+                'User-Agent': USER_AGENT
             }
-            resp = await self.session.post(url,headers=headers, data=payload)
+            resp = await self._session.post(url,headers=headers, data=payload)
             if resp.status != 200:
                 txt = await resp.text()
-                _LOGGER.error('Login failed response code [' + str(resp.status) + '] text [' + str(resp.text)+ ']')
-                return False
+                errmsg = f'Login failed response code [{resp.status}] text [{txt}]'
+                _LOGGER.error(errmsg)
+                raise S30Exception(errmsg, EC_LOGIN,1)
             resp_json = await resp.json()
             _LOGGER.debug(json.dumps(resp_json, indent=4))
             # Grab the bearer token
@@ -155,26 +211,26 @@ class s30api_async(object):
             # Split off the "bearer" part of the token, as we need to use just the token part later in the URL.  Format is "Bearer <token>"
             split = self.loginBearerToken.split(' ')
             self.loginToken = split[1]
-            # This is the ID of the target thermostat
-            homeList = resp_json['readyHomes']['homes']
-            # not sure if this is the best way to reinitialize.
-            self._homeList = []
-            self._systemList = []
 
+            # The list of homes and systems(aka S30s) comes back in the response.
+            homeList = resp_json['readyHomes']['homes']
             for home in homeList:
-                lhome = lennox_home(home['id'], home['homeId'], home['name'], home)
+                lhome:lennox_home = self.getOrCreateHome(home['homeId'])
+                lhome.update(home['id'], home['name'], home)
                 self._homeList.append(lhome)
                 for system in resp_json['readyHomes']['homes'][lhome.idx]['systems']:
-                    lsystem = lennox_system(self, lhome, system['id'],system['sysId'])
-                    self._systemList.append(lsystem)                
+                    lsystem = self.getOrCreateSystem(system['sysId'])
+                    lsystem.update(self, lhome, system['id'])
+        except S30Exception as e:
+            raise e
         except Exception as e:
+            txt = str(e)
             _LOGGER.error("Exception " + str(e))
-            return False
-        _LOGGER.info("login Success homes [" + str(len(self._homeList)) + "] systems [" + str(len(self._systemList)) + "]")
-        return True
+            raise S30Exception(str(e), EC_COMMS_ERROR,2)
+        _LOGGER.info(f"login Success homes [{len(self._homeList)}] systems [{len(self._systemList)}]")
 
 
-    async def negotiate(self) -> bool:
+    async def negotiate(self) -> None:
         _LOGGER.info("Negotiate - Enter")
         try:
             url = NEGOTIATE_URL
@@ -183,10 +239,12 @@ class s30api_async(object):
             # Since these may have special characters, they need to be URI encoded
             url += "&clientId=" + quote(self.getClientId())
             url += "&Authorization=" + quote(self.loginToken)
-            resp = await self.session.get(url)            
+            resp = await self._session.get(url)            
             if resp.status != 200:
-                _LOGGER.error('Negotiate failed response code [' + str(resp.status) + '] text [' + await resp.text() + ']')
-                return False
+                txt = await resp.text()
+                err_msg = f'Negotiate failed response code [{resp.status}] text [{txt}]'
+                _LOGGER.error(err_msg)
+                raise S30Exception(err_msg, EC_NEGOTIATE, 1)
             resp_json = await resp.json()
             _LOGGER.debug(json.dumps(resp_json, indent=4))
             # So we get these two pieces of information, but they are never used, perhaps these are used by the websockets interface?
@@ -197,30 +255,31 @@ class s30api_async(object):
             self._tryWebsockets = resp_json['TryWebSockets']
             self._streamURL = resp_json['Url']
             _LOGGER.info("Negotiate Success connectionId [" + self._connectionId + "] tryWebSockets [" + str(self._tryWebsockets) + "] streamUrl [" + self._streamURL + "]")
-            return True
         except Exception as e:
-            _LOGGER.error("Exception " + e)
-            _LOGGER.info("Negotiate - Failed")
-            return False
+            err_msg = "Negotiate - Failed - Exception " + str(e)
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_NEGOTIATE, 2)
 
     # The topics subscribed to here are based on the topics that the WebApp subscribes to.  We likely don't need to subscribe to all of them
     # These appear to be JSON topics that correspond to the returned JSON.  For now we will do what the web app does.
-    async def subscribe(self, lennoxSystem: 'lennox_system') -> bool:
-        result =  await self.requestDataHelper("ic3server", '"AdditionalParameters":{"publisherpresence":"true"},"Data":{"presence":[{"id":0,"endpointId":"' + lennoxSystem.sysId + '"}]}')
-        if result == False:
-            _LOGGER.error("subscribe - subscription 1 failed")
-            return False
-        result =  await self.requestDataHelper(lennoxSystem.sysId, '"AdditionalParameters":{"JSONPath":"1;\/system;\/zones;\/occupancy;\/schedules;"}')
-        if result == False:
-            _LOGGER.error("subscribe - subscription 2 failed")
-            return False
-        result = await self.requestDataHelper(lennoxSystem.sysId, '"AdditionalParameters":{"JSONPath":"1;\/reminderSensors;\/reminders;\/alerts\/active;\/alerts\/meta;\/dealers;\/devices;\/equipments;\/fwm;\/ocst;"}')
-        if result == False:        
-            _LOGGER.error("subscribe - subscription 3 failed")
-            return False
-        return True
+    async def subscribe(self, lennoxSystem: 'lennox_system') -> None:
+        ref:int = 1
+        try:
+            await self.requestDataHelper("ic3server", '"AdditionalParameters":{"publisherpresence":"true"},"Data":{"presence":[{"id":0,"endpointId":"' + lennoxSystem.sysId + '"}]}')
+            ref = 2
+            await self.requestDataHelper(lennoxSystem.sysId, '"AdditionalParameters":{"JSONPath":"1;\/system;\/zones;\/occupancy;\/schedules;"}')
+            ref = 3
+            await self.requestDataHelper(lennoxSystem.sysId, '"AdditionalParameters":{"JSONPath":"1;\/reminderSensors;\/reminders;\/alerts\/active;\/alerts\/meta;\/dealers;\/devices;\/equipments;\/fwm;\/ocst;"}')
+        except S30Exception as e:
+            err_msg = f'subsribe fail loca [{ref}] ' + str(e)
+            _LOGGER.error(err_msg)
+            raise e
+        except Exception as e:
+            err_msg = f'subsribe fail locb [{ref}] ' + str(e)
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_SUBSCRIBE, 3)
 
-    async def retrieve(self) -> bool:
+    async def retrieve(self) -> None:
         # This method reads off the queue.
         # Observations:  the clientId is not passed in, they must be mapping the token to the clientId as part of negotiate
         # TODO: The long polling is not working, I have tried adjusting the long polling delay.  Long polling seems to work from the IOS App, not sure
@@ -230,43 +289,55 @@ class s30api_async(object):
             url = RETRIEVE_URL
             headers = {
                 'Authorization': self.loginBearerToken,
-                'User-Agent' : 'lx_ic3_mobile_appstore/3.75.218 (iPad; iOS 14.4.1; Scale/2.00)',
+                'User-Agent' : USER_AGENT,
                 'Accept' : '*.*',
+#                'Accept' : '*/*',
                 'Accept-Language' : 'en-US;q=1',
                 'Accept-Encoding' : 'gzip, deflate'                
+#                'Accept-Encoding' : 'gzip, deflate'                
             }
-            resp = await self.session.get(url,  headers=headers)                      
-            if resp.status != 200:
-                _LOGGER.error('Negotiate failed response code [' + str(resp.status) + '] text [' + await resp.text() + ']')            
-                return False
-            resp_json = await resp.json()               
-            _LOGGER.debug(json.dumps(resp_json, indent=4))
-            for message in resp_json["messages"]:
-                sysId = message["SenderId"]
-                system = self.getSystem(sysId)
-                if (system == None):
-                    _LOGGER.error("Retrieve unknown SenderId/SystemId [" + str(sysId) + "]")
-                    continue
-                system.processMessage(message)
-
+            resp = await self._session.get(url,  headers=headers)                      
+            if resp.status == 200:
+                resp_json = await resp.json()               
+                _LOGGER.debug(json.dumps(resp_json, indent=4))
+                for message in resp_json["messages"]:
+                    self.messagesProcessed += 1
+                    self.lastProcessedMessageDateTime = datetime.now()
+                    sysId = message["SenderId"]
+                    system = self.getSystem(sysId)
+                    if (system == None):
+                        _LOGGER.error("Retrieve unknown SenderId/SystemId [" + str(sysId) + "]")
+                        continue
+                    system.processMessage(message)
+            else:
+#                txt = await resp.text()
+                err_msg = f'Retrieve failed response http_code [{resp.status}]'
+                _LOGGER.error(err_msg)
+                err_code = EC_RETRIEVE
+                if resp.status == 401:
+                    err_code = EC_UNAUTHORIZED
+                raise S30Exception(err_msg, err_code, 1)
             return True
+        except S30Exception as e:
+            raise e
         except Exception as e:
-            _LOGGER.error("Retrieve Failed - Exception " + str(e))
-            return False
+            err_msg = "Retrieve Failed - Exception " + str(e)
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_RETRIEVE, 2)
 
     # Messages seem to use unique GUIDS, here we create one
     def getNewMessageID(self):
         return str(uuid.uuid4())
 
 
-    async def requestDataHelper(self, sysId: str, additionalParameters: str) -> bool:
+    async def requestDataHelper(self, sysId: str, additionalParameters: str) -> None:
         _LOGGER.info("requestDataHelper - Enter")
         try:
             url = REQUESTDATA_URL
             headers = {
                 'Authorization': self.loginBearerToken,
                 'Content-Type': 'application/json; charset=utf-8',
-                'User-Agent' : 'lx_ic3_mobile_appstore/3.75.218 (iPad; iOS 14.4.1; Scale/2.00)',
+                'User-Agent' : USER_AGENT,
                 'Accept' : '*.*',
                 'Accept-Language' : 'en-US;q=1',
                 'Accept-Encoding' : 'gzip, deflate'
@@ -279,17 +350,21 @@ class s30api_async(object):
             payload += '"TargetID":"' + sysId + '",'
             payload += additionalParameters
             payload += '}'
-            _LOGGER.debug("Payload  [" + payload + "]")           
-            resp = await self.session.post(url, headers=headers, data=payload)            
+            _LOGGER.debug("requestDataHelper Payload  [" + payload + "]")           
+            resp = await self._session.post(url, headers=headers, data=payload)            
 
-            if resp.status != 200:
-                _LOGGER.error('requestDataHelper failed response code [' + str(resp.status) + '] text [' + await resp.text() + ']')
-                return False
-            _LOGGER.debug(json.dumps(await resp.json(), indent=4))
-            return True
+            if resp.status == 200:
+                # TODO we should be inspecting the return body?
+                _LOGGER.debug(json.dumps(await resp.json(), indent=4))
+            else:
+                txt = resp.text()
+                err_msg = f'requestDataHelper failed response code [{resp.status}] text [{txt}]'
+                _LOGGER.error(err_msg)
+                raise S30Exception(err_msg, EC_REQUEST_DATA_HELPER, 1)
         except Exception as e:
-            _LOGGER.error("requestDataHelper - Exception " + str(e))
-            return False
+            err_msg = "requestDataHelper - Exception " + str(e)
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_REQUEST_DATA_HELPER, 2)
 
     def getSystems(self):
         return self._systemList
@@ -300,8 +375,14 @@ class s30api_async(object):
                 return system
         return None
 
-    def getHomes(self):
-        return self._homeList
+    def getOrCreateSystem(self, sysId:str) -> 'lennox_system':
+        system = self.getSystem(sysId)
+        if system != None:
+            return system
+        system = lennox_system(sysId)
+        self._systemList.append(system)
+        return system
+
 
     # When publishing data, app uses a GUID that counts up from 1.
     def getNextMessageId(self):
@@ -309,24 +390,27 @@ class s30api_async(object):
         messageUUID = uuid.UUID(int = self._publishMessageId)
         return str(messageUUID)
 
-    async def setModeHelper(self, sysId, modeTarget, mode, scheduleId):
+    async def setModeHelper(self, sysId: str, modeTarget :str, mode : str, scheduleId :int) -> None:
         _LOGGER.info('setMode modeTarget [' + modeTarget + '] mode [' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
         try:
             if (modeTarget not in HVAC_MODE_TARGETS):
-                _LOGGER.error('setModeHelper - invalide mode target [' + str(modeTarget) + '] requested, must be in [' + str(HVAC_MODE_TARGETS) + ']')
-                return False
+                err_msg = f'setModeHelper - invalide mode target [{modeTarget}] requested, must be in [{HVAC_MODE_TARGETS}]'
+                _LOGGER.error(err_msg)
+                raise S30Exception(err_msg, EC_BAD_PARAMETERS, 1)
             data = '"Data":{"schedules":[{"schedule":{"periods":[{"id":0,"period":{"' + modeTarget + '":"' + str(mode) + '"}'
             data += '}]},"id":' + str(scheduleId) + '}]}'
             _LOGGER.debug('setmode message [' + data + ']')
             await self.publishMessageHelper(sysId, data)
+        except S30Exception as e:
+            _LOGGER.error("setmode - S30Exception " + str(e))
+            raise e
         except Exception as e:
             _LOGGER.error("setmode - Exception " + str(e))
-            return False
+            raise S30Exception(str(e), EC_SETMODE_HELPER, 1)
         _LOGGER.info('setModeHelper success[' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
-        return True
 
-    async def publishMessageHelper(self, sysId, data):
-        _LOGGER.info('publishMessageHelper sysId [' + str(sysId) + '] data [' + data + ']')
+    async def publishMessageHelper(self, sysId: str, data: str) -> None:
+        _LOGGER.info(f'publishMessageHelper sysId [{sysId}] data [{data}]')
         try:
             body = '{'
             body += '"MessageType":"Command",'
@@ -336,69 +420,72 @@ class s30api_async(object):
             body += data
             body += '}'
 
-            jsbody = json.loads(body)
-            
+            # See if we can parse the JSON, if we can't error will be thrown, no point in sending lennox bad data
+            jsbody = json.loads(body)            
             _LOGGER.debug('publishMessageHelper message [' + json.dumps(jsbody, indent=4) + ']')
 
             url = PUBLISH_URL
             headers = {
                 'Authorization': self.loginBearerToken,
-                'User-Agent' : 'lx_ic3_mobile_appstore/3.75.218 (iPad; iOS 14.4.1; Scale/2.00)',
+                'User-Agent' : USER_AGENT,
                 'Accept' : '*.*',
                 'Content-Type' : 'application/json',
                 'Accept-Language' : 'en-US;q=1',
                 'Accept-Encoding' : 'gzip, deflate'                
             }
-            resp = await self.session.post(url,  headers=headers, data=body)  
+            resp = await self._session.post(url,  headers=headers, data=body)  
             if resp.status != 200:
-                _LOGGER.error('publishMessageHelper failed response code [' + str(resp.status) + '] text [' + await resp.text() + ']')
-                return False
+                txt = await resp.text()
+                err_msg = f'publishMessageHelper failed response code [{resp.status}] text [{txt}]'
+                _LOGGER.error(err_msg)
+                raise S30Exception(err_msg, EC_PUBLISH_MESSAGE, 1)
             _LOGGER.debug(json.dumps(await resp.json(), indent=4))
         except Exception as e:
             _LOGGER.error("publishMessageHelper - Exception " + str(e))
-            return False
+            raise S30Exception(str(e), EC_PUBLISH_MESSAGE, 2)
         _LOGGER.info('publishMessageHelper success sysId [' + str(sysId) + ']')
-        return True
 
-
-    async def setHVACMode(self, sysId, mode, scheduleId):
+    async def setHVACMode(self, sysId: str, mode :str, scheduleId: int) -> None:
         _LOGGER.info('setHVACMode mode [' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
         if (mode not in HVAC_MODES):
-            _LOGGER.error('setMode - invalide mode [' + str(mode) + '] requested, must be in [' + str(HVAC_MODES) + ']')
-            return False
-        return await self.setModeHelper(sysId, 'systemMode', mode, scheduleId)
+            err_msg = f'setMode - invalide mode [{mode}] requested, must be in [{HVAC_MODES}]'
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_BAD_PARAMETERS, 1)
+        await self.setModeHelper(sysId, 'systemMode', mode, scheduleId)
 
-    async def setFanMode(self, sysId, mode, scheduleId):
+    async def setFanMode(self, sysId: str, mode: str, scheduleId: int) -> None:
         _LOGGER.info('setFanMode mode [' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
         if (mode not in FAN_MODES):
-            _LOGGER.error('setFanMode - invalide mode [' + str(mode) + '] requested, must be in [' + str(FAN_MODES) + ']')
-            return False
-        return await self.setModeHelper(sysId, 'fanMode', mode, scheduleId)
-
-
-class lennox_home(object):
-    def __init__(self, homeIdx:int, homeId:int, homeName:str, json:json):
-        self.idx = homeIdx
-        self.id = homeId
-        self.name = homeName
-        self.json = json
-        _LOGGER.info("Creating lennox_home homeIdx [" + str(self.idx) + "] homeId [" + str(self.id) + "] homeName [" + str(self.name) + "] json [" + str(json)+ "]") 
+            err_msg = 'setFanMode - invalide mode [{mode}] requested, must be in [{FAN_MODES}]'
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_BAD_PARAMETERS, 1)
+        await self.setModeHelper(sysId, 'fanMode', mode, scheduleId)
 
 class lennox_system(object):
-    def __init__(self, api:s30api_async, home:lennox_home, idx:int, sysId:str):
+    api: s30api_async = None
+    idx: int = None
+    sysId: str = None
+    home: lennox_home = None
+
+    _zoneList: List['lennox_zone'] = []
+    _schedules: List[lennox_schedule] = []
+    _callbacks = []
+    outdoorTemperature = None
+
+    name: str = None
+
+    def __init__(self, sysId:str):
+        self.sysId = sysId
+        _LOGGER.info(f"Creating lennox_system sysId [{self.sysId}]") 
+
+    def update(self, api:s30api_async, home:lennox_home, idx:int):
         self.api = api
         self.idx = idx
-        self.sysId = sysId
         self.home = home
-        self._zoneList = []
-        self._schedules = []
-        self._callbacks = []
-        self.outdoorTemperature = None
         self.name = self.home.name + '_' + str(self.idx)
-        self._en = False
-        _LOGGER.info("Creating lennox_system idx [" + str(self.idx) + "] sysId [" + str(self.sysId) + "]") 
+        _LOGGER.info(f"Update lennox_system idx [{self.idx}] sysId [{self.sysId}]") 
 
-    def processMessage(self, message):
+    def processMessage(self, message) -> None:
         try:
             data = message["Data"]
             if 'system'in data:
@@ -410,7 +497,7 @@ class lennox_system(object):
             self.executeOnUpdateCallbacks()
         except Exception as e:
             _LOGGER.error("processMessage - Exception " + str(e))
-            return False
+            raise S30Exception(str(e), EC_PROCESS_MESSAGE, 1)
 
     def getOrCreateSchedule(self, id):
         schedule = self.getSchedule(id)
@@ -441,29 +528,25 @@ class lennox_system(object):
                         # So here, we look for changes to these schedules and route them to the zone but only
                         # if it is in manual mode.
                         if schedule['id'] in (16, 17, 18, 19):  # Manual Mode Zones 1 .. 4
-                            zone_id = id - 16
+                            zone_id = id - LENNOX_MANUAL_MODE_SCHEDULE_START_INDEX
                             period = schedule['schedule']['periods'][0]['period']
                             zone:lennox_zone = self.getZone(zone_id)
                             if zone.isZoneManualMode():
                                 zone.processPeriodMessage(period)
         except Exception as e:
             _LOGGER.error("processSchedules - failed " + str(e))
+            raise S30Exception(str(e), EC_PROCESS_MESSAGE, 2)
 
     def registerOnUpdateCallback(self, callbackfunc):
         self._callbacks.append(callbackfunc)
 
     def executeOnUpdateCallbacks(self):
-#        if self._en == False:
-#            return
         for callbackfunc in self._callbacks:
             try:
                 callbackfunc()
             except Exception as e:
+                # Log and eat this exception so we can process other callbacks
                 _LOGGER.error("executeOnUpdateCallback - failed " + str(e))
-
-    def enableCallbackProcessing(self, en):
-        self._en = en
-                
 
     def processSystemMessage(self, message):
         try:
@@ -494,13 +577,9 @@ class lennox_system(object):
                     self.diagPoweredHours = status['diagPoweredHours']
                 if 'numberOfZones' in status:
                     self.numberOfZones = status['numberOfZones']
-#                if 'internalStatus' in message:
-#                    self.currentCfm = status['internalStatus']['ventilation']['currentCfm']
-            # Sometimes a change to system mode is not reflected back into the individual zones; rather it is reflected here as a
-            # change to schedule 16.  So we will pass this messages to each zone.
         except Exception as e:
             _LOGGER.error("processSystemMessage - Exception " + str(e))
-            return False
+            raise S30Exception(str(e), EC_PROCESS_MESSAGE, 3)
 
     def getZone(self, id):
         for zone in self._zoneList:
@@ -508,14 +587,11 @@ class lennox_system(object):
                 return zone
         return None
 
-
     def getZones(self):
         return self._zoneList
 
     def getZoneList(self):
-        # todo obsolete this method
         return self._zoneList
-
 
     async def setHVACMode(self, mode, scheduleId):
         return await self.api.setHVACMode(self.sysId, mode, scheduleId)
@@ -529,58 +605,60 @@ class lennox_system(object):
         str_TempC = round(float_TempC * 2.0) / 2.0
         return str_TempC
 
-    async def setSchedule(self, zoneId, scheduleId):
+    async def setSchedule(self, zoneId: int, scheduleId: int) -> None:
         data = '"Data":{"zones":[{"config":{"scheduleId":' + str(scheduleId) + '},"id":' + str(zoneId) + '}]}'
-        return await self.api.publishMessageHelper(self.sysId, data)
+        await self.api.publishMessageHelper(self.sysId, data)
 
-    async def setpointHelper(self, zoneId, scheduleId, hsp,hspC,csp,cspC):
-        # 16 is the schedule id for manual modes, not sure if this is always going to be correct
-        scheduleId = 16 + zoneId
-
-        data =  '"Data":{"schedules":[{"schedule":{"periods":[{"id":0,"period":{'
+    async def setpointHelper(self, zoneId, scheduleId, hsp, hspC, csp, cspC) -> None:
+        scheduleId: int = LENNOX_MANUAL_MODE_SCHEDULE_START_INDEX + zoneId
+        data: str =  '"Data":{"schedules":[{"schedule":{"periods":[{"id":0,"period":{'
         data += '"hsp":' + str(hsp) +',"cspC":' + str(cspC) + ',"hspC":' + str(hspC) +',"csp":' + str(csp) + '} }]},"id":' + str(scheduleId) + '}]}'
-        return await self.api.publishMessageHelper(self.sysId, data)
+        await self.api.publishMessageHelper(self.sysId, data)
     
-    async def setHeatCoolSPF(self, zoneId, scheduleId, r_hsp, r_csp):
+    async def setHeatCoolSPF(self, zoneId, scheduleId, r_hsp, r_csp) -> None:
         hsp = str(int(r_hsp))
         hspC = str(self.convertFtoC(r_hsp))
         csp = str(int(r_csp))
         cspC = str(self.convertFtoC(r_csp))
-        return await self.setpointHelper(zoneId, scheduleId, hsp,hspC,csp,cspC)
+        await self.setpointHelper(zoneId, scheduleId, hsp,hspC,csp,cspC)
 
-    async def setCoolSPF(self, zoneId, scheduleId, tempF):
+    async def setCoolSPF(self, zoneId, scheduleId, tempF) -> None:
         csp = str(int(tempF))        
         cspC = str(self.convertFtoC(tempF))
         schedule = self.getSchedule(scheduleId)
         if schedule is None:
-            _LOGGER.error("setCoolSPF - unable to find schedule [" + str(scheduleId) + ']')
-            return False
+            err_msg = f'setCoolSPF - unable to find schedule [{scheduleId}]'
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_NO_SCHEDULE, 1)
         period = schedule.getPeriod(0)
         if period is None:
-            _LOGGER.error("setCoolSPF - unable to find schedule [" + str(scheduleId) + '] period 0')
-            return False
+            err_msg = f'setCoolSPF - unable to find period schedule [{scheduleId}] period 0'
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_NO_SCHEDULE, 2)
         # Lennox App sends both the Heat Setpoints and Cool Setpoints when the App updates just the Cool SP.
         # Grab the existing heatsetpoints
         hsp = period.hsp
         hspC = period.hspC
-        return await self.setpointHelper(zoneId, scheduleId, hsp,hspC,csp,cspC)
+        await self.setpointHelper(zoneId, scheduleId, hsp,hspC,csp,cspC)
 
-    async def setHeatSPF(self, zoneId, scheduleId, tempF):
+    async def setHeatSPF(self, zoneId, scheduleId, tempF) -> None:
         hsp = str(int(tempF))        
         hspC = str(self.convertFtoC(tempF))
         schedule = self.getSchedule(scheduleId)
         if schedule is None:
-            _LOGGER.error("setCoolSPF - unable to find schedule [" + str(scheduleId) + ']')
-            return False
+            err_msg = f'setCoolSPF - unable to find schedule [{scheduleId}]'
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_NO_SCHEDULE, 1)
         period = schedule.getPeriod(0)
         if period is None:
-            _LOGGER.error("setCoolSPF - unable to find schedule [" + str(scheduleId) + '] period 0')
-            return False
+            err_msg = f'setCoolSPF - unable to find period schedule [{scheduleId}] period 0'
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_NO_SCHEDULE, 2)
         # Lennox App sends both the Heat Setpoints and Cool Setpoints when the App updates just the Cool SP.
         # Grab the existing coolsetpoints
         csp = period.csp
         cspC = period.cspC
-        return await self.setpointHelper(zoneId, scheduleId, hsp,hspC,csp,cspC)
+        await self.setpointHelper(zoneId, scheduleId, hsp,hspC,csp,cspC)
 
     def processZonesMessage(self, message):
         try:
@@ -596,61 +674,77 @@ class lennox_system(object):
                         lzone = lennox_zone(self, id, name)
                         self._zoneList.append(lzone)
                     else:
-                        _LOGGER.info("processZoneMessage skipping unconfigured zone id [" + str(id) + "] name [" + name +"]")
+                        _LOGGER.error("processZoneMessage skipping unconfigured zone id [" + str(id) + "] name [" + name +"]")
                 if (lzone != None):
                     lzone.processMessage(zone)
         except Exception as e:
-            _LOGGER.error("processZonesMessage - Exception " + str(e))
-            return False
+            err_msg = "processZonesMessage - Exception " + str(e)
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_PROCESS_MESSAGE, 1)
 
 class lennox_zone(object):
+
+    _callbacks = []
+
+    temperature = None
+    humidity = None
+    systemMode = None
+    fanMode = None
+    humidityMode = None
+    csp = None
+    hsp = None
+
+    heatingOption =  None
+    maxHsp = None
+    minHsp = None
+    coolingOption = None
+    maxCsp = None
+    minCsp = None
+    humidificationOption = None
+    maxHumSp = None
+    minHspC = None
+    emergencyHeatingOption = None
+    dehumidificationOption = None
+    maxDehumSp = None
+    minHspC = None
+
+    tempOperation = None
+    humOperation = None
+    scheduleId = None
+
+    # PERIOD
+    systemMode = None
+    fanMode = None
+    humidityMode = None
+    csp = None
+    cspC = None
+    hsp = None
+    hspC = None
+    desp = None
+    sp = None
+    spC = None
+    husp = None
+    startTime = None
+    overrideActive = None
+
+
     def __init__(self, system, id, name):
         self.id = id
         self.name = name
-        self._system = system
-
-        self.temperature = None
-        self.humidity = None
-        self.systemMode = None
-        self.fanMode = None
-        self.humidityMode = None
-        self.csp = None
-        self.hsp = None
-
-        self.heatingOption =  None
-        self.maxHsp = None
-        self.minHsp = None
-        self.coolingOption = None
-        self.maxCsp = None
-        self.minCsp = None
-        self.humidificationOption = None
-        self.maxHumSp = None
-        self.minHspC = None
-        self.emergencyHeatingOption = None
-        self.dehumidificationOption = None
-        self.maxDehumSp = None
-        self.minHspC = None
-
-        self.tempOperation = None
-        self.humOperation = None
-        self.scheduleId = None
-
-        # PERIOD
-        self.systemMode = None
-        self.fanMode = None
-        self.humidityMode = None
-        self.csp = None
-        self.cspC = None
-        self.hsp = None
-        self.hspC = None
-        self.desp = None
-        self.sp = None
-        self.spC = None
-        self.husp = None
-        self.startTime = None
-        self.overrideActive = None
-
+        self._system:lennox_system = system
         _LOGGER.info("Creating lennox_zone id [" + str(self.id) + "] name [" + str(self.name) + "]") 
+
+
+    def registerOnUpdateCallback(self, callbackfunc):
+        self._callbacks.append(callbackfunc)
+
+    def executeOnUpdateCallbacks(self):
+        for callbackfunc in self._callbacks:
+            try:
+                callbackfunc()
+            except Exception as e:
+                # Log and eat this exception so we can process other callbacks
+                _LOGGER.error("executeOnUpdateCallback - failed " + str(e))
 
     def processMessage(self, zoneMessage):
         _LOGGER.info("processMessage lennox_zone id [" + str(self.id) + "] name [" + str(self.name) + "]") 
@@ -711,7 +805,7 @@ class lennox_zone(object):
             if 'period' in status:
                 period = status['period']
                 self.processPeriodMessage(period)
-
+        self.executeOnUpdateCallbacks()
         _LOGGER.debug("lennox_zone id [" + str(self.id) + "] name [" + str(self.name) + "] temperature [" + str(self.getTemperature()) + "] humidity [" + str(self.getHumidity()) + "]")
 
     def processPeriodMessage(self, period):
@@ -788,16 +882,19 @@ class lennox_zone(object):
         return False
 
 
-    async def setHeatCoolSPF(self, r_hsp, r_csp):
+    async def setHeatCoolSPF(self, r_hsp, r_csp) -> None:
         _LOGGER.info("lennox_zone:setHeatCoolSPF  id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
         # If the zone is in manual mode, the temperature can just be set.
         if self.isZoneManualMode() == True:
             _LOGGER.info("lennox_zone:setHeatCoolSPF zone in manual mode id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
-            return await self._system.setHeatCoolSPF(self.id, self.getManualModeScheduleId(), r_hsp, r_csp)
+            await self._system.setHeatCoolSPF(self.id, self.getManualModeScheduleId(), r_hsp, r_csp)
+            return
+
         # If the zone is already over-ridden then we can just set the temperature
         if self.isZoneOveride() == True:
             _LOGGER.info("lennox_zone:setHeatCoolSPF zone in override mode id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
-            return await self._system.setHeatCoolSPF(self.id, self.getOverdideScheduleId(), r_hsp, r_csp)
+            await self._system.setHeatCoolSPF(self.id, self.getOverdideScheduleId(), r_hsp, r_csp)
+            return
 
         # Otherwise, we are following a schedule and need to switch into manual over-ride
         # Copy all the data over from the current executing period
@@ -822,10 +919,11 @@ class lennox_zone(object):
         data += '"fanMode":"' + self.fanMode + '"}'
         data += '}]},"id":' + str(self.getOverdideScheduleId()) + '}]}'
 
-        result = await self._system.api.publishMessageHelper(self._system.sysId, data)
-        if result is False:
+        try:
+            await self._system.api.publishMessageHelper(self._system.sysId, data)
+        except S30Exception as e:
             _LOGGER.error("lennox_zone:setHeatCoolSPF failed to create override - zone [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
-            return False
+            raise e
 
         _LOGGER.info("lennox_zone:setHeatCoolSPF placing zone in override hold - zone [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
         # Add a schedule hold to the zone, for now all hold will expire on next period
@@ -834,11 +932,11 @@ class lennox_zone(object):
         data += '"exceptionType":"hold","enabled":true,"expiresOn":"0","expirationMode":"nextPeriod"}'
         data += '},"id":' + str(self.id) + '}]}'
 
-        result = await self.setScheduleHold(True)
-        if result is False:
+        try:
+            await self.setScheduleHold(True)
+        except S30Exception as e:
             _LOGGER.error("lennox_zone:setHeatCoolSPF failed to create schedule hold - zone [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
-            return False
-        return True
+            raise e
 
     async def setScheduleHold(self, hold:bool) -> bool:
         if hold == True:
@@ -847,56 +945,49 @@ class lennox_zone(object):
             strHold = 'false'
 
         _LOGGER.info("lennox_zone:setScheduleHold zone [" + str(self.id) + "] hold [" + str(strHold) + "]") 
-
         # Add a schedule hold to the zone, for now all hold will expire on next period
         data = '"Data":{"zones":[{"config":{"scheduleHold":'
         data += '{"scheduleId":' + str(self.getOverdideScheduleId()) + ','
         data += '"exceptionType":"hold","enabled":' + strHold + ','
         data += '"expiresOn":"0","expirationMode":"nextPeriod"}'
         data += '},"id":' + str(self.id) + '}]}'
-        result =  await self._system.api.publishMessageHelper(self._system.sysId, data)
-        if result is False:
+        try:
+            await self._system.api.publishMessageHelper(self._system.sysId, data)
+        except S30Exception as e:
             _LOGGER.error("lennox_zone:setScheduleHold failed zone [" + str(self.id) + "] hold [" + str(strHold) + "]") 
-            return False
-        return True
+            raise e
 
-    async def setCoolSPF(self, r_csp):
+    async def setCoolSPF(self, r_csp) -> None:
         _LOGGER.info("lennox_zone:setCoolSPF  id [" + str(self.id) + "] csp [" + str(r_csp) + "]") 
         # Lennox API always sends both values, snag the current
         r_hsp = self.hsp
-        result = await self.setHeatCoolSPF(r_hsp, r_csp)
-        if result is False:
-            _LOGGER.error("lennox_zone:setCoolSPF failed zone [" + str(self.id) + "] csp [" + str(r_csp) + "]")
-            return False
-        return True
+        await self.setHeatCoolSPF(r_hsp, r_csp)
 
-    async def setHeatSPF(self, r_hsp):
+    async def setHeatSPF(self, r_hsp) -> None:
         _LOGGER.info("lennox_zone:setHeatSPF  id [" + str(self.id) + "] hsp [" + str(r_hsp) + "]") 
         # Lennox API always sends both values, snag the current
         r_csp = self.csp
-        result = await self.setHeatCoolSPF(r_hsp, r_csp)
-        if result is False:
-            _LOGGER.error("lennox_zone:setHeatSPF failed id [" + str(self.id) + "] hsp [" + str(r_hsp) + "]")
-            return False
-        return True
+        await self.setHeatCoolSPF(r_hsp, r_csp)
 
-    async def setSchedule(self, scheduleName):
+    async def setSchedule(self, scheduleName : str) -> None:
         scheduleId = None
         for schedule in self._system.getSchedules():
-            # Everything above 16 seems to be internal schedules
             if schedule.name == scheduleName:
                 scheduleId = schedule.id
                 break
 
         if scheduleId == None:
-            _LOGGER.error("setSchedule - unknown schedule [" + scheduleName + "] zone [" + self.name + "]")
-            return False
+            err_msg = f"setSchedule - unknown schedule [{scheduleName}] zone [{self.name}]"
+            _LOGGER.error(err_msg)
+            raise S30Exception(err_msg, EC_NO_SCHEDULE, 1)
 
-        return await self._system.setSchedule(self.id, scheduleId)
+        await self._system.setSchedule(self.id, scheduleId)
 
-    async def setFanMode(self,fan_mode):
+    async def setFanMode(self,fan_mode : str) -> None:
         if self.isZoneManualMode() == True:
-            return await self._system.setFanMode(fan_mode, self.getManualModeScheduleId())
+            await self._system.setFanMode(fan_mode, self.getManualModeScheduleId())
+            return
+
         if self.isZoneOveride() == False:
             data = '"Data":{"schedules":[{"schedule":{"periods":[{"id":0,"period":'
             data += '{"desp":' + str(self.desp) + ','
@@ -915,97 +1006,24 @@ class lennox_zone(object):
 
             await self._system.api.publishMessageHelper(self._system.sysId, data)
             await self.setScheduleHold(True)
-        return await self._system.setFanMode(fan_mode, self.getOverdideScheduleId())
+        await self._system.setFanMode(fan_mode, self.getOverdideScheduleId())
 
-    async def setHVACMode(self, hvac_mode):
+    async def setHVACMode(self, hvac_mode: str) -> None:
+        # We want to be careful passing modes to the controller that it does not support.  We don't want to brick the controller.
+        if hvac_mode == LENNOX_HVAC_COOL:
+            if self.coolingOption == False:
+                raise S30Exception(f"setHvacMode - invalidate hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 1)
+        elif hvac_mode == LENNOX_HVAC_HEAT:
+            if self.heatingOption == False:
+                raise S30Exception(f"setHvacMode - invalidate hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 2)
+        elif hvac_mode == LENNOX_HVAC_HEAT_COOL:
+            if self.heatingOption == False or self.coolingOption == False:
+                raise S30Exception(f"setHvacMode - invalidate hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 3)
+        elif hvac_mode == LENNOX_HVAC_OFF:
+            pass
+        else:
+            raise S30Exception(f"setHvacMode - invalidate hvac mode - zone [{self.id}]  does not recognize [{hvac_mode}]", EC_BAD_PARAMETERS, 4)
+
         if (self.isZoneManualMode() == False):
             await self._system.setSchedule(self.id, self.getManualModeScheduleId())
         await self._system.setHVACMode(hvac_mode, self.getManualModeScheduleId())
-
-     
-
-class lennox_schedule(object):
-    def __init__(self, id):
-        self.id = id
-        self.name = '<Unknown>'
-        self.periodCount = -1
-        self._periods = []
-
-    def getOrCreatePeriod(self, id):
-        item = self.getPeriod(id)
-        if item != None:
-            return item
-        item = lennox_period(id)
-        self._periods.append(item)
-        return item
-
-    def getPeriod(self, id):
-        for item in self._periods:
-            if item.id == id:
-                return item
-        return None
-
-    def update(self, tschedule):
-        if 'schedule' not in tschedule:
-            return
-        schedule = tschedule['schedule']
-        if 'name' in schedule:
-            self.name = schedule['name']
-        if 'periodCount' in schedule:
-            self.periodCount = schedule['periodCount']
-        if 'periods' in schedule:
-            for periods in schedule['periods']:
-                periodId = periods['id']
-                lperiod = self.getOrCreatePeriod(periodId)
-                lperiod.update(periods)
-
-
-
-
-class lennox_period(object):
-    def __init__(self, id):
-        self.id = id
-        self.enabled = False
-        self.startTime = None
-        self.systemMode = None
-        self.hsp = None
-        self.hspC = None
-        self.csp = None
-        self.cspC = None
-        self.sp = None
-        self.spC = None
-        self.humidityMode = None
-        self.husp = None
-        self.desp = None
-        self.fanMode = None
-
-    def update(self, periods):
-        if 'enabled' in periods:
-            self.enabled = periods['enabled']
-        if 'period' in periods:
-            period = periods['period']
-            if 'startTime' in period:
-                self.startTime = period['startTime']
-            if 'systemMode' in period:
-                self.systemMode = period['systemMode']
-            if 'hsp' in period:
-                self.hsp = period['hsp']
-            if 'hspC' in period:
-                self.hspC = period['hspC']
-            if 'csp' in period:
-                self.csp = period['csp']
-            if 'cspC' in period:
-                self.cspC = period['cspC']
-            if 'sp' in period:
-                self.sp = period['sp']
-            if 'spC' in period:
-                self.spC = period['spC']
-            if 'humidityMode' in period:
-                self.humidityMode = period['humidityMode']
-            if 'husp' in period:
-                self.husp = period['husp']
-            if 'desp' in period:
-                self.desp = period['desp']
-            if 'fanMode' in period:
-                self.fanMode = period['fanMode']
-    

@@ -1,19 +1,19 @@
 import logging
 import asyncio
-from . import s30api_async
+from .api import s30api_async
 
 from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, HVAC_MODE_DRY,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, ATTR_HVAC_MODE,
-    HVAC_MODE_HEAT_COOL, PRESET_AWAY, SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_HEAT_COOL, PRESET_AWAY, SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_PRESET_MODE, SUPPORT_FAN_MODE,
     FAN_ON, FAN_AUTO, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH,
     PRESET_NONE,
 )
 
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,CURRENT_HVAC_DRY, 
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL,
     HVAC_MODE_HEAT_COOL, PRESET_AWAY, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_PRESET_MODE, SUPPORT_FAN_MODE,
@@ -46,7 +46,7 @@ HVAC_MODES = [
 ]
 
 HVAC_ACTIONS = [
-    CURRENT_HVAC_IDLE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL
+    CURRENT_HVAC_IDLE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL, CURRENT_HVAC_DRY
 ]
 
 TEMP_UNITS = [
@@ -94,8 +94,8 @@ class S30Climate(ClimateEntity):
         self.hass = hass
         self._s30api = s30api
         self._system = system
-        self._system.registerOnUpdateCallback(self.update_callback)
         self._zone = zone
+        self._zone.registerOnUpdateCallback(self.update_callback)
         self._min_temp = 60
         self._max_temp = 80
         self._myname = self._system.name + '_' + self._zone.name
@@ -131,9 +131,12 @@ class S30Climate(ClimateEntity):
 
     @property
     def supported_features(self):
+        mask = SUPPORT_FLAGS
+        if self._zone.humidificationOption == True or self._zone.dehumidificationOption == True:
+            mask |= SUPPORT_TARGET_HUMIDITY
         _LOGGER.debug("climate:supported_features name[" + self._myname + "] support_flags [" + str(SUPPORT_FLAGS) + "]")
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return mask
 
     @property
     def temperature_unit(self):
@@ -180,28 +183,28 @@ class S30Climate(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         t = self._zone.getTemperature()
-        _LOGGER.debug("climate:current_temperature name[" + self._myname + "] temperature [" + str(t) + "]")
+        _LOGGER.debug(f"climate:current_temperature name [{self._myname}] temperature [{t}]")
         return t
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
         # TODO Need to figure out heatcool mode and the string, for now we will return csp
-        _LOGGER.debug("climate:target_temperature_high name[" + self._myname + "] temperature [" + str(self._zone.csp) + "]")
+        _LOGGER.debug(f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.csp}]")
         return self._zone.csp
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
         # TODO Need to figure out heatcool mode and the string, for now we will return csp
-        _LOGGER.debug("climate:target_temperature_low name[" + self._myname + "] temperature [" + str(self._zone.hsp) + "]")
+        _LOGGER.debug(f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hsp}]")
         return self._zone.hsp
 
     @property
     def current_humidity(self):
         """Return the current humidity."""
         h = self._zone.getHumidity() 
-        _LOGGER.debug("climate:current_temperature name[" + self._myname + "] humidity [" + str(h) + "]")
+        _LOGGER.debug(f"climate:current_humidity name [{self._myname}] humidity [{h}]")
         return h
  
     @property
@@ -210,8 +213,16 @@ class S30Climate(ClimateEntity):
         r = self._zone.getSystemMode()
         if r == s30api_async.LENNOX_HVAC_HEAT_COOL:
             r = HVAC_MODE_HEAT_COOL
-        _LOGGER.debug("climate:hvac_mode name[" + self._myname + "] mode [" + r + "]")
+        _LOGGER.debug(f"climate:hvac_mode name [{self._myname}] mode [{r}]")
         return r
+
+    @property
+    def target_temperature_step (self) -> float:
+        return 1.0
+
+    @property
+    def target_humidity(self) -> float:
+        return self._zone.desp
 
     @property
     def hvac_modes(self):
@@ -228,7 +239,7 @@ class S30Climate(ClimateEntity):
             modes.append(HVAC_MODE_HEAT_COOL)
         return modes
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):       
         """Set new hvac operation mode."""
         t_hvac_mode = hvac_mode
         # Only this mode needs to be mapped
@@ -251,7 +262,15 @@ class S30Climate(ClimateEntity):
     def hvac_action(self):
         """Return the current hvac state/action."""
         # TODO may need to translate
-        return self._zone.tempOperation
+        to = self._zone.tempOperation
+        ho = self._zone.humOperation
+        if to != 'off':
+            return to
+        if ho != 'off':
+            if ho == s30api_async.LENNOX_HUMID_OPERATION_DEHUMID:
+                return CURRENT_HVAC_DRY
+            return ho 
+        return to
 
     @property
     def preset_mode(self):
