@@ -32,6 +32,7 @@ from typing import List
 from .lennox_period import lennox_period
 from .lennox_schedule import lennox_schedule 
 from .lennox_home import lennox_home
+from .metrics import Metrics
 
 _LOGGER = logging.getLogger(__name__)
 #_LOGGER.setLevel(logging.DEBUG)
@@ -91,11 +92,10 @@ class s30api_async(object):
     _applicationid: str = APPLICATION_ID
     _publishMessageId: int = 1
     _session:ClientSession = None
+    metrics:Metrics = Metrics()
 
     _homeList: List[lennox_home]= []
     _systemList: List['lennox_system'] = []
-    messagesProcessed: int = 0
-    lastProcessedMessageDateTime: datetime = None
 
     """Representation of the Lennox S30/E30 thermostat."""
     def __init__(self, username: str, password : str):
@@ -137,7 +137,7 @@ class s30api_async(object):
             # until success, so this must be a known / re-occuring issue that they have solved via retries.  When this occured the call hung for a while, hence there
             # appears to be no reason to sleep between retries.
             for retry in range(1, self.AUTHENTICATE_RETRIES):
-                resp = await self._session.post(url, data=body)
+                resp = await self.post(url, data=body)
                 if resp.status == 200:
                     resp_json = await resp.json()
                     _LOGGER.debug(json.dumps(resp_json, indent=4))
@@ -186,19 +186,31 @@ class s30api_async(object):
         self._homeList.append(home)
         return home
 
+    async def post(self, url, headers = None, data = None):
+        self.metrics.inc_send_count(len(data))
+        resp = await self._session.post(url, headers= headers, data = data)
+        self.metrics.inc_receive_count()
+        self.metrics.process_http_code(resp.status)
+        return resp
+
+    async def get(self, url, headers=None):
+        resp = await self._session.get(url, headers = headers)
+        self.metrics.process_http_code(resp.status)
+        self.metrics.inc_receive_count()
+        return resp
 
     async def login(self) -> None:
         """Login to Lennox Server using provided email and password.  Throws S30Exception on failure"""
         _LOGGER.info("login - Enter")
         url:str = LOGIN_URL
         try:
-            payload:str = "username=" + self._username + "&password=" + self._password + "&grant_type=password" + "&applicationid=" + self._applicationid
+            body:str = "username=" + self._username + "&password=" + self._password + "&grant_type=password" + "&applicationid=" + self._applicationid
             headers = {
                 'Authorization': self.authBearerToken,
                 'Content-Type': 'text/plain',
                 'User-Agent': USER_AGENT
             }
-            resp = await self._session.post(url,headers=headers, data=payload)
+            resp = await self.post(url,headers=headers, data=body)
             if resp.status != 200:
                 txt = await resp.text()
                 errmsg = f'Login failed response code [{resp.status}] text [{txt}]'
@@ -239,7 +251,7 @@ class s30api_async(object):
             # Since these may have special characters, they need to be URI encoded
             url += "&clientId=" + quote(self.getClientId())
             url += "&Authorization=" + quote(self.loginToken)
-            resp = await self._session.get(url)            
+            resp = await self.get(url)            
             if resp.status != 200:
                 txt = await resp.text()
                 err_msg = f'Negotiate failed response code [{resp.status}] text [{txt}]'
@@ -296,13 +308,13 @@ class s30api_async(object):
                 'Accept-Encoding' : 'gzip, deflate'                
 #                'Accept-Encoding' : 'gzip, deflate'                
             }
-            resp = await self._session.get(url,  headers=headers)                      
+            resp = await self.get(url,  headers=headers) 
+            self.metrics.inc_receive_bytes(resp.content_length)                   
             if resp.status == 200:
-                resp_json = await resp.json()               
+                resp_json = await resp.json()     
                 _LOGGER.debug(json.dumps(resp_json, indent=4))
                 for message in resp_json["messages"]:
-                    self.messagesProcessed += 1
-                    self.lastProcessedMessageDateTime = datetime.now()
+                    self.metrics.inc_message_count()
                     sysId = message["SenderId"]
                     system = self.getSystem(sysId)
                     if (system == None):
@@ -351,7 +363,7 @@ class s30api_async(object):
             payload += additionalParameters
             payload += '}'
             _LOGGER.debug("requestDataHelper Payload  [" + payload + "]")           
-            resp = await self._session.post(url, headers=headers, data=payload)            
+            resp = await self.post(url, headers=headers, data=payload)            
 
             if resp.status == 200:
                 # TODO we should be inspecting the return body?
@@ -433,7 +445,7 @@ class s30api_async(object):
                 'Accept-Language' : 'en-US;q=1',
                 'Accept-Encoding' : 'gzip, deflate'                
             }
-            resp = await self._session.post(url,  headers=headers, data=body)  
+            resp = await self.post(url,  headers=headers, data=body)  
             if resp.status != 200:
                 txt = await resp.text()
                 err_msg = f'publishMessageHelper failed response code [{resp.status}] text [{txt}]'
