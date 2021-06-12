@@ -68,14 +68,20 @@ class Metrics:
         self.error_count += 1
 
     def process_http_code(self, http_code:int) -> None:
+        self.last_metric_time = datetime.now()
         if http_code >= 200 and http_code <= 299:
             self.http_2xx_cnt += 1
-        elif http_code >= 400 and http_code <= 499:
+            return
+        
+        self.error_count += 1
+        if http_code >= 400 and http_code <= 499:
             self.http_4xx_cnt += 1
             self.error_count += 1
         elif http_code >= 500 and http_code <= 599:
             self.http_5xx_cnt += 1
             self.error_count += 1
-        self.last_metric_time = datetime.now()
+        
+        self.last_error_time = datetime.now()
 
+ 
  

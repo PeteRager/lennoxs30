@@ -20,7 +20,7 @@ v0.2.0 - Initial Release
 """
 
 from aiohttp.client import ClientSession
-from homeassistant.components.lennoxs30.api.s30exception import EC_AUTHENTICATE, EC_BAD_PARAMETERS, EC_COMMS_ERROR, EC_LOGIN, EC_NEGOTIATE, EC_NO_SCHEDULE, EC_PROCESS_MESSAGE, EC_PUBLISH_MESSAGE, EC_REQUEST_DATA_HELPER, EC_RETRIEVE, EC_SETMODE_HELPER, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
+from homeassistant.components.lennoxs30.api.s30exception import EC_AUTHENTICATE, EC_BAD_PARAMETERS, EC_COMMS_ERROR, EC_HTTP_ERR, EC_LOGIN, EC_NEGOTIATE, EC_NO_SCHEDULE, EC_PROCESS_MESSAGE, EC_PUBLISH_MESSAGE, EC_REQUEST_DATA_HELPER, EC_RETRIEVE, EC_SETMODE_HELPER, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
 from datetime import datetime
 import logging
 import json
@@ -121,6 +121,7 @@ class s30api_async(object):
         await self.authenticate()
         await self.login()
         await self.negotiate()
+        self.metrics.last_reconnect_time = datetime.now()
         _LOGGER.info("serverLogin - Complete")
 
     AUTHENTICATE_RETRIES:int = 5
@@ -291,7 +292,7 @@ class s30api_async(object):
             _LOGGER.error(err_msg)
             raise S30Exception(err_msg, EC_SUBSCRIBE, 3)
 
-    async def retrieve(self) -> None:
+    async def messagePump(self) -> None:
         # This method reads off the queue.
         # Observations:  the clientId is not passed in, they must be mapping the token to the clientId as part of negotiate
         # TODO: The long polling is not working, I have tried adjusting the long polling delay.  Long polling seems to work from the IOS App, not sure
@@ -318,22 +319,23 @@ class s30api_async(object):
                     sysId = message["SenderId"]
                     system = self.getSystem(sysId)
                     if (system == None):
-                        _LOGGER.error("Retrieve unknown SenderId/SystemId [" + str(sysId) + "]")
+                        _LOGGER.error("messagePump unknown SenderId/SystemId [" + str(sysId) + "]")
                         continue
                     system.processMessage(message)
             else:
 #                txt = await resp.text()
-                err_msg = f'Retrieve failed response http_code [{resp.status}]'
-                _LOGGER.error(err_msg)
-                err_code = EC_RETRIEVE
+                err_msg = f'messagePump failed response http_code [{resp.status}]'
+                # 502s happen periodically, so this is an expected error and will only be reported as INFO
+                _LOGGER.info(err_msg)
+                err_code = EC_HTTP_ERR
                 if resp.status == 401:
                     err_code = EC_UNAUTHORIZED
-                raise S30Exception(err_msg, err_code, 1)
+                raise S30Exception(err_msg, err_code, resp.status)
             return True
         except S30Exception as e:
             raise e
         except Exception as e:
-            err_msg = "Retrieve Failed - Exception " + str(e)
+            err_msg = "messagePump Failed - Exception " + str(e)
             _LOGGER.error(err_msg)
             raise S30Exception(err_msg, EC_RETRIEVE, 2)
 

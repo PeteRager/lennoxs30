@@ -1,3 +1,4 @@
+from homeassistant.core import HomeAssistant
 import logging
 import asyncio
 from .api import s30api_async
@@ -91,8 +92,8 @@ class S30Climate(ClimateEntity):
 
     def __init__(self, hass, s30api: s30api_async, system: s30api_async.lennox_system, zone: s30api_async.lennox_zone):
         """Initialize the climate device."""
-        self.hass = hass
-        self._s30api = s30api
+        self.hass:HomeAssistant = hass
+        self._s30api:s30api_async.s30api_async = s30api
         self._system = system
         self._zone = zone
         self._zone.registerOnUpdateCallback(self.update_callback)
@@ -250,11 +251,11 @@ class S30Climate(ClimateEntity):
         # We'll do a couple polls until we get the state
         for x in range(1, 10):
             await asyncio.sleep(0.5)
-            await self._s30api.retrieve()
+            await self._s30api.messagePump()
             if self._zone.getSystemMode() == hvac_mode:
                 _LOGGER.info("async_set_hvac_mode - got change with fast poll iteration [" + str(x) + "]")
                 return
-        _LOGGER.info("async_set_hvac_mode - unabled to retrieve change with fast poll")
+        _LOGGER.info("async_set_hvac_mode - unabled to retrieve change with fast pump")
 
 
 
