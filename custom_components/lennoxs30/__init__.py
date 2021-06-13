@@ -123,7 +123,7 @@ async def messagePump_task(s30api : s30api_async.s30api_async, hass) -> None:
             update_counter += 1
             _LOGGER.debug("messagePump_task running")
             await s30api.messagePump()
-            if (update_counter == 6):
+            if (update_counter >= 6):
                 hass.states.async_set(DOMAIN_STATE, DS_CONNECTED, s30api.metrics.getMetricList(), force_update = True)
                 update_counter = 0
 
