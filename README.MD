@@ -106,10 +106,10 @@ The entity also has a set of attributes to provide diagnostic data:
 | http_2xx | int | number of HTTP responses received between 200-299. THese are good responses|
 | http_4xx | int | number of HTTP responses received between 400-499. These usually indicate a problem with authorization|
 | http_5xx | int | number of HTTP responses received between 500-599. These indicate a problem with the Lennox Cloud Servers.  Seeing a few of these a day is normal|
-|last_receive_time| Time of last succesful receive.  Should not be more than SCAN_INTERVAL seconds plus few seconds|
-|last_error_time| Time of the last error response|
-|last_reconnect_time| Time of the last reconnect or the time of the initial connect|
-|last_message_time| Time of the last message from Lennox Cloud.  How often messages are received is based on how often data is changing in the thermostat.  For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent|
+|last_receive_time| DateTime| Time of last succesful receive.  Should not be more than SCAN_INTERVAL seconds plus few seconds|
+|last_error_time| DateTime| Time of the last error response|
+|last_reconnect_time| DateTime| Time of the last reconnect or the time of the initial connect|
+|last_message_time| DateTime| Time of the last message from Lennox Cloud.  How often messages are received is based on how often data is changing in the thermostat.  For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent|
 
 
 
