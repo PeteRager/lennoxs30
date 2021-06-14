@@ -1,7 +1,7 @@
 from asyncio.locks import Lock
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import HomeAssistant
-from homeassistant.components.lennoxs30.api.s30exception import EC_HTTP_ERR, EC_LOGIN, EC_UNAUTHORIZED, S30Exception
+from homeassistant.components.lennoxs30.api.s30exception import EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
 from homeassistant.exceptions import HomeAssistantError
 import logging
 import asyncio
@@ -69,6 +69,7 @@ class Manager(object):
     _err_cnt: int = 0
     _update_counter: int = 0
     _mp_lock: Lock = Lock()
+    _climate_entities_initialized: bool = False
 
 
     def __init__(self, hass: HomeAssistant, config: ConfigType,  email: str, password: str, poll_interval:int, fast_poll_interval:float):
@@ -90,8 +91,10 @@ class Manager(object):
         await self.configuration_initialization()
         # Launch the message pump loop
         asyncio.create_task(self.messagePump_task())
-        # TODO - this should not be run on the second time!!!!
-        self._hass.helpers.discovery.load_platform('climate', DOMAIN, self._api, self._config)
+        # Only add entities the first time, on reconnect we do not need to add them again
+        if self._climate_entities_initialized == False:
+            self._hass.helpers.discovery.load_platform('climate', DOMAIN, self, self._config)
+            self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 
     async def initialize_retry_task(self):
@@ -113,18 +116,23 @@ class Manager(object):
     async def configuration_initialization(self) ->None:
         # Wait for zones to appear on each system
         sytemsWithZones = 0
+        loops: int = 0
         numOfSystems = len(self._api.getSystems())
-        while (sytemsWithZones < numOfSystems):
+        while (sytemsWithZones < numOfSystems and loops < 30):
             # TODO - should add a timeout and spin the APPLICATION_ID
             _LOGGER.debug("__init__:async_setup waiting for zone config to arrive numSystems [" + str(numOfSystems) + "] sytemsWithZones [" + str(sytemsWithZones) + "]")
             sytemsWithZones = 0
-            await asyncio.sleep(1)
-            await self._api.messagePump()
+            await asyncio.sleep(self._fast_poll_interval)
+            await self.messagePump()
             for lsystem in self._api.getSystems():
                     numZones = len(lsystem.getZoneList())
                     _LOGGER.debug("__init__:async_setup wait for zones system [" + lsystem.sysId + "] numZone [" + str(numZones) + "]")
                     if numZones > 0:
                         sytemsWithZones += 1
+            loops += 1
+        if loops == 30:
+            _LOGGER.error("configuration_initalization failed - no initial data received")
+            raise S30Exception("configuration_initalization failed - no initial data received", EC_SUBSCRIBE, 1)
 
     async def connect_subscribe(self):
         await self._api.serverConnect()

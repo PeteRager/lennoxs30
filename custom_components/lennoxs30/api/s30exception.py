@@ -17,6 +17,7 @@ class S30Exception(Exception):
    def __init__(self, value: str, error_code: int, reference: int) -> None:
         """Initialize error."""
         super().__init__(self, value)
+        self.message = value
         self.error_code = error_code
         self.reference = reference
    pass

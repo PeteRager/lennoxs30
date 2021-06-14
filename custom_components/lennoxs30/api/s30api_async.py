@@ -405,7 +405,7 @@ class s30api_async(object):
         return str(messageUUID)
 
     async def setModeHelper(self, sysId: str, modeTarget :str, mode : str, scheduleId :int) -> None:
-        _LOGGER.info('setMode modeTarget [' + modeTarget + '] mode [' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
+        _LOGGER.info(f'setMode modeTarget [{modeTarget}] mode [{mode}] scheduleId [{scheduleId}] sysId [{sysId}]')
         try:
             if (modeTarget not in HVAC_MODE_TARGETS):
                 err_msg = f'setModeHelper - invalide mode target [{modeTarget}] requested, must be in [{HVAC_MODE_TARGETS}]'
@@ -421,7 +421,7 @@ class s30api_async(object):
         except Exception as e:
             _LOGGER.error("setmode - Exception " + str(e))
             raise S30Exception(str(e), EC_SETMODE_HELPER, 1)
-        _LOGGER.info('setModeHelper success[' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
+        _LOGGER.info(f'setModeHelper success[{mode}] scheduleId [{scheduleId}] sysId [{sysId}]')
 
     async def publishMessageHelper(self, sysId: str, data: str) -> None:
         _LOGGER.info(f'publishMessageHelper sysId [{sysId}] data [{data}]')
@@ -460,18 +460,16 @@ class s30api_async(object):
         _LOGGER.info('publishMessageHelper success sysId [' + str(sysId) + ']')
 
     async def setHVACMode(self, sysId: str, mode :str, scheduleId: int) -> None:
-        _LOGGER.info('setHVACMode mode [' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
+        _LOGGER.info(f'setHVACMode mode [{mode}] scheduleId [{scheduleId}] sysId [{sysId}]')
         if (mode not in HVAC_MODES):
             err_msg = f'setMode - invalide mode [{mode}] requested, must be in [{HVAC_MODES}]'
-            _LOGGER.error(err_msg)
             raise S30Exception(err_msg, EC_BAD_PARAMETERS, 1)
         await self.setModeHelper(sysId, 'systemMode', mode, scheduleId)
 
     async def setFanMode(self, sysId: str, mode: str, scheduleId: int) -> None:
-        _LOGGER.info('setFanMode mode [' + str(mode) + '] scheduleId [' + str(scheduleId) + '] sysId [' + str(sysId) + ']')
+        _LOGGER.info(f'setFanMode mode [{mode}] scheduleId [{scheduleId}] sysId [{sysId}]')
         if (mode not in FAN_MODES):
-            err_msg = 'setFanMode - invalide mode [{mode}] requested, must be in [{FAN_MODES}]'
-            _LOGGER.error(err_msg)
+            err_msg = f'setFanMode - invalide mode [{mode}] requested, must be in [{FAN_MODES}]'
             raise S30Exception(err_msg, EC_BAD_PARAMETERS, 1)
         await self.setModeHelper(sysId, 'fanMode', mode, scheduleId)
 
@@ -535,8 +533,10 @@ class lennox_system(object):
             for schedule in schedules:
                 id = schedule['id']
                 if 'schedule' in schedule:
-                    if 'name' in schedule['schedule']:
+                    lschedule = self.getSchedule(id)
+                    if lschedule is None and 'name' in schedule['schedule']:
                         lschedule = self.getOrCreateSchedule(id)
+                    if lschedule != None:
                         lschedule.update(schedule)
                         # In manual mode, the updates only hit the schedulde rather than the period within the status.
                         # So here, we look for changes to these schedules and route them to the zone but only
@@ -547,6 +547,7 @@ class lennox_system(object):
                             zone:lennox_zone = self.getZone(zone_id)
                             if zone.isZoneManualMode():
                                 zone.processPeriodMessage(period)
+                                zone.executeOnUpdateCallbacks()
         except Exception as e:
             _LOGGER.error("processSchedules - failed " + str(e))
             raise S30Exception(str(e), EC_PROCESS_MESSAGE, 2)
@@ -871,12 +872,20 @@ class lennox_zone(object):
         return self.hsp
 
     def getTargetTemperatureF(self):
-        if self.systemMode == 'off':
-            return None
-        if self.systemMode == 'cool':
-            return self.csp
-        if self.systemMode == 'heat':
+        if self.heatingOption == True and self.coolingOption == True:
+#           _LOGGER.warning("Single target temperature not supported for Heat and Cool HVAC")
+            if self.systemMode == 'off':
+                return None
+            if self.systemMode == 'cool':
+                return self.csp
+            if self.systemMode == 'heat':
+                return self.hsp
+        elif self.heatingOption == True:
             return self.hsp
+        elif self.coolingOption == True:
+            return self.csp
+        else:
+            return None
 
     def getManualModeScheduleId(self) ->int:
         return 16 + self.id
@@ -898,6 +907,20 @@ class lennox_zone(object):
 
     async def setHeatCoolSPF(self, r_hsp, r_csp) -> None:
         _LOGGER.info("lennox_zone:setHeatCoolSPF  id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
+
+        if (r_csp < self.minCsp):
+            raise S30Exception(f"setHeatCoolSPF r_csp [{r_csp}] must be greater than minCsp [{self.minCsp}]", EC_BAD_PARAMETERS, 1)
+
+        if (r_csp > self.maxCsp):
+            raise S30Exception(f"setHeatCoolSPF r_csp [{r_csp}] must be less than maxCsp [{self.maxCsp}]", EC_BAD_PARAMETERS, 2)
+
+        if (r_hsp < self.minHsp):
+            raise S30Exception(f"setHeatCoolSPF r_hsp [{r_hsp}] must be greater than minCsp [{self.minHsp}]", EC_BAD_PARAMETERS, 3)
+
+        if (r_hsp > self.maxHsp):
+            raise S30Exception(f"setHeatCoolSPF r_hsp [{r_hsp}] must be less than maxHsp [{self.maxHsp}]", EC_BAD_PARAMETERS, 2)
+
+
         # If the zone is in manual mode, the temperature can just be set.
         if self.isZoneManualMode() == True:
             _LOGGER.info("lennox_zone:setHeatCoolSPF zone in manual mode id [" + str(self.id) + "] hsp [" + str(r_hsp) + "] csp [" + str(r_csp) + "]") 
@@ -1026,13 +1049,13 @@ class lennox_zone(object):
         # We want to be careful passing modes to the controller that it does not support.  We don't want to brick the controller.
         if hvac_mode == LENNOX_HVAC_COOL:
             if self.coolingOption == False:
-                raise S30Exception(f"setHvacMode - invalidate hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 1)
+                raise S30Exception(f"setHvacMode - invalid hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 1)
         elif hvac_mode == LENNOX_HVAC_HEAT:
             if self.heatingOption == False:
-                raise S30Exception(f"setHvacMode - invalidate hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 2)
+                raise S30Exception(f"setHvacMode - invalid hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 2)
         elif hvac_mode == LENNOX_HVAC_HEAT_COOL:
             if self.heatingOption == False or self.coolingOption == False:
-                raise S30Exception(f"setHvacMode - invalidate hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 3)
+                raise S30Exception(f"setHvacMode - invalid hvac mode - zone [{self.id}]  does not support [{hvac_mode}]", EC_BAD_PARAMETERS, 3)
         elif hvac_mode == LENNOX_HVAC_OFF:
             pass
         else:

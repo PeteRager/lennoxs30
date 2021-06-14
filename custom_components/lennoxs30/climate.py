@@ -1,4 +1,7 @@
+from homeassistant.components.lennoxs30.api.s30exception import S30Exception
+from homeassistant.components.lennoxs30 import Manager
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import logging
 import asyncio
 from .api import s30api_async
@@ -30,28 +33,15 @@ _LOGGER = logging.getLogger(__name__)
 # HA doesn't have a 'circulate' state defined for fan.
 FAN_CIRCULATE = 'circulate'
 
-PRESET_CANCEL_HOLD = 'Cancel Hold'
+PRESET_CANCEL_HOLD = 'cancel hold'
 PRESET_SCHEDULE_OVERRIDE = 'Schedule Hold'
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_TARGET_TEMPERATURE_RANGE |
                  SUPPORT_PRESET_MODE |
                  SUPPORT_FAN_MODE)
 
 FAN_MODES = [
     FAN_AUTO, FAN_ON, FAN_CIRCULATE
-]
-
-HVAC_MODES = [
-    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL
-]
-
-HVAC_ACTIONS = [
-    CURRENT_HVAC_IDLE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL, CURRENT_HVAC_DRY
-]
-
-TEMP_UNITS = [
-    TEMP_FAHRENHEIT, TEMP_CELSIUS
 ]
 
 DOMAIN = "lennoxs30"
@@ -60,40 +50,43 @@ DOMAIN = "lennoxs30"
 from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info: s30api_async.s30api_async=None ):
-    # Discovery info is the API that we passed in.
+async def async_setup_platform(hass, config, add_entities, discovery_info: Manager=None ) -> bool:
+    # Discovery info is the API that we passed in. 
     _LOGGER.debug("climate:async_setup_platform enter")
     if discovery_info is None:
         _LOGGER.error("climate:async_setup_platform expecting API in discovery_info, found None")
         return False
     theType = str(type(discovery_info))
-    if 's30api_async' not in theType:
-        _LOGGER.error("climate:async_setup_platform expecting API in discovery_info, found [" + str(theType) + "]")
+    if 'Manager' not in theType:
+        _LOGGER.error(f"climate:async_setup_platform expecting Manaager in discovery_info, found [{theType}]")
         return False
 
     climate_list = []
 
-    s30api = discovery_info
-    for system in s30api.getSystems():
+    manager: Manager = discovery_info
+    for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.getTemperature() != None:
-                _LOGGER.info("Create S30 Climate system [" + system.sysId + "] zone [" + zone.name + "]")
-                climate = S30Climate(hass, s30api, system, zone)
+                _LOGGER.info(f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]")
+                climate = S30Climate(hass, manager, system, zone)
                 climate_list.append(climate)
             else:
-                _LOGGER.info("Skipping S30 Climate system [" + system.sysId + "] zone [" + zone.name + "]")
-
-    add_entities(climate_list, True)
-    _LOGGER.debug("climate:async_setup_platform exit")
-    return True
+                _LOGGER.info(f"Skipping S30 Climate system [{system.sysId}] zone [{zone.name}]")
+    if len(climate_list) != 0:         
+        add_entities(climate_list, True)
+        _LOGGER.debug(f"climate:async_setup_platform exit - created [{len(climate_list)}] entitites")
+        return True
+    else:
+        _LOGGER.error(f"climate:async_setup_platform exit - no climate entities found")
+        return False
 
 class S30Climate(ClimateEntity):
     """Class for Lennox iComfort WiFi thermostat."""
 
-    def __init__(self, hass, s30api: s30api_async, system: s30api_async.lennox_system, zone: s30api_async.lennox_zone):
+    def __init__(self, hass, manager: Manager, system: s30api_async.lennox_system, zone: s30api_async.lennox_zone):
         """Initialize the climate device."""
         self.hass:HomeAssistant = hass
-        self._s30api:s30api_async.s30api_async = s30api
+        self._manager:Manager = manager
         self._system = system
         self._zone = zone
         self._zone.registerOnUpdateCallback(self.update_callback)
@@ -101,14 +94,16 @@ class S30Climate(ClimateEntity):
         self._max_temp = 80
         self._myname = self._system.name + '_' + self._zone.name
         s = 'climate' + "." +  self._system.sysId + '-' + str(self._zone.id)
+        # HA fails with dashes in IDs
         s = s.replace("-","")
 
     @property
     def unique_id(self) -> str:
+        # HA fails with dashes in IDs
         return (self._system.sysId + '_' + str(self._zone.id)).replace("-","")
 
     def update_callback(self):
-        _LOGGER.info("update_callback myname [" + self._myname + "]")
+        _LOGGER.info(f"update_callback myname [{self._myname}]")
         self.async_schedule_update_ha_state()
 
     @property
@@ -133,6 +128,8 @@ class S30Climate(ClimateEntity):
     @property
     def supported_features(self):
         mask = SUPPORT_FLAGS
+        if self._zone.coolingOption == True and self._zone.heatingOption == True:
+            mask |= SUPPORT_TARGET_TEMPERATURE_RANGE
         if self._zone.humidificationOption == True or self._zone.dehumidificationOption == True:
             mask |= SUPPORT_TARGET_HUMIDITY
         _LOGGER.debug("climate:supported_features name[" + self._myname + "] support_flags [" + str(SUPPORT_FLAGS) + "]")
@@ -162,7 +159,6 @@ class S30Climate(ClimateEntity):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-
         maxTemp = None
         if self._zone.heatingOption == True:
             maxTemp = self._zone.maxHsp
@@ -240,24 +236,29 @@ class S30Climate(ClimateEntity):
             modes.append(HVAC_MODE_HEAT_COOL)
         return modes
 
-    async def async_set_hvac_mode(self, hvac_mode):       
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:       
         """Set new hvac operation mode."""
-        t_hvac_mode = hvac_mode
-        # Only this mode needs to be mapped
-        if t_hvac_mode == HVAC_MODE_HEAT_COOL:
-            t_hvac_mode = s30api_async.LENNOX_HVAC_HEAT_COOL
-        _LOGGER.info("climate:async_set_hvac_mode zone [" + self._myname + "] ha_mode [" + str(hvac_mode) + "] lennox_mode [" + t_hvac_mode + "]")
-        await self._zone.setHVACMode(t_hvac_mode)
-        # We'll do a couple polls until we get the state
-        for x in range(1, 10):
-            await asyncio.sleep(0.5)
-            await self._s30api.messagePump()
-            if self._zone.getSystemMode() == hvac_mode:
-                _LOGGER.info("async_set_hvac_mode - got change with fast poll iteration [" + str(x) + "]")
-                return
-        _LOGGER.info("async_set_hvac_mode - unabled to retrieve change with fast pump")
-
-
+        try:
+            t_hvac_mode = hvac_mode
+            # Only this mode needs to be mapped
+            if t_hvac_mode == HVAC_MODE_HEAT_COOL:
+                t_hvac_mode = s30api_async.LENNOX_HVAC_HEAT_COOL
+            _LOGGER.info("climate:async_set_hvac_mode zone [" + self._myname + "] ha_mode [" + str(hvac_mode) + "] lennox_mode [" + t_hvac_mode + "]")
+            await self._zone.setHVACMode(t_hvac_mode)
+            # We'll do a couple polls until we get the state
+            for x in range(1, 10):
+                await asyncio.sleep(self._manager._fast_poll_interval)
+                bErr = await self._manager.messagePump()
+                if self._zone.getSystemMode() == hvac_mode:
+                    _LOGGER.info("async_set_hvac_mode - got change with fast poll iteration [" + str(x) + "]")
+                    return
+                if bErr:
+                    break
+            _LOGGER.info("async_set_hvac_mode - unabled to retrieve change with fast pump")
+        except S30Exception as e:
+            _LOGGER.error(e.message)
+        except Exception as e:
+            _LOGGER.error(str(e))
 
     @property
     def hvac_action(self):
@@ -302,12 +303,22 @@ class S30Climate(ClimateEntity):
         return presets
 
     async def async_set_preset_mode(self, preset_mode):
-        _LOGGER.info("climate:async_set_preset_mode name[" + self._myname + "] preset_mode [" + preset_mode + "]")
+        try:
+            _LOGGER.info("climate:async_set_preset_mode name[" + self._myname + "] preset_mode [" + preset_mode + "]")
+            if preset_mode == PRESET_CANCEL_HOLD:
+                await self._zone.setScheduleHold(False)
+            else:
+               await self._zone.setSchedule(preset_mode)
 
-        if preset_mode == PRESET_CANCEL_HOLD:
-            return await self._zone.setScheduleHold(False)
-        await self._zone.setSchedule(preset_mode)
-        
+            for x in range(1, 5):
+                await asyncio.sleep(self._manager._fast_poll_interval)
+                bErr = await self._manager.messagePump()
+              
+        except S30Exception as e:
+            _LOGGER.error("async_set_preset_mode error:" + e.message)
+        except Exception as e:
+            _LOGGER.error("async_set_preset_mode error:" + str(e))
+                
 #        if preset_mode == PRESET_AWAY:
 #            self._turn_away_mode_on()
 #        else:
@@ -346,62 +357,79 @@ class S30Climate(ClimateEntity):
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             r_hsp = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        _LOGGER.info("climate:async_set_temperature zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+        _LOGGER.info(f"climate:async_set_temperature zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]")
 
         # A temperature must be specified
         if r_temperature is None and r_csp is None and r_hsp is None:
-            _LOGGER.error("climate:async_set_temperature - no temperature given zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+            msg = f"climate:async_set_temperature - no temperature given zone [{self._myname}]] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
+            _LOGGER.error(msg)
             return
-
         # Either provide temperature or high/low but not both
         if r_temperature != None and (r_csp != None or r_hsp != None):
-            _LOGGER.error("climate:async_set_temperature - pass either temperature or temp_high / low - zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+            msg = f"climate:async_set_temperature - pass either temperature or temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
+            _LOGGER.error(msg)
             return
-
         # If no temperature, must specify both high and low 
         if r_temperature == None and (r_csp == None or r_hsp == None):
-            _LOGGER.error("climate:async_set_temperature - must provide both temp_high / low - zone [" + self._myname + "] hvacMode [" + str(r_hvacMode) + "] temperature [" + str(r_temperature) + "] temp_high [" + str(r_csp) + "] temp_low [" + str(r_hsp) + "]")
+            msg = f"climate:async_set_temperature - must provide both temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
+            _LOGGER.error(msg)
             return
 
-        # If an HVAC mode is requested; and we are not in that mode, then the first step
-        # is to switch the zone into that mode before setting the temperature
-        if (r_hvacMode != None and r_hvacMode != self.hvac_mode):
-            _LOGGER.info("climate:async_set_temperature zone [" + self._myname + "] setting hvacMode [" + str(r_hvacMode) + "]")
-            result = await self.async_set_hvac_mode(r_hvacMode)
-            if result == False:
-                _LOGGER.error("climate:async_set_temperature zone [" + self._myname + "] failed setting hvacMode [" + str(r_hvacMode) + "]")
-                return
+        try:
+            # If an HVAC mode is requested; and we are not in that mode, then the first step
+            # is to switch the zone into that mode before setting the temperature
+            if (r_hvacMode != None and r_hvacMode != self.hvac_mode):
+                _LOGGER.info(f"climate:async_set_temperature zone [{self._myname}] setting hvacMode [{r_hvacMode}]")
+                await self.async_set_hvac_mode(r_hvacMode)
 
-        if (r_hvacMode == None):
-            r_hvacMode = self.hvac_mode
+            if (r_hvacMode == None):
+                r_hvacMode = self.hvac_mode
 
-        if r_temperature is not None:
-            if self.hvac_mode == HVAC_MODE_COOL:
-                _LOGGER.info("climate:async_set_temperature set_temperature system in cool mode - zone [" + self._myname + "] temperature [" + str(r_temperature) + "]")
-                result = await self._zone.setCoolSPF(r_temperature)
-                if result == False:
-                    _LOGGER.error("climate:async_set_temperature - failed - zone [" + self._myname + "] temperature [" + str(r_temperature) + "]")
-                    return False
-                return True
-            elif self.hvac_mode == HVAC_MODE_HEAT:
-                _LOGGER.info("climate:async_set_temperature set_temperature system in heat mode - zone [" + self._myname + "] sp [" + str(r_temperature) + "]")
-                result = await self._zone.setCoolSPF(r_temperature)
-                if result == False:
-                    _LOGGER.error("climate:async_set_temperature - failed - zone [" + self._myname + "] temperature [" + str(r_temperature) + "]")
-                    return False
-                return True
+            if r_temperature is not None:
+                if self.hvac_mode == HVAC_MODE_COOL:
+                    _LOGGER.info(f"climate:async_set_temperature set_temperature system in cool mode - zone [{self._myname}] temperature [{r_temperature}]")
+                    await self._zone.setCoolSPF(r_temperature)
+                elif self.hvac_mode == HVAC_MODE_HEAT:
+                    _LOGGER.info(f"climate:async_set_temperature set_temperature system in heat mode - zone [{self._myname}] sp [{r_temperature}]")
+                    await self._zone.setCoolSPF(r_temperature)
+                else:
+                    _LOGGER.error(f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature")
+                    return
             else:
-                _LOGGER.error("set_temperature System Mode is [" + r_hvacMode + "] unable to set temperature")
-                return False
-        else:
-            _LOGGER.info("climate:async_set_temperature zone [" + self._myname + "] csp [" + str(r_csp) + "] hsp [" + str(r_hsp) + "]")
-            result = await self._zone.setHeatCoolSPF(r_hsp, r_csp)
+                _LOGGER.info("climate:async_set_temperature zone [" + self._myname + "] csp [" + str(r_csp) + "] hsp [" + str(r_hsp) + "]")
+                await self._zone.setHeatCoolSPF(r_hsp, r_csp)
+            for x in range(1, 5):
+                await asyncio.sleep(self._manager._fast_poll_interval)
+                bErr = await self._manager.messagePump()
+                # complex to know what to wait for :-)
 
+        except Exception as e:
+            if hasattr(e,"message"):
+                _LOGGER.error("climate:async_set_temperature - error:" + e.message)
+            else:
+                _LOGGER.error("climate:async_set_temperature - error:" + str(e))
+        
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        _LOGGER.info("climate:async_set_temperature name[" + self._myname + "] fanMode [ " + str(fan_mode) + "]")
-        await self._zone.setFanMode(fan_mode)
-
+        _LOGGER.info(f"climate:async_set_fan_mode name[{self._myname}] fanMode [{fan_mode}]")
+        try:
+            await self._zone.setFanMode(fan_mode)
+            # We'll do a couple polls until we get the state
+            for x in range(1, 10):
+                await asyncio.sleep(self._manager._fast_poll_interval)
+                bErr = await self._manager.messagePump()
+                if self._zone.getFanMode() == fan_mode:
+                    _LOGGER.info("async_set_fan_mode - got change with fast poll iteration [" + str(x) + "]")
+                    return
+                if bErr:
+                    break
+            _LOGGER.info("async_set_fan_mode - unabled to retrieve change with fast pump")
+        except Exception as e:
+            if hasattr(e,"message"):
+                _LOGGER.error("climate:async_set_fan_mode - error:" + e.message)
+            else:
+                _LOGGER.error("climate:async_set_fan_mode - error:" + str(e))
+ 
     def _turn_away_mode_on(self):
         raise NotImplementedError
 #        """Turn away mode on."""
