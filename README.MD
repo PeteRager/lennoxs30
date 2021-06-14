@@ -78,8 +78,7 @@ The Lennox configuration that comes back from the API contains every configurati
 | email | string | required | none | Cloud service account username |
 | password | string | required | none | Cloud service account password |
 | scan_interval| int | optional | 15 | The normal scan mode to check for cloud messages in seconds|
-| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system
-goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
+| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
 
 # Notes
 
