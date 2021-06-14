@@ -72,13 +72,47 @@ The Lennox configuration that comes back from the API contains every configurati
 
 
 
-### Platform Parameters
+### Configurtion Parameters
 | Name | Type | Requirement | Default | Description |
 | ---- | ---- | ----------- | ------- | ----------- |
 | email | string | required | none | Cloud service account username |
 | password | string | required | none | Cloud service account password |
 | scan_interval| int | optional | 15 | The normal scan mode to check for cloud messages in seconds|
 | fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
+
+### lennoxs30.state
+
+The entity is automatically created in Home Assistant and can be used to track the state and health of the connection to the cloud.
+
+| State | Description |
+| ----- | ----------- |
+| Connected| API is connected to cloud system.  This is the desired state|
+| Connecting| API is trying to connect to the cloud system.|
+| Disconnected| API has failed to connect to cloud and will not try again.  Please raise an issue if you encounter this state|
+| Login Failed| The login failued due to bad email/password combination.  Please correct credentials and restart HA|
+| Waiting to Retry| The API was unable to connect or lost connection and is waiting to attempt a retry|
+| Failed| The API failed.  Please raise an issue if you encounter this state|
+
+The entity also has a set of attributes to provide diagnostic data:
+
+| Attribute | Type |Description |
+| --------- | ---- | ---------- |
+| message_count|int| number of messages received from Lennox Cloud |
+| send_count|int| number of messages sent to Lennox Cloud|
+| receive_count|int| number of queries to recieve new messages.  Most queries return no messages|
+| bytes_in| int | number of byte received|
+| bytes_out| int | number of bytes sent|
+| error_count| int | number of errors|
+| http_2xx | int | number of HTTP responses received between 200-299. THese are good responses|
+| http_4xx | int | number of HTTP responses received between 400-499. These usually indicate a problem with authorization|
+| http_5xx | int | number of HTTP responses received between 500-599. These indicate a problem with the Lennox Cloud Servers.  Seeing a few of these a day is normal|
+|last_receive_time| Time of last succesful receive.  Should not be more than SCAN_INTERVAL seconds plus few seconds|
+|last_error_time| Time of the last error response|
+|last_reconnect_time| Time of the last reconnect or the time of the initial connect|
+|last_message_time| Time of the last message from Lennox Cloud.  How often messages are received is based on how often data is changing in the thermostat.  For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent|
+
+
+
 
 # Notes
 
