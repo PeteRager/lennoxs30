@@ -72,7 +72,7 @@ The Lennox configuration that comes back from the API contains every configurati
 
 
 
-### Configurtion Parameters
+### Configuration Parameters
 | Name | Type | Requirement | Default | Description |
 | ---- | ---- | ----------- | ------- | ----------- |
 | email | string | required | none | Cloud service account username |
