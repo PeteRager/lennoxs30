@@ -10,11 +10,11 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 # Current State and Suggested Usage
 
-The 0.0.2 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
+The 0.0.3 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
 
-The 0.0.2 release is not hardened for failure.  Internet failures may cause the system to disconnect and not recover.  The login session may expire and this will cause the system to disconnect.  If these occur, Home Assistant will need to be restarted.  Clearly this is not ideal.  Hardening is the main focus of release 0.0.3.  If any of these happen please report and capture the log files.
+The 0.0.3 release is hardened for failure.  The system should recover automatically from network failures, internet failues and session expiration.  Error may be logged to indicae this.  Please provide errors that are encountered.
 
-Recommended Usage:  Evaluation and Testing.  See if this works with your system, report the issues so we can get it solid.
+Recommended Usage:  Ready for production.
 
 # Installation
 Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
@@ -32,6 +32,8 @@ Use your login information.  Please enabled debug when reporting issues or provi
 lennoxs30:
    email: myemail@myemail.com
    password: mypassword
+   scan_interval: 30
+   fast_scan_interval: 0.5
 
 logger:
   default: info
@@ -75,6 +77,9 @@ The Lennox configuration that comes back from the API contains every configurati
 | ---- | ---- | ----------- | ------- | ----------- |
 | email | string | required | none | Cloud service account username |
 | password | string | required | none | Cloud service account password |
+| scan_interval| int | optional | 15 | The normal scan mode to check for cloud messages in seconds|
+| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system
+goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
 
 # Notes
 
