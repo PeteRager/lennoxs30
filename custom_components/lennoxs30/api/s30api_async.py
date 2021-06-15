@@ -494,7 +494,6 @@ class lennox_system(object):
         self.api = api
         self.idx = idx
         self.home = home
-        self.name = self.home.name + '_' + str(self.idx)
         _LOGGER.info(f"Update lennox_system idx [{self.idx}] sysId [{self.sysId}]") 
 
     def processMessage(self, message) -> None:
@@ -910,13 +909,10 @@ class lennox_zone(object):
 
         if (r_csp < self.minCsp):
             raise S30Exception(f"setHeatCoolSPF r_csp [{r_csp}] must be greater than minCsp [{self.minCsp}]", EC_BAD_PARAMETERS, 1)
-
         if (r_csp > self.maxCsp):
             raise S30Exception(f"setHeatCoolSPF r_csp [{r_csp}] must be less than maxCsp [{self.maxCsp}]", EC_BAD_PARAMETERS, 2)
-
         if (r_hsp < self.minHsp):
             raise S30Exception(f"setHeatCoolSPF r_hsp [{r_hsp}] must be greater than minCsp [{self.minHsp}]", EC_BAD_PARAMETERS, 3)
-
         if (r_hsp > self.maxHsp):
             raise S30Exception(f"setHeatCoolSPF r_hsp [{r_hsp}] must be less than maxHsp [{self.maxHsp}]", EC_BAD_PARAMETERS, 2)
 
