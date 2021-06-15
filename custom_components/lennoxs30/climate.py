@@ -281,7 +281,7 @@ class S30Climate(ClimateEntity):
         if self._zone.overrideActive == True:
             return PRESET_SCHEDULE_OVERRIDE
         if self._zone.isZoneManualMode() == True:
-            return ""
+            return None
         scheduleId = self._zone.scheduleId
         if scheduleId is None:
             return None
@@ -310,9 +310,13 @@ class S30Climate(ClimateEntity):
             else:
                await self._zone.setSchedule(preset_mode)
 
-            for x in range(1, 5):
+            for x in range(1, 10):
                 await asyncio.sleep(self._manager._fast_poll_interval)
                 bErr = await self._manager.messagePump()
+                if preset_mode == PRESET_CANCEL_HOLD and self._zone.isZoneOveride() == False:
+                    break
+                if preset_mode != PRESET_CANCEL_HOLD and self.preset_mode == preset_mode:
+                    break
               
         except S30Exception as e:
             _LOGGER.error("async_set_preset_mode error:" + e.message)
