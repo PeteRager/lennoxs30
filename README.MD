@@ -10,11 +10,11 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 # Current State and Suggested Usage
 
-The 0.0.2 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
+The 0.0.3 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
 
-The 0.0.2 release is not hardened for failure.  Internet failures may cause the system to disconnect and not recover.  The login session may expire and this will cause the system to disconnect.  If these occur, Home Assistant will need to be restarted.  Clearly this is not ideal.  Hardening is the main focus of release 0.0.3.  If any of these happen please report and capture the log files.
+The 0.0.3 release is hardened for failure.  The system should recover automatically from network failures, internet failues and session expiration.  Error may be logged to indicae this.  Please provide errors that are encountered.
 
-Recommended Usage:  Evaluation and Testing.  See if this works with your system, report the issues so we can get it solid.
+Recommended Usage:  Ready for production.
 
 # Installation
 Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
@@ -32,6 +32,8 @@ Use your login information.  Please enabled debug when reporting issues or provi
 lennoxs30:
    email: myemail@myemail.com
    password: mypassword
+   scan_interval: 30
+   fast_scan_interval: 0.5
 
 logger:
   default: info
@@ -70,11 +72,47 @@ The Lennox configuration that comes back from the API contains every configurati
 
 
 
-### Platform Parameters
+### Configuration Parameters
 | Name | Type | Requirement | Default | Description |
 | ---- | ---- | ----------- | ------- | ----------- |
 | email | string | required | none | Cloud service account username |
 | password | string | required | none | Cloud service account password |
+| scan_interval| int | optional | 15 | The normal scan mode to check for cloud messages in seconds|
+| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
+
+### lennoxs30.state
+
+The entity is automatically created in Home Assistant and can be used to track the state and health of the connection to the cloud.
+
+| State | Description |
+| ----- | ----------- |
+| Connected| API is connected to cloud system.  This is the desired state|
+| Connecting| API is trying to connect to the cloud system.|
+| Disconnected| API has failed to connect to cloud and will not try again.  Please raise an issue if you encounter this state|
+| Login Failed| The login failued due to bad email/password combination.  Please correct credentials and restart HA|
+| Waiting to Retry| The API was unable to connect or lost connection and is waiting to attempt a retry|
+| Failed| The API failed.  Please raise an issue if you encounter this state|
+
+The entity also has a set of attributes to provide diagnostic data:
+
+| Attribute | Type |Description |
+| --------- | ---- | ---------- |
+| message_count|int| number of messages received from Lennox Cloud |
+| send_count|int| number of messages sent to Lennox Cloud|
+| receive_count|int| number of queries to recieve new messages.  Most queries return no messages|
+| bytes_in| int | number of byte received|
+| bytes_out| int | number of bytes sent|
+| error_count| int | number of errors|
+| http_2xx | int | number of HTTP responses received between 200-299. THese are good responses|
+| http_4xx | int | number of HTTP responses received between 400-499. These usually indicate a problem with authorization|
+| http_5xx | int | number of HTTP responses received between 500-599. These indicate a problem with the Lennox Cloud Servers.  Seeing a few of these a day is normal|
+|last_receive_time| DateTime| Time of last succesful receive.  Should not be more than SCAN_INTERVAL seconds plus few seconds|
+|last_error_time| DateTime| Time of the last error response|
+|last_reconnect_time| DateTime| Time of the last reconnect or the time of the initial connect|
+|last_message_time| DateTime| Time of the last message from Lennox Cloud.  How often messages are received is based on how often data is changing in the thermostat.  For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent|
+
+
+
 
 # Notes
 
