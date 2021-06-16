@@ -12,10 +12,6 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 The 0.0.3 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
 
-The 0.0.3 release is hardened for failure.  The system should recover automatically from network failures, internet failues and session expiration.  Error may be logged to indicae this.  Please provide errors that are encountered.
-
-Recommended Usage:  Ready for production.
-
 # Installation
 Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
 
@@ -68,7 +64,7 @@ Please create issues to track bugs.  Please capture the logs with debug turned o
 
 ## A note on Debug Log Files
 
-The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information.  It is highly recommend to not publicly post these log files.  Information includes - the address of your residence and email address.  Issues #14 tracks this and we will work to scrub this information from the log file.
+The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information.  It is highly recommend to not publicly post these log files.  Information includes - the address of your residence and email address.  Issues #14 tracks this and we will work to scrub this information from the log file.  If I need a logfile or troubleshooting I will ask you to email it  
 
 
 
