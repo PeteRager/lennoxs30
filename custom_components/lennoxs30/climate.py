@@ -86,10 +86,7 @@ class S30Climate(ClimateEntity):
         self._zone = zone
         self._zone.registerOnUpdateCallback(self.update_callback)
         self._myname = self._system.name + '_' + self._zone.name
-        s = 'climate' + "." +  self._system.sysId + '-' + str(self._zone.id)
-        # HA fails with dashes in IDs
-        s = s.replace("-","")
-
+ 
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
@@ -275,6 +272,8 @@ class S30Climate(ClimateEntity):
         if ho != 'off':
             if ho == s30api_async.LENNOX_HUMID_OPERATION_DEHUMID:
                 return CURRENT_HVAC_DRY
+            if ho == s30api_async.LENNOX_HUMID_OPERATION_WAITING:
+                return CURRENT_HVAC_IDLE
             return ho 
         if to == 'off' and self._zone.systemMode != 'off':
             return CURRENT_HVAC_IDLE
