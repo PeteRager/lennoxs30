@@ -1,9 +1,9 @@
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
-from homeassistant.components.lennoxs30.api.s30exception import S30Exception
+from homeassistant.components.lennoxs30.s30exception import S30Exception
 from homeassistant.components.lennoxs30 import Manager
 from homeassistant.core import HassJob, HomeAssistant
 import logging
-from .api import s30api_async
+from .s30api_async import lennox_system, s30api_async
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity, PLATFORM_SCHEMA
 
@@ -38,7 +38,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info: Manag
 
 class S30OutdoorTempSensor(SensorEntity):
     """Class for Lennox S30 thermostat."""
-    def __init__(self, hass: HomeAssistant, manager: Manager, system:s30api_async.lennox_system):
+    def __init__(self, hass: HomeAssistant, manager: Manager, system:lennox_system):
         self._hass = hass
         self._manager = manager
         self._system = system

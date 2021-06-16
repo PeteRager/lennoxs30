@@ -1,10 +1,10 @@
-from homeassistant.components.lennoxs30.api.s30exception import S30Exception
+from homeassistant.components.lennoxs30.s30exception import S30Exception
 from homeassistant.components.lennoxs30 import Manager
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import logging
 import asyncio
-from .api import s30api_async
+from .s30api_async import LENNOX_HUMID_OPERATION_DEHUMID, LENNOX_HUMID_OPERATION_WAITING, LENNOX_HVAC_HEAT_COOL, lennox_system, lennox_zone, s30api_async
 
 from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
@@ -78,7 +78,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info: Manag
 class S30Climate(ClimateEntity):
     """Class for Lennox S30 thermostat."""
 
-    def __init__(self, hass, manager: Manager, system: s30api_async.lennox_system, zone: s30api_async.lennox_zone):
+    def __init__(self, hass, manager: Manager, system: lennox_system, zone: lennox_zone):
         """Initialize the climate device."""
         self.hass:HomeAssistant = hass
         self._manager:Manager = manager
@@ -198,7 +198,7 @@ class S30Climate(ClimateEntity):
     def hvac_mode(self):
         """Return the current hvac operation mode."""
         r = self._zone.getSystemMode()
-        if r == s30api_async.LENNOX_HVAC_HEAT_COOL:
+        if r == LENNOX_HVAC_HEAT_COOL:
             r = HVAC_MODE_HEAT_COOL
         _LOGGER.debug(f"climate:hvac_mode name [{self._myname}] mode [{r}]")
         return r
@@ -243,7 +243,7 @@ class S30Climate(ClimateEntity):
             t_hvac_mode = hvac_mode
             # Only this mode needs to be mapped
             if t_hvac_mode == HVAC_MODE_HEAT_COOL:
-                t_hvac_mode = s30api_async.LENNOX_HVAC_HEAT_COOL
+                t_hvac_mode = LENNOX_HVAC_HEAT_COOL
             _LOGGER.info("climate:async_set_hvac_mode zone [" + self._myname + "] ha_mode [" + str(hvac_mode) + "] lennox_mode [" + t_hvac_mode + "]")
             await self._zone.setHVACMode(t_hvac_mode)
             # We'll do a couple polls until we get the state
@@ -270,9 +270,9 @@ class S30Climate(ClimateEntity):
         if to != 'off':
             return to
         if ho != 'off':
-            if ho == s30api_async.LENNOX_HUMID_OPERATION_DEHUMID:
+            if ho == LENNOX_HUMID_OPERATION_DEHUMID:
                 return CURRENT_HVAC_DRY
-            if ho == s30api_async.LENNOX_HUMID_OPERATION_WAITING:
+            if ho == LENNOX_HUMID_OPERATION_WAITING:
                 return CURRENT_HVAC_IDLE
             return ho 
         if to == 'off' and self._zone.systemMode != 'off':

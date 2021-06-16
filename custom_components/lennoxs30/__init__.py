@@ -1,11 +1,11 @@
 from asyncio.locks import Lock
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import HomeAssistant
-from homeassistant.components.lennoxs30.api.s30exception import EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
+from homeassistant.components.lennoxs30.s30exception import EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
 from homeassistant.exceptions import HomeAssistantError
 import logging
 import asyncio
-from .api import s30api_async
+from .s30api_async import s30api_async
 #
 DOMAIN = "lennoxs30"
 DOMAIN_STATE = "lennoxs30.state"
@@ -76,7 +76,7 @@ class Manager(object):
         self._config: ConfigType = config
         self._poll_interval:int = poll_interval
         self._fast_poll_interval:float = fast_poll_interval
-        self._api:s30api_async.s30api_async = s30api_async.s30api_async(email, password)
+        self._api:s30api_async = s30api_async(email, password)
 
     def updateState(self, state: int) -> None:
         self._hass.states.async_set(DOMAIN_STATE, state, self.getMetricsList(), force_update=True)
