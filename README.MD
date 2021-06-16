@@ -13,6 +13,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 The 0.0.3 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
 
 # Installation
+If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennox30 folder.
 Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
 
 Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
@@ -76,6 +77,7 @@ The Lennox configuration that comes back from the API contains every configurati
 | scan_interval| int | optional | 15 | The normal scan mode to check for cloud messages in seconds|
 | fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
 
+## Entities
 ### lennoxs30.state
 
 The entity is automatically created in Home Assistant and can be used to track the state and health of the connection to the cloud.
@@ -107,6 +109,10 @@ The entity also has a set of attributes to provide diagnostic data:
 |last_reconnect_time| DateTime| Time of the last reconnect or the time of the initial connect|
 |last_message_time| DateTime| Time of the last message from Lennox Cloud.  How often messages are received is based on how often data is changing in the thermostat.  For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent|
 
+### Outdoor Temperature Sensor
+Lennox systems may have an outdoor temperature sensor.  If your system has one a sensor will be automatically created.  It's name will be
+
+sensor.<system_name>_outdoor_temperature
 
 
 
