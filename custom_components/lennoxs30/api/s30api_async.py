@@ -28,15 +28,13 @@ import uuid
 import aiohttp
 
 from urllib.parse import quote
-from typing import List
+from typing import Final, List
 from .lennox_period import lennox_period
 from .lennox_schedule import lennox_schedule 
 from .lennox_home import lennox_home
 from .metrics import Metrics
 
 _LOGGER = logging.getLogger(__name__)
-#_LOGGER.setLevel(logging.DEBUG)
-
 
 AUTHENTICATE_URL = "https://ic3messaging.myicomfort.com/v1/mobile/authenticate"
 LOGIN_URL = "https://ic3messaging.myicomfort.com/v2/user/login"
@@ -50,17 +48,18 @@ PUBLISH_URL = "https://icpublishapi.myicomfort.com/v1/messages/publish"
 # May need to update as the version of API increases
 USER_AGENT:str = "lx_ic3_mobile_appstore/3.75.218 (iPad; iOS 14.4.1; Scale/2.00)"
 
-LENNOX_HVAC_OFF = 'off'
-LENNOX_HVAC_COOL = 'cool'
-LENNOX_HVAC_HEAT = 'heat'
-LENNOX_HVAC_HEAT_COOL = 'heat and cool'            # validated
+LENNOX_HVAC_OFF:Final = 'off'
+LENNOX_HVAC_COOL:Final = 'cool'
+LENNOX_HVAC_HEAT:Final = 'heat'
+LENNOX_HVAC_HEAT_COOL:Final = 'heat and cool'            # validated
 
-LENNOX_HUMID_OPERATION_DEHUMID = 'dehumidifying'   # validated
-LENNOX_HUMID_OPERATION_HUMID = 'humidifying'       # a guess
+LENNOX_HUMID_OPERATION_DEHUMID:Final = 'dehumidifying'   # validated
+LENNOX_HUMID_OPERATION_HUMID:Final = 'humidifying'       # a guess
+LENNOX_HUMID_OPERATION_WAITING:Final = 'waiting'
 
-HVAC_MODES = {LENNOX_HVAC_OFF, LENNOX_HVAC_COOL, LENNOX_HVAC_HEAT, LENNOX_HVAC_HEAT_COOL}
-FAN_MODES = {'on', 'auto', 'circulate'}
-HVAC_MODE_TARGETS = {'fanMode', 'systemMode'}
+HVAC_MODES:Final = {LENNOX_HVAC_OFF, LENNOX_HVAC_COOL, LENNOX_HVAC_HEAT, LENNOX_HVAC_HEAT_COOL}
+FAN_MODES:Final = {'on', 'auto', 'circulate'}
+HVAC_MODE_TARGETS:Final = {'fanMode', 'systemMode'}
 
 LENNOX_MANUAL_MODE_SCHEDULE_START_INDEX: int = 16
 
