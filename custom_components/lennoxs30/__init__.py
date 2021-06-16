@@ -27,21 +27,26 @@ CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
 
 MAX_ERRORS = 5
 RETRY_INTERVAL_SECONDS = 60
-_poll_interval:int = 10
-_fast_poll_interval:float = 0.5
+DEFAULT_POLL_INTERVAL:int = 10
+DEFAULT_FAST_POLL_INTERVAL:float = 0.5
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     email = config.get(DOMAIN).get(CONF_EMAIL)
     password = config.get(DOMAIN).get(CONF_PASSWORD)
     t = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
-    if t != None:
-        _poll_interval = t
+    if t != None and t > 0:
+        poll_interval = t
+    else:
+        poll_interval = DEFAULT_POLL_INTERVAL
     t = config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL)
-    if t != None:
-        _fast_poll_interval = t
-    _LOGGER.info(f"async_setup starting scan_interval [{_poll_interval}] fast_scan_interval[{_fast_poll_interval}]")
+    if t != None and t > 0.2:
+        fast_poll_interval = t
+    else:
+        fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
+    
+    _LOGGER.info(f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}]")
 
-    manager = Manager(hass, config, email, password, _poll_interval, _fast_poll_interval)
+    manager = Manager(hass, config, email, password, poll_interval, fast_poll_interval)
     try:
         await manager.s30_initalize()
     except S30Exception as e:
@@ -53,14 +58,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.info("retying initialization")
         asyncio.create_task(manager.initialize_retry_task())
         return False
-    
-    
+       
     _LOGGER.info("async_setup complete")
     return True
 
 class Manager(object):
-
-
 
     def __init__(self, hass: HomeAssistant, config: ConfigType,  email: str, password: str, poll_interval:int, fast_poll_interval:float):
 
@@ -91,6 +93,7 @@ class Manager(object):
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
             self._hass.helpers.discovery.load_platform('climate', DOMAIN, self, self._config)
+            self._hass.helpers.discovery.load_platform('sensor', DOMAIN, self, self._config)
             self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 
