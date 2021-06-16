@@ -10,7 +10,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 # Current State and Suggested Usage
 
-The 0.0.3 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total) running a Heat / Cool system.  Standard operations seem to work.
+The 0.0.3 is tested and resilient.  Recommendation is to install, test out your systems and use it.
 
 # Installation
 If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennox30 folder.
