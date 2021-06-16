@@ -1,6 +1,6 @@
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
-from homeassistant.components.lennoxs30.s30exception import S30Exception
-from homeassistant.components.lennoxs30 import Manager
+from .s30exception import S30Exception
+from . import Manager
 from homeassistant.core import HassJob, HomeAssistant
 import logging
 from .s30api_async import lennox_system, s30api_async

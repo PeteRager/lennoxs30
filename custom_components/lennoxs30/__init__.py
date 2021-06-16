@@ -1,7 +1,7 @@
 from asyncio.locks import Lock
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import HomeAssistant
-from homeassistant.components.lennoxs30.s30exception import EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
+from .s30exception import EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
 from homeassistant.exceptions import HomeAssistantError
 import logging
 import asyncio

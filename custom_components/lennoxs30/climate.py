@@ -1,7 +1,6 @@
-from homeassistant.components.lennoxs30.s30exception import S30Exception
-from homeassistant.components.lennoxs30 import Manager
+from .s30exception import S30Exception
+from . import Manager
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 import logging
 import asyncio
 from .s30api_async import LENNOX_HUMID_OPERATION_DEHUMID, LENNOX_HUMID_OPERATION_WAITING, LENNOX_HVAC_HEAT_COOL, lennox_system, lennox_zone, s30api_async
