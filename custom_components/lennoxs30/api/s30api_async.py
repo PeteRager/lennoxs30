@@ -87,15 +87,6 @@ CERTIFICATE = "MIIKXAIBAzCCChgGCSqGSIb3DQEHAaCCCgkEggoFMIIKATCCBfoGCSqGSIb3DQEHA
 
 class s30api_async(object):
 
-    _username: str = None
-    _password: str = None
-    _applicationid: str = APPLICATION_ID
-    _publishMessageId: int = 1
-    _session:ClientSession = None
-    metrics:Metrics = Metrics()
-
-    _homeList: List[lennox_home]= []
-    _systemList: List['lennox_system'] = []
 
     """Representation of the Lennox S30/E30 thermostat."""
     def __init__(self, username: str, password : str):
@@ -103,6 +94,13 @@ class s30api_async(object):
         _LOGGER.info('__init__ S30TStat  applicationId [' + APPLICATION_ID + ']')
         self._username = username
         self._password = password
+        self._applicationid: str = APPLICATION_ID
+        self._publishMessageId: int = 1
+        self._session:ClientSession = None
+        self.metrics:Metrics = Metrics()
+
+        self._homeList: List[lennox_home]= []
+        self._systemList: List['lennox_system'] = []
 
     def getClientId(self) -> str:
         return self._applicationid + "_" + self._username
@@ -474,20 +472,17 @@ class s30api_async(object):
         await self.setModeHelper(sysId, 'fanMode', mode, scheduleId)
 
 class lennox_system(object):
-    api: s30api_async = None
-    idx: int = None
-    sysId: str = None
-    home: lennox_home = None
-
-    _zoneList: List['lennox_zone'] = []
-    _schedules: List[lennox_schedule] = []
-    _callbacks = []
-    outdoorTemperature = None
-
-    name: str = None
 
     def __init__(self, sysId:str):
-        self.sysId = sysId
+        self.sysId: str = sysId
+        self.api: s30api_async = None
+        self.idx: int = None
+        self.home: lennox_home = None
+        self._zoneList: List['lennox_zone'] = []
+        self._schedules: List[lennox_schedule] = []
+        self._callbacks = []
+        self.outdoorTemperature = None
+        self.name: str = None
         _LOGGER.info(f"Creating lennox_system sysId [{self.sysId}]") 
 
     def update(self, api:s30api_async, home:lennox_home, idx:int):
@@ -698,54 +693,54 @@ class lennox_system(object):
 
 class lennox_zone(object):
 
-    _callbacks = []
-
-    temperature = None
-    humidity = None
-    systemMode = None
-    fanMode = None
-    humidityMode = None
-    csp = None
-    hsp = None
-
-    heatingOption =  None
-    maxHsp = None
-    minHsp = None
-    coolingOption = None
-    maxCsp = None
-    minCsp = None
-    humidificationOption = None
-    maxHumSp = None
-    minHspC = None
-    emergencyHeatingOption = None
-    dehumidificationOption = None
-    maxDehumSp = None
-    minHspC = None
-
-    tempOperation = None
-    humOperation = None
-    scheduleId = None
-
-    # PERIOD
-    systemMode = None
-    fanMode = None
-    humidityMode = None
-    csp = None
-    cspC = None
-    hsp = None
-    hspC = None
-    desp = None
-    sp = None
-    spC = None
-    husp = None
-    startTime = None
-    overrideActive = None
-
-
     def __init__(self, system, id, name):
-        self.id = id
-        self.name = name
+        self._callbacks = []
+
+        self.temperature = None
+        self.humidity = None
+        self.systemMode = None
+        self.fanMode = None
+        self.humidityMode = None
+        self.csp = None
+        self.hsp = None
+
+        self.heatingOption =  None
+        self.maxHsp = None
+        self.minHsp = None
+        self.coolingOption = None
+        self.maxCsp = None
+        self.minCsp = None
+        self.humidificationOption = None
+        self.maxHumSp = None
+        self.minHspC = None
+        self.emergencyHeatingOption = None
+        self.dehumidificationOption = None
+        self.maxDehumSp = None
+        self.minHspC = None
+
+        self.tempOperation = None
+        self.humOperation = None
+        self.scheduleId = None
+
+        # PERIOD
+        self.systemMode = None
+        self.fanMode = None
+        self.humidityMode = None
+        self.csp = None
+        self.cspC = None
+        self.hsp = None
+        self.hspC = None
+        self.desp = None
+        self.sp = None
+        self.spC = None
+        self.husp = None
+        self.startTime = None
+        self.overrideActive = None
+
+        self.id:int  = id
+        self.name:str = name
         self._system:lennox_system = system
+
         _LOGGER.info("Creating lennox_zone id [" + str(self.id) + "] name [" + str(self.name) + "]") 
 
 
@@ -1001,6 +996,9 @@ class lennox_zone(object):
         # Lennox API always sends both values, snag the current
         r_csp = self.csp
         await self.setHeatCoolSPF(r_hsp, r_csp)
+
+    async def setManualMode(self)  -> None:       
+        await self._system.setSchedule(self.id, self.getManualModeScheduleId())
 
     async def setSchedule(self, scheduleName : str) -> None:
         scheduleId = None

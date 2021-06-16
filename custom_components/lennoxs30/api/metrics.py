@@ -1,25 +1,26 @@
 from datetime import datetime
 
 class Metrics:
-    error_count: int = 0
+    def __init__(self):
+        self.error_count: int = 0
 
-    message_count: int = 0
-    receive_count: int = 0
-    send_count: int = 0
+        self.message_count: int = 0
+        self.receive_count: int = 0
+        self.send_count: int = 0
 
-    http_2xx_cnt: int  = 0
-    http_4xx_cnt: int = 0
-    http_5xx_cnt: int = 0
+        self.http_2xx_cnt: int  = 0
+        self.http_4xx_cnt: int = 0
+        self.http_5xx_cnt: int = 0
 
-    last_receive_time: datetime = None
-    last_send_time: datetime = None
-    last_error_time: datetime = None
-    last_reconnect_time: datetime = None
-    last_message_time: datetime = None
-    last_metric_time: datetime = None
+        self.last_receive_time: datetime = None
+        self.last_send_time: datetime = None
+        self.last_error_time: datetime = None
+        self.last_reconnect_time: datetime = None
+        self.last_message_time: datetime = None
+        self.last_metric_time: datetime = None
 
-    bytes_in: int = 0
-    bytes_out: int = 0
+        self.bytes_in: int = 0
+        self.bytes_out: int = 0
 
     def getMetricList(self):
         return(

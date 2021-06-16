@@ -59,25 +59,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 class Manager(object):
-    _hass: HomeAssistant = None
-    _config: ConfigType = None
-    _api: s30api_async.s30api_async = None
-    _poll_interval:int = None
-    _fast_poll_interval = None
 
-    _reinitialize: bool = False
-    _err_cnt: int = 0
-    _update_counter: int = 0
-    _mp_lock: Lock = Lock()
-    _climate_entities_initialized: bool = False
 
 
     def __init__(self, hass: HomeAssistant, config: ConfigType,  email: str, password: str, poll_interval:int, fast_poll_interval:float):
-        self._hass = hass
-        self._config = config
-        self._poll_interval = poll_interval
-        self._fast_poll_interval = fast_poll_interval
-        self._api = s30api_async.s30api_async(email, password)
+
+        self._reinitialize: bool = False
+        self._err_cnt: int = 0
+        self._update_counter: int = 0
+        self._mp_lock: Lock = Lock()
+        self._climate_entities_initialized: bool = False
+
+        self._hass:HomeAssistant = hass
+        self._config: ConfigType = config
+        self._poll_interval:int = poll_interval
+        self._fast_poll_interval:float = fast_poll_interval
+        self._api:s30api_async.s30api_async = s30api_async.s30api_async(email, password)
 
     def updateState(self, state: int) -> None:
         self._hass.states.async_set(DOMAIN_STATE, state, self.getMetricsList(), force_update=True)
