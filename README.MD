@@ -14,7 +14,8 @@ The 0.0.3 has been tested in a Single Home with 2 S30 Controllers (5 Zones Total
 
 # Installation
 If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennox30 folder.
-Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
+
+Next, copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
 
 Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
 
