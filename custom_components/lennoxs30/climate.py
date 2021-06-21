@@ -93,7 +93,7 @@ class S30Climate(ClimateEntity):
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
-        self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def extra_state_attributes(self):
@@ -226,14 +226,17 @@ class S30Climate(ClimateEntity):
         return modes
 
     async def async_fast_poll(self, func) -> bool:
-        for x in range(1, 10):
-            await asyncio.sleep(self._manager._fast_poll_interval)
-            bErr = await self._manager.messagePump()
-            if func() == True:
-                return True
-            if bErr:
-                break
-        return False
+        self._manager._mp_wakeup_event.set()
+        return True
+#   TODO - need to clean-up the help func that is no longer used.
+#        for x in range(1, 10):
+#            await asyncio.sleep(self._manager._fast_poll_interval)
+#            bErr = await self._manager.messagePump()
+#            if func() == True:
+#                return True
+#            if bErr:
+#                break
+#        return False
        
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:       
