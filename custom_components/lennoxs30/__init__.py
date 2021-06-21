@@ -1,11 +1,11 @@
-from asyncio.locks import Lock
+from asyncio.locks import Lock, Event
+
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import HomeAssistant
-from .s30exception import EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, S30Exception
 from homeassistant.exceptions import HomeAssistantError
 import logging
 import asyncio
-from .s30api_async import s30api_async
+from lennoxs30api import S30Exception, EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, s30api_async
 #
 DOMAIN = "lennoxs30"
 DOMAIN_STATE = "lennoxs30.state"
@@ -69,7 +69,8 @@ class Manager(object):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
         self._update_counter: int = 0
-        self._mp_lock: Lock = Lock()
+#       self._mp_lock: Lock = Lock()
+        self._mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
 
         self._hass:HomeAssistant = hass
@@ -159,18 +160,41 @@ class Manager(object):
         asyncio.create_task(self.messagePump_task())
 
 
+    async def event_wait_mp_wakeup(self,timeout: float) -> bool:
+        # suppress TimeoutError because we'll return False in case of timeout
+        try:
+            await asyncio.wait_for(self._mp_wakeup_event.wait(), timeout)
+        except asyncio.TimeoutError as e:
+            return False
+        return self._mp_wakeup_event.is_set()
+
     async def messagePump_task(self) -> None:
         # TODO figure out a way to shutdown
         await asyncio.sleep(self._poll_interval)
         self._reinitialize = False
         self._err_cnt = 0
         self._update_counter = 0
+        fast_polling: bool = False
+        fast_polling_cd: int = 0
         while self._reinitialize == False:
             try:
                await self.messagePump()
             except Exception as e:
                 _LOGGER.error("messagePump_task unexpected exception:" + str(e))
-            await asyncio.sleep(self._poll_interval)
+            if fast_polling == True:
+                fast_polling_cd = fast_polling_cd - 1
+                if fast_polling_cd <=0:
+                    fast_polling = False
+
+            if fast_polling == True:
+                res = await asyncio.sleep(self._fast_poll_interval)
+            else:
+                res = await self.event_wait_mp_wakeup(self._poll_interval)
+                if res == True:
+                    self._mp_wakeup_event.clear()
+                    fast_polling = True
+                    fast_polling_cd = 10
+
 
         if self._reinitialize == True:            
             self.updateState(DS_DISCONNECTED)
@@ -184,36 +208,36 @@ class Manager(object):
         # Sinc this function can be called within the messagepump_task or via
         # fast polling, we likely don't want to be in this section of code twice
         # or do we?   Not sure if this can cause a deadlock TODO
-        async with self._mp_lock:
-            try:
-                self._update_counter += 1
-                _LOGGER.debug("messagePump_task running")
-                await self._api.messagePump()
-                if (self._update_counter >= 6):
-                    self.updateState(DS_CONNECTED)
-                    self._update_counter = 0
-            except S30Exception as e:
-                self._err_cnt += 1
-                # This should mean we have been logged out and need to start the login process
-                if e.error_code == EC_UNAUTHORIZED:
-                    _LOGGER.info("messagePump_task - unauthorized - trying to relogin")
-                    self._reinitialize = True
-                # If its an HTTP error, we will not log an error, just and info message, unless
-                # this exeeeds the max consecutive error count
-                elif e.error_code == EC_HTTP_ERR and self._err_cnt < MAX_ERRORS:
-                    _LOGGER.info("messagePump_task - S30Exception " + str(e))
-                else:
-                    _LOGGER.error("messagePump_task - S30Exception " + str(e))
-                bErr = True
-            except Exception as e:          
-                _LOGGER.error("messagePump_task - Exception " + str(e))
-                self._err_cnt += 1
-                bErr = True
-            # Keep retrying retrive up until we get this number of errors in a row, at which point will try to reconnect
-            if self._err_cnt > MAX_ERRORS:
+#        async with self._mp_lock:
+        try:
+            self._update_counter += 1
+            _LOGGER.debug("messagePump_task running")
+            await self._api.messagePump()
+            if (self._update_counter >= 6):
+                self.updateState(DS_CONNECTED)
+                self._update_counter = 0
+        except S30Exception as e:
+            self._err_cnt += 1
+            # This should mean we have been logged out and need to start the login process
+            if e.error_code == EC_UNAUTHORIZED:
+                _LOGGER.info("messagePump_task - unauthorized - trying to relogin")
                 self._reinitialize = True
-            if bErr is False:
-                self._err_cnt = 0
-            return bErr
+            # If its an HTTP error, we will not log an error, just and info message, unless
+            # this exeeeds the max consecutive error count
+            elif e.error_code == EC_HTTP_ERR and self._err_cnt < MAX_ERRORS:
+                _LOGGER.info("messagePump_task - S30Exception " + str(e))
+            else:
+                _LOGGER.error("messagePump_task - S30Exception " + str(e))
+            bErr = True
+        except Exception as e:          
+            _LOGGER.error("messagePump_task - Exception " + str(e))
+            self._err_cnt += 1
+            bErr = True
+        # Keep retrying retrive up until we get this number of errors in a row, at which point will try to reconnect
+        if self._err_cnt > MAX_ERRORS:
+            self._reinitialize = True
+        if bErr is False:
+            self._err_cnt = 0
+        return bErr
  
 

@@ -1,9 +1,10 @@
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
-from .s30exception import S30Exception
 from . import Manager
-from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.core import HomeAssistant
 import logging
-from .s30api_async import lennox_system, s30api_async
+
+from lennoxs30api import lennox_system
+
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity, PLATFORM_SCHEMA
 
@@ -48,7 +49,8 @@ class S30OutdoorTempSensor(SensorEntity):
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
-        self.async_schedule_update_ha_state()
+#       self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()        
 
     @property
     def unique_id(self) -> str:

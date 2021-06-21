@@ -1,9 +1,12 @@
-from .s30exception import S30Exception
+#from .s30exception import S30Exception
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
 import asyncio
-from .s30api_async import LENNOX_HUMID_OPERATION_DEHUMID, LENNOX_HUMID_OPERATION_WAITING, LENNOX_HVAC_HEAT_COOL, lennox_system, lennox_zone, s30api_async
+#from .s30api_async import LENNOX_HUMID_OPERATION_DEHUMID, LENNOX_HUMID_OPERATION_WAITING, LENNOX_HVAC_HEAT_COOL, lennox_system, lennox_zone, s30api_async
+
+from lennoxs30api import S30Exception, LENNOX_HUMID_OPERATION_DEHUMID, LENNOX_HUMID_OPERATION_WAITING, LENNOX_HVAC_HEAT_COOL, lennox_system, lennox_zone
+
 
 from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
@@ -93,7 +96,8 @@ class S30Climate(ClimateEntity):
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
-        self.async_schedule_update_ha_state()
+#        self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def extra_state_attributes(self):
@@ -226,14 +230,16 @@ class S30Climate(ClimateEntity):
         return modes
 
     async def async_fast_poll(self, func) -> bool:
-        for x in range(1, 10):
-            await asyncio.sleep(self._manager._fast_poll_interval)
-            bErr = await self._manager.messagePump()
-            if func() == True:
-                return True
-            if bErr:
-                break
-        return False
+        self._manager._mp_wakeup_event.set()
+        return 
+#        for x in range(1, 10):
+#            await asyncio.sleep(self._manager._fast_poll_interval)
+#            bErr = await self._manager.messagePump()
+#            if func() == True:
+#                return True
+#            if bErr:
+#                break
+#        return False
        
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:       
