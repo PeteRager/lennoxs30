@@ -20,7 +20,7 @@ DS_FAILED = "Failed"
 #
 _LOGGER = logging.getLogger(__name__)
 #
-from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP)
 #
 
 CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
@@ -58,9 +58,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.info("retying initialization")
         asyncio.create_task(manager.initialize_retry_task())
         return False
-       
+
+    listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_shutdown)
+
     _LOGGER.info("async_setup complete")
     return True
+
 
 class Manager(object):
 
@@ -69,7 +72,6 @@ class Manager(object):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
         self._update_counter: int = 0
-#       self._mp_lock: Lock = Lock()
         self._mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
 
@@ -78,6 +80,16 @@ class Manager(object):
         self._poll_interval:int = poll_interval
         self._fast_poll_interval:float = fast_poll_interval
         self._api:s30api_async = s30api_async(email, password)
+        self._shutdown = False
+        self._retrieve_task = None
+
+    async def async_shutdown(self, event):
+        self._shutdown = True
+        if self._retrieve_task != None:
+            self._mp_wakeup_event.set()
+            await self._retrieve_task
+        await self._api.shutdown()
+        _LOGGER.info("hello")
 
     def updateState(self, state: int) -> None:
         self._hass.states.async_set(DOMAIN_STATE, state, self.getMetricsList(), force_update=True)
@@ -90,7 +102,7 @@ class Manager(object):
         await self.connect_subscribe()
         await self.configuration_initialization()
         # Launch the message pump loop
-        asyncio.create_task(self.messagePump_task())
+        self._retrieve_task = asyncio.create_task(self.messagePump_task())
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
             self._hass.helpers.discovery.load_platform('climate', DOMAIN, self, self._config)
@@ -169,7 +181,6 @@ class Manager(object):
         return self._mp_wakeup_event.is_set()
 
     async def messagePump_task(self) -> None:
-        # TODO figure out a way to shutdown
         await asyncio.sleep(self._poll_interval)
         self._reinitialize = False
         self._err_cnt = 0
@@ -190,13 +201,17 @@ class Manager(object):
                 res = await asyncio.sleep(self._fast_poll_interval)
             else:
                 res = await self.event_wait_mp_wakeup(self._poll_interval)
+                if self._shutdown == True:
+                    break
                 if res == True:
                     self._mp_wakeup_event.clear()
                     fast_polling = True
                     fast_polling_cd = 10
 
-
-        if self._reinitialize == True:            
+        if self._shutdown == True:
+            _LOGGER.info("messagePump_task is exiting to shutdown")
+            return
+        elif self._reinitialize == True:            
             self.updateState(DS_DISCONNECTED)
             asyncio.create_task(self.reinitialize_task())
             _LOGGER.info("messagePump_task is exiting - to enter retries")
@@ -205,10 +220,6 @@ class Manager(object):
 
     async def messagePump(self) -> bool:
         bErr = False
-        # Sinc this function can be called within the messagepump_task or via
-        # fast polling, we likely don't want to be in this section of code twice
-        # or do we?   Not sure if this can cause a deadlock TODO
-#        async with self._mp_lock:
         try:
             self._update_counter += 1
             _LOGGER.debug("messagePump_task running")
