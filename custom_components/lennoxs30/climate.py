@@ -1,4 +1,6 @@
+from __future__ import annotations
 #from .s30exception import S30Exception
+from typing import Any, cast
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
@@ -100,10 +102,16 @@ class S30Climate(ClimateEntity):
         self.schedule_update_ha_state()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return {         
-        }        
+        attrs: dict[str, Any] = {}
+        attrs['fan'] = self._zone.fan
+        attrs['allergenDefender'] = self._zone.allergenDefender
+        attrs['damper'] = self._zone.damper
+        attrs['demand'] = self._zone.demand
+        attrs['humOperation'] = self._zone.humOperation
+        attrs['tempOperation'] = self._zone.tempOperation
+        return attrs
 
     def update(self):
         """Update data from the thermostat API."""
