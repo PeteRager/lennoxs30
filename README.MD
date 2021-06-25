@@ -8,23 +8,18 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 - Home Assistant >= 2021.04.06  (others may work)
 - Thermostat linked to a lennoxicomfort.com account
 
-# Current State and Suggested Usage
-
-The 0.0.3 is tested and resilient.  Recommendation is to install, test out your systems and use it.
-
 # Installation
-If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennox30 folder.
 
-Next, copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
+1.  Go to releases in this repo and downloss the latest zip or clone the repo
+2.  If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennoxs30 folder.
+3.  Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
+4.  Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
+5.  Restart HA
 
-Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
-
-Restart HA
 
 # Configuration
-### Example configuation
+Configuration of the integration is done in configuration.yaml
 
-Use your login information.  Please enabled debug when reporting issues or providing suggestions on missing capability.
 
 ```yaml
 lennoxs30:
@@ -33,12 +28,13 @@ lennoxs30:
    scan_interval: 30
    fast_scan_interval: 0.5
 
+# Enable logging if reporting issues  
 logger:
   default: info
   logs:
-    custom_components.lennoxs30.s30api_async: debug
     custom_components.lennoxs30: debug
     custom_components.lennoxs30.climate: debug
+    lennoxs30api: debug
 ```
 # Behavior
 
@@ -117,6 +113,6 @@ sensor.<system_name>_outdoor_temperature
 
 
 
-# Notes
+# 
 
 
