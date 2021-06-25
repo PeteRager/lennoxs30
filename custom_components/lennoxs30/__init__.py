@@ -1,11 +1,23 @@
 from asyncio.locks import Lock, Event
+from typing import Optional
+
+import voluptuous as vol
 
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 import logging
 import asyncio
-from lennoxs30api import S30Exception, EC_HTTP_ERR, EC_LOGIN, EC_SUBSCRIBE, EC_UNAUTHORIZED, s30api_async
+from lennoxs30api import (
+    S30Exception,
+    EC_HTTP_ERR,
+    EC_LOGIN,
+    EC_SUBSCRIBE,
+    EC_UNAUTHORIZED,
+    s30api_async,
+)
+
 #
 DOMAIN = "lennoxs30"
 DOMAIN_STATE = "lennoxs30.state"
@@ -17,18 +29,41 @@ DS_CONNECTED = "Connected"
 DS_RETRY_WAIT = "Waiting to Retry"
 DS_FAILED = "Failed"
 
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
+)
+
+CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
+DEFAULT_POLL_INTERVAL: int = 10
+DEFAULT_FAST_POLL_INTERVAL: float = 0.5
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_EMAIL): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
+                vol.Optional(CONF_FAST_POLL_INTERVAL): cv.positive_float,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
 #
 _LOGGER = logging.getLogger(__name__)
 #
-from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP)
 #
 
-CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
 
 MAX_ERRORS = 5
 RETRY_INTERVAL_SECONDS = 60
-DEFAULT_POLL_INTERVAL:int = 10
-DEFAULT_FAST_POLL_INTERVAL:float = 0.5
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     email = config.get(DOMAIN).get(CONF_EMAIL)
@@ -43,8 +78,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         fast_poll_interval = t
     else:
         fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
-    
-    _LOGGER.info(f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}]")
+
+    _LOGGER.info(
+        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}]"
+    )
 
     manager = Manager(hass, config, email, password, poll_interval, fast_poll_interval)
     try:
@@ -54,20 +91,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if e.error_code == EC_LOGIN:
             # TODO: encapsulate in manager class
             manager.updateState(DS_LOGIN_FAILED)
-            raise HomeAssistantError("Lennox30 unable to login - please check credentials and restart Home Assistant")
+            raise HomeAssistantError(
+                "Lennox30 unable to login - please check credentials and restart Home Assistant"
+            )
         _LOGGER.info("retying initialization")
         asyncio.create_task(manager.initialize_retry_task())
         return False
 
-    listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_shutdown)
+    listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
+    )
 
     _LOGGER.info("async_setup complete")
     return True
 
 
 class Manager(object):
-
-    def __init__(self, hass: HomeAssistant, config: ConfigType,  email: str, password: str, poll_interval:int, fast_poll_interval:float):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        email: str,
+        password: str,
+        poll_interval: int,
+        fast_poll_interval: float,
+    ):
 
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -75,11 +123,11 @@ class Manager(object):
         self._mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
 
-        self._hass:HomeAssistant = hass
+        self._hass: HomeAssistant = hass
         self._config: ConfigType = config
-        self._poll_interval:int = poll_interval
-        self._fast_poll_interval:float = fast_poll_interval
-        self._api:s30api_async = s30api_async(email, password)
+        self._poll_interval: int = poll_interval
+        self._fast_poll_interval: float = fast_poll_interval
+        self._api: s30api_async = s30api_async(email, password)
         self._shutdown = False
         self._retrieve_task = None
 
@@ -92,11 +140,13 @@ class Manager(object):
         _LOGGER.info("hello")
 
     def updateState(self, state: int) -> None:
-        self._hass.states.async_set(DOMAIN_STATE, state, self.getMetricsList(), force_update=True)
+        self._hass.states.async_set(
+            DOMAIN_STATE, state, self.getMetricsList(), force_update=True
+        )
 
     def getMetricsList(self):
         return self._api.metrics.getMetricList()
- 
+
     async def s30_initalize(self):
         self.updateState(DS_CONNECTING)
         await self.connect_subscribe()
@@ -105,13 +155,17 @@ class Manager(object):
         self._retrieve_task = asyncio.create_task(self.messagePump_task())
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
-            self._hass.helpers.discovery.load_platform('climate', DOMAIN, self, self._config)
-            self._hass.helpers.discovery.load_platform('sensor', DOMAIN, self, self._config)
+            self._hass.helpers.discovery.load_platform(
+                "climate", DOMAIN, self, self._config
+            )
+            self._hass.helpers.discovery.load_platform(
+                "sensor", DOMAIN, self, self._config
+            )
             self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 
     async def initialize_retry_task(self):
-        while (True):
+        while True:
             self.updateState(DS_RETRY_WAIT)
             await asyncio.sleep(RETRY_INTERVAL_SECONDS)
             self.updateState(DS_CONNECTING)
@@ -122,30 +176,50 @@ class Manager(object):
                 _LOGGER.error("async_setup: " + str(e))
                 if e.error_code == EC_LOGIN:
                     self.updateState(DS_LOGIN_FAILED)
-                    raise HomeAssistantError("Lennox30 unable to login - please check credentials and restart Home Assistant")
+                    raise HomeAssistantError(
+                        "Lennox30 unable to login - please check credentials and restart Home Assistant"
+                    )
                 _LOGGER.info("retying initialization")
                 self.updateState(DS_RETRY_WAIT)
 
-    async def configuration_initialization(self) ->None:
+    async def configuration_initialization(self) -> None:
         # Wait for zones to appear on each system
         sytemsWithZones = 0
         loops: int = 0
         numOfSystems = len(self._api.getSystems())
-        while (sytemsWithZones < numOfSystems and loops < 30):
+        while sytemsWithZones < numOfSystems and loops < 30:
             # TODO - should add a timeout and spin the APPLICATION_ID
-            _LOGGER.debug("__init__:async_setup waiting for zone config to arrive numSystems [" + str(numOfSystems) + "] sytemsWithZones [" + str(sytemsWithZones) + "]")
+            _LOGGER.debug(
+                "__init__:async_setup waiting for zone config to arrive numSystems ["
+                + str(numOfSystems)
+                + "] sytemsWithZones ["
+                + str(sytemsWithZones)
+                + "]"
+            )
             sytemsWithZones = 0
             await asyncio.sleep(self._fast_poll_interval)
             await self.messagePump()
             for lsystem in self._api.getSystems():
-                    numZones = len(lsystem.getZoneList())
-                    _LOGGER.debug("__init__:async_setup wait for zones system [" + lsystem.sysId + "] numZone [" + str(numZones) + "]")
-                    if numZones > 0:
-                        sytemsWithZones += 1
+                numZones = len(lsystem.getZoneList())
+                _LOGGER.debug(
+                    "__init__:async_setup wait for zones system ["
+                    + lsystem.sysId
+                    + "] numZone ["
+                    + str(numZones)
+                    + "]"
+                )
+                if numZones > 0:
+                    sytemsWithZones += 1
             loops += 1
         if loops == 30:
-            _LOGGER.error("configuration_initalization failed - no initial data received")
-            raise S30Exception("configuration_initalization failed - no initial data received", EC_SUBSCRIBE, 1)
+            _LOGGER.error(
+                "configuration_initalization failed - no initial data received"
+            )
+            raise S30Exception(
+                "configuration_initalization failed - no initial data received",
+                EC_SUBSCRIBE,
+                1,
+            )
 
     async def connect_subscribe(self):
         await self._api.serverConnect()
@@ -164,15 +238,16 @@ class Manager(object):
             except S30Exception as e:
                 _LOGGER.error("reinitialize_task: " + str(e))
                 if e.error_code == EC_LOGIN:
-                    raise HomeAssistantError("Lennox30 unable to login - please check credentials and restart Home Assistant")
+                    raise HomeAssistantError(
+                        "Lennox30 unable to login - please check credentials and restart Home Assistant"
+                    )
             self.updateState(DS_RETRY_WAIT)
             await asyncio.sleep(RETRY_INTERVAL_SECONDS)
 
         _LOGGER.info("reinitialize_task - reconnect successful")
         asyncio.create_task(self.messagePump_task())
 
-
-    async def event_wait_mp_wakeup(self,timeout: float) -> bool:
+    async def event_wait_mp_wakeup(self, timeout: float) -> bool:
         # suppress TimeoutError because we'll return False in case of timeout
         try:
             await asyncio.wait_for(self._mp_wakeup_event.wait(), timeout)
@@ -189,12 +264,12 @@ class Manager(object):
         fast_polling_cd: int = 0
         while self._reinitialize == False:
             try:
-               await self.messagePump()
+                await self.messagePump()
             except Exception as e:
                 _LOGGER.error("messagePump_task unexpected exception:" + str(e))
             if fast_polling == True:
                 fast_polling_cd = fast_polling_cd - 1
-                if fast_polling_cd <=0:
+                if fast_polling_cd <= 0:
                     fast_polling = False
 
             if fast_polling == True:
@@ -211,7 +286,7 @@ class Manager(object):
         if self._shutdown == True:
             _LOGGER.info("messagePump_task is exiting to shutdown")
             return
-        elif self._reinitialize == True:            
+        elif self._reinitialize == True:
             self.updateState(DS_DISCONNECTED)
             asyncio.create_task(self.reinitialize_task())
             _LOGGER.info("messagePump_task is exiting - to enter retries")
@@ -224,7 +299,7 @@ class Manager(object):
             self._update_counter += 1
             _LOGGER.debug("messagePump_task running")
             await self._api.messagePump()
-            if (self._update_counter >= 6):
+            if self._update_counter >= 6:
                 self.updateState(DS_CONNECTED)
                 self._update_counter = 0
         except S30Exception as e:
@@ -240,7 +315,7 @@ class Manager(object):
             else:
                 _LOGGER.error("messagePump_task - S30Exception " + str(e))
             bErr = True
-        except Exception as e:          
+        except Exception as e:
             _LOGGER.error("messagePump_task - Exception " + str(e))
             self._err_cnt += 1
             bErr = True
@@ -250,5 +325,3 @@ class Manager(object):
         if bErr is False:
             self._err_cnt = 0
         return bErr
- 
-

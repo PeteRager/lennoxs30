@@ -6,21 +6,32 @@ import logging
 from lennoxs30api import lennox_system
 
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    PLATFORM_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "lennoxs30"
 
-async def async_setup_platform(hass, config, add_entities, discovery_info: Manager=None ) -> bool:
-    # Discovery info is the API that we passed in. 
+
+async def async_setup_platform(
+    hass, config, add_entities, discovery_info: Manager = None
+) -> bool:
     _LOGGER.debug("sensor:async_setup_platform enter")
+    # Discovery info is the API that we passed in.
     if discovery_info is None:
-        _LOGGER.error("sensor:async_setup_platform expecting API in discovery_info, found None")
+        _LOGGER.error(
+            "sensor:async_setup_platform expecting API in discovery_info, found None"
+        )
         return False
     theType = str(type(discovery_info))
-    if 'Manager' not in theType:
-        _LOGGER.error(f"sensor:async_setup_platform expecting Manaager in discovery_info, found [{theType}]")
+    if "Manager" not in theType:
+        _LOGGER.error(
+            f"sensor:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
+        )
         return False
 
     sensor_list = []
@@ -29,39 +40,42 @@ async def async_setup_platform(hass, config, add_entities, discovery_info: Manag
         _LOGGER.info(f"Create S30 sensor system [{system.sysId}]")
         sensor = S30OutdoorTempSensor(hass, manager, system)
         sensor_list.append(sensor)
-    if len(sensor_list) != 0:         
+    if len(sensor_list) != 0:
         add_entities(sensor_list, True)
-        _LOGGER.debug(f"climate:async_setup_platform exit - created [{len(sensor_list)}] entitites")
+        _LOGGER.debug(
+            f"climate:async_setup_platform exit - created [{len(sensor_list)}] entitites"
+        )
         return True
     else:
-        _LOGGER.info(f"climate:async_setup_platform exit - no system outdoor temperatures found")
+        _LOGGER.info(
+            f"climate:async_setup_platform exit - no system outdoor temperatures found"
+        )
         return False
+
 
 class S30OutdoorTempSensor(SensorEntity):
     """Class for Lennox S30 thermostat."""
-    def __init__(self, hass: HomeAssistant, manager: Manager, system:lennox_system):
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         self._hass = hass
         self._manager = manager
         self._system = system
         self._system.registerOnUpdateCallback(self.update_callback)
-        self._myname = self._system.name + '_outdoor_temperature'
-         
+        self._myname = self._system.name + "_outdoor_temperature"
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
-#       self.async_schedule_update_ha_state()
-        self.schedule_update_ha_state()        
+        self.schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.sysId + '_OT').replace("-","")
+        return (self._system.sysId + "_OT").replace("-", "")
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {         
-        }        
+        return {}
 
     def update(self):
         """Update data from the thermostat API."""
