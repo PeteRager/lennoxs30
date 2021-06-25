@@ -1,24 +1,24 @@
-from asyncio.locks import Lock, Event
+"""Support for Lennoxs30 cloud api"""
+import asyncio
+from asyncio.locks import Event, Lock
+import logging
 from typing import Optional
 
-import voluptuous as vol
-
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-import logging
-import asyncio
 from lennoxs30api import (
-    S30Exception,
     EC_HTTP_ERR,
     EC_LOGIN,
     EC_SUBSCRIBE,
     EC_UNAUTHORIZED,
+    S30Exception,
     s30api_async,
 )
+import voluptuous as vol
 
-#
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+
 DOMAIN = "lennoxs30"
 DOMAIN_STATE = "lennoxs30.state"
 
@@ -38,7 +38,9 @@ from homeassistant.const import (
 
 CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
 DEFAULT_POLL_INTERVAL: int = 10
-DEFAULT_FAST_POLL_INTERVAL: float = 0.5
+DEFAULT_FAST_POLL_INTERVAL: float = 0.75
+MAX_ERRORS = 5
+RETRY_INTERVAL_SECONDS = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -46,23 +48,19 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
-                vol.Optional(CONF_FAST_POLL_INTERVAL): cv.positive_float,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_POLL_INTERVAL
+                ): cv.positive_int,
+                vol.Optional(
+                    CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
+                ): cv.positive_float,
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-
-#
 _LOGGER = logging.getLogger(__name__)
-#
-#
-
-
-MAX_ERRORS = 5
-RETRY_INTERVAL_SECONDS = 60
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -79,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
 
-    _LOGGER.info(
+    _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}]"
     )
 
@@ -94,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(
                 "Lennox30 unable to login - please check credentials and restart Home Assistant"
             )
-        _LOGGER.info("retying initialization")
+        _LOGGER.debug("retying initialization")
         asyncio.create_task(manager.initialize_retry_task())
         return False
 
@@ -102,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
     )
 
-    _LOGGER.info("async_setup complete")
+    _LOGGER.debug("async_setup complete")
     return True
 
 
@@ -116,13 +114,11 @@ class Manager(object):
         poll_interval: int,
         fast_poll_interval: float,
     ):
-
         self._reinitialize: bool = False
         self._err_cnt: int = 0
         self._update_counter: int = 0
         self._mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
-
         self._hass: HomeAssistant = hass
         self._config: ConfigType = config
         self._poll_interval: int = poll_interval
@@ -131,13 +127,14 @@ class Manager(object):
         self._shutdown = False
         self._retrieve_task = None
 
-    async def async_shutdown(self, event):
+    async def async_shutdown(self, event: Event) -> None:
+        _LOGGER.debug("async_shutdown started")
         self._shutdown = True
         if self._retrieve_task != None:
             self._mp_wakeup_event.set()
             await self._retrieve_task
         await self._api.shutdown()
-        _LOGGER.info("hello")
+        _LOGGER.debug("async_shutdown complete")
 
     def updateState(self, state: int) -> None:
         self._hass.states.async_set(
@@ -179,7 +176,7 @@ class Manager(object):
                     raise HomeAssistantError(
                         "Lennox30 unable to login - please check credentials and restart Home Assistant"
                     )
-                _LOGGER.info("retying initialization")
+                _LOGGER.debug("retying initialization")
                 self.updateState(DS_RETRY_WAIT)
 
     async def configuration_initialization(self) -> None:
@@ -231,7 +228,7 @@ class Manager(object):
         while True:
             try:
                 self.updateState(DS_CONNECTING)
-                _LOGGER.info("reinitialize_task - trying reconnect")
+                _LOGGER.debug("reinitialize_task - trying reconnect")
                 await self.connect_subscribe()
                 self.updateState(DS_CONNECTED)
                 break
@@ -244,7 +241,7 @@ class Manager(object):
             self.updateState(DS_RETRY_WAIT)
             await asyncio.sleep(RETRY_INTERVAL_SECONDS)
 
-        _LOGGER.info("reinitialize_task - reconnect successful")
+        _LOGGER.debug("reinitialize_task - reconnect successful")
         asyncio.create_task(self.messagePump_task())
 
     async def event_wait_mp_wakeup(self, timeout: float) -> bool:
@@ -284,14 +281,14 @@ class Manager(object):
                     fast_polling_cd = 10
 
         if self._shutdown == True:
-            _LOGGER.info("messagePump_task is exiting to shutdown")
+            _LOGGER.debug("messagePump_task is exiting to shutdown")
             return
         elif self._reinitialize == True:
             self.updateState(DS_DISCONNECTED)
             asyncio.create_task(self.reinitialize_task())
-            _LOGGER.info("messagePump_task is exiting - to enter retries")
+            _LOGGER.debug("messagePump_task is exiting - to enter retries")
         else:
-            _LOGGER.info("messagePump_task is exiting - and this should not happen")
+            _LOGGER.debug("messagePump_task is exiting - and this should not happen")
 
     async def messagePump(self) -> bool:
         bErr = False
@@ -306,12 +303,12 @@ class Manager(object):
             self._err_cnt += 1
             # This should mean we have been logged out and need to start the login process
             if e.error_code == EC_UNAUTHORIZED:
-                _LOGGER.info("messagePump_task - unauthorized - trying to relogin")
+                _LOGGER.debug("messagePump_task - unauthorized - trying to relogin")
                 self._reinitialize = True
             # If its an HTTP error, we will not log an error, just and info message, unless
             # this exeeeds the max consecutive error count
             elif e.error_code == EC_HTTP_ERR and self._err_cnt < MAX_ERRORS:
-                _LOGGER.info("messagePump_task - S30Exception " + str(e))
+                _LOGGER.debug("messagePump_task - S30Exception " + str(e))
             else:
                 _LOGGER.error("messagePump_task - S30Exception " + str(e))
             bErr = True

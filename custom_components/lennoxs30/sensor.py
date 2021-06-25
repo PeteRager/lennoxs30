@@ -1,3 +1,4 @@
+"""Support for Lennoxs30 outdoor temperature sensor"""
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
 from . import Manager
 from homeassistant.core import HomeAssistant

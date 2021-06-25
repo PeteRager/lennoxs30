@@ -1,63 +1,48 @@
+"""Support for Lennoxs30 Climate Entity"""
 from __future__ import annotations
-from . import Manager
+
 import logging
+from typing import Any
+
 from lennoxs30api import (
-    S30Exception,
     LENNOX_HUMID_OPERATION_DEHUMID,
     LENNOX_HUMID_OPERATION_WAITING,
     LENNOX_HVAC_HEAT_COOL,
+    S30Exception,
     lennox_system,
     lennox_zone,
 )
 from lennoxs30api.s30exception import EC_NO_SCHEDULE
-from homeassistant.core import HomeAssistant
-from homeassistant.components.climate import ClimateEntity, PLATFORM_SCHEMA
+
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    FAN_AUTO,
     FAN_OFF,
-    HVAC_MODE_DRY,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
+    FAN_ON,
     HVAC_MODE_COOL,
-    ATTR_HVAC_MODE,
+    HVAC_MODE_DRY,
+    HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_NONE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_FAN_MODE,
-    FAN_ON,
-    FAN_AUTO,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_HIGH,
-    PRESET_NONE,
 )
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
 
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_DRY,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    PRESET_AWAY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_FAN_MODE,
-    FAN_ON,
-    FAN_AUTO,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_HIGH,
-    PRESET_NONE,
-)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
-from typing import Any
+from . import Manager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,13 +81,13 @@ async def async_setup_platform(
     for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.getTemperature() != None:
-                _LOGGER.info(
+                _LOGGER.debug(
                     f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]"
                 )
                 climate = S30Climate(hass, manager, system, zone)
                 climate_list.append(climate)
             else:
-                _LOGGER.info(
+                _LOGGER.debug(
                     f"Skipping inactive zone - system [{system.sysId}] zone [{zone.name}]"
                 )
     if len(climate_list) != 0:
@@ -136,7 +121,7 @@ class S30Climate(ClimateEntity):
         return (self._system.sysId + "_" + str(self._zone.id)).replace("-", "")
 
     def update_callback(self):
-        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        _LOGGER.debug(f"update_callback myname [{self._myname}]")
         #        self.async_schedule_update_ha_state()
         self.schedule_update_ha_state()
 
@@ -304,7 +289,7 @@ class S30Climate(ClimateEntity):
             # Only this mode needs to be mapped
             if t_hvac_mode == HVAC_MODE_HEAT_COOL:
                 t_hvac_mode = LENNOX_HVAC_HEAT_COOL
-            _LOGGER.info(
+            _LOGGER.debug(
                 "climate:async_set_hvac_mode zone ["
                 + self._myname
                 + "] ha_mode ["
@@ -373,7 +358,7 @@ class S30Climate(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         try:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "climate:async_set_preset_mode name["
                 + self._myname
                 + "] preset_mode ["
@@ -424,7 +409,7 @@ class S30Climate(ClimateEntity):
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             r_hsp = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        _LOGGER.info(
+        _LOGGER.debug(
             f"climate:async_set_temperature zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
         )
 
@@ -450,7 +435,7 @@ class S30Climate(ClimateEntity):
             # If an HVAC mode is requested; and we are not in that mode, then the first step
             # is to switch the zone into that mode before setting the temperature
             if r_hvacMode != None and r_hvacMode != self.hvac_mode:
-                _LOGGER.info(
+                _LOGGER.debug(
                     f"climate:async_set_temperature zone [{self._myname}] setting hvacMode [{r_hvacMode}]"
                 )
                 await self.async_set_hvac_mode(r_hvacMode)
@@ -460,13 +445,13 @@ class S30Climate(ClimateEntity):
 
             if r_temperature is not None:
                 if self.hvac_mode == HVAC_MODE_COOL:
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in cool mode - zone [{self._myname}] temperature [{r_temperature}]"
                     )
                     t_csp = r_temperature
                     await self._zone.setCoolSPF(r_temperature)
                 elif self.hvac_mode == HVAC_MODE_HEAT:
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in heat mode - zone [{self._myname}] sp [{r_temperature}]"
                     )
                     t_hsp = r_temperature
@@ -477,7 +462,7 @@ class S30Climate(ClimateEntity):
                     )
                     return
             else:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "climate:async_set_temperature zone ["
                     + self._myname
                     + "] csp ["
@@ -500,7 +485,7 @@ class S30Climate(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        _LOGGER.info(
+        _LOGGER.debug(
             f"climate:async_set_fan_mode name[{self._myname}] fanMode [{fan_mode}]"
         )
         try:
