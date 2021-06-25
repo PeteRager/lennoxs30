@@ -34,23 +34,35 @@ logger:
   logs:
     custom_components.lennoxs30: debug
     custom_components.lennoxs30.climate: debug
-    lennoxs30api: debug
+    lennoxs30api: debug    
 ```
+
+### Configuration Parameters
+| Name | Type | Requirement | Default | Description |
+| ---- | ---- | ----------- | ------- | ----------- |
+| email | string | required | none | Cloud service account username |
+| password | string | required | none | Cloud service account password |
+| scan_interval| int | optional | 15 | Scan interval to check for cloud messages in seconds|
+| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands|
+
 # Behavior
 
-This integration will automatically detect all the homes, systems and zones in your account and add a Climate Entity for each discovered zone.  The names of the climate entities will be climate.<system_name>_<zone_name>.
+This integration will automatically detect all the homes, systems and zones in your account and add a Climate Entity for each discovered zone.  The names of the climate entities will be
+
+*climate.<system_name>_<zone_name>*
+
 
 System name is the name you gave to your S30.  By default Lennox names the Zones - "Zone 1", "Zone 2", "Zone 3", "Zone 4"
 
-The integration creates internal Entity_Ids using the GUID of your S30 plus the zone index (0,1,2,3).  Hence renaming your zone or system in the S30 should not cause duplicates.
+The integration creates internal Entity_Ids using the GUID of your S30 plus the zone index (0,1,2,3).
 
-# Functions
+# Supported operations
 
-The HVAC_MODE of each zone may be set to off, cool, heat or heat_cool.  The speficic modes enabled will be specific to your HVAC equipment.
+**HVAC_MODE** supports **off**, **cool**, **heat** or **heat_cool** mode.  The speficic modes availalbe depend on you equipemnt   For example an AC does not support heat.  
 
-The FAN_MODE may be set to auto, on, circulate
+**FAN_MODE**  may be set to **auto**, **on**, **circulate**.
 
-The heating and cooling setpoints can be set
+**Heating** and **cooling** setpoints can be set
 
 Zone Temperature and Humidity are reported
 
@@ -65,14 +77,6 @@ Please create issues to track bugs.  Please capture the logs with debug turned o
 The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information.  It is highly recommend to not publicly post these log files.  Information includes - the address of your residence and email address.  Issues #14 tracks this and we will work to scrub this information from the log file.  If I need a logfile or troubleshooting I will ask you to email it  
 
 
-
-### Configuration Parameters
-| Name | Type | Requirement | Default | Description |
-| ---- | ---- | ----------- | ------- | ----------- |
-| email | string | required | none | Cloud service account username |
-| password | string | required | none | Cloud service account password |
-| scan_interval| int | optional | 15 | The normal scan mode to check for cloud messages in seconds|
-| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
 
 ## Entities
 ### lennoxs30.state
