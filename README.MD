@@ -80,15 +80,11 @@ The integration provides all of the standard climate attributes, including
 
 In additon the following extra attributes are provided:
 
-|Attribute Name|Description|
+|**Attribute Name**|**Description**|
 |Fan|Indicates if the fan is currently running|
 |Damper|Position of damper - range 0-100|
 |TempOperstion|Current temperatue operation heating or cooling|
-
-
-one Temperature and Humidity are reported
-
-
+|HumidityOperation|Drying or humidfying|
 
 # Reporting Bugs
 
