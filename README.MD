@@ -45,7 +45,8 @@ logger:
 | scan_interval| int | optional | 15 | Scan interval to check for cloud messages in seconds|
 | fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands|
 
-# Behavior
+# Entities
+## Climate
 
 This integration will automatically detect all the homes, systems and zones in your account and add a Climate Entity for each discovered zone.  The names of the climate entities will be
 
@@ -56,7 +57,7 @@ System name is the name you gave to your S30.  By default Lennox names the Zones
 
 The integration creates internal Entity_Ids using the GUID of your S30 plus the zone index (0,1,2,3).
 
-# Supported operations
+### Supported operations
 
 **HVAC_MODE** supports **off**, **cool**, **heat** or **heat_cool** mode.  The speficic modes availalbe depend on you equipemnt   For example an AC does not support heat.  
 
@@ -64,9 +65,30 @@ The integration creates internal Entity_Ids using the GUID of your S30 plus the 
 
 **Heating** and **cooling** setpoints can be set
 
-Zone Temperature and Humidity are reported
+**Presets** are supported.  The Preset List is the list of schedules that you have configured in the S30.  
 
-Presets are supported.  The Preset List is the list of schedules that you have configured in the S30.  When you are running a schedule; changes to the temperature or fan create a temporary schedule override (the Mobile APP does the same thing).  The override will automatically end at the end of the Next Period (e.g. at the time of your next schedule period.)  To cancel the override, there is a preset called "Cancel Hold".  Invoking this preset will remove the hold and re-enable the underlying schedule.
+When you are running a schedule; changes to the temperature or fan create a temporary schedule override (the Mobile APP does the same thing).  The override will automatically end at the end of the Next Period (e.g. at the time of your next schedule period.)  To cancel the override, there is a preset called "Cancel Hold".  Invoking this preset will remove the hold and re-enable the underlying schedule.
+
+### Supported Data
+
+The integration provides all of the standard climate attributes, including
+1. Temperature
+2. Humidity
+3. Current HVAC action
+4. Active setpoints
+5. Active Preset
+
+In additon the following extra attributes are provided:
+
+|Attribute Name|Description|
+|Fan|Indicates if the fan is currently running|
+|Damper|Position of damper - range 0-100|
+|TempOperstion|Current temperatue operation heating or cooling|
+
+
+one Temperature and Humidity are reported
+
+
 
 # Reporting Bugs
 
