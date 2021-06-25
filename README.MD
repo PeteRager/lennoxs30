@@ -8,23 +8,18 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 - Home Assistant >= 2021.04.06  (others may work)
 - Thermostat linked to a lennoxicomfort.com account
 
-# Current State and Suggested Usage
-
-The 0.0.3 is tested and resilient.  Recommendation is to install, test out your systems and use it.
-
 # Installation
-If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennox30 folder.
 
-Next, copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
+1.  Go to releases in this repo and downloss the latest zip or clone the repo
+2.  If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennoxs30 folder.
+3.  Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
+4.  Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
+5.  Restart HA
 
-Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
-
-Restart HA
 
 # Configuration
-### Example configuation
+Configuration of the integration is done in configuration.yaml
 
-Use your login information.  Please enabled debug when reporting issues or providing suggestions on missing capability.
 
 ```yaml
 lennoxs30:
@@ -33,32 +28,63 @@ lennoxs30:
    scan_interval: 30
    fast_scan_interval: 0.5
 
+# Enable logging if reporting issues  
 logger:
   default: info
   logs:
-    custom_components.lennoxs30.s30api_async: debug
     custom_components.lennoxs30: debug
     custom_components.lennoxs30.climate: debug
+    lennoxs30api: debug    
 ```
-# Behavior
 
-This integration will automatically detect all the homes, systems and zones in your account and add a Climate Entity for each discovered zone.  The names of the climate entities will be climate.<system_name>_<zone_name>.
+### Configuration Parameters
+| Name | Type | Requirement | Default | Description |
+| ---- | ---- | ----------- | ------- | ----------- |
+| email | string | required | none | Cloud service account username |
+| password | string | required | none | Cloud service account password |
+| scan_interval| int | optional | 15 | Scan interval to check for cloud messages in seconds|
+| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands|
+
+# Entities
+## Climate
+
+This integration will automatically detect all the homes, systems and zones in your account and add a Climate Entity for each discovered zone.  The names of the climate entities will be
+
+*climate.<system_name>_<zone_name>*
+
 
 System name is the name you gave to your S30.  By default Lennox names the Zones - "Zone 1", "Zone 2", "Zone 3", "Zone 4"
 
-The integration creates internal Entity_Ids using the GUID of your S30 plus the zone index (0,1,2,3).  Hence renaming your zone or system in the S30 should not cause duplicates.
+The integration creates internal Entity_Ids using the GUID of your S30 plus the zone index (0,1,2,3).
 
-# Functions
+### Supported operations
 
-The HVAC_MODE of each zone may be set to off, cool, heat or heat_cool.  The speficic modes enabled will be specific to your HVAC equipment.
+**HVAC_MODE** supports **off**, **cool**, **heat** or **heat_cool** mode.  The speficic modes availalbe depend on you equipemnt   For example an AC does not support heat.  
 
-The FAN_MODE may be set to auto, on, circulate
+**FAN_MODE**  may be set to **auto**, **on**, **circulate**.
 
-The heating and cooling setpoints can be set
+**Heating** and **cooling** setpoints can be set
 
-Zone Temperature and Humidity are reported
+**Presets** are supported.  The Preset List is the list of schedules that you have configured in the S30.  
 
-Presets are supported.  The Preset List is the list of schedules that you have configured in the S30.  When you are running a schedule; changes to the temperature or fan create a temporary schedule override (the Mobile APP does the same thing).  The override will automatically end at the end of the Next Period (e.g. at the time of your next schedule period.)  To cancel the override, there is a preset called "Cancel Hold".  Invoking this preset will remove the hold and re-enable the underlying schedule.
+When you are running a schedule; changes to the temperature or fan create a temporary schedule override (the Mobile APP does the same thing).  The override will automatically end at the end of the Next Period (e.g. at the time of your next schedule period.)  To cancel the override, there is a preset called "Cancel Hold".  Invoking this preset will remove the hold and re-enable the underlying schedule.
+
+### Supported Data
+
+The integration provides all of the standard climate attributes, including
+1. Temperature
+2. Humidity
+3. Current HVAC action
+4. Active setpoints
+5. Active Preset
+
+In additon the following extra attributes are provided:
+
+|**Attribute Name**|**Description**|
+|Fan|Indicates if the fan is currently running|
+|Damper|Position of damper - range 0-100|
+|TempOperstion|Current temperatue operation heating or cooling|
+|HumidityOperation|Drying or humidfying|
 
 # Reporting Bugs
 
@@ -69,14 +95,6 @@ Please create issues to track bugs.  Please capture the logs with debug turned o
 The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information.  It is highly recommend to not publicly post these log files.  Information includes - the address of your residence and email address.  Issues #14 tracks this and we will work to scrub this information from the log file.  If I need a logfile or troubleshooting I will ask you to email it  
 
 
-
-### Configuration Parameters
-| Name | Type | Requirement | Default | Description |
-| ---- | ---- | ----------- | ------- | ----------- |
-| email | string | required | none | Cloud service account username |
-| password | string | required | none | Cloud service account password |
-| scan_interval| int | optional | 15 | The normal scan mode to check for cloud messages in seconds|
-| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands.  After 10 iterations or on confirmation of the change, the system returns to normal scan mode|
 
 ## Entities
 ### lennoxs30.state
@@ -117,6 +135,6 @@ sensor.<system_name>_outdoor_temperature
 
 
 
-# Notes
+# 
 
 
