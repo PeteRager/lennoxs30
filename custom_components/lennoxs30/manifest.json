@@ -5,7 +5,7 @@
     "documentation": "https://github.com/PeteRager/lennoxs30",
     "issuetracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
+    "requirements": ["lennoxs30api==0.0.5"],
     "codeowners": ["@PeteRager"],
-    "requirements": ["lennoxs30api==0.0.4"],
     "iot_class": "cloud_polling"
   }
