@@ -20,6 +20,15 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 # Configuration
 Configuration of the integration is done in configuration.yaml
 
+## Minimal
+
+```yaml
+lennoxs30:
+   email: myemail@myemail.com
+   password: mypassword
+```
+
+## All options a debug turned on
 
 ```yaml
 lennoxs30:
@@ -36,6 +45,7 @@ logger:
     custom_components.lennoxs30.climate: debug
     lennoxs30api: debug    
 ```
+
 
 ### Configuration Parameters
 | Name | Type | Requirement | Default | Description |
