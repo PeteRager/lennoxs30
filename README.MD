@@ -43,7 +43,7 @@ logger:
 | email | string | required | none | Cloud service account username |
 | password | string | required | none | Cloud service account password |
 | scan_interval| int | optional | 15 | Scan interval to check for cloud messages in seconds|
-| fast_scan_interval| float | optional | 0.5 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands|
+| fast_scan_interval| float | optional | 0.75 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands|
 
 # Entities
 ## Climate
@@ -59,7 +59,7 @@ The integration creates internal Entity_Ids using the GUID of your S30 plus the 
 
 ### Supported operations
 
-**HVAC_MODE** supports **off**, **cool**, **heat** or **heat_cool** mode.  The speficic modes availalbe depend on you equipemnt   For example an AC does not support heat.  
+**HVAC_MODE** supports **off**, **cool**, **heat** or **heat_cool** mode.  The speficic modes available depend on you equipemnt. For example an AC does not support heat, hence the heat and heat_cool modes would not appear in HA.
 
 **FAN_MODE**  may be set to **auto**, **on**, **circulate**.
 
@@ -78,37 +78,28 @@ The integration provides all of the standard climate attributes, including
 4. Active setpoints
 5. Active Preset
 
-In additon the following extra attributes are provided:
+In additon the following extra attributes are provided, to allow for a more detailed information on the current zone operation.
 
-|**Attribute Name**|**Description**|
-|Fan|Indicates if the fan is currently running|
-|Damper|Position of damper - range 0-100|
-|TempOperstion|Current temperatue operation heating or cooling|
-|HumidityOperation|Drying or humidfying|
+| Attribute Name | Description | 
+| ---- | ---- |
+| fan | Indicates if the fan is currently running |
+| damper | Position of damper - range 0-100 |
+| tempOperation | Current acvtive temperatue operation heating or cooling |
+| humidityOperation | Current active humidty operation - Drying or humidfying |
+| allergenDefender | Indicates if this is enabled on the zone |
 
-# Reporting Bugs
-
-Please create issues to track bugs.  Please capture the logs with debug turned on.
-
-## A note on Debug Log Files
-
-The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information.  It is highly recommend to not publicly post these log files.  Information includes - the address of your residence and email address.  Issues #14 tracks this and we will work to scrub this information from the log file.  If I need a logfile or troubleshooting I will ask you to email it  
-
-
-
-## Entities
-### lennoxs30.state
+## lennoxs30.state
 
 The entity is automatically created in Home Assistant and can be used to track the state and health of the connection to the cloud.
 
 | State | Description |
 | ----- | ----------- |
-| Connected| API is connected to cloud system.  This is the desired state|
-| Connecting| API is trying to connect to the cloud system.|
-| Disconnected| API has failed to connect to cloud and will not try again.  Please raise an issue if you encounter this state|
-| Login Failed| The login failued due to bad email/password combination.  Please correct credentials and restart HA|
-| Waiting to Retry| The API was unable to connect or lost connection and is waiting to attempt a retry|
-| Failed| The API failed.  Please raise an issue if you encounter this state|
+| Connected | API is connected to cloud system.  This is the desired state|
+| Connecting | API is trying to connect to the cloud system.|
+| Disconnected | API has failed to connect to cloud and will not try again.  Please raise an issue if you encounter this state|
+| Login Failed | The login failued due to bad email/password combination.  Please correct credentials and restart HA|
+| Waiting to Retry | The API was unable to connect or lost connection and is waiting to attempt a retry|
+| Failed | The API failed.  Please raise an issue if you encounter this state |
 
 The entity also has a set of attributes to provide diagnostic data:
 
@@ -128,13 +119,22 @@ The entity also has a set of attributes to provide diagnostic data:
 |last_reconnect_time| DateTime| Time of the last reconnect or the time of the initial connect|
 |last_message_time| DateTime| Time of the last message from Lennox Cloud.  How often messages are received is based on how often data is changing in the thermostat.  For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent|
 
-### Outdoor Temperature Sensor
+##  sensor for Outdoor Temperature
 Lennox systems may have an outdoor temperature sensor.  If your system has one a sensor will be automatically created.  It's name will be
 
 sensor.<system_name>_outdoor_temperature
 
+# Reporting Bugs
 
+Please create issues to track bugs.  Please capture the logs with debug turned on.
 
-# 
+## A note on Debug Log Files
+
+The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information.  It is highly recommend to not publicly post these log files.  Information includes - the address of your residence and email address.  Issues #14 tracks this and we will work to scrub this information from the log file.  If I need a logfile or troubleshooting I will ask you to email it  
+
+# Enhancement Requests
+
+Enhancement requests are welcomed and encouraged.  Please log issues for us to track enhancements.
+
 
 
