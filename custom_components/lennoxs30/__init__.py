@@ -1,3 +1,4 @@
+
 """Support for Lennoxs30 cloud api"""
 import asyncio
 from asyncio.locks import Event, Lock
@@ -268,7 +269,7 @@ class Manager(object):
                 fast_polling_cd = fast_polling_cd - 1
                 if fast_polling_cd <= 0:
                     fast_polling = False
-
+                    
             if fast_polling == True:
                 res = await asyncio.sleep(self._fast_poll_interval)
             else:

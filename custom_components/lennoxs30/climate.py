@@ -121,8 +121,6 @@ class S30Climate(ClimateEntity):
         return (self._system.sysId + "_" + str(self._zone.id)).replace("-", "")
 
     def update_callback(self):
-        _LOGGER.debug(f"update_callback myname [{self._myname}]")
-        #        self.async_schedule_update_ha_state()
         self.schedule_update_ha_state()
 
     @property
@@ -278,6 +276,7 @@ class S30Climate(ClimateEntity):
         if self._zone.coolingOption == True and self._zone.heatingOption == True:
             modes.append(HVAC_MODE_HEAT_COOL)
         return modes
+
 
     async def async_trigger_fast_poll(self) -> None:
         self._manager._mp_wakeup_event.set()
