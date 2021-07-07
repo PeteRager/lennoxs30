@@ -8,7 +8,7 @@ from lennoxs30api import lennox_system
 
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    #    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     PLATFORM_SCHEMA,
 )
@@ -103,6 +103,6 @@ class S30OutdoorTempSensor(SensorEntity):
     def device_class(self):
         return DEVICE_CLASS_TEMPERATURE
 
-    @property
-    def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+    # @property
+    # def state_class(self):
+    #    return STATE_CLASS_MEASUREMENT

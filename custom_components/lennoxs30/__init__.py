@@ -1,4 +1,3 @@
-
 """Support for Lennoxs30 cloud api"""
 import asyncio
 from asyncio.locks import Event, Lock
@@ -93,9 +92,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(
                 "Lennox30 unable to login - please check credentials and restart Home Assistant"
             )
-        _LOGGER.debug("retying initialization")
+        _LOGGER.warning(
+            "Configuration not received within timeout - will retry in 30 seconds"
+        )
         asyncio.create_task(manager.initialize_retry_task())
-        return False
+        return True
 
     listener = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
@@ -269,7 +270,7 @@ class Manager(object):
                 fast_polling_cd = fast_polling_cd - 1
                 if fast_polling_cd <= 0:
                     fast_polling = False
-                    
+
             if fast_polling == True:
                 res = await asyncio.sleep(self._fast_poll_interval)
             else:
