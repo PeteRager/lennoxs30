@@ -10,7 +10,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 # Installation
 
-1.  Go to releases in this repo and downloss the latest zip or clone the repo
+1.  Go to releases in this repo and download the latest zip or clone the repo
 2.  If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennoxs30 folder.
 3.  Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/ 
 4.  Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
@@ -28,7 +28,7 @@ lennoxs30:
    password: mypassword
 ```
 
-## All options a debug turned on
+## All options and debug turned on
 
 ```yaml
 lennoxs30:
