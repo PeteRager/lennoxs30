@@ -94,6 +94,7 @@ In additon the following extra attributes are provided, to allow for a more deta
 | ---- | ---- |
 | fan | Indicates if the fan is currently running |
 | damper | Position of damper - range 0-100 |
+| demand | CFM of air demand for the zone |
 | tempOperation | Current acvtive temperatue operation heating or cooling |
 | humidityOperation | Current active humidty operation - Drying or humidfying |
 | allergenDefender | Indicates if this is enabled on the zone |
