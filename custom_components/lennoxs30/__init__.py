@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 
 CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
+CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
 MAX_ERRORS = 5
@@ -54,6 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
                 ): cv.positive_float,
+                vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
             }
         )
     },
@@ -77,11 +79,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
 
+    allergenDefenderSwitch = config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
+
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}]"
     )
 
-    manager = Manager(hass, config, email, password, poll_interval, fast_poll_interval)
+    manager = Manager(
+        hass,
+        config,
+        email,
+        password,
+        poll_interval,
+        fast_poll_interval,
+        allergenDefenderSwitch,
+    )
     try:
         await manager.s30_initalize()
     except S30Exception as e:
@@ -115,6 +127,7 @@ class Manager(object):
         password: str,
         poll_interval: int,
         fast_poll_interval: float,
+        allergenDefenderSwitch: bool,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -128,6 +141,7 @@ class Manager(object):
         self._api: s30api_async = s30api_async(email, password)
         self._shutdown = False
         self._retrieve_task = None
+        self._allergenDefenderSwitch = allergenDefenderSwitch
 
     async def async_shutdown(self, event: Event) -> None:
         _LOGGER.debug("async_shutdown started")
@@ -160,6 +174,10 @@ class Manager(object):
             self._hass.helpers.discovery.load_platform(
                 "sensor", DOMAIN, self, self._config
             )
+            self._hass.helpers.discovery.load_platform(
+                "switch", DOMAIN, self, self._config
+            )
+
             self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 
@@ -199,6 +217,9 @@ class Manager(object):
             await asyncio.sleep(self._fast_poll_interval)
             await self.messagePump()
             for lsystem in self._api.getSystems():
+                # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
+                if lsystem.name == None:
+                    continue
                 numZones = len(lsystem.getZoneList())
                 _LOGGER.debug(
                     "__init__:async_setup wait for zones system ["

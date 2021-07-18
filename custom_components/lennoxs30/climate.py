@@ -136,6 +136,7 @@ class S30Climate(ClimateEntity):
             attrs["fan"] = FAN_OFF
         attrs["humOperation"] = self._zone.humOperation
         attrs["tempOperation"] = self._zone.tempOperation
+        attrs["ventilation"] = self._zone.ventilation
         return attrs
 
     def update(self):
@@ -276,7 +277,6 @@ class S30Climate(ClimateEntity):
         if self._zone.coolingOption == True and self._zone.heatingOption == True:
             modes.append(HVAC_MODE_HEAT_COOL)
         return modes
-
 
     async def async_trigger_fast_poll(self) -> None:
         self._manager._mp_wakeup_event.set()
