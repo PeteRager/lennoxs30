@@ -36,6 +36,7 @@ lennoxs30:
    password: mypassword
    scan_interval: 30
    fast_scan_interval: 0.5
+   allergen_defender_switch: true
 
 # Enable logging if reporting issues  
 logger:
@@ -53,6 +54,7 @@ logger:
 | email | string | required | none | Cloud service account username |
 | password | string | required | none | Cloud service account password |
 | scan_interval| int | optional | 15 | Scan interval to check for cloud messages in seconds|
+| allergen_defender_switch | bool | optional | false | When true creates a switch entity to allow control of allergenDefender mode |
 | fast_scan_interval| float | optional | 0.75 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands|
 
 # Entities
@@ -92,12 +94,13 @@ In additon the following extra attributes are provided, to allow for a more deta
 
 | Attribute Name | Description | 
 | ---- | ---- |
-| fan | Indicates if the fan is currently running |
+| fan | Indicates if the fan is currently running.  Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.) |
 | damper | Position of damper - range 0-100 |
-| demand | CFM of air demand for the zone |
+| demand | CFM of air demand for the zone.  Thanks @blyons16 for getting this information from his installers |
 | tempOperation | Current acvtive temperatue operation heating or cooling |
 | humidityOperation | Current active humidty operation - Drying or humidfying |
 | allergenDefender | Indicates if this is enabled on the zone |
+| ventilation | Indicates if external ventilation is currently active on this zone |
 
 ## lennoxs30.state
 
@@ -134,6 +137,31 @@ The entity also has a set of attributes to provide diagnostic data:
 Lennox systems may have an outdoor temperature sensor.  If your system has one a sensor will be automatically created.  It's name will be
 
 sensor.<system_name>_outdoor_temperature
+
+##  switches
+
+### allergen_defender
+When the configuration parameter is true a switch will be created.
+
+switch.<system_name>__allergen_defender
+
+The switch will reflect the current state of the allergen defender mode and will allow turning the mode on or off
+
+### ventilation
+If your system has an external outdoor air damper a switch will be created.
+
+switch.<system_name>_ventilation
+
+The switch will reflect the current state of the ventilation damper and will allow turning the mode on or off.  
+The switch has the following attributes:
+
+| Attribute | Type |Description |
+| --------- | ---- | ---------- |
+| ventilationRemainigTime |int| number of minutes remaining in ventilation action |
+| ventilatingUntilTime |int| integer timestamp of the end time of the ventilation action |
+| receive_count|int| number of queries to recieve new messages.  Most queries return no messages|
+| diagVentilationRuntime | int | total number of minutes the system has ventilated for over it's lifetime |
+
 
 # Reporting Bugs
 
