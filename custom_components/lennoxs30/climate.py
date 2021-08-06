@@ -50,6 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 FAN_CIRCULATE = "circulate"
 # Additional Presets
 PRESET_CANCEL_HOLD = "cancel hold"
+PRESET_CANCEL_AWAY_MODE = "cancel away mode"
 PRESET_SCHEDULE_OVERRIDE = "Schedule Hold"
 # Basic set of support flags for every HVAC setup
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_FAN_MODE
@@ -112,7 +113,9 @@ class S30Climate(ClimateEntity):
         self._manager: Manager = manager
         self._system = system
         self._zone = zone
-        self._zone.registerOnUpdateCallback(self.update_callback)
+        self._zone.registerOnUpdateCallback(self.zone_update_callback)
+        # We need notification of state of system.manualAwayMode in order to update the preset mode in HA.
+        self._system.registerOnUpdateCallback(self.system_update_callback)
         self._myname = self._system.name + "_" + self._zone.name
 
     @property
@@ -120,7 +123,10 @@ class S30Climate(ClimateEntity):
         # HA fails with dashes in IDs
         return (self._system.sysId + "_" + str(self._zone.id)).replace("-", "")
 
-    def update_callback(self):
+    def zone_update_callback(self):
+        self.schedule_update_ha_state()
+
+    def system_update_callback(self):
         self.schedule_update_ha_state()
 
     @property
@@ -324,6 +330,8 @@ class S30Climate(ClimateEntity):
 
     @property
     def preset_mode(self):
+        if self._system.get_manual_away_mode() == True:
+            return PRESET_AWAY
         if self._zone.overrideActive == True:
             return PRESET_SCHEDULE_OVERRIDE
         if self._zone.isZoneManualMode() == True:
@@ -344,7 +352,9 @@ class S30Climate(ClimateEntity):
             if schedule.id >= 16:
                 continue
             presets.append(schedule.name)
+        presets.append(PRESET_AWAY)
         presets.append(PRESET_CANCEL_HOLD)
+        presets.append(PRESET_CANCEL_AWAY_MODE)
         presets.append(PRESET_NONE)
         _LOGGER.debug(
             "climate:preset_modes name["
@@ -364,6 +374,19 @@ class S30Climate(ClimateEntity):
                 + preset_mode
                 + "]"
             )
+
+            if preset_mode == PRESET_CANCEL_AWAY_MODE:
+                await self._system.set_manual_away_mode(False)
+                await self.async_trigger_fast_poll()
+                return
+            if preset_mode == PRESET_AWAY:
+                await self._system.set_manual_away_mode(True)
+                await self.async_trigger_fast_poll()
+                return
+            # Need to cancel away mode before requesting a new preset
+            if self._system.get_manual_away_mode() == True:
+                await self._system.set_manual_away_mode(False)
+
             if preset_mode == PRESET_CANCEL_HOLD:
                 await self._zone.setScheduleHold(False)
             elif preset_mode == PRESET_NONE:
@@ -381,7 +404,7 @@ class S30Climate(ClimateEntity):
     @property
     def is_away_mode_on(self):
         """Return the current away mode status."""
-        return False
+        return self._system.get_manual_away_mode()
 
     @property
     def fan_mode(self):
@@ -496,9 +519,3 @@ class S30Climate(ClimateEntity):
                 _LOGGER.error("climate:async_set_fan_mode - error:" + e.message)
             else:
                 _LOGGER.error("climate:async_set_fan_mode - error:" + str(e))
-
-    def _turn_away_mode_on(self):
-        raise NotImplementedError
-
-    def _turn_away_mode_off(self):
-        raise NotImplementedError
