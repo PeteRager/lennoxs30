@@ -189,6 +189,7 @@ class Manager(object):
             try:
                 await self.s30_initalize()
                 self.updateState(DS_CONNECTED)
+                return
             except S30Exception as e:
                 _LOGGER.error("async_setup: " + str(e))
                 if e.error_code == EC_LOGIN:
@@ -205,7 +206,6 @@ class Manager(object):
         loops: int = 0
         numOfSystems = len(self._api.getSystems())
         while sytemsWithZones < numOfSystems and loops < 30:
-            # TODO - should add a timeout and spin the APPLICATION_ID
             _LOGGER.debug(
                 "__init__:async_setup waiting for zone config to arrive numSystems ["
                 + str(numOfSystems)
