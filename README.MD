@@ -79,7 +79,9 @@ The integration creates internal Entity_Ids using the GUID of your S30 plus the 
 
 **Presets** are supported.  The Preset List is the list of schedules that you have configured in the S30.  
 
-When you are running a schedule; changes to the temperature or fan create a temporary schedule override (the Mobile APP does the same thing).  The override will automatically end at the end of the Next Period (e.g. at the time of your next schedule period.)  To cancel the override, there is a preset called "Cancel Hold".  Invoking this preset will remove the hold and re-enable the underlying schedule.
+When you are running a schedule; changes to the temperature or fan create a temporary schedule override (the Mobile APP does the same thing).  The override will automatically end at the end of the Next Period (e.g. at the time of your next schedule period.)  To cancel the override, there is a preset called **Cancel Hold**.  Invoking this preset will remove the hold and re-enable the underlying schedule.
+
+Away Mode.  The **Away** preset will put the S30 system into Away Mode and the **cancel away mode** preset will return the S30 system to whatever state it was in prior to putting it into away mode.  This works the same as if you pressed the away / cancel away icon on the S30 panel.
 
 ### Supported Data
 
