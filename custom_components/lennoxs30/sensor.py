@@ -1,5 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
@@ -93,11 +93,15 @@ class S30OutdoorTempSensor(SensorEntity):
 
     @property
     def state(self):
-        return self._system.outdoorTemperature
+        if self._manager._is_metric is False:
+            return self._system.outdoorTemperature
+        return self._system.outdoorTemperatureC
 
     @property
     def unit_of_measurement(self):
-        return TEMP_FAHRENHEIT
+        if self._manager._is_metric is False:
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
 
     @property
     def device_class(self):

@@ -142,6 +142,7 @@ class Manager(object):
         self._shutdown = False
         self._retrieve_task = None
         self._allergenDefenderSwitch = allergenDefenderSwitch
+        self._is_metric: bool = hass.config.units.is_metric
 
     async def async_shutdown(self, event: Event) -> None:
         _LOGGER.debug("async_shutdown started")

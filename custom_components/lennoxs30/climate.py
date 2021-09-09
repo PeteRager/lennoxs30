@@ -83,7 +83,7 @@ async def async_setup_platform(
         for zone in system.getZones():
             if zone.getTemperature() != None:
                 _LOGGER.debug(
-                    f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]"
+                    f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]  metric [{manager._is_metric}]"
                 )
                 climate = S30Climate(hass, manager, system, zone)
                 climate_list.append(climate)
@@ -181,69 +181,114 @@ class S30Climate(ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
+        if self._manager._is_metric is False:
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
         minTemp = None
-        if self._zone.heatingOption == True:
-            minTemp = self._zone.minHsp
-        if self._zone.coolingOption == True:
-            if minTemp == None:
-                minTemp = self._zone.minCsp
-            else:
-                minTemp = min(minTemp, self._zone.minCsp)
-        if minTemp != None:
-            return minTemp
-        return super().min_temp
+        if self._manager._is_metric is False:
+            if self._zone.heatingOption == True:
+                minTemp = self._zone.minHsp
+            if self._zone.coolingOption == True:
+                if minTemp == None:
+                    minTemp = self._zone.minCsp
+                else:
+                    minTemp = min(minTemp, self._zone.minCsp)
+            if minTemp != None:
+                return minTemp
+            return super().min_temp
+        else:
+            if self._zone.heatingOption == True:
+                minTemp = self._zone.minHspC
+            if self._zone.coolingOption == True:
+                if minTemp == None:
+                    minTemp = self._zone.minCspC
+                else:
+                    minTemp = min(minTemp, self._zone.minCspC)
+            if minTemp != None:
+                return minTemp
+            return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         maxTemp = None
-        if self._zone.heatingOption == True:
-            maxTemp = self._zone.maxHsp
-        if self._zone.coolingOption == True:
-            if maxTemp == None:
-                maxTemp = self._zone.maxCsp
-            else:
-                maxTemp = max(maxTemp, self._zone.maxCsp)
-        if maxTemp != None:
-            return maxTemp
-        return super().max_temp
+        if self._manager._is_metric is False:
+            if self._zone.heatingOption == True:
+                maxTemp = self._zone.maxHsp
+            if self._zone.coolingOption == True:
+                if maxTemp == None:
+                    maxTemp = self._zone.maxCsp
+                else:
+                    maxTemp = max(maxTemp, self._zone.maxCsp)
+            if maxTemp != None:
+                return maxTemp
+            return super().max_temp
+        else:
+            if self._zone.heatingOption == True:
+                maxTemp = self._zone.maxHspC
+            if self._zone.coolingOption == True:
+                if maxTemp == None:
+                    maxTemp = self._zone.maxCspC
+                else:
+                    maxTemp = max(maxTemp, self._zone.maxCspC)
+            if maxTemp != None:
+                return maxTemp
+            return super().max_temp
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._zone.getTargetTemperatureF()
+        if self._manager._is_metric is False:
+            return self._zone.getTargetTemperatureF()
+        else:
+            return self._zone.getTargetTemperatureC()
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        t = self._zone.getTemperature()
-        _LOGGER.debug(
-            f"climate:current_temperature name [{self._myname}] temperature [{t}]"
-        )
+        if self._manager._is_metric is False:
+            t = self._zone.getTemperature()
+            _LOGGER.debug(
+                f"climate:current_temperature name [{self._myname}] temperature [{t}] F"
+            )
+        else:
+            t = self._zone.getTemperatureC()
+            _LOGGER.debug(
+                f"climate:current_temperature name [{self._myname}] temperature [{t}] C"
+            )
         return t
 
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
-        # TODO Need to figure out heatcool mode and the string, for now we will return csp
-        _LOGGER.debug(
-            f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.csp}]"
-        )
-        return self._zone.csp
+        if self._manager._is_metric is False:
+            _LOGGER.debug(
+                f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.csp}] F"
+            )
+            return self._zone.csp
+        else:
+            _LOGGER.debug(
+                f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.cspC}] C"
+            )
+            return self._zone.cspC
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        # TODO Need to figure out heatcool mode and the string, for now we will return csp
-        _LOGGER.debug(
-            f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hsp}]"
-        )
-        return self._zone.hsp
+        if self._manager._is_metric is False:
+            _LOGGER.debug(
+                f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hsp}] F"
+            )
+            return self._zone.hsp
+        else:
+            _LOGGER.debug(
+                f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hspC}] C"
+            )
+            return self._zone.hspC
 
     @property
     def current_humidity(self):
@@ -263,7 +308,9 @@ class S30Climate(ClimateEntity):
 
     @property
     def target_temperature_step(self) -> float:
-        return 1.0
+        if self._manager._is_metric is False:
+            return 1.0
+        return 0.5
 
     @property
     def target_humidity(self) -> float:
@@ -452,8 +499,6 @@ class S30Climate(ClimateEntity):
             return
 
         try:
-            t_csp = None
-            t_hsp = None
             # If an HVAC mode is requested; and we are not in that mode, then the first step
             # is to switch the zone into that mode before setting the temperature
             if r_hvacMode != None and r_hvacMode != self.hvac_mode:
@@ -470,14 +515,18 @@ class S30Climate(ClimateEntity):
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in cool mode - zone [{self._myname}] temperature [{r_temperature}]"
                     )
-                    t_csp = r_temperature
-                    await self._zone.setCoolSPF(r_temperature)
+                    if self._manager._is_metric is False:
+                        await self._zone.setCoolSPF(r_temperature)
+                    else:
+                        await self._zone.setCoolSPC(r_temperature)
                 elif self.hvac_mode == HVAC_MODE_HEAT:
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in heat mode - zone [{self._myname}] sp [{r_temperature}]"
                     )
-                    t_hsp = r_temperature
-                    await self._zone.setHeatSPF(r_temperature)
+                    if self._manager._is_metric is False:
+                        await self._zone.setHeatSPF(r_temperature)
+                    else:
+                        await self._zone.setHeatSPC(r_temperature)
                 else:
                     _LOGGER.error(
                         f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature"
@@ -493,9 +542,10 @@ class S30Climate(ClimateEntity):
                     + str(r_hsp)
                     + "]"
                 )
-                t_hsp = r_hsp
-                t_csp = r_csp
-                await self._zone.setHeatCoolSPF(r_hsp, r_csp)
+                if self._manager._is_metric is False:
+                    await self._zone.setHeatCoolSPF(r_hsp, r_csp)
+                else:
+                    await self._zone.setHeatCoolSPC(r_hsp, r_csp)
 
             await self.async_trigger_fast_poll()
 
