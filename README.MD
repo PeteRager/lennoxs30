@@ -9,6 +9,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 - Thermostat linked to a lennoxicomfort.com account
 
 # Installation
+## Basic
 
 1.  Go to releases in this repo and download the latest zip or clone the repo
 2.  If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennoxs30 folder.
@@ -16,6 +17,9 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 4.  Add the configuration to configuration.yaml.  If HA is running and you press the "Validate Configuration" button you may get an error.  HA must be restarted before it will see the new custom component.
 5.  Restart HA
 
+## HACS
+
+There is a HACS.JSON file that was contributed.  So this may work also.  If it does work please submit some docs we can put in here to describe the process!
 
 # Configuration
 Configuration of the integration is done in configuration.yaml
@@ -56,6 +60,10 @@ logger:
 | scan_interval| int | optional | 15 | Scan interval to check for cloud messages in seconds|
 | allergen_defender_switch | bool | optional | false | When true creates a switch entity to allow control of allergenDefender mode |
 | fast_scan_interval| float | optional | 0.75 | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands|
+
+# Temperature Units (Celsius, Fahrenheit)
+
+The integration detects the unit system configured in Home Assistant and reports the data in the correct units.  Celsius is in 0.5 degree increments.  Fahrenheit is in 1.0 degress increments.  The Lennox API delivers data in both units, so there is no conversion in the Integration and what you see in the Lennox UI should be what you see in HA.
 
 # Entities
 ## Climate
