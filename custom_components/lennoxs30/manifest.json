@@ -1,11 +1,11 @@
 {
     "domain": "lennoxs30",
     "name": "Lennox S30 Cloud Integration",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "documentation": "https://github.com/PeteRager/lennoxs30",
     "issuetracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
-    "requirements": ["lennoxs30api==0.0.7"],
+    "requirements": ["lennoxs30api==0.0.8"],
     "codeowners": ["@PeteRager"],
     "iot_class": "cloud_polling"
   }
