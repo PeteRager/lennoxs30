@@ -3,6 +3,7 @@ import asyncio
 from asyncio.locks import Event, Lock
 import logging
 from typing import Optional
+from lennoxs30api.s30exception import EC_CONFIG_TIMEOUT
 
 from lennoxs30api import (
     EC_HTTP_ERR,
@@ -38,6 +39,8 @@ from homeassistant.const import (
 
 CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
 CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
+CONF_APP_ID = "app_id"
+CONF_INIT_WAIT_TIME = "init_wait_time"
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
 MAX_ERRORS = 5
@@ -56,6 +59,8 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
                 ): cv.positive_float,
                 vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
+                vol.Optional(CONF_APP_ID): cv.string,
+                vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
             }
         )
     },
@@ -80,9 +85,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
 
     allergenDefenderSwitch = config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
+    app_id = config.get(DOMAIN).get(CONF_APP_ID)
+    conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
 
     _LOGGER.debug(
-        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}]"
+        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}]"
     )
 
     manager = Manager(
@@ -93,27 +100,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         poll_interval,
         fast_poll_interval,
         allergenDefenderSwitch,
+        app_id,
+        conf_init_wait_time,
     )
     try:
+        listener = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
+        )
         await manager.s30_initalize()
     except S30Exception as e:
-        _LOGGER.error("async_setup: " + str(e))
         if e.error_code == EC_LOGIN:
             # TODO: encapsulate in manager class
             manager.updateState(DS_LOGIN_FAILED)
             raise HomeAssistantError(
                 "Lennox30 unable to login - please check credentials and restart Home Assistant"
             )
-        _LOGGER.warning(
-            "Configuration not received within timeout - will retry in 30 seconds"
-        )
-        asyncio.create_task(manager.initialize_retry_task())
-        return True
-
-    listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
-    )
-
+        elif e.error_code == EC_CONFIG_TIMEOUT:
+            _LOGGER.warning("async_setup: " + e.message)
+            _LOGGER.info("connection will be retried in 1 minute")
+            asyncio.create_task(manager.initialize_retry_task())
+            return True
+        else:
+            _LOGGER.error("async_setup unexpected error " + e.message)
+            _LOGGER.info("connection will be retried in 1 minute")
+            asyncio.create_task(manager.initialize_retry_task())
+            return True
     _LOGGER.debug("async_setup complete")
     return True
 
@@ -128,6 +139,8 @@ class Manager(object):
         poll_interval: int,
         fast_poll_interval: float,
         allergenDefenderSwitch: bool,
+        app_id: str,
+        conf_init_wait_time: int,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -138,10 +151,11 @@ class Manager(object):
         self._config: ConfigType = config
         self._poll_interval: int = poll_interval
         self._fast_poll_interval: float = fast_poll_interval
-        self._api: s30api_async = s30api_async(email, password)
+        self._api: s30api_async = s30api_async(email, password, app_id)
         self._shutdown = False
         self._retrieve_task = None
         self._allergenDefenderSwitch = allergenDefenderSwitch
+        self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
 
     async def async_shutdown(self, event: Event) -> None:
@@ -191,22 +205,26 @@ class Manager(object):
                 await self.s30_initalize()
                 self.updateState(DS_CONNECTED)
                 return
+
             except S30Exception as e:
-                _LOGGER.error("async_setup: " + str(e))
                 if e.error_code == EC_LOGIN:
+                    # TODO: encapsulate in manager class
                     self.updateState(DS_LOGIN_FAILED)
-                    raise HomeAssistantError(
-                        "Lennox30 unable to login - please check credentials and restart Home Assistant"
-                    )
-                _LOGGER.debug("retying initialization")
-                self.updateState(DS_RETRY_WAIT)
+                    _LOGGER.error("initialize_retry_task - " + e.message)
+                    return
+                elif e.error_code == EC_CONFIG_TIMEOUT:
+                    _LOGGER.warning("async_setup: " + e.message)
+                    _LOGGER.info("connection will be retried in 1 minute")
+                else:
+                    _LOGGER.error("async_setup unexpected error " + e.message)
+                    _LOGGER.info("async setup will be retried in 1 minute")
 
     async def configuration_initialization(self) -> None:
         # Wait for zones to appear on each system
         sytemsWithZones = 0
         loops: int = 0
         numOfSystems = len(self._api.getSystems())
-        while sytemsWithZones < numOfSystems and loops < 30:
+        while sytemsWithZones < numOfSystems and loops < self._conf_init_wait_time:
             _LOGGER.debug(
                 "__init__:async_setup waiting for zone config to arrive numSystems ["
                 + str(numOfSystems)
@@ -215,7 +233,7 @@ class Manager(object):
                 + "]"
             )
             sytemsWithZones = 0
-            await asyncio.sleep(self._fast_poll_interval)
+            await asyncio.sleep(1.0)
             await self.messagePump()
             for lsystem in self._api.getSystems():
                 # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
@@ -232,13 +250,10 @@ class Manager(object):
                 if numZones > 0:
                     sytemsWithZones += 1
             loops += 1
-        if loops == 30:
-            _LOGGER.error(
-                "configuration_initalization failed - no initial data received"
-            )
+        if sytemsWithZones < numOfSystems:
             raise S30Exception(
-                "configuration_initalization failed - no initial data received",
-                EC_SUBSCRIBE,
+                "Timeout waiting for configuration data from Lennox - this sometimes happens, the connection will be automatically retried.  Consult the readme for more details",
+                EC_CONFIG_TIMEOUT,
                 1,
             )
 
