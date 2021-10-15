@@ -9,6 +9,9 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 - Home Assistant >= 2021.04.06 (others may work)
 - Thermostat linked to a lennoxicomfort.com account
 
+# Limitations
+- Passwords with special characters are not properly supported by the Lennox API and may not work.  Known special characters that cause issues are & and ^.  If your password contains these characters you may need to change it prior to using the integration.
+
 # Installation
 
 ## Basic
