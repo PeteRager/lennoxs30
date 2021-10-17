@@ -14,17 +14,33 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 # Installation
 
-## Basic
-
-1.  Go to releases in this repo and download the latest zip or clone the repo
-2.  If upgrading from a prior release, pleast remove ALL files from the &lt;HA config directory&gt;/custom_components/lennoxs30 folder.
-3.  Copy the 'lennoxs30' folder and contents to &lt;HA config directory&gt;/custom_components/
-4.  Add the configuration to configuration.yaml. If HA is running and you press the "Validate Configuration" button you may get an error. HA must be restarted before it will see the new custom component.
-5.  Restart HA
-
 ## HACS
 
-There is a HACS.JSON file that was contributed. So this may work also. If it does work please submit some docs we can put in here to describe the process!
+Install [HACS](https://github.com/hacs/integration) the add the [custom repository](https://hacs.xyz/docs/faq/custom_repositories) for this project
+
+1. Go to any of the sections (integrations, frontend, automation).
+1. Click on the 3 dots in the top right corner.
+1. Select "Custom repositories"
+1. Add the URL to the repository: `https://github.com/PeteRager/lennoxs30`
+1. Select the integration category.
+1. Click the "ADD" button.
+
+Add integration in HACS
+
+1. In the HACS panel, go to integrations and click the big orange '+' button. 
+1. Search for `Lennox iComfort` and click `Install this repository in HACS`.
+1. Restart HA to load the integration into HA.<br>
+1. Go to Configuration -> Integrations and click the big orange '+' button. Look for Lennox and click to add it.
+1. Add the configuration to configuration.yaml. 
+1. Restart HA.
+
+## Manually
+
+1. Go to [releases](https://github.com/PeteRager/lennoxs30/releases) in this repo and download the latest zip or clone the repo
+1. Extract it into the `custom_components` folder in your HA installation.  If upgrading from a prior release, pleast remove ALL files from this folder.
+1. Add the configuration to configuration.yaml. 
+1. Restart HA.
+
 
 # Configuration
 
