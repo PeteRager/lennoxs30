@@ -16,7 +16,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 ## HACS
 
-Install [HACS](https://github.com/hacs/integration) the add the [custom repository](https://hacs.xyz/docs/faq/custom_repositories) for this project
+Install [HACS](https://github.com/hacs/integration) then add the [custom repository](https://hacs.xyz/docs/faq/custom_repositories) for this project
 
 1. Go to any of the sections (integrations, frontend, automation).
 1. Click on the 3 dots in the top right corner.
