@@ -62,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
                 vol.Optional(CONF_APP_ID): cv.string,
                 vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
-                vol.Optional(CONF_IP_ADDRESS, default=None): str,
+                vol.Optional(CONF_IP_ADDRESS, default="None"): str,
             }
         )
     },
@@ -90,6 +90,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     app_id = config.get(DOMAIN).get(CONF_APP_ID)
     conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
     ip_address = config.get(DOMAIN).get(CONF_IP_ADDRESS)
+    if ip_address == "None":
+        ip_address = None
 
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}]"
