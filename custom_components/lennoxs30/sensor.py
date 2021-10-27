@@ -71,7 +71,7 @@ class S30OutdoorTempSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.sysId + "_OT").replace("-", "")
+        return (self._system.unique_id() + "_OT").replace("-", "")
 
     @property
     def extra_state_attributes(self):

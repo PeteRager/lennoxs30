@@ -32,6 +32,7 @@ DS_FAILED = "Failed"
 
 from homeassistant.const import (
     CONF_EMAIL,
+    CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
@@ -61,6 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
                 vol.Optional(CONF_APP_ID): cv.string,
                 vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
+                vol.Optional(CONF_IP_ADDRESS, default=None): str,
             }
         )
     },
@@ -87,6 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     allergenDefenderSwitch = config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
     app_id = config.get(DOMAIN).get(CONF_APP_ID)
     conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
+    ip_address = config.get(DOMAIN).get(CONF_IP_ADDRESS)
 
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}]"
@@ -102,6 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         allergenDefenderSwitch,
         app_id,
         conf_init_wait_time,
+        ip_address,
     )
     try:
         listener = hass.bus.async_listen_once(
@@ -141,6 +145,7 @@ class Manager(object):
         allergenDefenderSwitch: bool,
         app_id: str,
         conf_init_wait_time: int,
+        ip_address: str,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -151,7 +156,9 @@ class Manager(object):
         self._config: ConfigType = config
         self._poll_interval: int = poll_interval
         self._fast_poll_interval: float = fast_poll_interval
-        self._api: s30api_async = s30api_async(email, password, app_id)
+        self._api: s30api_async = s30api_async(
+            email, password, app_id, ip_address=ip_address
+        )
         self._shutdown = False
         self._retrieve_task = None
         self._allergenDefenderSwitch = allergenDefenderSwitch
@@ -237,7 +244,7 @@ class Manager(object):
             await self.messagePump()
             for lsystem in self._api.getSystems():
                 # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
-                if lsystem.name == None:
+                if lsystem.config_complete() == False:
                     continue
                 numZones = len(lsystem.getZoneList())
                 _LOGGER.debug(
