@@ -74,7 +74,7 @@ class S30VentilationSwitch(SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.sysId + "_VST").replace("-", "")
+        return (self._system.unique_id() + "_VST").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -140,7 +140,7 @@ class S30AllergenDefenderSwitch(SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.sysId + "_ADST").replace("-", "")
+        return (self._system.unique_id() + "_ADST").replace("-", "")
 
     @property
     def extra_state_attributes(self):

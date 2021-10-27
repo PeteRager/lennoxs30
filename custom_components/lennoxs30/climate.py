@@ -121,7 +121,7 @@ class S30Climate(ClimateEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.sysId + "_" + str(self._zone.id)).replace("-", "")
+        return (self._system.unique_id() + "_" + str(self._zone.id)).replace("-", "")
 
     def zone_update_callback(self):
         self.schedule_update_ha_state()
