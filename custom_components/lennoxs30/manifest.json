@@ -1,7 +1,7 @@
 {
     "domain": "lennoxs30",
     "name": "Lennox S30 Cloud Integration",
-    "version": "0.1.00",
+    "version": "0.1.1",
     "documentation": "https://github.com/PeteRager/lennoxs30",
     "issuetracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
