@@ -207,6 +207,16 @@ The switch has the following attributes:
 
 Please create issues to track bugs. Please capture the logs with debug turned on.
 
+Debug logging can be enabled by adding the following to your Home Assistant's configuration.yaml:
+
+```
+logger:
+  default: warning
+  logs:
+    custom_components.lennoxs30: debug
+    lennoxs30api: debug
+```
+
 ## A note on Debug Log Files
 
 The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information. It is highly recommend to not publicly post these log files. Information includes - the address of your residence and email address. Issues #14 tracks this and we will work to scrub this information from the log file. If I need a logfile or troubleshooting I will ask you to email it
