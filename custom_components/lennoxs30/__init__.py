@@ -43,6 +43,7 @@ CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
 CONF_APP_ID = "app_id"
 CONF_INIT_WAIT_TIME = "init_wait_time"
 DEFAULT_POLL_INTERVAL: int = 10
+DEFAULT_LOCAL_POLL_INTERVAL: int = 1
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
 MAX_ERRORS = 5
 RETRY_INTERVAL_SECONDS = 60
@@ -75,11 +76,19 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     email = config.get(DOMAIN).get(CONF_EMAIL)
     password = config.get(DOMAIN).get(CONF_PASSWORD)
+    ip_address = config.get(DOMAIN).get(CONF_IP_ADDRESS)
+    if ip_address == "None":
+        ip_address = None
+
     t = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
     if t != None and t > 0:
         poll_interval = t
     else:
-        poll_interval = DEFAULT_POLL_INTERVAL
+        if ip_address == None:
+            poll_interval = DEFAULT_POLL_INTERVAL
+        else:
+            poll_interval = DEFAULT_LOCAL_POLL_INTERVAL
+
     t = config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL)
     if t != None and t > 0.2:
         fast_poll_interval = t
@@ -89,9 +98,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     allergenDefenderSwitch = config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
     app_id = config.get(DOMAIN).get(CONF_APP_ID)
     conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
-    ip_address = config.get(DOMAIN).get(CONF_IP_ADDRESS)
-    if ip_address == "None":
-        ip_address = None
 
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}]"
