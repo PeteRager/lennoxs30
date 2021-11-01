@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_POLL_INTERVAL
+                    CONF_SCAN_INTERVAL
                 ): cv.positive_int,
                 vol.Optional(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
