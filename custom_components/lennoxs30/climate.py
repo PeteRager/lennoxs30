@@ -520,16 +520,29 @@ class S30Climate(ClimateEntity):
             msg = f"climate:async_set_temperature - no temperature given zone [{self._myname}]] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
             _LOGGER.error(msg)
             return
+
         # Either provide temperature or high/low but not both
         if r_temperature != None and (r_csp != None or r_hsp != None):
             msg = f"climate:async_set_temperature - pass either temperature or temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
             _LOGGER.error(msg)
             return
+
         # If no temperature, must specify both high and low
         if r_temperature == None and (r_csp == None or r_hsp == None):
             msg = f"climate:async_set_temperature - must provide both temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
             _LOGGER.error(msg)
             return
+
+        # If single setpoint mode, then must specify r_temperature and not high and low
+        if self._zone._system.single_setpoint_mode == True:
+            if r_temperature == None:
+                msg = f"climate:async_set_temperature - zone in single setpoint mode must provide [{ATTR_TEMPERATURE}] - zone [{self._myname}]"
+                _LOGGER.error(msg)
+                return
+            if r_hsp != None or r_csp != None:
+                msg = f"climate:async_set_temperature - zone in single setpoint mode - do not set HIGH and LOW - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
+                _LOGGER.error(msg)
+                return
 
         try:
             # If an HVAC mode is requested; and we are not in that mode, then the first step
@@ -543,23 +556,37 @@ class S30Climate(ClimateEntity):
             if r_hvacMode == None:
                 r_hvacMode = self.hvac_mode
 
+            if r_hvacMode == None:
+                _LOGGER.error(
+                    f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature"
+                )
+                return
+
             if r_temperature is not None:
-                if self.hvac_mode == HVAC_MODE_COOL:
+                if self._zone._system.single_setpoint_mode == True:
+                    _LOGGER.debug(
+                        f"climate:async_set_temperature set_temperature in single_setpoint_modesystem - zone [{self._myname}] temperature [{r_temperature}]"
+                    )
+                    if self._manager._is_metric is False:
+                        await self._zone.perform_setpoint(r_sp=r_temperature)
+                    else:
+                        await self._zone.perform_setpoint(r_spC=r_temperature)
+                elif self.hvac_mode == HVAC_MODE_COOL:
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in cool mode - zone [{self._myname}] temperature [{r_temperature}]"
                     )
                     if self._manager._is_metric is False:
-                        await self._zone.setCoolSPF(r_temperature)
+                        await self._zone.perform_setpoint(r_csp=r_temperature)
                     else:
-                        await self._zone.setCoolSPC(r_temperature)
+                        await self._zone.perform_setpoint(r_cspC=r_temperature)
                 elif self.hvac_mode == HVAC_MODE_HEAT:
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in heat mode - zone [{self._myname}] sp [{r_temperature}]"
                     )
                     if self._manager._is_metric is False:
-                        await self._zone.setHeatSPF(r_temperature)
+                        await self._zone.perform_setpoint(r_hsp=r_temperature)
                     else:
-                        await self._zone.setHeatSPC(r_temperature)
+                        await self._zone.perform_setpoint(r_hspC=r_temperature)
                 else:
                     _LOGGER.error(
                         f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature"
@@ -576,9 +603,9 @@ class S30Climate(ClimateEntity):
                     + "]"
                 )
                 if self._manager._is_metric is False:
-                    await self._zone.setHeatCoolSPF(r_hsp, r_csp)
+                    await self._zone.perform_setpoint(r_hsp=r_hsp, r_csp=r_csp)
                 else:
-                    await self._zone.setHeatCoolSPC(r_hsp, r_csp)
+                    await self._zone.perform_setpoint(r_hspC=r_hsp, r_cspC=r_csp)
 
             await self.async_trigger_fast_poll()
 
