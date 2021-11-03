@@ -128,10 +128,10 @@ class S30OutdoorTempSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, DOMAIN)},
-            "manufacturer": "LennoxS30",
-            "model": "Lennox S30",
+            "name": self._zone._system.unique_id(),
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
+            "manufacturer": "Lennox S30",
+            "model": "Lennox",
         }
         
         
@@ -196,8 +196,8 @@ class S30TempSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, DOMAIN)},
+            "name": self._zone._system.unique_id(),
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
             "manufacturer": "LennoxS30",
             "model": "Lennox S30",
         }
@@ -257,8 +257,8 @@ class S30HumiditySensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, DOMAIN)},
+            "name": self._zone._system.unique_id(),
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
             "manufacturer": "LennoxS30",
-            "model": "Lennox S30",
+            "model": "Lennox",
         }

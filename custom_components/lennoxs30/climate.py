@@ -620,8 +620,8 @@ class S30Climate(ClimateEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, DOMAIN)},
-            "manufacturer": "LennoxS30",
+            "name": self._zone._system.unique_id(),
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
+            "manufacturer": "Lennox",
             "model": "Lennox S30",
         }

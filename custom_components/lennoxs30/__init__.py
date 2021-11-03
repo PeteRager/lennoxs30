@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     #    fast_poll_interval = t
     #else:
     fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
-
+    create_sensors = True
     allergenDefenderSwitch = False # config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
     app_id = "homeassistant" #config.get(DOMAIN).get(CONF_APP_ID)
     conf_init_wait_time = 30# config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     manager = Manager(
         hass=hass,
-        entry,
+        entry=entry,
         email=email,
         password=password,
         poll_interval=poll_interval,

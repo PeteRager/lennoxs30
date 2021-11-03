@@ -5,7 +5,7 @@
     "documentation": "https://github.com/PeteRager/lennoxs30",
     "issuetracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
-
+	"requirements": ["git+https://github.com/hyperactivej/lennoxS30api.git@master#lennoxs30api"],
     "codeowners": ["@PeteRager"],
 	"config_flow": true,	
     "iot_class": "local_polling"
