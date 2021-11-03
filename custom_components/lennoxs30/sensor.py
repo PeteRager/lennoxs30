@@ -38,7 +38,7 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info: Ma
         else:
             nativevalue = system.outdoorTemperature
             nativeunit = TEMP_FAHRENHEIT
-        sensor_list.append( S30Sensor(hass, manager, system, "Outdoor_Temperature", nativeunit, nativevalue, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT))
+        sensor_list.append( S30Sensor(hass, manager, system, "Outdoor_Temperature", nativevalue, nativeunit, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT))
         if manager._createSensors == True:
             for zone in system.getZoneList():
                 if zone.is_zone_active() == True:
@@ -46,8 +46,8 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info: Ma
                         nativevalue = zone.getTemperatureC()
                     else:
                         nativevalue = zone.getTemperature()
-                    sensor_list.append( S30Sensor(hass, manager, system, zone.name + "_temperature", nativeunit, nativevalue, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT))
-                    sensor_list.append( S30Sensor(hass, manager, system, "_humdity", nativeunit, PERCENTAGE, DEVICE_CLASS_HUMIDITY, STATE_CLASS_MEASUREMENT))
+                    sensor_list.append( S30Sensor(hass, manager, system, zone.name + "_temperature", nativevalue, nativeunit, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT))
+                    sensor_list.append( S30Sensor(hass, manager, system, zone.name + "_humdity", zone.getHumidity(), PERCENTAGE, DEVICE_CLASS_HUMIDITY, STATE_CLASS_MEASUREMENT))
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
         _LOGGER.debug(
@@ -82,7 +82,7 @@ class S30Sensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return self._myname.replace("-", "")
+        return self._myname.replace("-", "").replace(" ", "_")
 
     @property
     def extra_state_attributes(self):
@@ -107,7 +107,7 @@ class S30Sensor(SensorEntity):
         return self._nativevalue
 
     @property
-    def native_unit(self):
+    def native_unit_of_measurement(self):
         return self._nativeunit
 
     @property

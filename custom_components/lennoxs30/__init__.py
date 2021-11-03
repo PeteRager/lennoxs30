@@ -125,8 +125,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         create_sensors=create_sensors,
     )
     
-
-    
     try:
         listener = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
@@ -152,6 +150,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("async_setup complete")
     return True
 
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if not unload_ok:
+        return False
+
+    hass.data[DOMAIN].pop(entry.data["name"])
+    return True
+    
 
 class Manager():
     def __init__(
