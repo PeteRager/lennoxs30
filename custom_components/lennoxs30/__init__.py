@@ -32,6 +32,7 @@ DS_FAILED = "Failed"
 
 from homeassistant.const import (
     CONF_EMAIL,
+    CONF_HOSTS,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -55,10 +56,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_IP_ADDRESS, default="None"): str,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL
-                ): cv.positive_int,
+                vol.Optional(CONF_HOSTS, default="Cloud"): str,
+                vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
                 vol.Optional(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
                 ): cv.positive_float,
@@ -78,15 +77,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     email = config.get(DOMAIN).get(CONF_EMAIL)
     password = config.get(DOMAIN).get(CONF_PASSWORD)
-    ip_address = config.get(DOMAIN).get(CONF_IP_ADDRESS)
-    if ip_address == "None":
-        ip_address = None
+    conf_hosts = config.get(DOMAIN).get(CONF_HOSTS)
+    if conf_hosts == "Cloud":
+        conf_hosts = None
 
     t = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
     if t != None and t > 0:
         poll_interval = t
     else:
-        if ip_address == None:
+        if conf_hosts == None:
             poll_interval = DEFAULT_POLL_INTERVAL
         else:
             poll_interval = DEFAULT_LOCAL_POLL_INTERVAL
@@ -116,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         allergenDefenderSwitch=allergenDefenderSwitch,
         app_id=app_id,
         conf_init_wait_time=conf_init_wait_time,
-        ip_address=ip_address,
+        ip_address=conf_hosts,
         create_sensors=create_sensors,
     )
     try:
@@ -335,7 +334,9 @@ class Manager(object):
 
             if not received:
                 if fast_polling == True:
-                    res = await asyncio.sleep(self._fast_poll_interval)
+                    res = await asyncio.sleep(
+                        min(self._fast_poll_interval, self._poll_interval)
+                    )
                 else:
                     res = await self.event_wait_mp_wakeup(self._poll_interval)
                     if res == True:
