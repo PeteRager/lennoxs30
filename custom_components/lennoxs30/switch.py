@@ -176,8 +176,8 @@ class S30AllergenDefenderSwitch(SwitchEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, DOMAIN)},
-            "manufacturer": "LennoxS30",
+            "name":  self._system.name,
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "manufacturer": "Lennox",
             "model": "Lennox S30",
         }
