@@ -9,7 +9,7 @@ from homeassistant.const import (
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
-
+from homeassistant.helpers.entity import DeviceInfo
 from lennoxs30api import lennox_system, lennox_zone
 
 
@@ -24,27 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info: Manager = None
-) -> bool:
+async def async_setup_entry(hass, config, async_add_entities, discovery_info: Manager = None ) -> bool:
+    
     _LOGGER.debug("sensor:async_setup_platform enter")
-    # Discovery info is the API that we passed in.
-    if discovery_info is None:
-        _LOGGER.error(
-            "sensor:async_setup_platform expecting API in discovery_info, found None"
-        )
-        return False
-    theType = str(type(discovery_info))
-    if "Manager" not in theType:
-        _LOGGER.error(
-            f"sensor:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
-        )
-        return False
-
+    
+    hub_name = "lennoxs30"
+    manager = hass.data[DOMAIN][hub_name]["hub"]
     sensor_list = []
-    manager: Manager = discovery_info
     for system in manager._api.getSystems():
-        _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
+        _LOGGER.info(f"Create S30 S30OutdoorTempSensor sensor system [{system.sysId}]")
         sensor = S30OutdoorTempSensor(hass, manager, system)
         sensor_list.append(sensor)
         if manager._createSensors == True:
@@ -60,9 +48,8 @@ async def async_setup_platform(
                     )
                     humSensor = S30HumiditySensor(hass, manager, zone)
                     sensor_list.append(humSensor)
-
     if len(sensor_list) != 0:
-        add_entities(sensor_list, True)
+        async_add_entities(sensor_list, True)
         _LOGGER.debug(
             f"climate:async_setup_platform exit - created [{len(sensor_list)}] entitites"
         )
@@ -83,6 +70,7 @@ class S30OutdoorTempSensor(SensorEntity):
         self._system = system
         self._system.registerOnUpdateCallback(self.update_callback)
         self._myname = self._system.name + "_outdoor_temperature"
+        manager.async_add_lennoxs30_sensor(self)
 
     def update_callback(self):
         _LOGGER.info(f"update_callback S30OutdoorTempSensor myname [{self._myname}]")
@@ -126,11 +114,28 @@ class S30OutdoorTempSensor(SensorEntity):
     @property
     def device_class(self):
         return DEVICE_CLASS_TEMPERATURE
+        
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID of entity."""
+        return f"{self._myname}"
 
     # @property
     # def state_class(self):
     #    return STATE_CLASS_MEASUREMENT
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name": DOMAIN,
+            "identifiers": {(DOMAIN, DOMAIN)},
+            "manufacturer": "LennoxS30",
+            "model": "Lennox S30",
+        }
+        
+        
+    
 
 class S30TempSensor(SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
@@ -187,6 +192,15 @@ class S30TempSensor(SensorEntity):
     def device_class(self):
         return DEVICE_CLASS_TEMPERATURE
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name": DOMAIN,
+            "identifiers": {(DOMAIN, DOMAIN)},
+            "manufacturer": "LennoxS30",
+            "model": "Lennox S30",
+        }
 
 class S30HumiditySensor(SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
@@ -238,3 +252,13 @@ class S30HumiditySensor(SensorEntity):
     @property
     def device_class(self):
         return DEVICE_CLASS_HUMIDITY
+        
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name": DOMAIN,
+            "identifiers": {(DOMAIN, DOMAIN)},
+            "manufacturer": "LennoxS30",
+            "model": "Lennox S30",
+        }

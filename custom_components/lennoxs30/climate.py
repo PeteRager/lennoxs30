@@ -1,6 +1,6 @@
 """Support for Lennoxs30 Climate Entity"""
 from __future__ import annotations
-
+from homeassistant.helpers.entity import DeviceInfo
 import logging
 from typing import Any
 
@@ -64,26 +64,12 @@ FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
 DOMAIN = "lennoxs30"
 
-
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info: Manager = None
-) -> bool:
+async def async_setup_entry(hass, config, async_add_entities, discovery_info: Manager = None ) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
     # Discovery info is the API that we passed in, let's make sure it is there.
-    if discovery_info is None:
-        _LOGGER.error(
-            "climate:async_setup_platform expecting API in discovery_info, found None"
-        )
-        return False
-    theType = str(type(discovery_info))
-    if "Manager" not in theType:
-        _LOGGER.error(
-            f"climate:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
-        )
-        return False
-
+    hub_name = "lennoxs30"
+    manager = hass.data[DOMAIN][hub_name]["hub"]
     climate_list = []
-    manager: Manager = discovery_info
     for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.is_zone_active() == True:
@@ -97,7 +83,7 @@ async def async_setup_platform(
                     f"Skipping inactive zone - system [{system.sysId}] zone [{zone.name}]"
                 )
     if len(climate_list) != 0:
-        add_entities(climate_list, True)
+        async_add_entities(climate_list, True)
         _LOGGER.debug(
             f"climate:async_setup_platform exit - created [{len(climate_list)}] entitites"
         )
@@ -167,8 +153,8 @@ class S30Climate(ClimateEntity):
 
     def is_single_setpoint_active(self) -> bool:
         # If the system is configured to use a single setpoint for both heat and cool
-        if self._zone._system.single_setpoint_mode == True:
-            return True
+       # if self._zone._system.single_setpoint_mode == True:
+       #     return True
         # If it's in heat and cool then there are two setpoints
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
             return False
@@ -629,3 +615,13 @@ class S30Climate(ClimateEntity):
                 _LOGGER.error("climate:async_set_fan_mode - error:" + e.message)
             else:
                 _LOGGER.error("climate:async_set_fan_mode - error:" + str(e))
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name": DOMAIN,
+            "identifiers": {(DOMAIN, DOMAIN)},
+            "manufacturer": "LennoxS30",
+            "model": "Lennox S30",
+        }
