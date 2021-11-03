@@ -10,7 +10,8 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 - Thermostat linked to a lennoxicomfort.com account
 
 # Limitations
-- Passwords with special characters are not properly supported by the Lennox API and may not work.  Known special characters that cause issues are & and ^.  If your password contains these characters you may need to change it prior to using the integration.
+
+- Passwords with special characters are not properly supported by the Lennox API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
 # Installation
 
@@ -27,20 +28,19 @@ Install [HACS](https://github.com/hacs/integration) then add the [custom reposit
 
 Add integration in HACS
 
-1. In the HACS panel, go to integrations and click the big orange '+' button. 
+1. In the HACS panel, go to integrations and click the big orange '+' button.
 1. Search for `Lennox iComfort` and click `Install this repository in HACS`.
 1. Restart HA to load the integration into HA.<br>
 1. Go to Configuration -> Integrations and click the big orange '+' button. Look for Lennox and click to add it.
-1. Add the configuration to configuration.yaml. 
+1. Add the configuration to configuration.yaml.
 1. Restart HA.
 
 ## Manually
 
 1. Go to [releases](https://github.com/PeteRager/lennoxs30/releases) in this repo and download the latest zip or clone the repo
-1. Extract it into the `custom_components` folder in your HA installation.  If upgrading from a prior release, pleast remove ALL files from this folder.
-1. Add the configuration to configuration.yaml. 
+1. Extract it into the `custom_components` folder in your HA installation. If upgrading from a prior release, pleast remove ALL files from this folder.
+1. Add the configuration to configuration.yaml.
 1. Restart HA.
-
 
 # Configuration
 
@@ -80,9 +80,9 @@ logger:
 | Name                     | Type   | Requirement | Default            | Description                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------------ | ------ | ----------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | email                    | string | required    | none               | Cloud service account username                                                                                                                                                                                                                                                                                                                                                                                       |
-| password                 | string | required    | none               | Cloud service account password                                                                                                                                                                                                                                                                                                                                                                                       | 
-| ip_address               | string | optional    | none               | Local LAN IP address or hostname of S30 thermostat.  If specified, the integration will talk directly to the S30 instead of using cloud connection.  This festure is in beta in the 0.1.1 release |
-| scan_interval            | int    | optional    | 15                 | Scan interval to check for cloud messages in seconds. 15 seconds is recommened for cloud connections. For local connections this sbould be set to 1                                                                                                                                                                                                                                                                                                                                                                |
+| password                 | string | required    | none               | Cloud service account password                                                                                                                                                                                                                                                                                                                                                                                       |
+| hosts                    | string | optional    | Cloud              | Local LAN IP address or hostname of S30 thermostat. If specified, the integration will talk directly to the S30 instead of using cloud connection. This festure is in beta in the 0.1.1 release                                                                                                                                                                                                                      |
+| scan_interval            | int    | optional    | 15                 | Scan interval to check for cloud messages in seconds. 15 seconds is recommened for cloud connections. For local connections this sbould not be set unless instructed                                                                                                                                                                                                                                                 |
 | allergen_defender_switch | bool   | optional    | false              | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                          |
 | fast_scan_interval       | float  | optional    | 0.75               | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands                                                                                                                                                                                                                                                         |
 | init_wait_time           | int    | optional    | 30                 | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                                    |
@@ -234,5 +234,3 @@ https://github.com/HyperActiveJ
 https://github.com/hufman/lennox_lcc
 
 https://github.com/thevoltagesource
-
-
