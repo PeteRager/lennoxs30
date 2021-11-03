@@ -42,8 +42,9 @@ CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
 CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
 CONF_APP_ID = "app_id"
 CONF_INIT_WAIT_TIME = "init_wait_time"
+CONF_CREATE_SENSORS = "create_sensors"
 DEFAULT_POLL_INTERVAL: int = 10
-DEFAULT_LOCAL_POLL_INTERVAL: int = 1
+DEFAULT_LOCAL_POLL_INTERVAL: int = 0
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
 MAX_ERRORS = 5
 RETRY_INTERVAL_SECONDS = 60
@@ -54,6 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_IP_ADDRESS, default="None"): str,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_POLL_INTERVAL
                 ): cv.positive_int,
@@ -63,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
                 vol.Optional(CONF_APP_ID): cv.string,
                 vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
-                vol.Optional(CONF_IP_ADDRESS, default="None"): str,
+                vol.Optional(CONF_CREATE_SENSORS, default=False): cv.boolean,
             }
         )
     },
@@ -98,22 +100,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     allergenDefenderSwitch = config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
     app_id = config.get(DOMAIN).get(CONF_APP_ID)
     conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
+    create_sensors = config.get(DOMAIN).get(CONF_CREATE_SENSORS)
 
     _LOGGER.debug(
-        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}]"
+        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}]"
     )
 
     manager = Manager(
-        hass,
-        config,
-        email,
-        password,
-        poll_interval,
-        fast_poll_interval,
-        allergenDefenderSwitch,
-        app_id,
-        conf_init_wait_time,
-        ip_address,
+        hass=hass,
+        config=config,
+        email=email,
+        password=password,
+        poll_interval=poll_interval,
+        fast_poll_interval=fast_poll_interval,
+        allergenDefenderSwitch=allergenDefenderSwitch,
+        app_id=app_id,
+        conf_init_wait_time=conf_init_wait_time,
+        ip_address=ip_address,
+        create_sensors=create_sensors,
     )
     try:
         listener = hass.bus.async_listen_once(
@@ -154,6 +158,7 @@ class Manager(object):
         app_id: str,
         conf_init_wait_time: int,
         ip_address: str,
+        create_sensors: bool,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -170,6 +175,7 @@ class Manager(object):
         self._shutdown = False
         self._retrieve_task = None
         self._allergenDefenderSwitch = allergenDefenderSwitch
+        self._createSensors: bool = create_sensors
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
 

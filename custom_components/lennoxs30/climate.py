@@ -86,7 +86,7 @@ async def async_setup_platform(
     manager: Manager = discovery_info
     for system in manager._api.getSystems():
         for zone in system.getZones():
-            if zone.getTemperature() != None:
+            if zone.is_zone_active() == True:
                 _LOGGER.debug(
                     f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]  metric [{manager._is_metric}]"
                 )
