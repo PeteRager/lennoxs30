@@ -24,13 +24,25 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info: Manager = None ) -> bool:
-    
+async def async_setup_platform(
+    hass, config, add_entities, discovery_info: Manager = None
+) -> bool:
     _LOGGER.debug("sensor:async_setup_platform enter")
-    
-    hub_name = "lennoxs30"
-    manager = hass.data[DOMAIN][hub_name]["hub"]
+    # Discovery info is the API that we passed in.
+    if discovery_info is None:
+        _LOGGER.error(
+            "sensor:async_setup_platform expecting API in discovery_info, found None"
+        )
+        return False
+    theType = str(type(discovery_info))
+    if "Manager" not in theType:
+        _LOGGER.error(
+            f"sensor:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
+        )
+        return False
+
     sensor_list = []
+    manager: Manager = discovery_info
     for system in manager._api.getSystems():
         _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
         sensor = S30OutdoorTempSensor(hass, manager, system)
@@ -50,7 +62,7 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info: Ma
                     sensor_list.append(humSensor)
 
     if len(sensor_list) != 0:
-        async_add_entities(sensor_list, True)
+        add_entities(sensor_list, True)
         _LOGGER.debug(
             f"climate:async_setup_platform exit - created [{len(sensor_list)}] entitites"
         )
