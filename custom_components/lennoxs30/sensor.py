@@ -81,7 +81,9 @@ class S30OutdoorTempSensor(SensorEntity):
         self._hass = hass
         self._manager = manager
         self._system = system
-        self._system.registerOnUpdateCallback(self.update_callback)
+        self._system.registerOnUpdateCallback(
+            self.update_callback, ["outdoorTemperature", "outdoorTemperatureC"]
+        )
         self._myname = self._system.name + "_outdoor_temperature"
 
     def update_callback(self):
@@ -139,7 +141,9 @@ class S30TempSensor(SensorEntity):
         self._hass = hass
         self._manager = manager
         self._zone = zone
-        self._zone.registerOnUpdateCallback(self.update_callback)
+        self._zone.registerOnUpdateCallback(
+            self.update_callback, ["temperature", "temperatureC"]
+        )
         self._myname = self._zone._system.name + "_" + self._zone.name + "_temperature"
 
     def update_callback(self):
@@ -195,7 +199,7 @@ class S30HumiditySensor(SensorEntity):
         self._hass = hass
         self._manager = manager
         self._zone = zone
-        self._zone.registerOnUpdateCallback(self.update_callback)
+        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity"])
         self._myname = self._zone._system.name + "_" + self._zone.name + "_humidity"
 
     def update_callback(self):
