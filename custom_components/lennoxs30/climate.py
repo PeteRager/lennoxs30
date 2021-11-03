@@ -213,24 +213,18 @@ class S30Climate(ClimateEntity):
         """Return the minimum temperature."""
         minTemp = None
         if self._manager._is_metric is False:
-            if self._zone.heatingOption == True:
-                minTemp = self._zone.minHsp
             if self._zone.coolingOption == True:
-                if minTemp == None:
-                    minTemp = self._zone.minCsp
-                else:
-                    minTemp = min(minTemp, self._zone.minCsp)
+                minTemp = self._zone.minCsp
+            elif self._zone.heatingOption == True:
+                minTemp = self._zone.minHsp
             if minTemp != None:
                 return minTemp
             return super().min_temp
         else:
-            if self._zone.heatingOption == True:
-                minTemp = self._zone.minHspC
             if self._zone.coolingOption == True:
-                if minTemp == None:
-                    minTemp = self._zone.minCspC
-                else:
-                    minTemp = min(minTemp, self._zone.minCspC)
+                minTemp = self._zone.minCspC
+            elif self._zone.heatingOption == True:
+                minTemp = self._zone.minHspC
             if minTemp != None:
                 return minTemp
             return super().min_temp
@@ -242,22 +236,16 @@ class S30Climate(ClimateEntity):
         if self._manager._is_metric is False:
             if self._zone.heatingOption == True:
                 maxTemp = self._zone.maxHsp
-            if self._zone.coolingOption == True:
-                if maxTemp == None:
-                    maxTemp = self._zone.maxCsp
-                else:
-                    maxTemp = max(maxTemp, self._zone.maxCsp)
+            elif self._zone.coolingOption == True:
+                maxTemp = self._zone.maxCsp
             if maxTemp != None:
                 return maxTemp
             return super().max_temp
         else:
             if self._zone.heatingOption == True:
                 maxTemp = self._zone.maxHspC
-            if self._zone.coolingOption == True:
-                if maxTemp == None:
-                    maxTemp = self._zone.maxCspC
-                else:
-                    maxTemp = max(maxTemp, self._zone.maxCspC)
+            elif self._zone.coolingOption == True:
+                maxTemp = self._zone.maxCspC
             if maxTemp != None:
                 return maxTemp
             return super().max_temp
