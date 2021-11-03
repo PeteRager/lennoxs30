@@ -64,26 +64,12 @@ FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
 DOMAIN = "lennoxs30"
 
-
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info: Manager = None
-) -> bool:
+async def async_setup_entry(hass, config, async_add_entities, discovery_info: Manager = None ) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
     # Discovery info is the API that we passed in, let's make sure it is there.
-    if discovery_info is None:
-        _LOGGER.error(
-            "climate:async_setup_platform expecting API in discovery_info, found None"
-        )
-        return False
-    theType = str(type(discovery_info))
-    if "Manager" not in theType:
-        _LOGGER.error(
-            f"climate:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
-        )
-        return False
-
+    hub_name = "lennoxs30"
+    manager = hass.data[DOMAIN][hub_name]["hub"]
     climate_list = []
-    manager: Manager = discovery_info
     for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.is_zone_active() == True:
@@ -97,7 +83,7 @@ async def async_setup_platform(
                     f"Skipping inactive zone - system [{system.sysId}] zone [{zone.name}]"
                 )
     if len(climate_list) != 0:
-        add_entities(climate_list, True)
+        async_add_entities(climate_list, True)
         _LOGGER.debug(
             f"climate:async_setup_platform exit - created [{len(climate_list)}] entitites"
         )

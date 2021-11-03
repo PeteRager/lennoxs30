@@ -14,25 +14,11 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info: Manager = None
-) -> bool:
+async def async_setup_entry(hass, config, async_add_entities, discovery_info: Manager = None ) -> bool:
     _LOGGER.debug("switch:async_setup_platform enter")
-    # Discovery info is the API that we passed in.
-    if discovery_info is None:
-        _LOGGER.error(
-            "switch:async_setup_platform expecting API in discovery_info, found None"
-        )
-        return False
-    theType = str(type(discovery_info))
-    if "Manager" not in theType:
-        _LOGGER.error(
-            f"switch:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
-        )
-        return False
-
+    hub_name = "lennoxs30"
+    manager = hass.data[DOMAIN][hub_name]["hub"]
     switch_list = []
-    manager: Manager = discovery_info
     for system in manager._api.getSystems():
         _LOGGER.info(
             f"async_setup_platform ventilation [{system.supports_ventilation()}]"
@@ -47,7 +33,7 @@ async def async_setup_platform(
             switch_list.append(switch)
 
     if len(switch_list) != 0:
-        add_entities(switch_list, True)
+        async_add_entities(switch_list, True)
         _LOGGER.debug(
             f"switch:async_setup_platform exit - created [{len(switch_list)}] switch entitites"
         )

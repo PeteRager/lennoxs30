@@ -1,0 +1,21 @@
+{
+  "config": {
+    "title": "Lennox S30 Local/Cloud",
+    "step": {
+      "user": {
+        "title": "Define your Lennox S30 connection",
+        "data": {
+			"ip_address": "The Local IP or Hostname of your Lennox S30, or \"None\" if using cloud",
+			"email": "Your email, if using Cloud or blank if using local LAN",
+			"password": "Your password if using local lan"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Device is already configured"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
