@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_IP_ADDRESS, default="None"): str,
                 vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_POLL_INTERVAL
+                    CONF_SCAN_INTERVAL
                 ): cv.positive_int,
                 vol.Optional(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
@@ -319,9 +319,10 @@ class Manager(object):
         self._update_counter = 0
         fast_polling: bool = False
         fast_polling_cd: int = 0
+        received = False
         while self._reinitialize == False:
             try:
-                await self.messagePump()
+                received = await self.messagePump()
             except Exception as e:
                 _LOGGER.error("messagePump_task unexpected exception:" + str(e))
             if fast_polling == True:
@@ -329,16 +330,18 @@ class Manager(object):
                 if fast_polling_cd <= 0:
                     fast_polling = False
 
-            if fast_polling == True:
-                res = await asyncio.sleep(self._fast_poll_interval)
-            else:
-                res = await self.event_wait_mp_wakeup(self._poll_interval)
-                if self._shutdown == True:
-                    break
-                if res == True:
-                    self._mp_wakeup_event.clear()
-                    fast_polling = True
-                    fast_polling_cd = 10
+            if self._shutdown == True:
+                break
+
+            if not received:
+                if fast_polling == True:
+                    res = await asyncio.sleep(self._fast_poll_interval)
+                else:
+                    res = await self.event_wait_mp_wakeup(self._poll_interval)
+                    if res == True:
+                        self._mp_wakeup_event.clear()
+                        fast_polling = True
+                        fast_polling_cd = 10
 
         if self._shutdown == True:
             _LOGGER.debug("messagePump_task is exiting to shutdown")
@@ -352,10 +355,11 @@ class Manager(object):
 
     async def messagePump(self) -> bool:
         bErr = False
+        received = False
         try:
             self._update_counter += 1
             _LOGGER.debug("messagePump_task running")
-            await self._api.messagePump()
+            received = await self._api.messagePump()
             if self._update_counter >= 6:
                 self.updateState(DS_CONNECTED)
                 self._update_counter = 0
@@ -381,4 +385,4 @@ class Manager(object):
             self._reinitialize = True
         if bErr is False:
             self._err_cnt = 0
-        return bErr
+        return received
