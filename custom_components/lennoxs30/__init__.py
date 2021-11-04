@@ -193,7 +193,16 @@ class Manager(object):
         )
 
     def getMetricsList(self):
-        return self._api.metrics.getMetricList()
+        list = self._api.metrics.getMetricList()
+        # TODO these are at the individual S30 level, when we have a device object we should move this there
+        systems = self._api.getSystems()
+        if len(systems) > 0:
+            system: s30api_async.lennox_system = self._api.getSystems()[0]
+            if system != None:
+                list["sysUpTime"] = system.sysUpTime
+                list["diagLevel"] = system.diagLevel
+                list["softwareVersion"] = system.softwareVersion
+        return list
 
     async def s30_initalize(self):
         self.updateState(DS_CONNECTING)
