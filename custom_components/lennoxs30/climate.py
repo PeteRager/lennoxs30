@@ -120,7 +120,9 @@ class S30Climate(ClimateEntity):
         self._zone = zone
         self._zone.registerOnUpdateCallback(self.zone_update_callback)
         # We need notification of state of system.manualAwayMode in order to update the preset mode in HA.
-        self._system.registerOnUpdateCallback(self.system_update_callback)
+        self._system.registerOnUpdateCallback(
+            self.system_update_callback, ["manualAwayMode"]
+        )
         self._myname = self._system.name + "_" + self._zone.name
         ### For development testing.  We need a better way to enable this.  DO NOT CHECK IT IN WITH THIS AS TRUE!!!!!!
         self._sim_mode = False
