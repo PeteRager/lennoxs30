@@ -64,7 +64,15 @@ class S30VentilationSwitch(SwitchEntity):
         self._hass = hass
         self._manager = manager
         self._system = system
-        self._system.registerOnUpdateCallback(self.update_callback)
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "ventilationRemainingTime",
+                "ventilatingUntilTime",
+                "diagVentilationRuntime",
+                "ventilationMode",
+            ],
+        )
         self._myname = self._system.name + "_ventilation"
 
     def update_callback(self):
@@ -130,7 +138,9 @@ class S30AllergenDefenderSwitch(SwitchEntity):
         self._hass = hass
         self._manager = manager
         self._system = system
-        self._system.registerOnUpdateCallback(self.update_callback)
+        self._system.registerOnUpdateCallback(
+            self.update_callback, ["allergenDefender"]
+        )
         self._myname = self._system.name + "_allergen_defender"
 
     def update_callback(self):
