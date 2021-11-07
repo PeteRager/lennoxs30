@@ -15,6 +15,7 @@ from lennoxs30api import lennox_system, lennox_zone
 
 from homeassistant.components.sensor import (
     #    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     PLATFORM_SCHEMA,
 )
@@ -129,9 +130,9 @@ class S30OutdoorTempSensor(SensorEntity):
     def device_class(self):
         return DEVICE_CLASS_TEMPERATURE
 
-    # @property
-    # def state_class(self):
-    #    return STATE_CLASS_MEASUREMENT
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
 
 
 class S30TempSensor(SensorEntity):
@@ -191,6 +192,10 @@ class S30TempSensor(SensorEntity):
     def device_class(self):
         return DEVICE_CLASS_TEMPERATURE
 
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
+
 
 class S30HumiditySensor(SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
@@ -242,3 +247,7 @@ class S30HumiditySensor(SensorEntity):
     @property
     def device_class(self):
         return DEVICE_CLASS_HUMIDITY
+
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
