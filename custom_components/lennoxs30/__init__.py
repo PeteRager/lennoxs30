@@ -44,6 +44,7 @@ CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
 CONF_APP_ID = "app_id"
 CONF_INIT_WAIT_TIME = "init_wait_time"
 CONF_CREATE_SENSORS = "create_sensors"
+CONF_CREATE_INVERTER_POWER = "create_inverter_power"
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_LOCAL_POLL_INTERVAL: int = 0
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
@@ -65,6 +66,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_APP_ID): cv.string,
                 vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
                 vol.Optional(CONF_CREATE_SENSORS, default=False): cv.boolean,
+                vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
             }
         )
     },
@@ -100,9 +102,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     app_id = config.get(DOMAIN).get(CONF_APP_ID)
     conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
     create_sensors = config.get(DOMAIN).get(CONF_CREATE_SENSORS)
+    create_inverter_power = config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER)
 
     _LOGGER.debug(
-        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}]"
+        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
     )
 
     manager = Manager(
@@ -117,6 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf_init_wait_time=conf_init_wait_time,
         ip_address=conf_hosts,
         create_sensors=create_sensors,
+        create_inverter_power=create_inverter_power,
     )
     try:
         listener = hass.bus.async_listen_once(
@@ -158,6 +162,7 @@ class Manager(object):
         conf_init_wait_time: int,
         ip_address: str,
         create_sensors: bool,
+        create_inverter_power: bool,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -175,6 +180,7 @@ class Manager(object):
         self._retrieve_task = None
         self._allergenDefenderSwitch = allergenDefenderSwitch
         self._createSensors: bool = create_sensors
+        self._create_inverter_power: bool = create_inverter_power
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
 

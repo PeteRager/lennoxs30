@@ -65,6 +65,8 @@ lennoxs30:
   allergen_defender_switch: true
   init_wait_time: 45
   app_id: mapp079372367644467046827001
+  create_sensors: true
+  create_inverter_power: true
 
 # Enable logging if reporting issues
 logger:
@@ -87,6 +89,8 @@ logger:
 | fast_scan_interval       | float  | optional    | 0.75               | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands                                                                                                                                                                                                                                                         |
 | init_wait_time           | int    | optional    | 30                 | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                                    |
 | app_id                   | string | optional    | uniquely generated | Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. If default prevents initialization from being successful then specify the app id here. Please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. |
+| create_sensors           | bool   | optional   | false               | Creates sensors representing temperature and humidity detected at each zone                                                                                                                                                                                                                                                                                                                                          |
+| create_inverter_power    | bool   | optional   | false               | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 1 or 2, as opposed to the default value of 0.                                                                                                                                                                                                                                                 |
 
 # Temperature Units (Celsius, Fahrenheit)
 
