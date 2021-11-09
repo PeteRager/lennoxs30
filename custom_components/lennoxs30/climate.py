@@ -1,6 +1,6 @@
 """Support for Lennoxs30 Climate Entity"""
 from __future__ import annotations
-from homeassistant.helpers.entity import DeviceInfo
+
 import logging
 from typing import Any
 
@@ -44,10 +44,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME
 from homeassistant.core import HomeAssistant
-
+from homeassistant.helpers.entity import Entity
 from . import Manager
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,12 +67,12 @@ FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
 DOMAIN = "lennoxs30"
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info: Manager = None ) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
-    # Discovery info is the API that we passed in, let's make sure it is there.
-    hub_name = "lennoxs30"
-    manager = hass.data[DOMAIN][hub_name]["hub"]
     climate_list = []
+    hub_name = entry.data[CONF_NAME]
+    manager: Manager = hass.data[DOMAIN][hub_name]["hub"]
     for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.is_zone_active() == True:
@@ -106,7 +109,9 @@ class S30Climate(ClimateEntity):
         self._zone = zone
         self._zone.registerOnUpdateCallback(self.zone_update_callback)
         # We need notification of state of system.manualAwayMode in order to update the preset mode in HA.
-        self._system.registerOnUpdateCallback(self.system_update_callback)
+        self._system.registerOnUpdateCallback(
+            self.system_update_callback, ["manualAwayMode"]
+        )
         self._myname = self._system.name + "_" + self._zone.name
         ### For development testing.  We need a better way to enable this.  DO NOT CHECK IT IN WITH THIS AS TRUE!!!!!!
         self._sim_mode = False
@@ -153,8 +158,8 @@ class S30Climate(ClimateEntity):
 
     def is_single_setpoint_active(self) -> bool:
         # If the system is configured to use a single setpoint for both heat and cool
-       # if self._zone._system.single_setpoint_mode == True:
-       #     return True
+        if self._zone._system.single_setpoint_mode == True:
+            return True
         # If it's in heat and cool then there are two setpoints
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
             return False
@@ -199,24 +204,18 @@ class S30Climate(ClimateEntity):
         """Return the minimum temperature."""
         minTemp = None
         if self._manager._is_metric is False:
-            if self._zone.heatingOption == True:
-                minTemp = self._zone.minHsp
             if self._zone.coolingOption == True:
-                if minTemp == None:
-                    minTemp = self._zone.minCsp
-                else:
-                    minTemp = min(minTemp, self._zone.minCsp)
+                minTemp = self._zone.minCsp
+            elif self._zone.heatingOption == True:
+                minTemp = self._zone.minHsp
             if minTemp != None:
                 return minTemp
             return super().min_temp
         else:
-            if self._zone.heatingOption == True:
-                minTemp = self._zone.minHspC
             if self._zone.coolingOption == True:
-                if minTemp == None:
-                    minTemp = self._zone.minCspC
-                else:
-                    minTemp = min(minTemp, self._zone.minCspC)
+                minTemp = self._zone.minCspC
+            elif self._zone.heatingOption == True:
+                minTemp = self._zone.minHspC
             if minTemp != None:
                 return minTemp
             return super().min_temp
@@ -228,22 +227,16 @@ class S30Climate(ClimateEntity):
         if self._manager._is_metric is False:
             if self._zone.heatingOption == True:
                 maxTemp = self._zone.maxHsp
-            if self._zone.coolingOption == True:
-                if maxTemp == None:
-                    maxTemp = self._zone.maxCsp
-                else:
-                    maxTemp = max(maxTemp, self._zone.maxCsp)
+            elif self._zone.coolingOption == True:
+                maxTemp = self._zone.maxCsp
             if maxTemp != None:
                 return maxTemp
             return super().max_temp
         else:
             if self._zone.heatingOption == True:
                 maxTemp = self._zone.maxHspC
-            if self._zone.coolingOption == True:
-                if maxTemp == None:
-                    maxTemp = self._zone.maxCspC
-                else:
-                    maxTemp = max(maxTemp, self._zone.maxCspC)
+            elif self._zone.coolingOption == True:
+                maxTemp = self._zone.maxCspC
             if maxTemp != None:
                 return maxTemp
             return super().max_temp
@@ -615,13 +608,12 @@ class S30Climate(ClimateEntity):
                 _LOGGER.error("climate:async_set_fan_mode - error:" + e.message)
             else:
                 _LOGGER.error("climate:async_set_fan_mode - error:" + str(e))
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
             "name":  self._system.name,
-            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id())},
             "manufacturer": "Lennox",
             "model": "Lennox S30",
         }

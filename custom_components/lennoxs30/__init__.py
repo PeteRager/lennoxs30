@@ -4,7 +4,7 @@ from asyncio.locks import Event, Lock
 import logging
 from typing import Optional
 from lennoxs30api.s30exception import EC_CONFIG_TIMEOUT
-from homeassistant.core import callback
+
 from lennoxs30api import (
     EC_HTTP_ERR,
     EC_LOGIN,
@@ -19,8 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from typing import Any
 
 DOMAIN = "lennoxs30"
 DOMAIN_STATE = "lennoxs30.state"
@@ -33,7 +36,9 @@ DS_RETRY_WAIT = "Waiting to Retry"
 DS_FAILED = "Failed"
 
 from homeassistant.const import (
+    CONF_NAME,
     CONF_EMAIL,
+    CONF_HOSTS,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -55,12 +60,11 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
+                vol.Optional(CONF_NAME, default = "S30"): cv.string,
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_IP_ADDRESS, default="None"): str,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL
-                ): cv.positive_int,
+                vol.Optional(CONF_HOSTS, default="Cloud"): str,
+                vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
                 vol.Optional(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
                 ): cv.positive_float,
@@ -76,44 +80,74 @@ CONFIG_SCHEMA = vol.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup(hass, config):
-    """Set up the Solaredge modbus component."""
+async def async_setup(
+    hass : HomeAssistant,
+    config : ConfigType
+):
+    """Import config as config entry."""
     hass.data[DOMAIN] = {}
+    _LOGGER.warning(
+        "Configuration of the LennoxS30 platform in YAML is deprecated "
+        "and will be removed; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_NAME: "S30",
+                CONF_EMAIL: config.get(DOMAIN).get(CONF_EMAIL),
+                CONF_PASSWORD:  config.get(DOMAIN).get(CONF_PASSWORD),
+                CONF_HOSTS:  config.get(DOMAIN).get(CONF_HOSTS),
+                CONF_SCAN_INTERVAL:  config.get(DOMAIN).get(CONF_SCAN_INTERVAL),
+                CONF_FAST_POLL_INTERVAL:  config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL),
+                CONF_ALLERGEN_DEFENDER_SWITCH:  config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH),
+                CONF_APP_ID:  config.get(DOMAIN).get(CONF_APP_ID),
+                CONF_INIT_WAIT_TIME:  config.get(DOMAIN).get(CONF_INIT_WAIT_TIME),
+                CONF_CREATE_SENSORS:  config.get(DOMAIN).get(CONF_CREATE_SENSORS),
+            },
+        )
+    )
     return True
-    
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:   
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
-    ip_address = entry.data[CONF_IP_ADDRESS]
-    if ip_address == "None":
-        ip_address = None
+    conf_hosts = entry.data[CONF_HOSTS]
 
-    #t = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
-    #if t != None and t > 0:
-    #    poll_interval = t
-    #else:
-        #if ip_address == None:
-            #poll_interval = DEFAULT_POLL_INTERVAL
-        #else:
-    poll_interval = DEFAULT_LOCAL_POLL_INTERVAL
+    if conf_hosts == "Cloud":
+        conf_hosts = None
+   
+    t = entry.data[CONF_SCAN_INTERVAL]
+    if t != None and t > 0:
+        poll_interval = t
+    else:
+        if conf_hosts == None:
+            poll_interval = DEFAULT_POLL_INTERVAL
+        else:
+            poll_interval = DEFAULT_LOCAL_POLL_INTERVAL
 
-    #t = config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL)
-    #if t != None and t > 0.2:
-    #    fast_poll_interval = t
-    #else:
-    fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
-    create_sensors = True
-    allergenDefenderSwitch = False # config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
-    app_id = "homeassistant" #config.get(DOMAIN).get(CONF_APP_ID)
-    conf_init_wait_time = 30# config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
+    t = entry.data[CONF_FAST_POLL_INTERVAL]
+    if t != None and t > 0.2:
+        fast_poll_interval = t
+    else:
+        fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
+
+    allergenDefenderSwitch =  entry.data[CONF_ALLERGEN_DEFENDER_SWITCH]
+    app_id =  entry.data[CONF_APP_ID]
+    conf_init_wait_time = entry.data[CONF_INIT_WAIT_TIME]
+    create_sensors =  entry.data[CONF_CREATE_SENSORS]
 
     _LOGGER.debug(
-        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}]"
+        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}]"
     )
 
     manager = Manager(
         hass=hass,
-        entry=entry,
+        config=entry,
         email=email,
         password=password,
         poll_interval=poll_interval,
@@ -121,10 +155,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         allergenDefenderSwitch=allergenDefenderSwitch,
         app_id=app_id,
         conf_init_wait_time=conf_init_wait_time,
-        ip_address=ip_address,
+        ip_address=conf_hosts,
         create_sensors=create_sensors,
     )
-    
     try:
         listener = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
@@ -150,29 +183,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("async_setup complete")
     return True
 
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    if not unload_ok:
-        return False
-
+    #TODO- This is incompelte!
     hass.data[DOMAIN].pop(entry.data["name"])
     return True
     
-
-class Manager():
+    
+class Manager(object):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry,
+        config: ConfigEntry,
         email: str,
         password: str,
         poll_interval: int,
@@ -183,14 +205,14 @@ class Manager():
         ip_address: str,
         create_sensors: bool,
     ):
-        self._name = "lennoxs30"
+        
         self._reinitialize: bool = False
         self._err_cnt: int = 0
         self._update_counter: int = 0
         self._mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
         self._hass: HomeAssistant = hass
-        self._entry: ConfigType = entry
+        self._config: ConfigEntry = config
         self._poll_interval: int = poll_interval
         self._fast_poll_interval: float = fast_poll_interval
         self._api: s30api_async = s30api_async(
@@ -202,7 +224,6 @@ class Manager():
         self._createSensors: bool = create_sensors
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
-        self._sensors = []
 
     async def async_shutdown(self, event: Event) -> None:
         _LOGGER.debug("async_shutdown started")
@@ -219,17 +240,16 @@ class Manager():
         )
 
     def getMetricsList(self):
-        return self._api.metrics.getMetricList()
-
-    @property
-    def name(self):
-        """Return the name of this hub."""
-        return self._name
-        
-    @callback
-    def async_add_lennoxs30_sensor(self, sensor):
-        """Listen for data updates."""
-        self._sensors.append(sensor)
+        list = self._api.metrics.getMetricList()
+        # TODO these are at the individual S30 level, when we have a device object we should move this there
+        systems = self._api.getSystems()
+        if len(systems) > 0:
+            system: s30api_async.lennox_system = self._api.getSystems()[0]
+            if system != None:
+                list["sysUpTime"] = system.sysUpTime
+                list["diagLevel"] = system.diagLevel
+                list["softwareVersion"] = system.softwareVersion
+        return list
 
     async def s30_initalize(self):
         self.updateState(DS_CONNECTING)
@@ -239,25 +259,16 @@ class Manager():
         self._retrieve_task = asyncio.create_task(self.messagePump_task())
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
-            self._hass.data[DOMAIN][self._name] = {"hub": self}
+            self._hass.data[DOMAIN][self._config.data[CONF_NAME]] = {"hub": self}
             self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(self._entry, "climate")
+                self._hass.config_entries.async_forward_entry_setup(self._config, "climate")
             )
             self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(self._entry, "sensor")
+                self._hass.config_entries.async_forward_entry_setup(self._config, "sensor")
             )
             self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(self._entry, "switch")
+                self._hass.config_entries.async_forward_entry_setup(self._config, "switch")
             )
-            #self._hass.helpers.discovery.load_platform(
-            #    "climate", DOMAIN, self, self._config
-            #)
-            #self._hass.helpers.discovery.load_platform(
-            #    "sensor", DOMAIN, self, self._config
-            #)
-            #self._hass.helpers.discovery.load_platform(
-            #    "switch", DOMAIN, self, self._config
-            #)
             self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 
@@ -379,7 +390,9 @@ class Manager():
 
             if not received:
                 if fast_polling == True:
-                    res = await asyncio.sleep(self._fast_poll_interval)
+                    res = await asyncio.sleep(
+                        min(self._fast_poll_interval, self._poll_interval)
+                    )
                 else:
                     res = await self.event_wait_mp_wakeup(self._poll_interval)
                     if res == True:
@@ -402,7 +415,7 @@ class Manager():
         received = False
         try:
             self._update_counter += 1
-            #_LOGGER.debug("messagePump_task running")
+            _LOGGER.debug("messagePump_task running")
             received = await self._api.messagePump()
             if self._update_counter >= 6:
                 self.updateState(DS_CONNECTED)

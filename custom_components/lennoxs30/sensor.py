@@ -1,5 +1,6 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from homeassistant.const import (
+    CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
@@ -9,12 +10,14 @@ from homeassistant.const import (
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from lennoxs30api import lennox_system, lennox_zone
-
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    #    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     PLATFORM_SCHEMA,
 )
@@ -23,31 +26,30 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "lennoxs30"
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info: Manager = None ) -> bool:
-    
-    _LOGGER.debug("sensor:async_setup_platform enter")
-    
-    hub_name = "lennoxs30"
-    manager = hass.data[DOMAIN][hub_name]["hub"]
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
+
     sensor_list = []
+    hub_name = entry.data[CONF_NAME]
+    manager: Manager = hass.data[DOMAIN][hub_name]["hub"]
     for system in manager._api.getSystems():
-        _LOGGER.info(f"Create S30 S30OutdoorTempSensor sensor system [{system.sysId}]")
-        if manager._is_metric:
-            nativevalue = system.outdoorTemperatureC 
-            nativeunit = TEMP_CELSIUS
-        else:
-            nativevalue = system.outdoorTemperature
-            nativeunit = TEMP_FAHRENHEIT
-        sensor_list.append( S30Sensor(hass, manager, system, "Outdoor_Temperature", nativevalue, nativeunit, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT))
+        _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
+        sensor = S30OutdoorTempSensor(hass, manager, system)
+        sensor_list.append(sensor)
         if manager._createSensors == True:
             for zone in system.getZoneList():
                 if zone.is_zone_active() == True:
-                    if manager._is_metric:
-                        nativevalue = zone.getTemperatureC()
-                    else:
-                        nativevalue = zone.getTemperature()
-                    sensor_list.append( S30Sensor(hass, manager, system, zone.name + "_temperature", nativevalue, nativeunit, DEVICE_CLASS_TEMPERATURE, STATE_CLASS_MEASUREMENT))
-                    sensor_list.append( S30Sensor(hass, manager, system, zone.name + "_humdity", zone.getHumidity(), PERCENTAGE, DEVICE_CLASS_HUMIDITY, STATE_CLASS_MEASUREMENT))
+                    _LOGGER.info(
+                        f"Create S30TempSensor sensor system [{system.sysId}] zone [{zone.id}]"
+                    )
+                    tempSensor = S30TempSensor(hass, manager, zone)
+                    sensor_list.append(tempSensor)
+                    _LOGGER.info(
+                        f"Create S30HumSensor sensor system [{system.sysId}] zone [{zone.id}]"
+                    )
+                    humSensor = S30HumiditySensor(hass, manager, zone)
+                    sensor_list.append(humSensor)
+
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
         _LOGGER.debug(
@@ -61,28 +63,26 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info: Ma
         return False
 
 
-class S30Sensor(SensorEntity):
+class S30OutdoorTempSensor(SensorEntity):
     """Class for Lennox S30 thermostat."""
 
-    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system, name, nativevalue,  nativeunit, deviceclass, stateclass):
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         self._hass = hass
         self._manager = manager
         self._system = system
-        self._system.registerOnUpdateCallback(self.update_callback)
-        self._myname = self._system.name + "_" + name
-        self._nativevalue = nativevalue
-        self._nativeunit = nativeunit
-        self._deviceclass = deviceclass
-        self._stateclass = stateclass
-        manager.async_add_lennoxs30_sensor(self)
+        self._system.registerOnUpdateCallback(
+            self.update_callback, ["outdoorTemperature", "outdoorTemperatureC"]
+        )
+        self._myname = self._system.name + "_outdoor_temperature"
 
     def update_callback(self):
+        _LOGGER.info(f"update_callback S30OutdoorTempSensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return self._myname.replace("-", "").replace(" ", "_")
+        return (self._system.unique_id() + "_OT").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -103,34 +103,162 @@ class S30Sensor(SensorEntity):
         return self._myname
 
     @property
-    def native_value(self):
-        return self._nativevalue
+    def state(self):
+        if self._manager._is_metric is False:
+            return self._system.outdoorTemperature
+        return self._system.outdoorTemperatureC
 
     @property
-    def native_unit_of_measurement(self):
-        return self._nativeunit
+    def unit_of_measurement(self):
+        if self._manager._is_metric is False:
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
 
     @property
     def device_class(self):
-        return self._deviceclass
-        
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of entity."""
-        return f"{self._myname}"
+        return DEVICE_CLASS_TEMPERATURE
+
+    # @property
+    # def state_class(self):
+    #    return STATE_CLASS_MEASUREMENT
 
     @property
-    def state_class(self):
-        return self._stateclass
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._system.name,
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
+
+
+class S30TempSensor(SensorEntity):
+    """Class for Lennox S30 thermostat temperature."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, zone: lennox_zone):
+        self._hass = hass
+        self._manager = manager
+        self._zone = zone
+        self._zone.registerOnUpdateCallback(
+            self.update_callback, ["temperature", "temperatureC"]
+        )
+        self._myname = self._zone._system.name + "_" + self._zone.name + "_temperature"
+
+    def update_callback(self):
+        _LOGGER.info(f"update_callback S30TempSensor myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._zone._system.unique_id() + "_" + str(self._zone.id)).replace(
+            "-", ""
+        ) + "_T"
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {}
+
+    def update(self):
+        """Update data from the thermostat API."""
+        return True
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def state(self):
+        if self._manager._is_metric is False:
+            return self._zone.getTemperature()
+        return self._zone.getTemperatureC()
+
+    @property
+    def unit_of_measurement(self):
+        if self._manager._is_metric is False:
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._zone._system.name,
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
+
+
+class S30HumiditySensor(SensorEntity):
+    """Class for Lennox S30 thermostat temperature."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, zone: lennox_zone):
+        self._hass = hass
+        self._manager = manager
+        self._zone = zone
+        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity"])
+        self._myname = self._zone._system.name + "_" + self._zone.name + "_humidity"
+
+    def update_callback(self):
+        _LOGGER.info(f"update_callback S30HumiditySensor myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._zone._system.unique_id() + "_" + str(self._zone.id)).replace(
+            "-", ""
+        ) + "_H"
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {}
+
+    def update(self):
+        """Update data from the thermostat API."""
+        return True
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def state(self):
+        return self._zone.getHumidity()
+
+    @property
+    def unit_of_measurement(self):
+        return PERCENTAGE
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_HUMIDITY
         
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name": self._system.name,
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "name":  self._zone._system.name,
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
             "manufacturer": "Lennox",
             "model": "Lennox S30",
         }
-        
-        
+
