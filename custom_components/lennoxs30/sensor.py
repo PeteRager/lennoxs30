@@ -262,6 +262,15 @@ class S30HumiditySensor(SensorEntity):
     def state_class(self):
         return STATE_CLASS_MEASUREMENT
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._zone._system.name,
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
 
 class S30InverterPowerSensor(SensorEntity):
     """Class for Lennox S30 inverter power."""
@@ -318,3 +327,13 @@ class S30InverterPowerSensor(SensorEntity):
     @property
     def state_class(self):
         return STATE_CLASS_MEASUREMENT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._system.name,
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
