@@ -2,10 +2,12 @@
 from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 from . import Manager
 from homeassistant.core import HomeAssistant
@@ -17,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
 
 from homeassistant.components.sensor import (
-    #    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     PLATFORM_SCHEMA,
 )
@@ -36,6 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
         sensor = S30OutdoorTempSensor(hass, manager, system)
         sensor_list.append(sensor)
+        if manager._create_inverter_power == True:
+            _LOGGER.info(f"Create S30InverterPowerSensor sensor system [{system.sysId}]")
+            power_sensor = S30InverterPowerSensor(hass, manager, system)
+            sensor_list.append(power_sensor)
         if manager._createSensors == True:
             for zone in system.getZoneList():
                 if zone.is_zone_active() == True:
@@ -118,9 +124,9 @@ class S30OutdoorTempSensor(SensorEntity):
     def device_class(self):
         return DEVICE_CLASS_TEMPERATURE
 
-    # @property
-    # def state_class(self):
-    #    return STATE_CLASS_MEASUREMENT
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -251,14 +257,64 @@ class S30HumiditySensor(SensorEntity):
     @property
     def device_class(self):
         return DEVICE_CLASS_HUMIDITY
-        
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return {
-            "name":  self._zone._system.name,
-            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
-            "manufacturer": "Lennox",
-            "model": "Lennox S30",
-        }
 
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
+
+
+class S30InverterPowerSensor(SensorEntity):
+    """Class for Lennox S30 inverter power."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            ["diagInverterInputVoltage", "diagInverterInputCurrent"]
+        )
+        self._myname = self._system.name + "_inverter_energy"
+
+    def update_callback(self):
+        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._system.unique_id() + "_IE").replace("-", "")
+
+    def update(self):
+        """Update data from the thermostat API."""
+        return True
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def state(self):
+        try:
+            return int(float(self._system.diagInverterInputVoltage) * float(self._system.diagInverterInputCurrent))
+        except ValueError as e:
+            _LOGGER.warning(f"state myname [{self._myname}] failed: {e}")
+            pass
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        return POWER_WATT
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_POWER
+
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
