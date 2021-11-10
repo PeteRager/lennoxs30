@@ -136,12 +136,18 @@ In additon the following extra attributes are provided, to allow for a more deta
 
 | Attribute Name    | Description                                                                                                                                            |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.) |
-| damper            | Position of damper - range 0-100                                                                                                                       |
-| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                      |
-| tempOperation     | Current acvtive temperatue operation heating or cooling                                                                                                |
-| humidityOperation | Current active humidty operation - Drying or humidfying                                                                                                |
 | allergenDefender  | Indicates if this is enabled on the zone                                                                                                               |
+| aux               | Auxiliary Heating is On when True, off when False                                                                                                      |
+| balancePoint      | Not known what this attribute indicates. If you know let us know!                                                                                      |
+| coolCoast         | Not known what this attribute indicates. If you know let us know!                                                                                      |
+| damper            | Position of damper - range 0-100                                                                                                                       |
+| defrost           | Defrost is active                                                                                                                                      |
+| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                      |
+| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.) |
+| heatCoast         | Not known what this attribute indicates. If you know let us know!                                                                                      |
+| humidityOperation | Current active humidty operation - Drying or humidfying                                                                                                |
+| ssr               | Not known what this attribute indicates. If you know let us know!                                                                                      |
+| tempOperation     | Current acvtive temperatue operation heating or cooling                                                                                                |
 | ventilation       | Indicates if external ventilation is currently active on this zone                                                                                     |
 
 ## lennoxs30.state
