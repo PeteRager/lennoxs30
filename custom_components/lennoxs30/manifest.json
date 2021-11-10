@@ -7,5 +7,6 @@
     "dependencies": [],
     "requirements": ["lennoxs30api==0.1.1"],
     "codeowners": ["@PeteRager"],
-    "iot_class": "local_polling"
+    "iot_class": "local_polling",
+	"config_flow": true
   }

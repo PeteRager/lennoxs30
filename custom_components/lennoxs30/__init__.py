@@ -19,6 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from typing import Any
 
 DOMAIN = "lennoxs30"
 DOMAIN_STATE = "lennoxs30.state"
@@ -31,6 +36,7 @@ DS_RETRY_WAIT = "Waiting to Retry"
 DS_FAILED = "Failed"
 
 from homeassistant.const import (
+    CONF_NAME,
     CONF_EMAIL,
     CONF_HOSTS,
     CONF_IP_ADDRESS,
@@ -55,6 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
+                vol.Optional(CONF_NAME, default = "S30"): cv.string,
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_HOSTS, default="Cloud"): str,
@@ -75,15 +82,49 @@ CONFIG_SCHEMA = vol.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
+async def async_setup(
+    hass : HomeAssistant,
+    config : ConfigType
+):
+    """Import config as config entry."""
+    hass.data[DOMAIN] = {}
+    _LOGGER.warning(
+        "Configuration of the LennoxS30 platform in YAML is deprecated "
+        "and will be removed; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_NAME: "S30",
+                CONF_EMAIL: config.get(DOMAIN).get(CONF_EMAIL),
+                CONF_PASSWORD:  config.get(DOMAIN).get(CONF_PASSWORD),
+                CONF_HOSTS:  config.get(DOMAIN).get(CONF_HOSTS),
+                CONF_SCAN_INTERVAL:  config.get(DOMAIN).get(CONF_SCAN_INTERVAL),
+                CONF_FAST_POLL_INTERVAL:  config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL),
+                CONF_ALLERGEN_DEFENDER_SWITCH:  config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH),
+                CONF_APP_ID:  config.get(DOMAIN).get(CONF_APP_ID),
+                CONF_INIT_WAIT_TIME:  config.get(DOMAIN).get(CONF_INIT_WAIT_TIME),
+                CONF_CREATE_SENSORS:  config.get(DOMAIN).get(CONF_CREATE_SENSORS),
+                CONF_CREATE_INVERTER_POWER:  config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER),
+            },
+        )
+    )
+    return True
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    email = config.get(DOMAIN).get(CONF_EMAIL)
-    password = config.get(DOMAIN).get(CONF_PASSWORD)
-    conf_hosts = config.get(DOMAIN).get(CONF_HOSTS)
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:   
+    email = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
+    conf_hosts = entry.data[CONF_HOSTS]
+
     if conf_hosts == "Cloud":
         conf_hosts = None
-
-    t = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
+   
+    t = entry.data[CONF_SCAN_INTERVAL]
     if t != None and t > 0:
         poll_interval = t
     else:
@@ -92,17 +133,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             poll_interval = DEFAULT_LOCAL_POLL_INTERVAL
 
-    t = config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL)
+    t = entry.data[CONF_FAST_POLL_INTERVAL]
     if t != None and t > 0.2:
         fast_poll_interval = t
     else:
         fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
 
-    allergenDefenderSwitch = config.get(DOMAIN).get(CONF_ALLERGEN_DEFENDER_SWITCH)
-    app_id = config.get(DOMAIN).get(CONF_APP_ID)
-    conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
-    create_sensors = config.get(DOMAIN).get(CONF_CREATE_SENSORS)
-    create_inverter_power = config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER)
+    allergenDefenderSwitch =  entry.data[CONF_ALLERGEN_DEFENDER_SWITCH]
+    app_id =  entry.data[CONF_APP_ID]
+    conf_init_wait_time = entry.data[CONF_INIT_WAIT_TIME]
+    create_sensors =  entry.data[CONF_CREATE_SENSORS]
+    create_inverter_power = entry.data[CONF_CREATE_INVERTER_POWER]
 
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
@@ -110,7 +151,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     manager = Manager(
         hass=hass,
-        config=config,
+        config=entry,
         email=email,
         password=password,
         poll_interval=poll_interval,
@@ -147,12 +188,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _LOGGER.debug("async_setup complete")
     return True
 
-
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    #TODO- This is incompelte!
+    hass.data[DOMAIN].pop(entry.data["name"])
+    return True
+    
+    
 class Manager(object):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: ConfigType,
+        config: ConfigEntry,
         email: str,
         password: str,
         poll_interval: int,
@@ -164,13 +211,14 @@ class Manager(object):
         create_sensors: bool,
         create_inverter_power: bool,
     ):
+        
         self._reinitialize: bool = False
         self._err_cnt: int = 0
         self._update_counter: int = 0
         self._mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
         self._hass: HomeAssistant = hass
-        self._config: ConfigType = config
+        self._config: ConfigEntry = config
         self._poll_interval: int = poll_interval
         self._fast_poll_interval: float = fast_poll_interval
         self._api: s30api_async = s30api_async(
@@ -218,16 +266,16 @@ class Manager(object):
         self._retrieve_task = asyncio.create_task(self.messagePump_task())
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
-            self._hass.helpers.discovery.load_platform(
-                "climate", DOMAIN, self, self._config
+            self._hass.data[DOMAIN][self._config.data[CONF_NAME]] = {"hub": self}
+            self._hass.async_create_task(
+                self._hass.config_entries.async_forward_entry_setup(self._config, "climate")
             )
-            self._hass.helpers.discovery.load_platform(
-                "sensor", DOMAIN, self, self._config
+            self._hass.async_create_task(
+                self._hass.config_entries.async_forward_entry_setup(self._config, "sensor")
             )
-            self._hass.helpers.discovery.load_platform(
-                "switch", DOMAIN, self, self._config
+            self._hass.async_create_task(
+                self._hass.config_entries.async_forward_entry_setup(self._config, "switch")
             )
-
             self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 

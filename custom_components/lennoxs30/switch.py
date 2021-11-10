@@ -1,38 +1,26 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
 from typing import Any
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT,  CONF_NAME
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
-
+from homeassistant.helpers.entity import Entity
 from lennoxs30api import lennox_system
-
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.components.switch import SwitchEntity, PLATFORM_SCHEMA
-
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info: Manager = None
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     _LOGGER.debug("switch:async_setup_platform enter")
-    # Discovery info is the API that we passed in.
-    if discovery_info is None:
-        _LOGGER.error(
-            "switch:async_setup_platform expecting API in discovery_info, found None"
-        )
-        return False
-    theType = str(type(discovery_info))
-    if "Manager" not in theType:
-        _LOGGER.error(
-            f"switch:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
-        )
-        return False
 
     switch_list = []
-    manager: Manager = discovery_info
+    hub_name = entry.data[CONF_NAME]
+    manager: Manager = hass.data[DOMAIN][hub_name]["hub"]
     for system in manager._api.getSystems():
         _LOGGER.info(
             f"async_setup_platform ventilation [{system.supports_ventilation()}]"
@@ -47,7 +35,7 @@ async def async_setup_platform(
             switch_list.append(switch)
 
     if len(switch_list) != 0:
-        add_entities(switch_list, True)
+        async_add_entities(switch_list, True)
         _LOGGER.debug(
             f"switch:async_setup_platform exit - created [{len(switch_list)}] switch entitites"
         )
@@ -195,3 +183,13 @@ class S30AllergenDefenderSwitch(SwitchEntity):
                 )
             else:
                 _LOGGER.error("allergenDefender_off:async_turn_off - error:" + str(e))
+                
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._system.name,
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }

@@ -1,5 +1,6 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from homeassistant.const import (
+    CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
@@ -11,9 +12,11 @@ from homeassistant.const import (
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
-
+from homeassistant.helpers.entity import Entity
 from lennoxs30api import lennox_system, lennox_zone
-
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -26,25 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info: Manager = None
-) -> bool:
-    _LOGGER.debug("sensor:async_setup_platform enter")
-    # Discovery info is the API that we passed in.
-    if discovery_info is None:
-        _LOGGER.error(
-            "sensor:async_setup_platform expecting API in discovery_info, found None"
-        )
-        return False
-    theType = str(type(discovery_info))
-    if "Manager" not in theType:
-        _LOGGER.error(
-            f"sensor:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
-        )
-        return False
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
 
     sensor_list = []
-    manager: Manager = discovery_info
+    hub_name = entry.data[CONF_NAME]
+    manager: Manager = hass.data[DOMAIN][hub_name]["hub"]
     for system in manager._api.getSystems():
         _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
         sensor = S30OutdoorTempSensor(hass, manager, system)
@@ -68,7 +57,7 @@ async def async_setup_platform(
                     sensor_list.append(humSensor)
 
     if len(sensor_list) != 0:
-        add_entities(sensor_list, True)
+        async_add_entities(sensor_list, True)
         _LOGGER.debug(
             f"climate:async_setup_platform exit - created [{len(sensor_list)}] entitites"
         )
@@ -139,6 +128,16 @@ class S30OutdoorTempSensor(SensorEntity):
     def state_class(self):
         return STATE_CLASS_MEASUREMENT
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._system.name,
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
+
 
 class S30TempSensor(SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
@@ -198,8 +197,14 @@ class S30TempSensor(SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._zone._system.name,
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
 
 
 class S30HumiditySensor(SensorEntity):
@@ -257,6 +262,15 @@ class S30HumiditySensor(SensorEntity):
     def state_class(self):
         return STATE_CLASS_MEASUREMENT
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._zone._system.name,
+            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
 
 class S30InverterPowerSensor(SensorEntity):
     """Class for Lennox S30 inverter power."""
@@ -313,3 +327,13 @@ class S30InverterPowerSensor(SensorEntity):
     @property
     def state_class(self):
         return STATE_CLASS_MEASUREMENT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "name":  self._system.name,
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "manufacturer": "Lennox",
+            "model": "Lennox S30",
+        }
