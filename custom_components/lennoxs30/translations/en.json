@@ -15,6 +15,7 @@
 			"app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
 			"init_wait_time": "Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts",
 			"create_sensors": "Create Sensors"
+			"create_inverter_power": "Create Sensor for inverter power"
         }
       }
     },
