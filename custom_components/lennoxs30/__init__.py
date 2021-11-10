@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     app_id =  entry.data[CONF_APP_ID]
     conf_init_wait_time = entry.data[CONF_INIT_WAIT_TIME]
     create_sensors =  entry.data[CONF_CREATE_SENSORS]
-    create_inverter_power = config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER)
+    create_inverter_power = entry.data[CONF_CREATE_INVERTER_POWER]
 
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
