@@ -22,6 +22,7 @@ CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
 CONF_APP_ID = "app_id"
 CONF_INIT_WAIT_TIME = "init_wait_time"
 CONF_CREATE_SENSORS = "create_sensors"
+CONF_CREATE_INVERTER_POWER = "create_inverter_power"
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
 MAX_ERRORS = 5
@@ -45,6 +46,7 @@ DATA_SCHEMA = vol.Schema(
                 vol.Optional(CONF_APP_ID): cv.string,
                 vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
                 vol.Optional(CONF_CREATE_SENSORS, default=False): cv.boolean,
+                vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
             }
         )
     },
