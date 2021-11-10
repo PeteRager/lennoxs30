@@ -109,6 +109,7 @@ async def async_setup(
                 CONF_APP_ID:  config.get(DOMAIN).get(CONF_APP_ID),
                 CONF_INIT_WAIT_TIME:  config.get(DOMAIN).get(CONF_INIT_WAIT_TIME),
                 CONF_CREATE_SENSORS:  config.get(DOMAIN).get(CONF_CREATE_SENSORS),
+                CONF_CREATE_INVERTER_POWER:  config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER),
             },
         )
     )
