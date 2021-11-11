@@ -39,7 +39,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_EMAIL,
     CONF_HOSTS,
-    CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
@@ -61,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_NAME, default="S30"): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_HOSTS, default="Cloud"): str,
@@ -86,6 +85,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Import config as config entry."""
     hass.data[DOMAIN] = {}
+    if config.get(DOMAIN) is None:
+        return True
     _LOGGER.warning(
         "Configuration of the LennoxS30 platform in YAML is deprecated "
         "and will be removed; Your existing configuration "
@@ -128,7 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if conf_hosts == "Cloud":
         conf_hosts = None
 
-    t = entry.data[CONF_SCAN_INTERVAL]
+    t = None
+    if CONF_SCAN_INTERVAL in entry.data:
+        t = entry.data[CONF_SCAN_INTERVAL]
     if t != None and t > 0:
         poll_interval = t
     else:
@@ -137,7 +140,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             poll_interval = DEFAULT_LOCAL_POLL_INTERVAL
 
-    t = entry.data[CONF_FAST_POLL_INTERVAL]
+    t = None
+    if CONF_FAST_POLL_INTERVAL in entry.data:
+        t = entry.data[CONF_FAST_POLL_INTERVAL]
     if t != None and t > 0.2:
         fast_poll_interval = t
     else:
