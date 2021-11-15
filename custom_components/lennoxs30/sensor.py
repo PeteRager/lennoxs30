@@ -32,8 +32,8 @@ DOMAIN = "lennoxs30"
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
 
     sensor_list = []
-    hub_name = entry.data[CONF_NAME]
-    manager: Manager = hass.data[DOMAIN][hub_name]["hub"]
+
+    manager: Manager = hass.data[DOMAIN][entry.unique_id]["hub"]
     for system in manager._api.getSystems():
         _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
         sensor = S30OutdoorTempSensor(hass, manager, system)

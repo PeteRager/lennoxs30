@@ -19,8 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     _LOGGER.debug("switch:async_setup_platform enter")
 
     switch_list = []
-    hub_name = entry.data[CONF_NAME]
-    manager: Manager = hass.data[DOMAIN][hub_name]["hub"]
+    manager: Manager = hass.data[DOMAIN][entry.unique_id]["hub"]
     for system in manager._api.getSystems():
         _LOGGER.info(
             f"async_setup_platform ventilation [{system.supports_ventilation()}]"

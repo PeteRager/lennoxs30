@@ -122,12 +122,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    email = entry.data[CONF_EMAIL]
-    password = entry.data[CONF_PASSWORD]
-    conf_hosts = entry.data[CONF_HOSTS]
-
-    if conf_hosts == "Cloud":
-        conf_hosts = None
+    
+    _LOGGER.debug(
+        f"UniqueID {entry.unique_id}"
+    )
+    
+    conf_hosts = None
+    try:
+        email = entry.data[CONF_EMAIL]
+        password = entry.data[CONF_PASSWORD]
+        app_id = entry.data[CONF_APP_ID]
+    except KeyError:
+        conf_hosts = entry.data[CONF_HOSTS]
+        email = ""
+        password = ""
+        app_id = "homeassistant"
 
     t = None
     if CONF_SCAN_INTERVAL in entry.data:
@@ -149,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
 
     allergenDefenderSwitch = entry.data[CONF_ALLERGEN_DEFENDER_SWITCH]
-    app_id = entry.data[CONF_APP_ID]
+
     conf_init_wait_time = entry.data[CONF_INIT_WAIT_TIME]
     create_sensors = entry.data[CONF_CREATE_SENSORS]
     create_inverter_power = entry.data[CONF_CREATE_INVERTER_POWER]
@@ -201,7 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # TODO- This is incompelte!
-    hass.data[DOMAIN].pop(entry.data["name"])
+    hass.data[DOMAIN].pop(entry.unique_id)
     return True
 
 
@@ -276,7 +285,7 @@ class Manager(object):
         self._retrieve_task = asyncio.create_task(self.messagePump_task())
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
-            self._hass.data[DOMAIN][self._config.data[CONF_NAME]] = {"hub": self}
+            self._hass.data[DOMAIN][self._config.unique_id] = {"hub": self}
             self._hass.async_create_task(
                 self._hass.config_entries.async_forward_entry_setup(
                     self._config, "climate"

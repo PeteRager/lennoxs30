@@ -71,8 +71,7 @@ DOMAIN = "lennoxs30"
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
     climate_list = []
-    hub_name = entry.data[CONF_NAME]
-    manager: Manager = hass.data[DOMAIN][hub_name]["hub"]
+    manager: Manager = hass.data[DOMAIN][entry.unique_id]["hub"]
     for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.is_zone_active() == True:
