@@ -2,7 +2,7 @@
 import asyncio
 from asyncio.locks import Event, Lock
 import logging
-from typing import Optional
+
 from lennoxs30api.s30exception import EC_CONFIG_TIMEOUT
 
 from lennoxs30api import (
@@ -45,6 +45,7 @@ CONF_APP_ID = "app_id"
 CONF_INIT_WAIT_TIME = "init_wait_time"
 CONF_CREATE_SENSORS = "create_sensors"
 CONF_CREATE_INVERTER_POWER = "create_inverter_power"
+CONF_PROTOCOL = "protocol"
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_LOCAL_POLL_INTERVAL: int = 0
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
@@ -67,6 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
                 vol.Optional(CONF_CREATE_SENSORS, default=False): cv.boolean,
                 vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
+                vol.Optional(CONF_PROTOCOL, default="https"): cv.string,
             }
         )
     },
@@ -103,6 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf_init_wait_time = config.get(DOMAIN).get(CONF_INIT_WAIT_TIME)
     create_sensors = config.get(DOMAIN).get(CONF_CREATE_SENSORS)
     create_inverter_power = config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER)
+    conf_protocol = config.get(DOMAIN).get(CONF_PROTOCOL)
 
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
@@ -121,6 +124,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ip_address=conf_hosts,
         create_sensors=create_sensors,
         create_inverter_power=create_inverter_power,
+        protocol=conf_protocol,
     )
     try:
         listener = hass.bus.async_listen_once(
@@ -163,6 +167,7 @@ class Manager(object):
         ip_address: str,
         create_sensors: bool,
         create_inverter_power: bool,
+        protocol: str,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -173,8 +178,10 @@ class Manager(object):
         self._config: ConfigType = config
         self._poll_interval: int = poll_interval
         self._fast_poll_interval: float = fast_poll_interval
+        self._protocol = protocol
+        self._ip_address = ip_address
         self._api: s30api_async = s30api_async(
-            email, password, app_id, ip_address=ip_address
+            email, password, app_id, ip_address=ip_address, protocol=self._protocol
         )
         self._shutdown = False
         self._retrieve_task = None
