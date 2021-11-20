@@ -12,21 +12,14 @@ from lennoxs30api import (
     lennox_system,
     lennox_zone,
 )
-from lennoxs30api.s30api_async import (
-    LENNOX_HVAC_COOL,
-    LENNOX_HVAC_HEAT,
-    LENNOX_HVAC_OFF,
-)
-from lennoxs30api.s30exception import EC_NO_SCHEDULE
+from lennoxs30api.s30api_async import LENNOX_HVAC_EMERGENCY_HEAT, LENNOX_HVAC_HEAT
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
     CURRENT_HVAC_DRY,
-    CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_OFF,
@@ -38,6 +31,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
+    SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
@@ -124,8 +118,6 @@ class S30Climate(ClimateEntity):
             self.system_update_callback, ["manualAwayMode"]
         )
         self._myname = self._system.name + "_" + self._zone.name
-        ### For development testing.  We need a better way to enable this.  DO NOT CHECK IT IN WITH THIS AS TRUE!!!!!!
-        self._sim_mode = False
 
     @property
     def unique_id(self) -> str:
@@ -152,6 +144,12 @@ class S30Climate(ClimateEntity):
         attrs["humOperation"] = self._zone.humOperation
         attrs["tempOperation"] = self._zone.tempOperation
         attrs["ventilation"] = self._zone.ventilation
+        attrs["heatCoast"] = self._zone.heatCoast
+        attrs["defrost"] = self._zone.defrost
+        attrs["balancePoint"] = self._zone.balancePoint
+        attrs["aux"] = self._zone.aux
+        attrs["coolCoast"] = self._zone.coolCoast
+        attrs["ssr"] = self._zone.ssr
         return attrs
 
     def update(self):
@@ -193,6 +191,13 @@ class S30Climate(ClimateEntity):
             or self._zone.dehumidificationOption == True
         ):
             mask |= SUPPORT_TARGET_HUMIDITY
+
+        if (
+            self._zone.heatingOption == True
+            and self._system.has_emergency_heat() == True
+        ):
+            mask |= SUPPORT_AUX_HEAT
+
         _LOGGER.debug(
             "climate:supported_features name["
             + self._myname
@@ -320,6 +325,8 @@ class S30Climate(ClimateEntity):
         r = self._zone.getSystemMode()
         if r == LENNOX_HVAC_HEAT_COOL:
             r = HVAC_MODE_HEAT_COOL
+        elif r == LENNOX_HVAC_EMERGENCY_HEAT:
+            r = HVAC_MODE_HEAT
         _LOGGER.debug(f"climate:hvac_mode name [{self._myname}] mode [{r}]")
         return r
 
@@ -338,15 +345,13 @@ class S30Climate(ClimateEntity):
         """Return the list of available hvac operation modes."""
         modes = []
         modes.append(HVAC_MODE_OFF)
-        if self._zone.coolingOption == True or self._sim_mode == True:
+        if self._zone.coolingOption == True:
             modes.append(HVAC_MODE_COOL)
-        if self._zone.heatingOption == True or self._sim_mode == True:
+        if self._zone.heatingOption == True:
             modes.append(HVAC_MODE_HEAT)
-        if self._zone.dehumidificationOption == True or self._sim_mode == True:
+        if self._zone.dehumidificationOption == True:
             modes.append(HVAC_MODE_DRY)
-        if (
-            self._zone.coolingOption == True and self._zone.heatingOption == True
-        ) or self._sim_mode == True:
+        if self._zone.coolingOption == True and self._zone.heatingOption == True:
             modes.append(HVAC_MODE_HEAT_COOL)
         return modes
 
@@ -369,12 +374,8 @@ class S30Climate(ClimateEntity):
                 + t_hvac_mode
                 + "]"
             )
-            if self._sim_mode == False:
-                await self._zone.setHVACMode(t_hvac_mode)
-                await self.async_trigger_fast_poll()
-            else:
-                self._zone.systemMode = t_hvac_mode
-                self.zone_update_callback()
+            await self._zone.setHVACMode(t_hvac_mode)
+            await self.async_trigger_fast_poll()
         except S30Exception as e:
             _LOGGER.error(e.message)
         except Exception as e:
@@ -485,6 +486,33 @@ class S30Climate(ClimateEntity):
     def fan_modes(self):
         """Return the list of available fan modes."""
         return FAN_MODES
+
+    @property
+    def is_aux_heat(self) -> bool | None:
+        res = self._zone.systemMode == LENNOX_HVAC_EMERGENCY_HEAT
+        return res
+
+    async def async_turn_aux_heat_on(self):
+        """Turn auxiliary heater on."""
+        try:
+            _LOGGER.debug(f"climate:async_turn_aux_heat_on zone [{self._myname}]")
+            await self._zone.setHVACMode(LENNOX_HVAC_EMERGENCY_HEAT)
+            await self.async_trigger_fast_poll()
+        except S30Exception as e:
+            _LOGGER.error(e.message)
+        except Exception as e:
+            _LOGGER.error(str(e))
+
+    async def async_turn_aux_heat_off(self):
+        try:
+            _LOGGER.debug(f"climate:async_turn_aux_heat_off zone [{self._myname}]")
+            # When Aux is turned off, we will revert the zone to Heat Mode.
+            await self._zone.setHVACMode(LENNOX_HVAC_HEAT)
+            await self.async_trigger_fast_poll()
+        except S30Exception as e:
+            _LOGGER.error(e.message)
+        except Exception as e:
+            _LOGGER.error(str(e))
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature"""
