@@ -210,9 +210,9 @@ The entity also has a set of attributes to provide diagnostic data:
 
 When the **create_sensors** configuration parameter is set, humidity and temperarture sensors are created for each zone.
 
-sensor.<system_name>\_<zone_name>\_temperature"
+sensor.<system_name>\_<zone_name>\_temperature
 
-sensor.<system_name>\_<zone_name>\_humidity"
+sensor.<system_name>\_<zone_name>\_humidity
 
 ## sensor for Outdoor Temperature
 
