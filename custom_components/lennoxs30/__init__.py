@@ -81,9 +81,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     email = config.get(DOMAIN).get(CONF_EMAIL)
     password = config.get(DOMAIN).get(CONF_PASSWORD)
-    conf_hosts = config.get(DOMAIN).get(CONF_HOSTS)
+    conf_hosts: str = config.get(DOMAIN).get(CONF_HOSTS)
+    host_list = []
     if conf_hosts == "Cloud":
         conf_hosts = None
+        host_list.append(None)
+    else:
+        host_list = conf_hosts.split(",")
 
     t = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
     if t != None and t > 0:
@@ -107,48 +111,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     create_inverter_power = config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER)
     conf_protocol = config.get(DOMAIN).get(CONF_PROTOCOL)
 
-    _LOGGER.debug(
-        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
-    )
+    index = 0
 
-    manager = Manager(
-        hass=hass,
-        config=config,
-        email=email,
-        password=password,
-        poll_interval=poll_interval,
-        fast_poll_interval=fast_poll_interval,
-        allergenDefenderSwitch=allergenDefenderSwitch,
-        app_id=app_id,
-        conf_init_wait_time=conf_init_wait_time,
-        ip_address=conf_hosts,
-        create_sensors=create_sensors,
-        create_inverter_power=create_inverter_power,
-        protocol=conf_protocol,
-    )
-    try:
-        listener = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
+    for host_name in host_list:
+        _LOGGER.debug(
+            f"async_setup starting host [{host_name}] scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
         )
-        await manager.s30_initalize()
-    except S30Exception as e:
-        if e.error_code == EC_LOGIN:
-            # TODO: encapsulate in manager class
-            manager.updateState(DS_LOGIN_FAILED)
-            raise HomeAssistantError(
-                "Lennox30 unable to login - please check credentials and restart Home Assistant"
+
+        manager = Manager(
+            hass=hass,
+            config=config,
+            email=email,
+            password=password,
+            poll_interval=poll_interval,
+            fast_poll_interval=fast_poll_interval,
+            allergenDefenderSwitch=allergenDefenderSwitch,
+            app_id=app_id,
+            conf_init_wait_time=conf_init_wait_time,
+            ip_address=host_name,
+            create_sensors=create_sensors,
+            create_inverter_power=create_inverter_power,
+            protocol=conf_protocol,
+            index=index,
+        )
+        try:
+            listener = hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
             )
-        elif e.error_code == EC_CONFIG_TIMEOUT:
-            _LOGGER.warning("async_setup: " + e.message)
-            _LOGGER.info("connection will be retried in 1 minute")
-            asyncio.create_task(manager.initialize_retry_task())
-            return True
-        else:
-            _LOGGER.error("async_setup unexpected error " + e.message)
-            _LOGGER.info("connection will be retried in 1 minute")
-            asyncio.create_task(manager.initialize_retry_task())
-            return True
-    _LOGGER.debug("async_setup complete")
+            await manager.s30_initalize()
+        except S30Exception as e:
+            if e.error_code == EC_LOGIN:
+                # TODO: encapsulate in manager class
+                manager.updateState(DS_LOGIN_FAILED)
+                raise HomeAssistantError(
+                    f"Lennox30 unable to login host [{host_name}] - please check credentials and restart Home Assistant"
+                )
+            elif e.error_code == EC_CONFIG_TIMEOUT:
+                _LOGGER.warning("async_setup: " + e.message)
+                _LOGGER.info("connection will be retried in 1 minute")
+                asyncio.create_task(manager.initialize_retry_task())
+            else:
+                _LOGGER.error("async_setup unexpected error " + e.message)
+                _LOGGER.info("connection will be retried in 1 minute")
+                asyncio.create_task(manager.initialize_retry_task())
+        _LOGGER.debug(f"async_setup complete host [{host_name}]")
+        index = index + 1
     return True
 
 
@@ -168,6 +175,7 @@ class Manager(object):
         create_sensors: bool,
         create_inverter_power: bool,
         protocol: str,
+        index: int = 0,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -190,19 +198,26 @@ class Manager(object):
         self._create_inverter_power: bool = create_inverter_power
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
+        # For backwards compatibility
+        if index == 0:
+            self.connection_state = DOMAIN_STATE
+        else:
+            self.connection_state = "lennoxs30.conn_" + self._ip_address.replace(
+                ".", "_"
+            ).replace(":", "_")
 
     async def async_shutdown(self, event: Event) -> None:
-        _LOGGER.debug("async_shutdown started")
+        _LOGGER.debug(f"async_shutdown started host [{self._ip_address}]")
         self._shutdown = True
         if self._retrieve_task != None:
             self._mp_wakeup_event.set()
             await self._retrieve_task
         await self._api.shutdown()
-        _LOGGER.debug("async_shutdown complete")
+        _LOGGER.debug(f"async_shutdown complete [{self._ip_address}]")
 
     def updateState(self, state: int) -> None:
         self._hass.states.async_set(
-            DOMAIN_STATE, state, self.getMetricsList(), force_update=True
+            self.connection_state, state, self.getMetricsList(), force_update=True
         )
 
     def getMetricsList(self):
@@ -215,6 +230,7 @@ class Manager(object):
                 list["sysUpTime"] = system.sysUpTime
                 list["diagLevel"] = system.diagLevel
                 list["softwareVersion"] = system.softwareVersion
+                list["hostname"] = self._ip_address
         return list
 
     async def s30_initalize(self):
@@ -252,14 +268,26 @@ class Manager(object):
                 if e.error_code == EC_LOGIN:
                     # TODO: encapsulate in manager class
                     self.updateState(DS_LOGIN_FAILED)
-                    _LOGGER.error("initialize_retry_task - " + e.message)
+                    _LOGGER.error(
+                        f"initialize_retry_task host [{self._ip_address}] - "
+                        + e.message
+                    )
                     return
                 elif e.error_code == EC_CONFIG_TIMEOUT:
-                    _LOGGER.warning("async_setup: " + e.message)
-                    _LOGGER.info("connection will be retried in 1 minute")
+                    _LOGGER.warning(
+                        f"async_setup: host [{self._ip_address}] " + e.message
+                    )
+                    _LOGGER.info(
+                        f"connection host [{self._ip_address}] will be retried in 1 minute"
+                    )
                 else:
-                    _LOGGER.error("async_setup unexpected error " + e.message)
-                    _LOGGER.info("async setup will be retried in 1 minute")
+                    _LOGGER.error(
+                        f"async_setup host [{self._ip_address}] unexpected error "
+                        + e.message
+                    )
+                    _LOGGER.info(
+                        f"async setup host [{self._ip_address}] will be retried in 1 minute"
+                    )
 
     async def configuration_initialization(self) -> None:
         # Wait for zones to appear on each system
@@ -268,7 +296,7 @@ class Manager(object):
         numOfSystems = len(self._api.getSystems())
         while sytemsWithZones < numOfSystems and loops < self._conf_init_wait_time:
             _LOGGER.debug(
-                "__init__:async_setup waiting for zone config to arrive numSystems ["
+                f"__init__:async_setup waiting for zone config to arrive host [{self._ip_address}]  numSystems ["
                 + str(numOfSystems)
                 + "] sytemsWithZones ["
                 + str(sytemsWithZones)
@@ -283,7 +311,7 @@ class Manager(object):
                     continue
                 numZones = len(lsystem.getZoneList())
                 _LOGGER.debug(
-                    "__init__:async_setup wait for zones system ["
+                    f"__init__:async_setup host [{self._ip_address}] wait for zones system ["
                     + lsystem.sysId
                     + "] numZone ["
                     + str(numZones)
@@ -309,20 +337,26 @@ class Manager(object):
         while True:
             try:
                 self.updateState(DS_CONNECTING)
-                _LOGGER.debug("reinitialize_task - trying reconnect")
+                _LOGGER.debug(
+                    f"reinitialize_task host [{self._ip_address}] - trying reconnect"
+                )
                 await self.connect_subscribe()
                 self.updateState(DS_CONNECTED)
                 break
             except S30Exception as e:
-                _LOGGER.error("reinitialize_task: " + str(e))
+                _LOGGER.error(
+                    f"reinitialize_task host [{self._ip_address}] : " + str(e)
+                )
                 if e.error_code == EC_LOGIN:
                     raise HomeAssistantError(
-                        "Lennox30 unable to login - please check credentials and restart Home Assistant"
+                        f"Lennox30 unable to login host [{self._ip_address}]  - please check credentials and restart Home Assistant"
                     )
             self.updateState(DS_RETRY_WAIT)
             await asyncio.sleep(RETRY_INTERVAL_SECONDS)
 
-        _LOGGER.debug("reinitialize_task - reconnect successful")
+        _LOGGER.debug(
+            f"reinitialize_task host [{self._ip_address}] - reconnect successful"
+        )
         asyncio.create_task(self.messagePump_task())
 
     async def event_wait_mp_wakeup(self, timeout: float) -> bool:
@@ -345,7 +379,10 @@ class Manager(object):
             try:
                 received = await self.messagePump()
             except Exception as e:
-                _LOGGER.error("messagePump_task unexpected exception:" + str(e))
+                _LOGGER.error(
+                    f"messagePump_task host [{self._ip_address}] unexpected exception:"
+                    + str(e)
+                )
             if fast_polling == True:
                 fast_polling_cd = fast_polling_cd - 1
                 if fast_polling_cd <= 0:
@@ -367,21 +404,27 @@ class Manager(object):
                         fast_polling_cd = 10
 
         if self._shutdown == True:
-            _LOGGER.debug("messagePump_task is exiting to shutdown")
+            _LOGGER.debug(
+                f"messagePump_task host [{self._ip_address}] is exiting to shutdown"
+            )
             return
         elif self._reinitialize == True:
             self.updateState(DS_DISCONNECTED)
             asyncio.create_task(self.reinitialize_task())
-            _LOGGER.debug("messagePump_task is exiting - to enter retries")
+            _LOGGER.debug(
+                f"messagePump_task host [{self._ip_address}] is exiting - to enter retries"
+            )
         else:
-            _LOGGER.debug("messagePump_task is exiting - and this should not happen")
+            _LOGGER.debug(
+                f"messagePump_task host [{self._ip_address}] is exiting - and this should not happen"
+            )
 
     async def messagePump(self) -> bool:
         bErr = False
         received = False
         try:
             self._update_counter += 1
-            _LOGGER.debug("messagePump_task running")
+            _LOGGER.debug(f"messagePump_task host [{self._ip_address}] running")
             received = await self._api.messagePump()
             if self._update_counter >= 6:
                 self.updateState(DS_CONNECTED)
@@ -390,17 +433,27 @@ class Manager(object):
             self._err_cnt += 1
             # This should mean we have been logged out and need to start the login process
             if e.error_code == EC_UNAUTHORIZED:
-                _LOGGER.debug("messagePump_task - unauthorized - trying to relogin")
+                _LOGGER.debug(
+                    f"messagePump_task host [{self._ip_address}] - unauthorized - trying to relogin"
+                )
                 self._reinitialize = True
             # If its an HTTP error, we will not log an error, just and info message, unless
             # this exeeeds the max consecutive error count
             elif e.error_code == EC_HTTP_ERR and self._err_cnt < MAX_ERRORS:
-                _LOGGER.debug("messagePump_task - S30Exception " + str(e))
+                _LOGGER.debug(
+                    f"messagePump_task - host [{self._ip_address}] S30Exception "
+                    + str(e)
+                )
             else:
-                _LOGGER.error("messagePump_task - S30Exception " + str(e))
+                _LOGGER.error(
+                    f"messagePump_task - host [{self._ip_address}] S30Exception "
+                    + str(e)
+                )
             bErr = True
         except Exception as e:
-            _LOGGER.error("messagePump_task - Exception " + str(e))
+            _LOGGER.error(
+                f"messagePump_task host [{self._ip_address}] - Exception " + str(e)
+            )
             self._err_cnt += 1
             bErr = True
         # Keep retrying retrive up until we get this number of errors in a row, at which point will try to reconnect
