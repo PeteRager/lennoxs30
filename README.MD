@@ -170,7 +170,7 @@ In additon the following extra attributes are provided, to allow for a more deta
 | tempOperation     | Current acvtive temperatue operation heating or cooling                                                                                                                                         |
 | ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                              |
 
-## lennoxs30.state or lennoxs30.conn\_<hostname>
+## lennoxs30.state or lennoxs30.conn\_\<hostname\>
 
 The entity is automatically created in Home Assistant and can be used to track the state and health of the Cloud or Local connection to the S30. When using multiple LAN connections, the
 first host in the list will use **lennoxs30.state** for backwards compatibility. Additional hosts will use a naming convention of **lennoxs30.conn\_<hostname>**
