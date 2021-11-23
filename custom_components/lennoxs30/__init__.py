@@ -179,7 +179,6 @@ class Manager(object):
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
-        self._update_counter: int = 0
         self._mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
         self._hass: HomeAssistant = hass
@@ -371,7 +370,6 @@ class Manager(object):
         await asyncio.sleep(self._poll_interval)
         self._reinitialize = False
         self._err_cnt = 0
-        self._update_counter = 0
         fast_polling: bool = False
         fast_polling_cd: int = 0
         received = False
@@ -423,12 +421,9 @@ class Manager(object):
         bErr = False
         received = False
         try:
-            self._update_counter += 1
             _LOGGER.debug(f"messagePump_task host [{self._ip_address}] running")
             received = await self._api.messagePump()
-            if self._update_counter >= 6:
-                self.updateState(DS_CONNECTED)
-                self._update_counter = 0
+            self.updateState(DS_CONNECTED)
         except S30Exception as e:
             self._err_cnt += 1
             # This should mean we have been logged out and need to start the login process
