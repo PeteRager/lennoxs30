@@ -1,11 +1,11 @@
 {
     "domain": "lennoxs30",
     "name": "Lennox S30 Integration",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "documentation": "https://github.com/PeteRager/lennoxs30",
     "issuetracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
-    "requirements": ["lennoxs30api==0.1.1"],
+    "requirements": ["lennoxs30api==0.1.2"],
     "codeowners": ["@PeteRager"],
     "iot_class": "local_polling"
   }
