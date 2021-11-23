@@ -220,7 +220,24 @@ sensor.<system_name>\_<zone_name>\_humidity
 
 Lennox systems may have an outdoor temperature sensor. If your system has one a sensor will be automatically created. It's name will be
 
-sensor.<system_name>\_outdoor_temperature
+sensor.<system_name>\_outdoor\_temperature
+
+## sensor for Inverter Power
+
+When the **create_inverter_power** configuration parameter is set, a power sensor entity will be created. If the Lennox system is configured in diagnostic mode (either through the Dealer Control Menu or through the local API), it should begin updating with the current power draw of the system. It's name will be
+
+sensor.<system_name>\_inverter\_energy
+
+It can be combined with an Integration sensor to count the total energy usage over time, and this Integration sensor can be added to the Home Assistant Energy dashboard. A configuration similar to the following should work:
+
+```yaml
+sensor:
+  - platform: integration
+    source: sensor.<system_name>_inverter_energy
+    name: <system_name>_inverter_kwh
+    unit_prefix: k
+    round: 2
+```
 
 ## switches
 
@@ -254,7 +271,7 @@ Please create issues to track bugs. Please capture the logs with debug turned on
 
 Debug logging can be enabled by adding the following to your Home Assistant's configuration.yaml:
 
-```
+```yaml
 logger:
   default: warning
   logs:
