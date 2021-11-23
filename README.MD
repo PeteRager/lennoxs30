@@ -1,17 +1,19 @@
 # Lennox iComfort Component
 
-A custom component for Home Assistant to integrate with Lennox iComfort S30 or Lennox iComfort E30 thermostats
+A custom component for Home Assistant to integrate with Lennox iComfort S30 or Lennox iComfort E30 thermostats. Supports both local and cloud connections.
 
 > **Please Note:** This component **does not** support the other models of Lennox Thermostats
 
 # Requirements
 
 - Home Assistant >= 2021.04.06 (others may work)
-- Thermostat linked to a lennoxicomfort.com account
+- S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
 
 # Limitations
 
 - Passwords with special characters are not properly supported by the Lennox API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
+- Support for multiple S30s on local LAN in in Beta for the current release
+- It is HIGHLY recommended to specify the APP_ID in all configurations
 
 # Installation
 
@@ -46,12 +48,23 @@ Add integration in HACS
 
 Configuration of the integration is done in configuration.yaml
 
-## Minimal
+## Minimal - Lennox Cloud Connection
 
 ```yaml
 lennoxs30:
   email: myemail@myemail.com
   password: mypassword
+  app_id: <See configuration details in README>
+```
+
+## Minimal - Local Connection
+
+```yaml
+lennoxs30:
+  email: myemail@myemail.com
+  password: mypassword
+  hosts: 10.0.0.4
+  app_id: ha_prod
 ```
 
 ## All options and debug turned on
@@ -70,7 +83,7 @@ lennoxs30:
 
 # Enable logging if reporting issues
 logger:
-  default: info
+  default: warning
   logs:
     custom_components.lennoxs30: debug
     custom_components.lennoxs30.climate: debug
@@ -79,18 +92,19 @@ logger:
 
 ### Configuration Parameters
 
-| Name                     | Type   | Requirement | Default            | Description                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ------------------------ | ------ | ----------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| email                    | string | required    | none               | Cloud service account username                                                                                                                                                                                                                                                                                                                                                                                       |
-| password                 | string | required    | none               | Cloud service account password                                                                                                                                                                                                                                                                                                                                                                                       |
-| hosts                    | string | optional    | Cloud              | Local LAN IP address or hostname of S30 thermostat. If specified, the integration will talk directly to the S30 instead of using cloud connection. This festure is in beta in the 0.1.1 release                                                                                                                                                                                                                      |
-| scan_interval            | int    | optional    | 15                 | Scan interval to check for cloud messages in seconds. 15 seconds is recommened for cloud connections. For local connections this sbould not be set unless instructed                                                                                                                                                                                                                                                 |
-| allergen_defender_switch | bool   | optional    | false              | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                          |
-| fast_scan_interval       | float  | optional    | 0.75               | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands                                                                                                                                                                                                                                                         |
-| init_wait_time           | int    | optional    | 30                 | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                                    |
-| app_id                   | string | optional    | uniquely generated | Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. If default prevents initialization from being successful then specify the app id here. Please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. |
-| create_sensors           | bool   | optional   | false               | Creates sensors representing temperature and humidity detected at each zone                                                                                                                                                                                                                                                                                                                                          |
-| create_inverter_power    | bool   | optional   | false               | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 1 or 2, as opposed to the default value of 0.                                                                                                                                                                                                                                                 |
+| Name                     | Type   | Requirement | Default            | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ------ | ----------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| email                    | string | required    | none               | Cloud service account username                                                                                                                                                                                                                                                                                                                                                                               |
+| password                 | string | required    | none               | Cloud service account password                                                                                                                                                                                                                                                                                                                                                                               |
+| hosts                    | string | optional    | Cloud              | Comma seperated list of Local LAN IP addresses or hostnames of S30 thermostat. If specified, the integration will talk directly to the S30 instead of using cloud connection. Local connections are currently the recommended approach for reliability and performance                                                                                                                                      |
+| scan_interval            | int    | optional    | 15                 | Scan interval to check for cloud messages in seconds. 15 seconds is recommended for cloud connections. For local connections this sbould not be set unless instructed                                                                                                                                                                                                                                        |
+| allergen_defender_switch | bool   | optional    | false              | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                  |
+| fast_scan_interval       | float  | optional    | 0.75               | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands                                                                                                                                                                                                                                                 |
+| init_wait_time           | int    | optional    | 30                 | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                            |
+| app_id                   | string | optional    | uniquely generated | Specify the unique application id to use. For Cloud connections, Lennox is very particular - please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. For local connections use a string like ha_dev or ha_prod - must be unique for each connection |
+| create_sensors           | bool   | optional    | false              | Creates temperature and humidity sensors for each zone                                                                                                                                                                                                                                                                                                                                  |
+| create_inverter_power    | bool   | optional    | false              | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 1 or 2, as opposed to the default value of 0. Raise an Issue if you need help enabling diagnostics                                                                                                                                                                                    |
+| protocol | string | optional | https | Selects the protocol to use.  The only reason to use this is when developing using the S30 simluator, in which case this should be set to HTTP|
 
 # Temperature Units (Celsius, Fahrenheit)
 
@@ -122,6 +136,13 @@ When you are running a schedule; changes to the temperature or fan create a temp
 
 Away Mode. The **Away** preset will put the S30 system into Away Mode and the **cancel away mode** preset will return the S30 system to whatever state it was in prior to putting it into away mode. This works the same as if you pressed the away / cancel away icon on the S30 panel.
 
+**Emergency Heat** - Lennox systems that have a heat pump and an auxiliary furnace, have an additional HVAC_MODE to run just the auxiliary furnace. In the S30 App this is shown as Emergency Heat. Home Assistant **does not** allow this mode directly - instead Home Assistant provides support for turning aux_heat on and off - independent of the HVAC_MODE. The integration has the following behavior:
+
+- If Emergency Heat Mode is set in the S30, the HA climate will show Heat and the Aux Heat switch will be on.
+- If the HA Aux Switch is turned on, the S30 Heat Mode will be set to **Emergency Heat**
+- If the HA Aux Switch is turned off, the S30 Heat Mode will be set to **Heat**
+- If the Lennox Auxiliary Heat is running, the **aux** attribute in the HA Climate entity will be set to True and the HA Climate Entity will show **Heating**
+
 ### Supported Data
 
 The integration provides all of the standard climate attributes, including
@@ -134,25 +155,26 @@ The integration provides all of the standard climate attributes, including
 
 In additon the following extra attributes are provided, to allow for a more detailed information on the current zone operation.
 
-| Attribute Name    | Description                                                                                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| allergenDefender  | Indicates if this is enabled on the zone                                                                                                               |
-| aux               | Auxiliary Heating is On when True, off when False                                                                                                      |
-| balancePoint      | Not known what this attribute indicates. If you know let us know!                                                                                      |
-| coolCoast         | Not known what this attribute indicates. If you know let us know!                                                                                      |
-| damper            | Position of damper - range 0-100                                                                                                                       |
-| defrost           | Defrost is active                                                                                                                                      |
-| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                      |
-| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.) |
-| heatCoast         | Not known what this attribute indicates. If you know let us know!                                                                                      |
-| humidityOperation | Current active humidty operation - Drying or humidfying                                                                                                |
-| ssr               | Not known what this attribute indicates. If you know let us know!                                                                                      |
-| tempOperation     | Current acvtive temperatue operation heating or cooling                                                                                                |
-| ventilation       | Indicates if external ventilation is currently active on this zone                                                                                     |
+| Attribute Name    | Description                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                        |
+| aux               | Auxiliary Heating is On when True, off when False                                                                                                                                               |
+| balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                         |
+| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
+| damper            | Position of damper - range 0-100                                                                                                                                                                |
+| defrost           | Defrost is active                                                                                                                                                                               |
+| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                               |
+| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                          |
+| heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
+| humidityOperation | Current active humidty operation - Drying or humidfying                                                                                                                                         |
+| ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                               |
+| tempOperation     | Current acvtive temperatue operation heating or cooling                                                                                                                                         |
+| ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                              |
 
-## lennoxs30.state
+## lennoxs30.state or lennoxs30.conn\_\<hostname\>
 
-The entity is automatically created in Home Assistant and can be used to track the state and health of the connection to the cloud.
+The entity is automatically created in Home Assistant and can be used to track the state and health of the Cloud or Local connection to the S30. When using multiple LAN connections, the
+first host in the list will use **lennoxs30.state** for backwards compatibility. Additional hosts will use a naming convention of **lennoxs30.conn\_<hostname>**
 
 | State            | Description                                                                                                  |
 | ---------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -173,6 +195,7 @@ The entity also has a set of attributes to provide diagnostic data:
 | bytes_in            | int      | number of byte received                                                                                                                                                                                                                                                 |
 | bytes_out           | int      | number of bytes sent                                                                                                                                                                                                                                                    |
 | error_count         | int      | number of errors                                                                                                                                                                                                                                                        |
+| exceptions          | int      | number of network exceptions that have occured |
 | http_2xx            | int      | number of HTTP responses received between 200-299. THese are good responses                                                                                                                                                                                             |
 | http_4xx            | int      | number of HTTP responses received between 400-499. These usually indicate a problem with authorization                                                                                                                                                                  |
 | http_5xx            | int      | number of HTTP responses received between 500-599. These indicate a problem with the Lennox Cloud Servers. Seeing a few of these a day is normal                                                                                                                        |
@@ -180,6 +203,18 @@ The entity also has a set of attributes to provide diagnostic data:
 | last_error_time     | DateTime | Time of the last error response                                                                                                                                                                                                                                         |
 | last_reconnect_time | DateTime | Time of the last reconnect or the time of the initial connect                                                                                                                                                                                                           |
 | last_message_time   | DateTime | Time of the last message from Lennox Cloud. How often messages are received is based on how often data is changing in the thermostat. For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent |
+| sysUpTime           | int      | Number of seconds the S30 has been running since last reboot.                                                                                                                                                                                                           |
+| diagLevel           | int      | Current Diagnostic Level of the S30. By default this is zero, if using the power diagnostics this should be 1 or 2                                                                                                                                                      |
+| softwareVersion     | string   | Current software version of the S30                                                                                                                                                                                                                                     |
+| hostname            | string   | The hostname used by this connection or None if a cloud connection                                                                                                                                                                                                      |
+
+## sensor for Zone Temperature and Humidity
+
+When the **create_sensors** configuration parameter is set, humidity and temperarture sensors are created for each zone.
+
+sensor.<system_name>\_<zone_name>\_temperature
+
+sensor.<system_name>\_<zone_name>\_humidity
 
 ## sensor for Outdoor Temperature
 
