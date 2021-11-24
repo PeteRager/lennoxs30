@@ -19,21 +19,26 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 ## HACS
 
-Install [HACS](https://github.com/hacs/integration) then add the [custom repository](https://hacs.xyz/docs/faq/custom_repositories) for this project
+This assumes you have [HACS](https://github.com/hacs/integration) installed and know how to use it.  If you need help with this, go to the HACS project documentation.
 
-1. Go to any of the sections (integrations, frontend, automation).
+Add custom repository in *HACS*
+
+1. Click on HACS in your menu to open the HACS panel, then click on integrations (https://your.domain/hacs/integrations).
 1. Click on the 3 dots in the top right corner.
 1. Select "Custom repositories"
 1. Add the URL to the repository: `https://github.com/PeteRager/lennoxs30`
 1. Select the integration category.
 1. Click the "ADD" button.
 
-Add integration in HACS
+Add integration in *HACS*
 
-1. In the HACS panel, go to integrations and click the big orange '+' button.
-1. Search for `Lennox iComfort` and click `Install this repository in HACS`.
+1. In the HACS panel, go to integrations and click the '+ Explore & add repositories' button.
+1. Search for `Lennox iComfort WiFi Thermostat Integration` and click `Install this repository in HACS`.
 1. Restart HA to load the integration into HA.<br>
-1. Go to Configuration -> Integrations and click the big orange '+' button. Look for Lennox and click to add it.
+
+Add integration in *Home Assistant*
+
+1. Go to Home Assistant Configuration Panel -> Integrations (https://your.domain/config/integrations) - click the  '+ Add integration' button. Search for 'Lennox' and click to add it.
 1. Add the configuration to configuration.yaml.
 1. Restart HA.
 
