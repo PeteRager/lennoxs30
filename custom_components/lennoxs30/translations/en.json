@@ -1,14 +1,31 @@
 {
   "config": {
-    "title": "Lennox S30 Local/Cloud",
+    "title": "Lennox S30/E30 Local/Cloud",
     "step": {
       "user": {
-        "title": "Define your Lennox S30 connection",
+        "title": "Define your Lennox S30/E30 connection",
         "data": {
-			"name": "Name you want to use for this copy of the intergration",
+			"cloud_local": "Check if you like to make a cloud connection."
+        }
+      },
+	  "cloud": {
+        "title": "Define your Lennox S30/E30 connection",
+        "data": {
 			"email": "Your email, or \"Local\" if using local lan",
 			"password": "Your password, or \"Local\" if using local lan",
-			"hosts": "The Local IP or Hostname of your Lennox S30, or \"None\" if using cloud",
+			"scan_interval": "Scan interval to check for messages in seconds. 15 seconds is recommened for cloud connections. For local connections this sbould be set to 1",
+			"fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
+			"allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
+			"app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
+			"init_wait_time": "Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts",
+			"create_sensors": "Create Sensors",
+			"create_inverter_power": "Create Sensor for inverter power"
+        }
+      },
+	  "local": {
+        "title": "Define your Lennox S30/E30 connection",
+        "data": {
+			"hosts": "The Local IP or Hostname of your Lennox S30/E30, or \"None\" if using cloud",
 			"scan_interval": "Scan interval to check for messages in seconds. 15 seconds is recommened for cloud connections. For local connections this sbould be set to 1",
 			"fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
 			"allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
