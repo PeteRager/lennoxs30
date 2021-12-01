@@ -1,6 +1,6 @@
 # Lennox iComfort Component
 
-A custom component for Home Assistant to integrate with Lennox iComfort S30 or Lennox iComfort E30 thermostats. Supports both local and cloud connections.
+A custom component for Home Assistant to integrate with Lennox iComfort S30 or Lennox iComfort E30 thermostats and perhaps the E30. Supports both local and cloud connections.
 
 > **Please Note:** This component **does not** support the other models of Lennox Thermostats
 
