@@ -3,7 +3,7 @@ import asyncio
 from asyncio.locks import Event, Lock
 import logging
 
-from lennoxs30api.s30exception import EC_CONFIG_TIMEOUT
+from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
 
 from lennoxs30api import (
     EC_HTTP_ERR,
@@ -46,6 +46,9 @@ CONF_INIT_WAIT_TIME = "init_wait_time"
 CONF_CREATE_SENSORS = "create_sensors"
 CONF_CREATE_INVERTER_POWER = "create_inverter_power"
 CONF_PROTOCOL = "protocol"
+CONF_PII_IN_MESSAGE_LOGS = "pii_in_message_logs"
+CONF_MESSAGE_DEBUG_LOGGING = "message_debug_logging"
+CONF_MESSAGE_DEBUG_FILE = "message_debug_file"
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_LOCAL_POLL_INTERVAL: int = 1
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
@@ -69,6 +72,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_CREATE_SENSORS, default=False): cv.boolean,
                 vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
                 vol.Optional(CONF_PROTOCOL, default="https"): cv.string,
+                vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
+                vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
+                vol.Optional(CONF_MESSAGE_DEBUG_FILE, default=""): cv.string,
             }
         )
     },
@@ -110,6 +116,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     create_sensors = config.get(DOMAIN).get(CONF_CREATE_SENSORS)
     create_inverter_power = config.get(DOMAIN).get(CONF_CREATE_INVERTER_POWER)
     conf_protocol = config.get(DOMAIN).get(CONF_PROTOCOL)
+    conf_pii_in_message_logs = config.get(DOMAIN).get(CONF_PII_IN_MESSAGE_LOGS)
+    conf_message_debug_logging = config.get(DOMAIN).get(CONF_MESSAGE_DEBUG_LOGGING)
+    conf_message_debug_file = config.get(DOMAIN).get(CONF_MESSAGE_DEBUG_FILE)
+    if conf_message_debug_file == "":
+        conf_message_debug_file = None
 
     index = 0
 
@@ -133,6 +144,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             create_inverter_power=create_inverter_power,
             protocol=conf_protocol,
             index=index,
+            pii_message_logs=conf_pii_in_message_logs,
+            message_debug_logging=conf_message_debug_logging,
+            message_logging_file=conf_message_debug_file,
         )
         try:
             listener = hass.bus.async_listen_once(
@@ -176,6 +190,9 @@ class Manager(object):
         create_inverter_power: bool,
         protocol: str,
         index: int = 0,
+        pii_message_logs: bool = False,
+        message_debug_logging: bool = True,
+        message_logging_file: str = None,
     ):
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -187,8 +204,18 @@ class Manager(object):
         self._fast_poll_interval: float = fast_poll_interval
         self._protocol = protocol
         self._ip_address = ip_address
+        self._pii_message_log = pii_message_logs
+        self._message_debug_logging = message_debug_logging
+        self._message_logging_file = message_logging_file
         self._api: s30api_async = s30api_async(
-            email, password, app_id, ip_address=ip_address, protocol=self._protocol
+            email,
+            password,
+            app_id,
+            ip_address=ip_address,
+            protocol=self._protocol,
+            pii_message_logs=self._pii_message_log,
+            message_debug_logging=self._message_debug_logging,
+            message_logging_file=self._message_logging_file,
         )
         self._shutdown = False
         self._retrieve_task = None
@@ -268,21 +295,19 @@ class Manager(object):
                     # TODO: encapsulate in manager class
                     self.updateState(DS_LOGIN_FAILED)
                     _LOGGER.error(
-                        f"initialize_retry_task host [{self._ip_address}] - "
-                        + e.message
+                        f"initialize_retry_task host [{self._ip_address}] {e.as_string()}"
                     )
                     return
                 elif e.error_code == EC_CONFIG_TIMEOUT:
                     _LOGGER.warning(
-                        f"async_setup: host [{self._ip_address}] " + e.message
+                        f"async_setup: host [{self._ip_address}] {e.as_string()}"
                     )
                     _LOGGER.info(
                         f"connection host [{self._ip_address}] will be retried in 1 minute"
                     )
                 else:
                     _LOGGER.error(
-                        f"async_setup host [{self._ip_address}] unexpected error "
-                        + e.message
+                        f"async_setup host [{self._ip_address}] unexpected error {e.as_string()}"
                     )
                     _LOGGER.info(
                         f"async setup host [{self._ip_address}] will be retried in 1 minute"
@@ -344,7 +369,7 @@ class Manager(object):
                 break
             except S30Exception as e:
                 _LOGGER.error(
-                    f"reinitialize_task host [{self._ip_address}] : " + str(e)
+                    f"reinitialize_task host [{self._ip_address}] {e.as_string()}"
                 )
                 if e.error_code == EC_LOGIN:
                     raise HomeAssistantError(
@@ -436,18 +461,20 @@ class Manager(object):
             # this exeeeds the max consecutive error count
             elif e.error_code == EC_HTTP_ERR and self._err_cnt < MAX_ERRORS:
                 _LOGGER.debug(
-                    f"messagePump_task - host [{self._ip_address}] S30Exception "
-                    + str(e)
+                    f"messagePump_task - http error host [{self._ip_address}] {e.as_string()}"
+                )
+            elif e.error_code == EC_COMMS_ERROR:
+                _LOGGER.error(
+                    f"messagePump_task - communication error to host [{self._ip_address}] {e.as_string()}"
                 )
             else:
                 _LOGGER.error(
-                    f"messagePump_task - host [{self._ip_address}] S30Exception "
-                    + str(e)
+                    f"messagePump_task - general error host [{self._ip_address}] {e.as_string()}"
                 )
             bErr = True
         except Exception as e:
-            _LOGGER.error(
-                f"messagePump_task host [{self._ip_address}] - Exception " + str(e)
+            _LOGGER.exception(
+                f"messagePump_task unexpected exception host [{self._ip_address}]"
             )
             self._err_cnt += 1
             bErr = True
