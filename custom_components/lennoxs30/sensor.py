@@ -39,7 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         sensor = S30OutdoorTempSensor(hass, manager, system)
         sensor_list.append(sensor)
         if manager._create_inverter_power == True:
-            _LOGGER.info(f"Create S30InverterPowerSensor sensor system [{system.sysId}]")
+            _LOGGER.info(
+                f"Create S30InverterPowerSensor sensor system [{system.sysId}]"
+            )
+            if system.diagLevel == None or system.diagLevel == 0:
+                _LOGGER.warning(
+                    f"Power Inverter Sensor requires S30 to be in diagLevel 1 or 2, currently in [{system.diagLevel}]"
+                )
             power_sensor = S30InverterPowerSensor(hass, manager, system)
             sensor_list.append(power_sensor)
         if manager._createSensors == True:
@@ -281,7 +287,7 @@ class S30InverterPowerSensor(SensorEntity):
         self._system = system
         self._system.registerOnUpdateCallback(
             self.update_callback,
-            ["diagInverterInputVoltage", "diagInverterInputCurrent"]
+            ["diagInverterInputVoltage", "diagInverterInputCurrent"],
         )
         self._myname = self._system.name + "_inverter_energy"
 
@@ -309,8 +315,25 @@ class S30InverterPowerSensor(SensorEntity):
 
     @property
     def state(self):
+        if (
+            self._system.diagInverterInputVoltage is None
+            or self._system.diagInverterInputCurrent is None
+        ):
+            _LOGGER.debug(f"Values are None for diagnostic sensors  [{self._myname}]")
+            return None
+        if (
+            self._system.diagInverterInputVoltage == "waiting..."
+            or self._system.diagInverterInputCurrent == "waiting..."
+        ):
+            _LOGGER.debug(
+                f"System is waiting for values for diagnostic sensors  [{self._myname}]"
+            )
+            return None
         try:
-            return int(float(self._system.diagInverterInputVoltage) * float(self._system.diagInverterInputCurrent))
+            return int(
+                float(self._system.diagInverterInputVoltage)
+                * float(self._system.diagInverterInputCurrent)
+            )
         except ValueError as e:
             _LOGGER.warning(f"state myname [{self._myname}] failed: {e}")
             pass
