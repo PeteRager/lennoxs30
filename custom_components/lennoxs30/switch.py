@@ -1,6 +1,6 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
 from typing import Any
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT,  CONF_NAME
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, CONF_NAME
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
@@ -10,12 +10,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.components.switch import SwitchEntity, PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> bool:
     _LOGGER.debug("switch:async_setup_platform enter")
 
     switch_list = []
@@ -97,6 +100,11 @@ class S30VentilationSwitch(SwitchEntity):
     def is_on(self):
         return self._system.ventilationMode == "on"
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+
     async def async_turn_on(self, **kwargs):
         try:
             await self._system.ventilation_on()
@@ -161,6 +169,11 @@ class S30AllergenDefenderSwitch(SwitchEntity):
     def is_on(self):
         return self._system.allergenDefender == True
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+
     async def async_turn_on(self, **kwargs):
         try:
             await self._system.allergenDefender_on()
@@ -182,12 +195,12 @@ class S30AllergenDefenderSwitch(SwitchEntity):
                 )
             else:
                 _LOGGER.error("allergenDefender_off:async_turn_off - error:" + str(e))
-                
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name":  self._system.name,
+            "name": self._system.name,
             "identifiers": {(DOMAIN, self._system.unique_id())},
             "manufacturer": "Lennox",
             "model": "Lennox S30",
