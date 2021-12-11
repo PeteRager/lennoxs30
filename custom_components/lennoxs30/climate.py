@@ -38,7 +38,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from . import Manager
@@ -62,7 +67,9 @@ FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
     climate_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id]["hub"]
@@ -109,8 +116,7 @@ class S30Climate(ClimateEntity):
 
     @property
     def unique_id(self) -> str:
-        # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_" + str(self._zone.id)).replace("-", "")
+        return self._zone.unique_id
 
     def zone_update_callback(self):
         self.schedule_update_ha_state()
@@ -635,12 +641,15 @@ class S30Climate(ClimateEntity):
                 _LOGGER.error("climate:async_set_fan_mode - error:" + e.message)
             else:
                 _LOGGER.error("climate:async_set_fan_mode - error:" + str(e))
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "name":  self._system.name,
-            "identifiers": {(DOMAIN, self._system.unique_id())},
-            "manufacturer": "Lennox",
-            "model": "Lennox S30",
+        result = {
+            #            "name": self._myname,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            #            "manufacturer": "Lennox",
+            #            "model": "Lennox S30",
         }
+        _LOGGER.debug(f"device_info [{result}]")
+        return result

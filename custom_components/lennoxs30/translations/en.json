@@ -3,9 +3,9 @@
     "title": "Lennox S30/E30 Local/Cloud",
     "step": {
       "user": {
-        "title": "Define your Lennox S30/E30 connection",
+        "title": "Select whether to use a local or a cloud connection",
         "data": {
-			"cloud_local": "Check if you like to make a cloud connection."
+			"cloud_local": "Cloud connection:"
         }
       },
 	  "cloud": {
@@ -13,26 +13,33 @@
         "data": {
 			"email": "Your email, or \"Local\" if using local lan",
 			"password": "Your password, or \"Local\" if using local lan",
-			"scan_interval": "Scan interval to check for messages in seconds. 15 seconds is recommened for cloud connections. For local connections this sbould be set to 1",
+			"scan_interval": "Message scan interval in seconds. No faster than 15 seconds is recommened for cloud connections.",
 			"fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
 			"allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
 			"app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
-			"init_wait_time": "Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts",
+			"init_wait_time": "Wait time in seconds for configuration to complete. Increase this value if you see initialization timeouts",
 			"create_sensors": "Create Sensors",
-			"create_inverter_power": "Create Sensor for inverter power"
+			"create_inverter_power": "Create Sensor for inverter power",
+      "pii_in_message_logs" : "Include personal information in log files",
+      "message_debug_logging" : "Debug logging logs message",
+      "message_debug_file" : "Optional file to log messages to"
         }
       },
 	  "local": {
         "title": "Define your Lennox S30/E30 connection",
         "data": {
-			"hosts": "The Local IP or Hostname of your Lennox S30/E30, or \"None\" if using cloud",
-			"scan_interval": "Scan interval to check for messages in seconds. 15 seconds is recommened for cloud connections. For local connections this sbould be set to 1",
+			"host": "The Local IP or Hostname of your Lennox S30/E30",
+			"scan_interval": "Message scan interval in seconds. 1 second is recommended for local connections",
 			"fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
 			"allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
 			"app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
-			"init_wait_time": "Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts",
+			"init_wait_time": "Wait time in seconds for configuration to complete. Increase this value if you see initialization timeouts",
 			"create_sensors": "Create Sensors",
-			"create_inverter_power": "Create Sensor for inverter power"
+			"create_inverter_power": "Create Sensor for inverter power",
+      "protocol": "Should be HTTPS unless using simulator",
+      "pii_in_message_logs" : "Include personal information in log files",
+      "message_debug_logging" : "Debug logging logs message",
+      "message_debug_file" : "Optional file to log messages to"
         }
       }
     },

@@ -29,7 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> bool:
 
     sensor_list = []
 
@@ -138,10 +140,10 @@ class S30OutdoorTempSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name":  self._system.name,
-            "identifiers": {(DOMAIN, self._system.unique_id())},
-            "manufacturer": "Lennox",
-            "model": "Lennox S30",
+            #            "name": self._system.name + "_outdoor_unit",
+            "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
+            #            "manufacturer": "Lennox",
+            #            "model": "Lennox S30",
         }
 
 
@@ -206,10 +208,10 @@ class S30TempSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name":  self._zone._system.name,
-            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
-            "manufacturer": "Lennox",
-            "model": "Lennox S30",
+            #            "name": self._zone._system.name + "_" + self._zone.name,
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+            #            "manufacturer": "Lennox",
+            #            "model": "Lennox S30",
         }
 
 
@@ -272,11 +274,12 @@ class S30HumiditySensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name":  self._zone._system.name,
-            "identifiers": {(DOMAIN, self._zone._system.unique_id())},
-            "manufacturer": "Lennox",
-            "model": "Lennox S30",
+            #            "name": self._zone._system.name + "_" + self._zone.name,
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+            #            "manufacturer": "Lennox",
+            #            "model": "Lennox S30",
         }
+
 
 class S30InverterPowerSensor(SensorEntity):
     """Class for Lennox S30 inverter power."""
@@ -355,8 +358,8 @@ class S30InverterPowerSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "name":  self._system.name,
-            "identifiers": {(DOMAIN, self._system.unique_id())},
-            "manufacturer": "Lennox",
-            "model": "Lennox S30",
+            #            "name": self._system.name,
+            "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
+            #            "manufacturer": "Lennox",
+            #            "model": "Lennox S30",
         }
