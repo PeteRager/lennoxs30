@@ -1,7 +1,9 @@
 import ipaddress
 import re
+from lennoxs30api.s30exception import EC_AUTHENTICATE, EC_LOGIN, S30Exception
 
 import voluptuous as vol
+from config.custom_components.lennoxs30 import Manager
 from config.custom_components.lennoxs30.const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
@@ -139,12 +141,61 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_CLOUD_CONNECTION] = True
             if user_input[CONF_LOG_MESSAGES_TO_FILE] == False:
                 user_input[CONF_MESSAGE_DEBUG_FILE] = ""
-            return self.async_create_entry(
-                title=user_input[CONF_EMAIL], data=user_input
-            )
+
+            try:
+                await self.try_to_connect(user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_EMAIL], data=user_input
+                )
+            except S30Exception as e:
+                _LOGGER.error(e.as_string())
+                if e.error_code == EC_LOGIN:
+                    errors["base"] = "unable_to_connect_login"
+                else:
+                    errors["base"] = "unable_to_connect_cloud"
         return self.async_show_form(
             step_id="cloud", data_schema=STEP_CLOUD, errors=errors
         )
+
+    async def try_to_connect(self, user_input):
+        if user_input[CONF_CLOUD_CONNECTION] == True:
+            email = user_input[CONF_EMAIL]
+            password = user_input[CONF_PASSWORD]
+            ip_address = None
+            protocol = "https"
+            create_inverter_power = False
+        else:
+            email = None
+            password = None
+            ip_address = user_input[CONF_HOST]
+            protocol = user_input[CONF_PROTOCOL]
+            create_inverter_power = user_input[CONF_CREATE_INVERTER_POWER]
+
+        message_logging_file = user_input[CONF_MESSAGE_DEBUG_FILE]
+        if message_logging_file == "":
+            message_logging_file = None
+
+        manager = Manager(
+            hass=self.hass,
+            config=None,
+            email=email,
+            password=password,
+            poll_interval=user_input[CONF_SCAN_INTERVAL],
+            fast_poll_interval=user_input[CONF_FAST_POLL_INTERVAL],
+            allergenDefenderSwitch=user_input[CONF_ALLERGEN_DEFENDER_SWITCH],
+            app_id=user_input[CONF_APP_ID],
+            conf_init_wait_time=user_input[CONF_INIT_WAIT_TIME],
+            ip_address=ip_address,
+            create_sensors=user_input[CONF_CREATE_SENSORS],
+            create_inverter_power=create_inverter_power,
+            protocol=protocol,
+            pii_message_logs=user_input[CONF_PII_IN_MESSAGE_LOGS],
+            message_debug_logging=user_input[CONF_MESSAGE_DEBUG_LOGGING],
+            message_logging_file=message_logging_file,
+            config_entry=None,
+        )
+        await manager.connect()
+        await manager.async_shutdown(None)
 
     async def async_step_local(self, user_input=None):
         """Handle the initial step."""
@@ -161,13 +212,18 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     await self.async_set_unique_id("lennoxs30" + user_input[CONF_HOST])
                     self._abort_if_unique_id_configured()
+
                     user_input[CONF_CLOUD_CONNECTION] = False
                     if user_input[CONF_LOG_MESSAGES_TO_FILE] == False:
                         user_input[CONF_MESSAGE_DEBUG_FILE] = ""
-
-                    return self.async_create_entry(
-                        title=user_input[CONF_HOST], data=user_input
-                    )
+                    try:
+                        await self.try_to_connect(user_input)
+                        return self.async_create_entry(
+                            title=user_input[CONF_HOST], data=user_input
+                        )
+                    except S30Exception as e:
+                        _LOGGER.error(e.as_string())
+                        errors[CONF_HOST] = "unable_to_connect_local"
         return self.async_show_form(
             step_id="local", data_schema=STEP_LOCAL, errors=errors
         )

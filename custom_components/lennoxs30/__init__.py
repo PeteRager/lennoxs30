@@ -478,6 +478,9 @@ class Manager(object):
                 1,
             )
 
+    async def connect(self):
+        await self._api.serverConnect()
+
     async def connect_subscribe(self):
         await self._api.serverConnect()
 

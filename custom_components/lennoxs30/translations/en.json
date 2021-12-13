@@ -46,7 +46,10 @@
       }
     },
     "error": {
-      "already_configured": "Device is already configured"
+      "already_configured": "Device is already configured", 
+      "unable_to_connect_local" : "Unable to connect to S30, please check IP address",
+      "unable_to_connect_login" : "Email / password combination is invalid",
+      "unable_to_connect_cloud" : "Unable to connect to Lennox Cloud, please check internet connection and log file for additional information"
     },
     "abort": {
       "already_configured": "Device is already configured"
