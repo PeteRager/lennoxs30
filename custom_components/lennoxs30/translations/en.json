@@ -5,41 +5,43 @@
       "user": {
         "title": "Select whether to use a local or a cloud connection",
         "data": {
-			"cloud_local": "Cloud connection:"
+			      "cloud_connection": "Use Lennox cloud connection:"
         }
       },
 	  "cloud": {
         "title": "Define your Lennox S30/E30 connection",
         "data": {
-			"email": "Your email, or \"Local\" if using local lan",
-			"password": "Your password, or \"Local\" if using local lan",
-			"scan_interval": "Message scan interval in seconds. No faster than 15 seconds is recommened for cloud connections.",
-			"fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
-			"allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
-			"app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
-			"init_wait_time": "Wait time in seconds for configuration to complete. Increase this value if you see initialization timeouts",
-			"create_sensors": "Create Sensors",
-			"create_inverter_power": "Create Sensor for inverter power",
-      "pii_in_message_logs" : "Include personal information in log files",
-      "message_debug_logging" : "Debug logging logs message",
-      "message_debug_file" : "Optional file to log messages to"
+          "email": "Your email, or \"Local\" if using local lan",
+          "password": "Your password, or \"Local\" if using local lan",
+          "scan_interval": "Message scan interval in seconds. No faster than 15 seconds is recommened for cloud connections.",
+          "fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
+          "allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
+          "app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
+          "init_wait_time": "Wait time in seconds for configuration to complete. Increase this value if you see initialization timeouts",
+          "create_sensors": "Create Sensors",
+          "create_inverter_power": "Create Sensor for inverter power",
+          "pii_in_message_logs" : "Include personal information in log files",
+          "message_debug_logging" : "Debug logging logs message",
+          "message_debug_file" : "Optional file to log messages to",
+          "log_messages_to_file": "Log S30 message to seperate file"
         }
       },
 	  "local": {
         "title": "Define your Lennox S30/E30 connection",
         "data": {
-			"host": "The Local IP or Hostname of your Lennox S30/E30",
-			"scan_interval": "Message scan interval in seconds. 1 second is recommended for local connections",
-			"fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
-			"allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
-			"app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
-			"init_wait_time": "Wait time in seconds for configuration to complete. Increase this value if you see initialization timeouts",
-			"create_sensors": "Create Sensors",
-			"create_inverter_power": "Create Sensor for inverter power",
-      "protocol": "Should be HTTPS unless using simulator",
-      "pii_in_message_logs" : "Include personal information in log files",
-      "message_debug_logging" : "Debug logging logs message",
-      "message_debug_file" : "Optional file to log messages to"
+          "host": "The Local IP or Hostname of your Lennox S30/E30",
+          "scan_interval": "Message scan interval in seconds. 1 second is recommended for local connections",
+          "fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
+          "allergen_defender_switch": "Create a switch entity to allow control of allergenDefender mode",
+          "app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
+          "init_wait_time": "Wait time in seconds for configuration to complete. Increase this value if you see initialization timeouts",
+          "create_sensors": "Create Sensors",
+          "create_inverter_power": "Create Sensor for inverter power",
+          "protocol": "Should be HTTPS unless using simulator",
+          "pii_in_message_logs" : "Include personal information in log files",
+          "message_debug_logging" : "Debug logging logs message",
+          "message_debug_file" : "Optional file to log messages to",
+          "log_messages_to_file": "Log S30 message to seperate file"
         }
       }
     },
@@ -49,5 +51,28 @@
     "abort": {
       "already_configured": "Device is already configured"
     }
-  }
+  },
+  "options": {
+    "step": {
+        "init": {
+            "data": {
+              "host": "The Local IP or Hostname of your Lennox S30/E30",
+              "scan_interval": "Message scan interval in seconds. 1 second is recommended for local connections",
+              "fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
+              "allergen_defender_switch": "Create allergentDefender switch",
+              "app_id": "Specify the unique application id to use. In most cases, having the integration autogenerate one works fine. See documentation",
+              "init_wait_time": "Wait time in seconds for configuration to complete. Increase this value if you see initialization timeouts",
+              "create_sensors": "Create temperature and humidity Sensors",
+              "create_inverter_power": "Create inverter power sensor",
+              "protocol": "Should be HTTPS unless using simulator",
+              "pii_in_message_logs" : "Include personal information in log files",
+              "message_debug_logging" : "Debug logging logs message",
+              "message_debug_file" : "Optional file to log messages to",
+              "log_messages_to_file": "Log S30 message to seperate file"
+            },
+            "description": "Set the options for the connection",
+            "title": "Options"
+        }
+    }
+}  
 }

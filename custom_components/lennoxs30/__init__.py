@@ -14,7 +14,6 @@ from lennoxs30api import (
     s30api_async,
 )
 import voluptuous as vol
-from config.custom_components.lennoxs30.config_flow import CONF_CLOUD_LOCAL
 from config.custom_components.lennoxs30.const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
@@ -22,10 +21,12 @@ from config.custom_components.lennoxs30.const import (
     CONF_CREATE_SENSORS,
     CONF_FAST_POLL_INTERVAL,
     CONF_INIT_WAIT_TIME,
+    CONF_LOG_MESSAGES_TO_FILE,
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
     LENNOX_DOMAIN,
+    CONF_CLOUD_CONNECTION,
 )
 from config.custom_components.lennoxs30.device import (
     S30ControllerDevice,
@@ -124,6 +125,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         cloud_local: bool = False
         if host_name == "Cloud":
             cloud_local = True
+        log_to_file = True
+        if config.get(DOMAIN).get(CONF_MESSAGE_DEBUG_FILE) == "":
+            log_to_file = False
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -156,7 +160,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
                     CONF_MESSAGE_DEBUG_FILE: config.get(DOMAIN).get(
                         CONF_MESSAGE_DEBUG_FILE
                     ),
-                    CONF_CLOUD_LOCAL: cloud_local,
+                    CONF_LOG_MESSAGES_TO_FILE: log_to_file,
+                    CONF_CLOUD_CONNECTION: cloud_local,
                 },
             )
         )
