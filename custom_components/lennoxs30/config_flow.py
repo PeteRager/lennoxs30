@@ -52,15 +52,6 @@ STEP_CLOUD = vol.Schema(
         vol.Optional(CONF_APP_ID): cv.string,
         vol.Optional(CONF_CREATE_SENSORS, default=True): cv.boolean,
         vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
-        vol.Optional(CONF_INIT_WAIT_TIME, default=60): cv.positive_int,
-        vol.Optional(CONF_SCAN_INTERVAL, default=15): cv.positive_int,
-        vol.Optional(
-            CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
-        ): cv.positive_float,
-        vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
-        vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
-        vol.Optional(CONF_LOG_MESSAGES_TO_FILE, default=False): cv.boolean,
-        vol.Optional(CONF_MESSAGE_DEBUG_FILE, default=""): cv.string,
     }
 )
 
@@ -71,16 +62,7 @@ STEP_LOCAL = vol.Schema(
         vol.Optional(CONF_CREATE_SENSORS, default=True): cv.boolean,
         vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
         vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
-        vol.Optional(CONF_INIT_WAIT_TIME, default=30): cv.positive_int,
-        vol.Optional(CONF_SCAN_INTERVAL, default=1): cv.positive_int,
-        vol.Optional(
-            CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
-        ): cv.positive_float,
         vol.Optional(CONF_PROTOCOL, default="https"): cv.string,
-        vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
-        vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
-        vol.Optional(CONF_LOG_MESSAGES_TO_FILE, default=False): cv.boolean,
-        vol.Optional(CONF_MESSAGE_DEBUG_FILE, default=""): cv.string,
     }
 )
 
@@ -118,16 +100,43 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return True
         return False
 
+    def get_advanced_schema(self, is_cloud: bool):
+        if is_cloud == True:
+            scan_interval = 15
+            conf_wait_time = 60
+        else:
+            scan_interval = 1
+            conf_wait_time = 30
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=scan_interval
+                ): cv.positive_int,
+                vol.Optional(
+                    CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
+                ): cv.positive_float,
+                vol.Optional(
+                    CONF_INIT_WAIT_TIME, default=conf_wait_time
+                ): cv.positive_int,
+                vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
+                vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
+                vol.Optional(CONF_LOG_MESSAGES_TO_FILE, default=False): cv.boolean,
+                vol.Optional(CONF_MESSAGE_DEBUG_FILE, default=""): cv.string,
+            }
+        )
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+        self.config_input = {}
         _LOGGER.debug(f"async_step_user user_input [{user_input}]")
         if user_input is not None:
             cloud_local = user_input[CONF_CLOUD_CONNECTION]
+            self.config_input.update(user_input)
             if cloud_local:
-                return await self.async_step_cloud(user_input=user_input)
+                return await self.async_step_cloud()
             else:
-                return await self.async_step_local(user_input=user_input)
+                return await self.async_step_local()
 
         return self.async_show_form(step_id="user", data_schema=STEP_ONE, errors=errors)
 
@@ -135,18 +144,16 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         _LOGGER.debug(f"async_step_cloud user_input [{user_input}]")
-        if user_input is not None and CONF_EMAIL in user_input:
+        if user_input is not None:
             await self.async_set_unique_id("lennoxs30" + user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
-            user_input[CONF_CLOUD_CONNECTION] = True
             if user_input[CONF_LOG_MESSAGES_TO_FILE] == False:
                 user_input[CONF_MESSAGE_DEBUG_FILE] = ""
 
             try:
                 await self.try_to_connect(user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
-                )
+                self.config_input.update(user_input)
+                return await self.async_step_advanced()
             except S30Exception as e:
                 _LOGGER.error(e.as_string())
                 if e.error_code == EC_LOGIN:
@@ -157,76 +164,90 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="cloud", data_schema=STEP_CLOUD, errors=errors
         )
 
+    async def async_step_local(self, user_input=None):
+        """Handle the initial step."""
+        errors = {}
+        _LOGGER.debug(f"async_step_local user_input [{user_input}]")
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            if self._host_in_configuration_exists(host):
+                errors[CONF_HOST] = "already_configured"
+            elif not host_valid(user_input[CONF_HOST]):
+                errors[CONF_HOST] = "invalid_hostname"
+            else:
+                await self.async_set_unique_id("lennoxs30" + user_input[CONF_HOST])
+                self._abort_if_unique_id_configured()
+                try:
+                    await self.try_to_connect(user_input)
+                    self.config_input.update(user_input)
+                    return await self.async_step_advanced()
+                except S30Exception as e:
+                    _LOGGER.error(e.as_string())
+                    errors[CONF_HOST] = "unable_to_connect_local"
+        return self.async_show_form(
+            step_id="local", data_schema=STEP_LOCAL, errors=errors
+        )
+
+    async def async_step_advanced(self, user_input=None):
+        """Handle the initial step."""
+        """Handle the initial step."""
+        errors = {}
+        _LOGGER.debug(f"async_step_advanced user_input [{user_input}]")
+
+        if user_input is not None:
+            self.config_input.update(user_input)
+            await self.async_set_unique_id("lennoxs30" + self.config_input[CONF_HOST])
+            self._abort_if_unique_id_configured()
+            if self.config_input[CONF_LOG_MESSAGES_TO_FILE] == False:
+                self.config_input[CONF_MESSAGE_DEBUG_FILE] = ""
+            if self.config_input[CONF_CLOUD_CONNECTION] == True:
+                title = self.config_input[CONF_EMAIL]
+            else:
+                title = self.config_input[CONF_HOST]
+            _LOGGER.debug(f"async_step_advanced config_input [{self.config_input}]")
+            return self.async_create_entry(title=title, data=self.config_input)
+        return self.async_show_form(
+            step_id="advanced",
+            data_schema=self.get_advanced_schema(
+                self.config_input[CONF_CLOUD_CONNECTION]
+            ),
+            errors=errors,
+        )
+
     async def try_to_connect(self, user_input):
-        if user_input[CONF_CLOUD_CONNECTION] == True:
+        if self.config_input[CONF_CLOUD_CONNECTION] == True:
             email = user_input[CONF_EMAIL]
             password = user_input[CONF_PASSWORD]
             ip_address = None
             protocol = "https"
-            create_inverter_power = False
         else:
             email = None
             password = None
             ip_address = user_input[CONF_HOST]
             protocol = user_input[CONF_PROTOCOL]
-            create_inverter_power = user_input[CONF_CREATE_INVERTER_POWER]
-
-        message_logging_file = user_input[CONF_MESSAGE_DEBUG_FILE]
-        if message_logging_file == "":
-            message_logging_file = None
 
         manager = Manager(
             hass=self.hass,
             config=None,
             email=email,
             password=password,
-            poll_interval=user_input[CONF_SCAN_INTERVAL],
-            fast_poll_interval=user_input[CONF_FAST_POLL_INTERVAL],
-            allergenDefenderSwitch=user_input[CONF_ALLERGEN_DEFENDER_SWITCH],
+            poll_interval=1,
+            fast_poll_interval=1.0,
+            allergenDefenderSwitch=False,
             app_id=user_input[CONF_APP_ID],
-            conf_init_wait_time=user_input[CONF_INIT_WAIT_TIME],
+            conf_init_wait_time=30,
             ip_address=ip_address,
-            create_sensors=user_input[CONF_CREATE_SENSORS],
-            create_inverter_power=create_inverter_power,
+            create_sensors=False,
+            create_inverter_power=False,
             protocol=protocol,
-            pii_message_logs=user_input[CONF_PII_IN_MESSAGE_LOGS],
-            message_debug_logging=user_input[CONF_MESSAGE_DEBUG_LOGGING],
-            message_logging_file=message_logging_file,
+            pii_message_logs=False,
+            message_debug_logging=True,
+            message_logging_file=None,
             config_entry=None,
         )
         await manager.connect()
         await manager.async_shutdown(None)
-
-    async def async_step_local(self, user_input=None):
-        """Handle the initial step."""
-        errors = {}
-        _LOGGER.debug(f"async_step_local user_input [{user_input}]")
-
-        if user_input is not None and CONF_HOST in user_input:
-            host = user_input[CONF_HOST]
-            if host != "Cloud":
-                if self._host_in_configuration_exists(host):
-                    errors[CONF_HOST] = "already_configured"
-                elif not host_valid(user_input[CONF_HOST]):
-                    errors[CONF_HOST] = "invalid host IP"
-                else:
-                    await self.async_set_unique_id("lennoxs30" + user_input[CONF_HOST])
-                    self._abort_if_unique_id_configured()
-
-                    user_input[CONF_CLOUD_CONNECTION] = False
-                    if user_input[CONF_LOG_MESSAGES_TO_FILE] == False:
-                        user_input[CONF_MESSAGE_DEBUG_FILE] = ""
-                    try:
-                        await self.try_to_connect(user_input)
-                        return self.async_create_entry(
-                            title=user_input[CONF_HOST], data=user_input
-                        )
-                    except S30Exception as e:
-                        _LOGGER.error(e.as_string())
-                        errors[CONF_HOST] = "unable_to_connect_local"
-        return self.async_show_form(
-            step_id="local", data_schema=STEP_LOCAL, errors=errors
-        )
 
     async def async_step_import(self, user_input) -> FlowResult:
         """Handle the import step."""
