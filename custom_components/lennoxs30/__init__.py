@@ -25,6 +25,8 @@ from config.custom_components.lennoxs30.const import (
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
+    LENNOX_DEFAULT_CLOUD_APP_ID,
+    LENNOX_DEFAULT_LOCAL_APP_ID,
     LENNOX_DOMAIN,
     CONF_CLOUD_CONNECTION,
 )
@@ -154,8 +156,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         if cloud_connection == True:
             migration_data[CONF_EMAIL] = config.get(DOMAIN).get(CONF_EMAIL)
             migration_data[CONF_PASSWORD] = config.get(DOMAIN).get(CONF_PASSWORD)
+            if migration_data[CONF_APP_ID] == None:
+                migration_data[CONF_APP_ID] = LENNOX_DEFAULT_CLOUD_APP_ID
         else:
             migration_data[CONF_HOST] = host_name
+            if migration_data[CONF_APP_ID] == None:
+                migration_data[CONF_APP_ID] = LENNOX_DEFAULT_LOCAL_APP_ID
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -169,20 +175,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
-    _LOGGER.debug(f"UniqueID {entry.unique_id}")
+    _LOGGER.debug(f"async_setup_entry UniqueID [{entry.unique_id}] Data [{entry.data}]")
 
-    host_name: str = None
-    email: str = None
-    password: str = None
-    app_id: str = "homeassistant"
-    if CONF_EMAIL in entry.data:
+    is_cloud = entry.data[CONF_CLOUD_CONNECTION]
+    if is_cloud == True:
+        host_name: str = None
         email = entry.data[CONF_EMAIL]
-    if CONF_PASSWORD in entry.data:
         password = entry.data[CONF_PASSWORD]
-    if CONF_APP_ID in entry.data:
-        app_id = entry.data[CONF_APP_ID]
-    if CONF_HOST in entry.data[CONF_HOST]:
+        create_inverter_power: bool = False
+        conf_protocol: str = None
+    else:
         host_name = entry.data[CONF_HOST]
+        email: str = None
+        password: str = None
+        create_inverter_power: bool = entry.data[CONF_CREATE_INVERTER_POWER]
+        conf_protocol: str = entry.data[CONF_PROTOCOL]
+
+    if CONF_APP_ID in entry.data:
+        app_id: str = entry.data[CONF_APP_ID]
+    else:
+        app_id: str = None
 
     t = None
     if CONF_SCAN_INTERVAL in entry.data:
@@ -206,8 +218,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     conf_init_wait_time = entry.data[CONF_INIT_WAIT_TIME]
     create_sensors = entry.data[CONF_CREATE_SENSORS]
-    create_inverter_power = entry.data[CONF_CREATE_INVERTER_POWER]
-    conf_protocol = entry.data[CONF_PROTOCOL]
     conf_pii_in_message_logs = entry.data[CONF_PII_IN_MESSAGE_LOGS]
     conf_message_debug_logging = entry.data[CONF_MESSAGE_DEBUG_LOGGING]
     conf_message_debug_file = entry.data[CONF_MESSAGE_DEBUG_FILE]

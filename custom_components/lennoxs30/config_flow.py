@@ -17,6 +17,7 @@ from config.custom_components.lennoxs30.const import (
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
     LENNOX_DEFAULT_CLOUD_APP_ID,
+    LENNOX_DEFAULT_LOCAL_APP_ID,
 )
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant import config_entries
@@ -59,7 +60,7 @@ STEP_CLOUD = vol.Schema(
 STEP_LOCAL = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_APP_ID, default="homeassistant"): cv.string,
+        vol.Optional(CONF_APP_ID, default=LENNOX_DEFAULT_LOCAL_APP_ID): cv.string,
         vol.Optional(CONF_CREATE_SENSORS, default=True): cv.boolean,
         vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
         vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
@@ -146,11 +147,8 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         _LOGGER.debug(f"async_step_cloud user_input [{user_input}]")
         if user_input is not None:
-            await self.async_set_unique_id("lennoxs30" + user_input[CONF_EMAIL])
+            await self.async_set_unique_id(DOMAIN + "_" + user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
-            if user_input[CONF_LOG_MESSAGES_TO_FILE] == False:
-                user_input[CONF_MESSAGE_DEBUG_FILE] = ""
-
             try:
                 await self.try_to_connect(user_input)
                 self.config_input.update(user_input)
@@ -177,7 +175,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             elif not host_valid(user_input[CONF_HOST]):
                 errors[CONF_HOST] = "invalid_hostname"
             else:
-                await self.async_set_unique_id("lennoxs30" + user_input[CONF_HOST])
+                await self.async_set_unique_id(DOMAIN + "_" + user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
                 try:
                     await self.try_to_connect(user_input)
@@ -208,14 +206,14 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def create_entry(self):
-        await self.async_set_unique_id("lennoxs30" + self.config_input[CONF_HOST])
-        self._abort_if_unique_id_configured()
-        if self.config_input[CONF_LOG_MESSAGES_TO_FILE] == False:
-            self.config_input[CONF_MESSAGE_DEBUG_FILE] = ""
         if self.config_input[CONF_CLOUD_CONNECTION] == True:
             title = self.config_input[CONF_EMAIL]
         else:
             title = self.config_input[CONF_HOST]
+        await self.async_set_unique_id(DOMAIN + "_" + title)
+        self._abort_if_unique_id_configured()
+        if self.config_input[CONF_LOG_MESSAGES_TO_FILE] == False:
+            self.config_input[CONF_MESSAGE_DEBUG_FILE] = ""
         _LOGGER.debug(f"async_step_advanced config_input [{self.config_input}]")
         return self.async_create_entry(title=title, data=self.config_input)
 
