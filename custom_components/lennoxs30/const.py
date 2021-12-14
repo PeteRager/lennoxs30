@@ -10,5 +10,7 @@ CONF_LOG_MESSAGES_TO_FILE = "log_messages_to_file"
 CONF_MESSAGE_DEBUG_FILE = "message_debug_file"
 CONF_CLOUD_CONNECTION = "cloud_connection"
 
+LENNOX_DEFAULT_CLOUD_APP_ID = "mapp079372367644467046827001"
+
 LENNOX_DOMAIN = "lennoxs30"
 LENNOX_MFG = "Lennox"

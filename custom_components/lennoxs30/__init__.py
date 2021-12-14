@@ -122,47 +122,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         host_list = conf_hosts.split(",")
 
     for host_name in host_list:
-        cloud_local: bool = False
+        cloud_connection: bool = False
         if host_name == "Cloud":
-            cloud_local = True
+            cloud_connection = True
         log_to_file = True
         if config.get(DOMAIN).get(CONF_MESSAGE_DEBUG_FILE) == "":
             log_to_file = False
+
+        migration_data = {
+            CONF_SCAN_INTERVAL: config.get(DOMAIN).get(CONF_SCAN_INTERVAL),
+            CONF_FAST_POLL_INTERVAL: config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL),
+            CONF_ALLERGEN_DEFENDER_SWITCH: config.get(DOMAIN).get(
+                CONF_ALLERGEN_DEFENDER_SWITCH
+            ),
+            CONF_APP_ID: config.get(DOMAIN).get(CONF_APP_ID),
+            CONF_INIT_WAIT_TIME: config.get(DOMAIN).get(CONF_INIT_WAIT_TIME),
+            CONF_CREATE_SENSORS: config.get(DOMAIN).get(CONF_CREATE_SENSORS),
+            CONF_CREATE_INVERTER_POWER: config.get(DOMAIN).get(
+                CONF_CREATE_INVERTER_POWER
+            ),
+            CONF_PROTOCOL: config.get(DOMAIN).get(CONF_PROTOCOL),
+            CONF_PII_IN_MESSAGE_LOGS: config.get(DOMAIN).get(CONF_PII_IN_MESSAGE_LOGS),
+            CONF_MESSAGE_DEBUG_LOGGING: config.get(DOMAIN).get(
+                CONF_MESSAGE_DEBUG_LOGGING
+            ),
+            CONF_MESSAGE_DEBUG_FILE: config.get(DOMAIN).get(CONF_MESSAGE_DEBUG_FILE),
+            CONF_LOG_MESSAGES_TO_FILE: log_to_file,
+            CONF_CLOUD_CONNECTION: cloud_connection,
+        }
+
+        if cloud_connection == True:
+            migration_data[CONF_EMAIL] = config.get(DOMAIN).get(CONF_EMAIL)
+            migration_data[CONF_PASSWORD] = config.get(DOMAIN).get(CONF_PASSWORD)
+        else:
+            migration_data[CONF_HOST] = host_name
+
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_NAME: "S30",
-                    CONF_EMAIL: config.get(DOMAIN).get(CONF_EMAIL),
-                    CONF_PASSWORD: config.get(DOMAIN).get(CONF_PASSWORD),
-                    CONF_HOST: host_name,
-                    CONF_SCAN_INTERVAL: config.get(DOMAIN).get(CONF_SCAN_INTERVAL),
-                    CONF_FAST_POLL_INTERVAL: config.get(DOMAIN).get(
-                        CONF_FAST_POLL_INTERVAL
-                    ),
-                    CONF_ALLERGEN_DEFENDER_SWITCH: config.get(DOMAIN).get(
-                        CONF_ALLERGEN_DEFENDER_SWITCH
-                    ),
-                    CONF_APP_ID: config.get(DOMAIN).get(CONF_APP_ID),
-                    CONF_INIT_WAIT_TIME: config.get(DOMAIN).get(CONF_INIT_WAIT_TIME),
-                    CONF_CREATE_SENSORS: config.get(DOMAIN).get(CONF_CREATE_SENSORS),
-                    CONF_CREATE_INVERTER_POWER: config.get(DOMAIN).get(
-                        CONF_CREATE_INVERTER_POWER
-                    ),
-                    CONF_PROTOCOL: config.get(DOMAIN).get(CONF_PROTOCOL),
-                    CONF_PII_IN_MESSAGE_LOGS: config.get(DOMAIN).get(
-                        CONF_PII_IN_MESSAGE_LOGS
-                    ),
-                    CONF_MESSAGE_DEBUG_LOGGING: config.get(DOMAIN).get(
-                        CONF_MESSAGE_DEBUG_LOGGING
-                    ),
-                    CONF_MESSAGE_DEBUG_FILE: config.get(DOMAIN).get(
-                        CONF_MESSAGE_DEBUG_FILE
-                    ),
-                    CONF_LOG_MESSAGES_TO_FILE: log_to_file,
-                    CONF_CLOUD_CONNECTION: cloud_local,
-                },
+                data=migration_data,
             )
         )
     return True
