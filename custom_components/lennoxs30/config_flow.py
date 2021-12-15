@@ -19,6 +19,7 @@ from config.custom_components.lennoxs30.const import (
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
 )
+from config.custom_components.lennoxs30.util import dict_redact_fields
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
@@ -131,7 +132,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         self.config_input = {}
-        _LOGGER.debug(f"async_step_user user_input [{user_input}]")
+        _LOGGER.debug(f"async_step_user user_input [{dict_redact_fields(user_input)}]")
         if user_input is not None:
             cloud_local = user_input[CONF_CLOUD_CONNECTION]
             self.config_input.update(user_input)
@@ -145,7 +146,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_cloud(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-        _LOGGER.debug(f"async_step_cloud user_input [{user_input}]")
+        _LOGGER.debug(f"async_step_cloud user_input [{dict_redact_fields(user_input)}]")
         if user_input is not None:
             await self.async_set_unique_id(DOMAIN + "_" + user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
@@ -166,7 +167,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_local(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-        _LOGGER.debug(f"async_step_local user_input [{user_input}]")
+        _LOGGER.debug(f"async_step_local user_input [{dict_redact_fields(user_input)}]")
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -192,7 +193,9 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         """Handle the initial step."""
         errors = {}
-        _LOGGER.debug(f"async_step_advanced user_input [{user_input}]")
+        _LOGGER.debug(
+            f"async_step_advanced user_input [{dict_redact_fields(user_input)}]"
+        )
 
         if user_input is not None:
             self.config_input.update(user_input)
@@ -214,7 +217,9 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         if self.config_input[CONF_LOG_MESSAGES_TO_FILE] == False:
             self.config_input[CONF_MESSAGE_DEBUG_FILE] = ""
-        _LOGGER.debug(f"async_step_advanced config_input [{self.config_input}]")
+        _LOGGER.debug(
+            f"async_step_advanced config_input [{dict_redact_fields(self.config_input)}]"
+        )
         return self.async_create_entry(title=title, data=self.config_input)
 
     async def try_to_connect(self, user_input):
@@ -254,7 +259,9 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input) -> FlowResult:
         """Handle the import step."""
         self.config_input = {}
-        _LOGGER.debug(f"async_step_import user_input [{user_input}]")
+        _LOGGER.debug(
+            f"async_step_import user_input [{dict_redact_fields(user_input)}]"
+        )
         self.config_input.update(user_input)
         return await self.create_entry()
 
@@ -272,7 +279,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         _LOGGER.debug(
-            f"OptionsFlowHandler:async_step_init user_input [{user_input}] data [{self.config_entry.data}] options[{self.config_entry.options}]"
+            f"OptionsFlowHandler:async_step_init user_input [{dict_redact_fields(user_input)}] data [{dict_redact_fields(self.config_entry.data)}]"
         )
         if user_input is not None:
             if CONF_HOST in self.config_entry.data:

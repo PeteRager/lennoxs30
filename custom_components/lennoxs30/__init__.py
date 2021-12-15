@@ -35,6 +35,7 @@ from config.custom_components.lennoxs30.device import (
     S30OutdoorUnit,
     S30ZoneThermostat,
 )
+from config.custom_components.lennoxs30.util import dict_redact_fields
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -125,7 +126,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
     for host_name in host_list:
         cloud_connection: bool = False
-        if host_name == "Cloud":
+        if host_name == None:
             cloud_connection = True
         log_to_file = True
         if config.get(DOMAIN).get(CONF_MESSAGE_DEBUG_FILE) == "":
@@ -174,9 +175,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-
-    _LOGGER.debug(f"async_setup_entry UniqueID [{entry.unique_id}] Data [{entry.data}]")
-
+    _LOGGER.debug(
+        f"async_setup_entry UniqueID [{entry.unique_id}] Data [{dict_redact_fields(entry.data)}]"
+    )
     is_cloud = entry.data[CONF_CLOUD_CONNECTION]
     if is_cloud == True:
         host_name: str = None
