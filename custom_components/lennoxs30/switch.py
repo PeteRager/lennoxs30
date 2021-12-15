@@ -1,5 +1,6 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
 from typing import Any
+from config.custom_components.lennoxs30.const import MANAGER
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, CONF_NAME
 from . import Manager
 from homeassistant.core import HomeAssistant
@@ -22,7 +23,7 @@ async def async_setup_entry(
     _LOGGER.debug("switch:async_setup_platform enter")
 
     switch_list = []
-    manager: Manager = hass.data[DOMAIN][entry.unique_id]["hub"]
+    manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager._api.getSystems():
         _LOGGER.info(
             f"async_setup_platform ventilation [{system.supports_ventilation()}]"

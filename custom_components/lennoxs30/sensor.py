@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+from config.custom_components.lennoxs30.const import MANAGER
 from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
@@ -35,7 +36,7 @@ async def async_setup_entry(
 
     sensor_list = []
 
-    manager: Manager = hass.data[DOMAIN][entry.unique_id]["hub"]
+    manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager._api.getSystems():
         _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
         sensor = S30OutdoorTempSensor(hass, manager, system)

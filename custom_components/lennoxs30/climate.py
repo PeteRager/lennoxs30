@@ -13,6 +13,7 @@ from lennoxs30api import (
     lennox_zone,
 )
 from lennoxs30api.s30api_async import LENNOX_HVAC_EMERGENCY_HEAT, LENNOX_HVAC_HEAT
+from config.custom_components.lennoxs30.const import MANAGER
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -72,7 +73,7 @@ async def async_setup_entry(
 ) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
     climate_list = []
-    manager: Manager = hass.data[DOMAIN][entry.unique_id]["hub"]
+    manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.is_zone_active() == True:

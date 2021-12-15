@@ -29,6 +29,7 @@ from config.custom_components.lennoxs30.const import (
     LENNOX_DEFAULT_LOCAL_APP_ID,
     LENNOX_DOMAIN,
     CONF_CLOUD_CONNECTION,
+    MANAGER,
 )
 from config.custom_components.lennoxs30.device import (
     S30ControllerDevice,
@@ -49,6 +50,8 @@ from typing import Any
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
+PLATFORMS = ["sensor", "climate", "switch"]
+
 
 DS_CONNECTING = "Connecting"
 DS_DISCONNECTED = "Disconnected"
@@ -274,9 +277,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # TODO- This is incompelte!
-    hass.data[DOMAIN].pop(entry.unique_id)
-    return True
+    _LOGGER.debug(f"async_unlod_entry entry [{entry.unique_id}]")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok == True:
+        entry_data = hass.data[DOMAIN].pop(entry.unique_id)
+        manager: Manager = entry_data[MANAGER]
+        try:
+            await manager.async_shutdown(None)
+        except S30Exception as e:
+            _LOGGER.error(
+                f"async_unload_entry entry [{entry.unique_id}] error [{e.as_string()}]"
+            )
+        except Exception as e:
+            _LOGGER.exception(f"async_unload_entry entry [{entry.unique_id}]")
+        return True
+    else:
+        _LOGGER.error(
+            f"async_unload_entry call to hass.config_entries.async_unload_platforms returned False"
+        )
+        return False
 
 
 class Manager(object):
@@ -377,7 +396,7 @@ class Manager(object):
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
             await self.create_devices()
-            self._hass.data[DOMAIN][self._config.unique_id] = {"hub": self}
+            self._hass.data[DOMAIN][self._config.unique_id] = {MANAGER: self}
             self._hass.async_create_task(
                 self._hass.config_entries.async_forward_entry_setup(
                     self._config, "climate"
