@@ -91,7 +91,7 @@ class S30OutdoorTempSensor(SensorEntity):
         self._myname = self._system.name + "_outdoor_temperature"
 
     def update_callback(self):
-        _LOGGER.info(f"update_callback S30OutdoorTempSensor myname [{self._myname}]")
+        _LOGGER.debug(f"update_callback S30OutdoorTempSensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
@@ -158,7 +158,7 @@ class S30TempSensor(SensorEntity):
         self._myname = self._zone._system.name + "_" + self._zone.name + "_temperature"
 
     def update_callback(self):
-        _LOGGER.info(f"update_callback S30TempSensor myname [{self._myname}]")
+        _LOGGER.debug(f"update_callback S30TempSensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
@@ -221,7 +221,7 @@ class S30HumiditySensor(SensorEntity):
         self._myname = self._zone._system.name + "_" + self._zone.name + "_humidity"
 
     def update_callback(self):
-        _LOGGER.info(f"update_callback S30HumiditySensor myname [{self._myname}]")
+        _LOGGER.debug(f"update_callback S30HumiditySensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
@@ -287,7 +287,7 @@ class S30InverterPowerSensor(SensorEntity):
         self._myname = self._system.name + "_inverter_energy"
 
     def update_callback(self):
-        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        _LOGGER.debug(f"update_callback myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property

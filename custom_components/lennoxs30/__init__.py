@@ -50,7 +50,7 @@ from typing import Any
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
-PLATFORMS = ["sensor", "climate", "switch"]
+PLATFORMS = ["sensor", "climate", "switch", "number"]
 
 
 DS_CONNECTING = "Connecting"
@@ -397,21 +397,12 @@ class Manager(object):
         if self._climate_entities_initialized == False:
             await self.create_devices()
             self._hass.data[DOMAIN][self._config.unique_id] = {MANAGER: self}
-            self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(
-                    self._config, "climate"
+            for platform in PLATFORMS:
+                self._hass.async_create_task(
+                    self._hass.config_entries.async_forward_entry_setup(
+                        self._config, platform
+                    )
                 )
-            )
-            self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(
-                    self._config, "sensor"
-                )
-            )
-            self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(
-                    self._config, "switch"
-                )
-            )
             self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 
