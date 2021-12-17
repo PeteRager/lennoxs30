@@ -19,7 +19,7 @@ from config.custom_components.lennoxs30.const import (
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
 )
-from config.custom_components.lennoxs30.util import dict_redact_fields
+from config.custom_components.lennoxs30.util import dict_redact_fields, redact_email
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
@@ -210,7 +210,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def create_entry(self):
         if self.config_input[CONF_CLOUD_CONNECTION] == True:
-            title = self.config_input[CONF_EMAIL]
+            title = redact_email(self.config_input[CONF_EMAIL])
         else:
             title = self.config_input[CONF_HOST]
         await self.async_set_unique_id(DOMAIN + "_" + title)

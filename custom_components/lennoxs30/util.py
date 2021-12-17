@@ -28,3 +28,13 @@ def dict_redact_fields(i_dict):
         else:
             mydict[k] = v
     return mydict
+
+
+def redact_email(email: str) -> str:
+    red = ""
+    for i in range(len(email)):
+        if i > 4 and i % 3 == 0 and email[i] != "@" and email[i] != ".":
+            red = red + "_"
+        else:
+            red = red + email[i]
+    return red
