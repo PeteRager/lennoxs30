@@ -62,7 +62,6 @@ DS_FAILED = "Failed"
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_EMAIL,
     CONF_HOSTS,
     CONF_PASSWORD,
@@ -81,7 +80,6 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_HOSTS, default="Cloud"): str,
