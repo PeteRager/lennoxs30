@@ -14,7 +14,7 @@ from lennoxs30api import (
     s30api_async,
 )
 import voluptuous as vol
-from config.custom_components.lennoxs30.const import (
+from .const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
     CONF_CREATE_INVERTER_POWER,
@@ -31,12 +31,12 @@ from config.custom_components.lennoxs30.const import (
     CONF_CLOUD_CONNECTION,
     MANAGER,
 )
-from config.custom_components.lennoxs30.device import (
+from .device import (
     S30ControllerDevice,
     S30OutdoorUnit,
     S30ZoneThermostat,
 )
-from config.custom_components.lennoxs30.util import dict_redact_fields
+from .util import dict_redact_fields
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -133,8 +133,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         if config.get(DOMAIN).get(CONF_MESSAGE_DEBUG_FILE) == "":
             log_to_file = False
 
+        conf_scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
+        if conf_scan_interval is None:
+            if cloud_connection == True:
+                conf_scan_interval = DEFAULT_POLL_INTERVAL
+            else:
+                conf_scan_interval = DEFAULT_LOCAL_POLL_INTERVAL
+
         migration_data = {
-            CONF_SCAN_INTERVAL: config.get(DOMAIN).get(CONF_SCAN_INTERVAL),
+            CONF_SCAN_INTERVAL: conf_scan_interval,
             CONF_FAST_POLL_INTERVAL: config.get(DOMAIN).get(CONF_FAST_POLL_INTERVAL),
             CONF_ALLERGEN_DEFENDER_SWITCH: config.get(DOMAIN).get(
                 CONF_ALLERGEN_DEFENDER_SWITCH
@@ -164,15 +171,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
             migration_data[CONF_HOST] = host_name
             if migration_data[CONF_APP_ID] == None:
                 migration_data[CONF_APP_ID] = LENNOX_DEFAULT_LOCAL_APP_ID
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=migration_data,
-            )
-        )
+        create_migration_task(hass, migration_data)
     return True
+
+
+def create_migration_task(hass, migration_data):
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=migration_data,
+        )
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

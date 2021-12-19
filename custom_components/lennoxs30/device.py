@@ -1,5 +1,5 @@
 from lennoxs30api.s30api_async import lennox_system, lennox_zone, s30api_async
-from config.custom_components.lennoxs30.const import LENNOX_DOMAIN, LENNOX_MFG
+from .const import LENNOX_DOMAIN, LENNOX_MFG
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -18,7 +18,7 @@ class S30ControllerDevice(Device):
         self._config_entry = config_entry
 
     @property
-    def unique_name(self) -> dr.STORAGE_VERSION:
+    def unique_name(self) -> str:
         return self._system.unique_id()
 
     def register_device(self):
@@ -50,7 +50,7 @@ class S30OutdoorUnit(Device):
         self._s30_controller_device: S30ControllerDevice = s30_device
 
     @property
-    def unique_name(self) -> dr.STORAGE_VERSION:
+    def unique_name(self) -> str:
         return self._system.unique_id() + "_ou"
 
     def register_device(self):
@@ -83,7 +83,7 @@ class S30ZoneThermostat(Device):
         self._s30_controller_device: S30ControllerDevice = s30_device
 
     @property
-    def unique_name(self) -> dr.STORAGE_VERSION:
+    def unique_name(self) -> str:
         return self._zone.unique_id
 
     def register_device(self):

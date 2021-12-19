@@ -1,6 +1,6 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from lennoxs30api.s30exception import S30Exception
-from config.custom_components.lennoxs30.const import CONF_CLOUD_CONNECTION, MANAGER
+from .const import CONF_CLOUD_CONNECTION, MANAGER
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (
     CONF_NAME,

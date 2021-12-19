@@ -3,8 +3,8 @@ import re
 from lennoxs30api.s30exception import EC_AUTHENTICATE, EC_LOGIN, S30Exception
 
 import voluptuous as vol
-from config.custom_components.lennoxs30 import Manager
-from config.custom_components.lennoxs30.const import (
+from . import Manager
+from .const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
     CONF_CLOUD_CONNECTION,
@@ -19,7 +19,7 @@ from config.custom_components.lennoxs30.const import (
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
 )
-from config.custom_components.lennoxs30.util import dict_redact_fields, redact_email
+from .util import dict_redact_fields, redact_email
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
