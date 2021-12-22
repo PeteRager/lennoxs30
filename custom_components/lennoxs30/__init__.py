@@ -33,6 +33,7 @@ from .const import (
 )
 from .device import (
     S30ControllerDevice,
+    S30IndoorUnit,
     S30OutdoorUnit,
     S30ZoneThermostat,
 )
@@ -257,7 +258,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pii_message_logs=conf_pii_in_message_logs,
         message_debug_logging=conf_message_debug_logging,
         message_logging_file=conf_message_debug_file,
-        config_entry=entry,
     )
     try:
         listener = hass.bus.async_listen_once(
@@ -326,9 +326,8 @@ class Manager(object):
         pii_message_logs: bool = False,
         message_debug_logging: bool = True,
         message_logging_file: str = None,
-        config_entry: ConfigEntry = None,
     ):
-        self._config_entry: ConfigEntry = config_entry
+        self._config_entry: ConfigEntry = config
         self._reinitialize: bool = False
         self._err_cnt: int = 0
         self._mp_wakeup_event: Event = Event()
@@ -427,6 +426,8 @@ class Manager(object):
                 self._hass, self._config_entry, system, s30
             )
             s30_outdoor_unit.register_device()
+            s30_indoor_unit = S30IndoorUnit(self._hass, self._config_entry, system, s30)
+            s30_indoor_unit.register_device()
             self.s30_outdoorunits[system.sysId] = s30_outdoor_unit
             for zone in system._zoneList:
                 if zone.is_zone_active() == True:

@@ -29,7 +29,7 @@ class S30ControllerDevice(Device):
             #            connections={(dr.CONNECTION_NETWORK_MAC, config.mac)},
             identifiers={(LENNOX_DOMAIN, self.unique_name)},
             manufacturer=LENNOX_MFG,
-            suggested_area="Basement",
+            suggested_area="basement",
             name=self._system.name,
             model=self._system.productType,
             sw_version=self._system.softwareVersion,
@@ -60,9 +60,40 @@ class S30OutdoorUnit(Device):
             config_entry_id=self._config_entry.entry_id,
             identifiers={(LENNOX_DOMAIN, self.unique_name)},
             manufacturer=LENNOX_MFG,
-            suggested_area="Outside",
+            suggested_area="outside",
             name=self._system.name + " outdoor unit",
             model=self._system.outdoorUnitType,
+            via_device=(LENNOX_DOMAIN, self._s30_controller_device.unique_name),
+        )
+
+
+class S30IndoorUnit(Device):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        system: lennox_system,
+        s30_device: S30ControllerDevice,
+    ):
+        self._hass = hass
+        self._system = system
+        self._config_entry = config_entry
+        self._s30_controller_device: S30ControllerDevice = s30_device
+
+    @property
+    def unique_name(self) -> str:
+        return self._system.unique_id() + "_iu"
+
+    def register_device(self):
+        device_registry = dr.async_get(self._hass)
+
+        device_registry.async_get_or_create(
+            config_entry_id=self._config_entry.entry_id,
+            identifiers={(LENNOX_DOMAIN, self.unique_name)},
+            manufacturer=LENNOX_MFG,
+            suggested_area="basement",
+            name=self._system.name + " indoor unit",
+            model=self._system.indoorUnitType,
             via_device=(LENNOX_DOMAIN, self._s30_controller_device.unique_name),
         )
 

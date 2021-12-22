@@ -45,23 +45,6 @@ from homeassistant.helpers import entity_registry, entity_component
 
 from custom_components.lennoxs30.util import redact_email
 
-#
-# @pytest.fixture(autouse=True)
-# def zero_aggregation_time():
-#    """Prevent the aggregation time from delaying the tests."""
-#    with patch.object(config_flow, "DISCOVERY_AGGREGATION_TIME", 0):
-#        yield
-
-
-# @pytest.fixture(autouse=True)
-# def mock_setup_entry():
-#    """Mock setting up a config entry."""
-#    with patch(
-#        "homeassistant.components.apple_tv.async_setup_entry", return_value=True
-#    ):
-#        yield
-
-
 # User Flows
 
 
