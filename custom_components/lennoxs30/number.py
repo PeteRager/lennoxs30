@@ -33,7 +33,13 @@ async def async_setup_entry(
     number_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     # We do not support setting diag level from a cloud connection
-    if entry.data[CONF_CLOUD_CONNECTION] == True:
+    if (
+        entry.data[CONF_CLOUD_CONNECTION] == True
+        or manager._create_inverter_power == False
+    ):
+        _LOGGER.debug(
+            "async_setup_entry - not cresting diagnosrtic level number because inverter power not enabled"
+        )
         return
     for system in manager._api.getSystems():
         number = DiagnosticLevelNumber(hass, manager, system)
@@ -52,6 +58,7 @@ class DiagnosticLevelNumber(NumberEntity):
         self._system = system
         self._myname = self._system.name + "_diagnostic_level"
         self._system.registerOnUpdateCallback(self.update_callback, ["diagLevel"])
+        _LOGGER.debug(f"Create DiagnosticLevelNumber myname [{self._myname}]")
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback DiagnosticLevelNumber myname [{self._myname}]")

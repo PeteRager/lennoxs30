@@ -150,9 +150,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
             CONF_APP_ID: config.get(DOMAIN).get(CONF_APP_ID),
             CONF_INIT_WAIT_TIME: config.get(DOMAIN).get(CONF_INIT_WAIT_TIME),
             CONF_CREATE_SENSORS: config.get(DOMAIN).get(CONF_CREATE_SENSORS),
-            CONF_CREATE_INVERTER_POWER: config.get(DOMAIN).get(
-                CONF_CREATE_INVERTER_POWER
-            ),
             CONF_PROTOCOL: config.get(DOMAIN).get(CONF_PROTOCOL),
             CONF_PII_IN_MESSAGE_LOGS: config.get(DOMAIN).get(CONF_PII_IN_MESSAGE_LOGS),
             CONF_MESSAGE_DEBUG_LOGGING: config.get(DOMAIN).get(
@@ -172,6 +169,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
             migration_data[CONF_HOST] = host_name
             if migration_data[CONF_APP_ID] == None:
                 migration_data[CONF_APP_ID] = LENNOX_DEFAULT_LOCAL_APP_ID
+            migration_data[CONF_CREATE_INVERTER_POWER] = config.get(DOMAIN).get(
+                CONF_CREATE_INVERTER_POWER
+            )
         create_migration_task(hass, migration_data)
     return True
 
@@ -186,10 +186,23 @@ def create_migration_task(hass, migration_data):
     )
 
 
+# Track the title of the first entry, it gets the S30.State object
+_first_entry_title: str = None
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug(
         f"async_setup_entry UniqueID [{entry.unique_id}] Data [{dict_redact_fields(entry.data)}]"
     )
+
+    # Determine if this is the first entry that gets S30.State.
+    global _first_entry_title
+    index: int = 1
+    if _first_entry_title == None:
+        _first_entry_title = entry.title
+    if _first_entry_title == entry.title:
+        index = 0
+
     is_cloud = entry.data[CONF_CLOUD_CONNECTION]
     if is_cloud == True:
         host_name: str = None
@@ -234,8 +247,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf_pii_in_message_logs = entry.data[CONF_PII_IN_MESSAGE_LOGS]
     conf_message_debug_logging = entry.data[CONF_MESSAGE_DEBUG_LOGGING]
     conf_message_debug_file = entry.data[CONF_MESSAGE_DEBUG_FILE]
+    # If no path specified then it goes into the config directory,
     if conf_message_debug_file == "":
         conf_message_debug_file = None
+    if conf_message_debug_file != None and "/" not in conf_message_debug_file:
+        conf_message_debug_file = "config/" + conf_message_debug_file
+
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
     )
@@ -254,7 +271,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         create_sensors=create_sensors,
         create_inverter_power=create_inverter_power,
         protocol=conf_protocol,
-        index=0,
+        index=index,
         pii_message_logs=conf_pii_in_message_logs,
         message_debug_logging=conf_message_debug_logging,
         message_logging_file=conf_message_debug_file,
@@ -358,14 +375,17 @@ class Manager(object):
         self._create_inverter_power: bool = create_inverter_power
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
-        if ip_address == None:
-            self.connection_state = "lennoxs30.conn_" + email.replace(".", "_").replace(
-                "@", "_"
-            )
+        if index == 0:
+            self.connection_state = DOMAIN_STATE
         else:
-            self.connection_state = "lennoxs30.conn_" + self._ip_address.replace(
-                ".", "_"
-            ).replace(":", "_")
+            if ip_address == None:
+                self.connection_state = "lennoxs30.conn_" + email.replace(
+                    ".", "_"
+                ).replace("@", "_")
+            else:
+                self.connection_state = "lennoxs30.conn_" + self._ip_address.replace(
+                    ".", "_"
+                ).replace(":", "_")
 
     async def async_shutdown(self, event: Event) -> None:
         _LOGGER.debug(f"async_shutdown started host [{self._ip_address}]")
@@ -400,9 +420,10 @@ class Manager(object):
         await self.configuration_initialization()
         # Launch the message pump loop
         self._retrieve_task = asyncio.create_task(self.messagePump_task())
+        # Since there is no change detection implemented to update device attributes like SW version - alwayas reinit
+        await self.create_devices()
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized == False:
-            await self.create_devices()
             self._hass.data[DOMAIN][self._config.unique_id] = {MANAGER: self}
             for platform in PLATFORMS:
                 self._hass.async_create_task(
@@ -414,21 +435,21 @@ class Manager(object):
         self.updateState(DS_CONNECTED)
 
     async def create_devices(self):
-        self.s30_devices = {}
-        self.s30_outdoorunits = {}
         for system in self._api._systemList:
             s30: S30ControllerDevice = S30ControllerDevice(
                 self._hass, self._config_entry, system
             )
             s30.register_device()
-            self.s30_devices[system.sysId] = s30
-            s30_outdoor_unit = S30OutdoorUnit(
-                self._hass, self._config_entry, system, s30
-            )
-            s30_outdoor_unit.register_device()
-            s30_indoor_unit = S30IndoorUnit(self._hass, self._config_entry, system, s30)
-            s30_indoor_unit.register_device()
-            self.s30_outdoorunits[system.sysId] = s30_outdoor_unit
+            if system.has_outdoor_unit:
+                s30_outdoor_unit = S30OutdoorUnit(
+                    self._hass, self._config_entry, system, s30
+                )
+                s30_outdoor_unit.register_device()
+            if system.has_indoor_unit:
+                s30_indoor_unit = S30IndoorUnit(
+                    self._hass, self._config_entry, system, s30
+                )
+                s30_indoor_unit.register_device()
             for zone in system._zoneList:
                 if zone.is_zone_active() == True:
                     z: S30ZoneThermostat = S30ZoneThermostat(

@@ -112,15 +112,15 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             conf_wait_time = 30
         return vol.Schema(
             {
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=scan_interval
-                ): cv.positive_int,
+                vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=300)
+                ),
                 vol.Optional(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
-                ): cv.positive_float,
-                vol.Optional(
-                    CONF_INIT_WAIT_TIME, default=conf_wait_time
-                ): cv.positive_int,
+                ): vol.All(vol.Coerce(float), vol.Range(min=0.25, max=300.0)),
+                vol.Optional(CONF_INIT_WAIT_TIME, default=conf_wait_time): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=300)
+                ),
                 vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
                 vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
                 vol.Optional(CONF_LOG_MESSAGES_TO_FILE, default=False): cv.boolean,
@@ -190,8 +190,6 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_advanced(self, user_input=None):
-        """Handle the initial step."""
-        """Handle the initial step."""
         errors = {}
         _LOGGER.debug(
             f"async_step_advanced user_input [{dict_redact_fields(user_input)}]"
@@ -251,7 +249,6 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             pii_message_logs=False,
             message_debug_logging=True,
             message_logging_file=None,
-            config_entry=None,
         )
         await manager.connect()
         await manager.async_shutdown(None)
@@ -324,15 +321,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Optional(
                             CONF_SCAN_INTERVAL,
                             default=self.config_entry.data[CONF_SCAN_INTERVAL],
-                        ): cv.positive_int,
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
                         vol.Optional(
                             CONF_INIT_WAIT_TIME,
                             default=self.config_entry.data[CONF_INIT_WAIT_TIME],
-                        ): cv.positive_int,
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
                         vol.Optional(
                             CONF_FAST_POLL_INTERVAL,
                             default=self.config_entry.data[CONF_FAST_POLL_INTERVAL],
-                        ): cv.positive_float,
+                        ): vol.All(vol.Coerce(float), vol.Range(min=0.25, max=300.0)),
                         vol.Optional(
                             CONF_PROTOCOL, default=self.config_entry.data[CONF_PROTOCOL]
                         ): cv.string,
@@ -381,18 +378,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Optional(
                             CONF_SCAN_INTERVAL,
                             default=self.config_entry.data[CONF_SCAN_INTERVAL],
-                        ): cv.positive_int,
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
                         vol.Optional(
                             CONF_INIT_WAIT_TIME,
                             default=self.config_entry.data[CONF_INIT_WAIT_TIME],
-                        ): cv.positive_int,
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
                         vol.Optional(
                             CONF_FAST_POLL_INTERVAL,
                             default=self.config_entry.data[CONF_FAST_POLL_INTERVAL],
-                        ): cv.positive_float,
-                        vol.Optional(
-                            CONF_PROTOCOL, default=self.config_entry.data[CONF_PROTOCOL]
-                        ): cv.string,
+                        ): vol.All(vol.Coerce(float), vol.Range(min=0.25, max=300.0)),
                         vol.Optional(
                             CONF_PII_IN_MESSAGE_LOGS,
                             default=self.config_entry.data[CONF_PII_IN_MESSAGE_LOGS],

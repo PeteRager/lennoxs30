@@ -73,6 +73,7 @@
         "init": {
             "data": {
               "host": "The Local IP or Hostname of your Lennox S30/E30",
+              "password": "Your Lennox Account password",
               "scan_interval": "Message scan interval in seconds. 1 second is recommended for local connections",
               "fast_scan_interval": "After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands",
               "allergen_defender_switch": "Create allergentDefender switch",
