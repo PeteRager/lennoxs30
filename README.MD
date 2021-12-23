@@ -222,7 +222,7 @@ sensor.<system*name>\_outdoor_temperature - \_ALPHA*
 
 ## Sensor for Inverter Power
 
-When the **create_inverter_power** configuration parameter is set, a power sensor entity will be created. Inverter Power can only be enabled for Local Connections. To get this information the S30 must be placed in Diagnostic Mode 2. To set the diagnostic mode see TODO.
+When the **create_inverter_power** configuration parameter is set, a power sensor entity will be created. Inverter Power can only be enabled for Local Connections. To get this information the S30 must be placed in Diagnostic Mode 2. To set the diagnostic mode see [diagnostic level](#diagnostic-level)
 
 When diagnostics is enabled it should begin updating with the current power draw of the system. It's name will be
 
@@ -268,9 +268,9 @@ The switch has the following attributes:
 
 ## Number
 
-### diagnostic_level - **Alpha**
+### diagnostic level
 
-When the power inverter option is enable, a Number entity is created to allow setting and reporting on the active diagnostic level in the S30. A value of zero indicared diagnostics is disabled. Values of 1 or 2 will cause the inverter power to be sent. Other values are invalid. The name of the entity is:
+**ALPHA** When the power inverter option is enable, a Number entity is created to allow setting and reporting on the active diagnostic level in the S30. A value of zero indicared diagnostics is disabled. Values of 1 or 2 will cause the inverter power to be sent. Other values are invalid. The name of the entity is:
 
 number.<system_name>\_diagnostic_level
 
@@ -292,7 +292,7 @@ logger:
 
 ## A note on Debug Log Files
 
-The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information. The system by default redacrts this information in the log files. Stil the recommendation is not to publicly post these. If we need them to debug an issue we can use email.
+The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information. The system by default redacts this information in the log files. Stil the recommendation is not to publicly post these. If we need them to debug an issue we can use email.
 
 # Detailed Configuration Parameters
 
