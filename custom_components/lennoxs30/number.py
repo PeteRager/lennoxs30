@@ -86,10 +86,6 @@ class DiagnosticLevelNumber(NumberEntity):
         return 1
 
     @property
-    def mode(self) -> str:
-        return "box"
-
-    @property
     def value(self) -> float:
         return self._system.diagLevel
 
