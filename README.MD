@@ -14,7 +14,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 - If you are migrating from Cloud to Local connection. Please review the [cloud to local migration section](#Cloud-to-Local-Migration)
 - If you are upgrading from 0.1.3 to this release. Please review the [upgrade migration section](#New-Releases)
 - If you are migrating from a custom install to a HACS install. Please review the [HACS migration section](#Migrate-to-HACS-from-Manual-Installation)
-- If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Condiguration](#Detailed-Configuration-Parameters)
+- If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
 - The Power Inverter Diagnostic are in Alpha. Please review the [documentation](#Sensor-for-Inverter-Power) prior to using
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
