@@ -298,12 +298,12 @@ async def test_migrate_cloud_config_min(hass, caplog):
             assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_POLL_INTERVAL
             assert CONF_HOST not in migration_data
             assert CONF_HOSTS not in migration_data
+            assert CONF_CREATE_INVERTER_POWER not in migration_data
             assert migration_data[CONF_EMAIL] == "myemail@email.com"
             assert migration_data[CONF_PASSWORD] == "mypassword"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
             assert migration_data[CONF_CREATE_SENSORS] == False
             assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
-            assert migration_data[CONF_CREATE_INVERTER_POWER] == False
             assert migration_data[CONF_PROTOCOL] == "https"
             assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
@@ -316,6 +316,7 @@ async def test_migrate_cloud_config_min(hass, caplog):
                 data = result["data"]
                 assert data[CONF_SCAN_INTERVAL] == migration_data[CONF_SCAN_INTERVAL]
                 assert CONF_HOST not in data
+                assert CONF_CREATE_INVERTER_POWER not in data
                 assert migration_data[CONF_EMAIL] == data[CONF_EMAIL]
                 assert migration_data[CONF_PASSWORD] == data[CONF_PASSWORD]
                 assert (
@@ -326,10 +327,6 @@ async def test_migrate_cloud_config_min(hass, caplog):
                 assert (
                     migration_data[CONF_ALLERGEN_DEFENDER_SWITCH]
                     == data[CONF_ALLERGEN_DEFENDER_SWITCH]
-                )
-                assert (
-                    migration_data[CONF_CREATE_INVERTER_POWER]
-                    == data[CONF_CREATE_INVERTER_POWER]
                 )
                 assert migration_data[CONF_PROTOCOL] == data[CONF_PROTOCOL]
                 assert (
@@ -378,12 +375,12 @@ async def test_migrate_cloud_config_full(hass, caplog):
             assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_POLL_INTERVAL
             assert CONF_HOST not in migration_data
             assert CONF_HOSTS not in migration_data
+            assert CONF_CREATE_INVERTER_POWER not in migration_data
             assert migration_data[CONF_EMAIL] == "myemail@email.com"
             assert migration_data[CONF_PASSWORD] == "mypassword"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
             assert migration_data[CONF_CREATE_SENSORS] == False
             assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
-            assert migration_data[CONF_CREATE_INVERTER_POWER] == False
             assert migration_data[CONF_PROTOCOL] == "https"
             assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
@@ -396,6 +393,7 @@ async def test_migrate_cloud_config_full(hass, caplog):
                 data = result["data"]
                 assert data[CONF_SCAN_INTERVAL] == migration_data[CONF_SCAN_INTERVAL]
                 assert CONF_HOST not in data
+                assert CONF_CREATE_INVERTER_POWER not in data
                 assert migration_data[CONF_EMAIL] == data[CONF_EMAIL]
                 assert migration_data[CONF_PASSWORD] == data[CONF_PASSWORD]
                 assert (
@@ -406,10 +404,6 @@ async def test_migrate_cloud_config_full(hass, caplog):
                 assert (
                     migration_data[CONF_ALLERGEN_DEFENDER_SWITCH]
                     == data[CONF_ALLERGEN_DEFENDER_SWITCH]
-                )
-                assert (
-                    migration_data[CONF_CREATE_INVERTER_POWER]
-                    == data[CONF_CREATE_INVERTER_POWER]
                 )
                 assert migration_data[CONF_PROTOCOL] == data[CONF_PROTOCOL]
                 assert (
