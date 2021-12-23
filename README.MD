@@ -1,19 +1,22 @@
-# Lennox iComfort Component
+# Lennox S30/E30 Component
 
 A custom component for Home Assistant to integrate with Lennox iComfort S30 or Lennox iComfort E30 thermostats. Supports both local and cloud connections.
 
-> **Please Note:** This component **does not** support the other models of Lennox Thermostats
+> **Please Note:** This component **does not** support the other models of Lennox Thermostats, though it may work with the M30
 
 # Requirements
 
-- Home Assistant >= 2021.04.06 (others may work)
+- Home Assistant >= 2021.11.3 (others may work)
 - S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
 
-# Limitations
+# Important Information
 
-- Passwords with special characters are not properly supported by the Lennox API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
-- Support for multiple S30s on local LAN in in Beta for the current release
-- It is HIGHLY recommended to specify the APP_ID in all configurations
+- If you are migrating from Cloud to Local connection. Please review the [cloud to local migration section](#Cloud-to-Local-Migration)
+- If you are upgrading from 0.1.3 to this release. Please review the [upgrade migration section](#New-Releases)
+- If you are migrating from a custom install to a HACS install. Please review the [HACS migration section](#Migrate-to-HACS-from-Manual-Installation)
+- If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Condiguration](#Detailed-Configuration-Parameters)
+- The Power Inverter Diagnostic are in Alpha. Please review the [documentation](#Sensor-for-Inverter-Power) prior to using
+- Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
 # Installation
 
@@ -33,98 +36,93 @@ Add integration in HACS
 1. In the HACS panel, go to integrations and click the big orange '+' button.
 1. Search for `Lennox iComfort` and click `Install this repository in HACS`.
 1. Restart HA to load the integration into HA.<br>
-1. Go to Configuration -> Integrations and click the big orange '+' button. Look for Lennox and click to add it.
-1. Add the configuration to configuration.yaml.
-1. Restart HA.
+1. Follow the Configuration Instructions below
 
 ## Manually
 
 1. Go to [releases](https://github.com/PeteRager/lennoxs30/releases) in this repo and download the latest zip or clone the repo
 1. Extract it into the `custom_components` folder in your HA installation. If upgrading from a prior release, pleast remove ALL files from this folder.
-1. Add the configuration to configuration.yaml.
 1. Restart HA.
+1. Follow the Configuration Instuctions below
 
 # Configuration
 
-Configuration of the integration is done in configuration.yaml
+Configuration of the integration is done within the Integrations Panel in Home Assistant.
 
-## Minimal - Lennox Cloud Connection
+1. Click on Configuration, then Integrations
+1. Click _Add Integration_
+1. Search for Lennox S30/E30
 
-```yaml
-lennoxs30:
-  email: myemail@myemail.com
-  password: mypassword
-  app_id: <See configuration details in README>
-```
+## Select Cloud or Local
 
-## Minimal - Local Connection
+The first step is to determine if you are using a Cloud or a Local connection. Most, will use the Local Connection. To have this work well requires that the S30 has a static IP address (DHCP lease), consult your router docunentation for how to configure this. Local connections are faster and more stable than Cloud Connections. Why would you use a Cooud Connection? Perhaps you want to monitor your vacation home in the Alps? Or your parent's house? You are able to run multiple local and multiple cloud connections at a the same time. Each is configured using this process.
 
-```yaml
-lennoxs30:
-  email: myemail@myemail.com
-  password: mypassword
-  hosts: 10.0.0.4
-  app_id: ha_prod
-```
+1. To use a cloud connection Check the Box, to use a local connection leave it unchecked.
 
-## All options and debug turned on
+## Local Configuration
 
-```yaml
-lennoxs30:
-  email: myemail@myemail.com
-  password: mypassword
-  scan_interval: 30
-  fast_scan_interval: 0.5
-  allergen_defender_switch: true
-  init_wait_time: 45
-  app_id: mapp079372367644467046827001
-  create_sensors: true
-  create_inverter_power: true
+If using a local connections. The next step is to setup the connection information.
 
-# Enable logging if reporting issues
-logger:
-  default: warning
-  logs:
-    custom_components.lennoxs30: debug
-    custom_components.lennoxs30.climate: debug
-    lennoxs30api: debug
-```
+1. Enter the IP address of the S30. Alternatvely, you can use a DNS name. If you have firewalls and do port mapping you may specify the port (host/ip:port) By default the S30 exposes HTTPS on Port 443.
+1. You can use the defaults for the rest of the fields, or adjust as needed. See detailed configuration parameters below
+1. Submit the form
 
-### Configuration Parameters
+At this point, the integration will attempt to connect to the S30. If it succeeds the Advanced Congfiguration Page woll appear. If there are error they will be reported. For detailed error information look in the home assistant log file. This should take no more than 5-10 seconds. Go onto the Advanced Configuration section.
 
-| Name                     | Type   | Requirement | Default            | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------ | ------ | ----------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| email                    | string | required    | none               | Cloud service account username                                                                                                                                                                                                                                                                                                                                                                               |
-| password                 | string | required    | none               | Cloud service account password                                                                                                                                                                                                                                                                                                                                                                               |
-| hosts                    | string | optional    | Cloud              | Comma seperated list of Local LAN IP addresses or hostnames of S30 thermostat. If specified, the integration will talk directly to the S30 instead of using cloud connection. Local connections are currently the recommended approach for reliability and performance                                                                                                                                      |
-| scan_interval            | int    | optional    | 15                 | Scan interval to check for cloud messages in seconds. 15 seconds is recommended for cloud connections. For local connections this sbould not be set unless instructed                                                                                                                                                                                                                                        |
-| allergen_defender_switch | bool   | optional    | false              | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                  |
-| fast_scan_interval       | float  | optional    | 0.75               | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands                                                                                                                                                                                                                                                 |
-| init_wait_time           | int    | optional    | 30                 | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                            |
-| app_id                   | string | optional    | uniquely generated | Specify the unique application id to use. For Cloud connections, Lennox is very particular - please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. For local connections use a string like ha_dev or ha_prod - must be unique for each connection |
-| create_sensors           | bool   | optional    | false              | Creates temperature and humidity sensors for each zone                                                                                                                                                                                                                                                                                                                                  |
-| create_inverter_power    | bool   | optional    | false              | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 1 or 2, as opposed to the default value of 0. Raise an Issue if you need help enabling diagnostics                                                                                                                                                                                    |
-| protocol | string | optional | https | Selects the protocol to use.  The only reason to use this is when developing using the S30 simluator, in which case this should be set to HTTP|
+## Cloud Connection
+
+If using a cloud conection. The next step is to specifiy the connection information.
+
+1. Enter the email address associated with your Lennox iComfoft acount
+1. Enter the password associated with your Lennox iComfort account
+1. Use the defaults for the rest of the fields, or adjust as needed. See [Detailed Condiguration](#Detailed-Configuration-Parameters)
+1. Submit the form
+
+At this point, the integration will attempt to login to the Lennox Cloud. If it succeeds the Advanced Congfiguration Page woll appear. If there are error they will be reported. For detailed error information look in the home assistant log file. This should take no more than 5-10 seconds. Go onto the Advanced Configuration section.
+
+## Advanced Configuration
+
+The next page brings up advanced configuration properties with the recommended defaults.
+
+1. Use the defaults (recommended) or adjust using the [Detailed Condiguration](#Detailed-Configuration-Parameters)
+1. Press submit
+
+At this point, the integration will connect to the S30, download and process it's configuration (100kb) and create the Entities in Home Assistant. For local connections, this step typically takes 10-30 seconds complete, for cloud connections it an take up to a minute. If it is succesful, you will be presenteed with a list of discovered devices. If it fails, review the error and look in the log file for more detailed information.
+
+For Local Connections the Integration Instance name is the ip_address / host name. For Cloud Connections the instance name is a redacted version of your email.
 
 # Temperature Units (Celsius, Fahrenheit)
 
 The integration detects the unit system configured in Home Assistant and reports the data in the correct units. Celsius is in 0.5 degree increments. Fahrenheit is in 1.0 degress increments. The Lennox API delivers data in both units, so there is no conversion in the Integration and what you see in the Lennox UI should be what you see in HA.
 
+# Devices
+
+The integration will create a full set of devices representing your HVAC system. Note: depending on your HVAC configuration and the configuration options not all devices may have entities. Please don't delete the unused devices, they will be used as we add more entities in future releases
+
+| Device Type  | Description                                                                                       | Name                           | Parent |
+| ------------ | ------------------------------------------------------------------------------------------------- | ------------------------------ | ------ |
+| S30          | This is the HVAC contoller, it is a little box with an attenae located near the indoor unit.      | S30 System Name                | None   |
+| Indoor Unit  | This specifies the type of indoor unit you have. Examples, include Furnace and Air Handler.       | S30 System Name + Outdoor Unit | S30    |
+| Outdoor Unit | This specifies the tyoe of outdoor unit you have. Examples include Heat Pump and Air Conditioner. | S30 System Name + Indoor Unit  | S30    |
+| Thermostat   | One thermostat device is created for each zone.                                                   | S30 System Name + Zone Name    | S30    |
+
 # Entities
 
 ## Climate
 
-This integration will automatically detect all the homes, systems and zones in your account and add a Climate Entity for each discovered zone. The names of the climate entities will be
+_Cloud_ - Automatically detects all the zones across the homes and systems in your cloud account. Climate Entity created for each zone. The integration creates internal Entity_Ids using the Cloud GUID of your S30 plus the zone index (0,1,2,3).
+
+_Local_ - Automstically detects all the zones in the S30 it is connected to. Climate Entity created for each zone. The integration creates internal Entity_Ids using the Serial Number of your S30 plus the zone index (0,1,2,3).
+
+Entities are attached to the corresponding S30 Device and have default names (which you can change in Home Assistant)
 
 _climate.<system*name>*<zone_name>_
 
-System name is the name you gave to your S30. By default Lennox names the Zones - "Zone 1", "Zone 2", "Zone 3", "Zone 4"
-
-The integration creates internal Entity_Ids using the GUID of your S30 plus the zone index (0,1,2,3).
+System name is the name you gave to your S30. By default Lennox names the Zones - "Zone 1", "Zone 2", "Zone 3", "Zone 4" - this is configurable within the S30.
 
 ### Supported operations
 
-**HVAC_MODE** supports **off**, **cool**, **heat** or **heat_cool** mode. The speficic modes available depend on you equipemnt. For example an AC does not support heat, hence the heat and heat_cool modes would not appear in HA.
+**HVAC_MODE** supports **off**, **cool**, **heat** or **heat_cool** mode. The specific modes available depend on you equipemnt. For example an AC does not support heat, hence the heat and heat_cool modes will not be available.
 
 **FAN_MODE** may be set to **auto**, **on**, **circulate**.
 
@@ -150,7 +148,7 @@ The integration provides all of the standard climate attributes, including
 1. Temperature
 2. Humidity
 3. Current HVAC action
-4. Active setpoints
+4. Active setpoints - dependent on the HVAC_MODE. For example, in Cool Mode the Cool Setpoint is shown, but not the Heat Setpoint.
 5. Active Preset
 
 In additon the following extra attributes are provided, to allow for a more detailed information on the current zone operation.
@@ -158,10 +156,10 @@ In additon the following extra attributes are provided, to allow for a more deta
 | Attribute Name    | Description                                                                                                                                                                                     |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                        |
-| aux               | Auxiliary Heating is On when True, off when False                                                                                                                                               |
+| aux               | Auxiliary Heating is On when True, off when False. Typicslly this mesns the hest pump is dissbled and the furnace is running instead.                                                           |
 | balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                         |
 | coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
-| damper            | Position of damper - range 0-100                                                                                                                                                                |
+| damper            | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open.                                                                                          |
 | defrost           | Defrost is active                                                                                                                                                                               |
 | demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                               |
 | fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                          |
@@ -171,34 +169,34 @@ In additon the following extra attributes are provided, to allow for a more deta
 | tempOperation     | Current acvtive temperatue operation heating or cooling                                                                                                                                         |
 | ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                              |
 
-## lennoxs30.state or lennoxs30.conn\_\<hostname\>
+## lennoxs30.state or lennoxs30.conn\_\<hostname\> or lennoxs30.\_<email_addess\>
 
-The entity is automatically created in Home Assistant and can be used to track the state and health of the Cloud or Local connection to the S30. When using multiple LAN connections, the
-first host in the list will use **lennoxs30.state** for backwards compatibility. Additional hosts will use a naming convention of **lennoxs30.conn\_<hostname>**
+These entities is automatically created for each integration instance and can be used to track the state and health of the Cloud or Local connection to the S30. When using multiple LAN connections, the
+first host in the list will use **lennoxs30.state** for backwards compatibility. Additional local connections will use a naming convention of **lennoxs30.conn\_<hostname>**. Cloud connections wil use lennoxs30.\_<email_addess\>
 
-| State            | Description                                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| Connected        | API is connected to cloud system. This is the desired state                                                  |
-| Connecting       | API is trying to connect to the cloud system.                                                                |
-| Disconnected     | API has failed to connect to cloud and will not try again. Please raise an issue if you encounter this state |
-| Login Failed     | The login failued due to bad email/password combination. Please correct credentials and restart HA           |
-| Waiting to Retry | The API was unable to connect or lost connection and is waiting to attempt a retry                           |
-| Failed           | The API failed. Please raise an issue if you encounter this state                                            |
+| State            | Description                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| Connected        | API is connected. This is the desired state                                                                |
+| Connecting       | API is trying to connect                                                                                   |
+| Disconnected     | API has failed to connect and will not try again. Please raise an issue if you encounter this state        |
+| Login Failed     | The login failued due to bad email/password combination. Please correct credentials and reload integration |
+| Waiting to Retry | The API was unable to connect or lost connection and is waiting to attempt a retry                         |
+| Failed           | The API failed. Please raise an issue if you encounter this state                                          |
 
 The entity also has a set of attributes to provide diagnostic data:
 
 | Attribute           | Type     | Description                                                                                                                                                                                                                                                             |
 | ------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | message_count       | int      | number of messages received from Lennox Cloud                                                                                                                                                                                                                           |
-| send_count          | int      | number of messages sent to Lennox Cloud                                                                                                                                                                                                                                 |
+| send_count          | int      | number of messages sent                                                                                                                                                                                                                                                 |
 | receive_count       | int      | number of queries to recieve new messages. Most queries return no messages                                                                                                                                                                                              |
-| bytes_in            | int      | number of byte received                                                                                                                                                                                                                                                 |
+| bytes_in            | int      | number of bytes received                                                                                                                                                                                                                                                |
 | bytes_out           | int      | number of bytes sent                                                                                                                                                                                                                                                    |
 | error_count         | int      | number of errors                                                                                                                                                                                                                                                        |
-| exceptions          | int      | number of network exceptions that have occured |
-| http_2xx            | int      | number of HTTP responses received between 200-299. THese are good responses                                                                                                                                                                                             |
+| exceptions          | int      | number of network exceptions that have occured                                                                                                                                                                                                                          |
+| http_2xx            | int      | number of HTTP responses received between 200-299. These are good responses                                                                                                                                                                                             |
 | http_4xx            | int      | number of HTTP responses received between 400-499. These usually indicate a problem with authorization                                                                                                                                                                  |
-| http_5xx            | int      | number of HTTP responses received between 500-599. These indicate a problem with the Lennox Cloud Servers. Seeing a few of these a day is normal                                                                                                                        |
+| http_5xx            | int      | number of HTTP responses received between 500-599. These indicate a problem with the Cloud or S30. Seeing a few of these a day is normal                                                                                                                                |
 | last_receive_time   | DateTime | Time of last succesful receive. Should not be more than SCAN_INTERVAL seconds plus few seconds plus the metric update interval (90 seconds). In other words is this time is more than 5 minutes ago using default SCAN_INTERVAL something is wrong.                     |
 | last_error_time     | DateTime | Time of the last error response                                                                                                                                                                                                                                         |
 | last_reconnect_time | DateTime | Time of the last reconnect or the time of the initial connect                                                                                                                                                                                                           |
@@ -210,7 +208,7 @@ The entity also has a set of attributes to provide diagnostic data:
 
 ## sensor for Zone Temperature and Humidity
 
-When the **create_sensors** configuration parameter is set, humidity and temperarture sensors are created for each zone.
+When the **create_sensors** configuration parameter is set, humidity and temperarture sensors are created for each zone. This is the default for new configurations. These sensors are attached to the Thermostat Device.
 
 sensor.<system_name>\_<zone_name>\_temperature
 
@@ -218,9 +216,30 @@ sensor.<system_name>\_<zone_name>\_humidity
 
 ## sensor for Outdoor Temperature
 
-Lennox systems may have an outdoor temperature sensor. If your system has one a sensor will be automatically created. It's name will be
+Lennox systems may have an outdoor temperature sensor. If your system has one a sensor will be automatically created and attached to the Outdoor Unit Device. It's name will be
 
-sensor.<system_name>\_outdoor_temperature
+sensor.<system*name>\_outdoor_temperature - \_ALPHA*
+
+## Sensor for Inverter Power
+
+When the **create_inverter_power** configuration parameter is set, a power sensor entity will be created. Inverter Power can only be enabled for Local Connections. To get this information the S30 must be placed in Diagnostic Mode 2. To set the diagnostic mode see TODO.
+
+When diagnostics is enabled it should begin updating with the current power draw of the system. It's name will be
+
+sensor.<system_name>\_inverter_energy
+
+It can be combined with an Integration sensor to count the total energy usage over time, and this Integration sensor can be added to the Home Assistant Energy dashboard. A configuration similar to the following should work:
+
+```yaml
+sensor:
+  - platform: integration
+    source: sensor.<system_name>_inverter_energy
+    name: <system_name>_inverter_kwh
+    unit_prefix: k
+    round: 2
+```
+
+This feature is in Alpha and we are looking for feedback and experiences using the data - as it's accuracy.
 
 ## switches
 
@@ -241,12 +260,21 @@ switch.<system_name>\_ventilation
 The switch will reflect the current state of the ventilation damper and will allow turning the mode on or off.  
 The switch has the following attributes:
 
-| Attribute               | Type | Description                                                                |
-| ----------------------- | ---- | -------------------------------------------------------------------------- |
-| ventilationRemainigTime | int  | number of minutes remaining in ventilation action                          |
-| ventilatingUntilTime    | int  | integer timestamp of the end time of the ventilation action                |
-| receive_count           | int  | number of queries to recieve new messages. Most queries return no messages |
-| diagVentilationRuntime  | int  | total number of minutes the system has ventilated for over it's lifetime   |
+| Attribute               | Type | Description                                                              |
+| ----------------------- | ---- | ------------------------------------------------------------------------ |
+| ventilationRemainigTime | int  | number of minutes remaining in ventilation action                        |
+| ventilatingUntilTime    | int  | integer timestamp of the end time of the ventilation action              |
+| diagVentilationRuntime  | int  | total number of minutes the system has ventilated for over it's lifetime |
+
+## Number
+
+### diagnostic_level - **Alpha**
+
+When the power inverter option is enable, a Number entity is created to allow setting and reporting on the active diagnostic level in the S30. A value of zero indicared diagnostics is disabled. Values of 1 or 2 will cause the inverter power to be sent. Other values are invalid. The name of the entity is:
+
+number.<system_name>\_diagnostic_level
+
+Note: This capability in in _Alpha_ Mode. When enabled the S30 sends much more information. If you are using their IOS / Android App - this may impact the performance. It is not recommended to be toggling this mode frequently. Early on there were reports of the S30 rebooting that may have been caused by this - but it has not reproduced. If you are using this feature, you may want to monitor the lennoxS30.state sysuptime attribute. This value will reset to zero when the S30 reboots. The integration will log a warning if this is detected. Please report on your findings - we want to know if its working or not workig for you!
 
 # Reporting Bugs
 
@@ -264,7 +292,96 @@ logger:
 
 ## A note on Debug Log Files
 
-The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information. It is highly recommend to not publicly post these log files. Information includes - the address of your residence and email address. Issues #14 tracks this and we will work to scrub this information from the log file. If I need a logfile or troubleshooting I will ask you to email it
+The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information. The system by default redacrts this information in the log files. Stil the recommendation is not to publicly post these. If we need them to debug an issue we can use email.
+
+# Detailed Configuration Parameters
+
+| Name                     | Type    | Requirement | Default            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | ------- | ----------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| email                    | string  | required    | none               | Cloud service account username                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| password                 | string  | required    | none               | Cloud service account password                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| hosts                    | string  | optional    | Cloud              | Comma seperated list of Local LAN IP addresses or hostnames of S30 thermostat. If specified, the integration will talk directly to the S30 instead of using cloud connection. Local connections are currently the recommended approach for reliability and performance                                                                                                                                                                                                                                                             |
+| scan_interval            | int     | optional    | 15                 | Scan interval to check for cloud messages in seconds. 15 seconds is recommended for cloud connections. For local connections this sbould not be set unless instructed                                                                                                                                                                                                                                                                                                                                                              |
+| allergen_defender_switch | bool    | optional    | false              | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| fast_scan_interval       | float   | optional    | 0.75               | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands                                                                                                                                                                                                                                                                                                                                                                       |
+| init_wait_time           | int     | optional    | 30                 | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                                                                                                                                                  |
+| app_id                   | string  | optional    | uniquely generated | Specify the unique application id to use. For Cloud connections, Lennox is very particular - please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. For local connections use a string like ha_dev or ha_prod - must be unique for each connection                                                                                                                       |
+| create_sensors           | bool    | optional    | false              | Creates temperature and humidity sensors for each zone                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| create_inverter_power    | bool    | optional    | false              | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 1 or 2, as opposed to the default value of 0. Use the number.diagnostic_level entity to set this,.                                                                                                                                                                                                                                                                                                          |
+| protocol                 | string  | optional    | https              | Selects the protocol to use. The only reason to use this is when developing using the S30 simluator, in which case this should be set to HTTP                                                                                                                                                                                                                                                                                                                                                                                      |
+| message_debug_logging    | boolean | optional    | True               | When True messages are logged when debug is enabled. Setting to False omits the message from the debug log file.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| log_messages_to_file     | string  | optional    |                    | When set all S30 messages for this connection will the logged to the specified file. If no path is specified, the file will appear on the home asssistant config directory - the same place the home_assistant.log file is. If you want the fie to be elsewhere specific a full path or relative path to the home assistant root directory. Messages will be logged regardless of debug settings. This provides an easy way to submit the message logs without having to submit all the stuff in the full home assistant log file. |
+| pii_in_message_logs      | boolean | optional    | False              | When set to False personal information - email, passords, street addresses, etc. are redacted from the log files. False is the default and the recommended setting for submitting logs. This parameter exists in the unlikely event this information is needed in troubleshooting.                                                                                                                                                                                                                                                 |
+
+# Migration
+
+## New Releases
+
+### Migration from 0.1.3 to 0.2.0
+
+In Release 0.2.0 configuration is moved from configuratiom.yaml to the internal home asssistant configuration repository. On startup of 0.2.0 (or later releases), the YAML configuration will be migrated to the repository. After HA starts please check your entities to verify they are working. Once verified remove the lennoxs30 configuration from configuration.yaml. All of your entities should be preserved and the migration should be seamless.
+
+### Migration from <0.1.3 to 0.2.0
+
+If you are on older versions of the integration. You may need to adjust your configuration in the YAML fie to meet the new requirements.
+
+1. Start HA
+2. Look for errors in the log indicating there is missing configuration
+3. Add missing configuration
+4. Restart
+
+## Cloud to Local Migration
+
+### Cloud to Local (have not upgraded to 0.2.0)
+
+Use Case: You have the integration configured to use the cloud and you want to go local.
+Current State: You are on 0.1.3
+
+The simplest approach is to edit the configuration.yaml in 0.1.3 and add the ip_address in and restart HA.
+
+When switching from Cloud to Local - new entities are created in Home Assistant. Perform the following steps after restarting:
+
+- Go into the list of entities and delete the old entities (write down their names if needed)
+- Remame the new entities using the old entity's entity ids.
+
+### Cloud to Local (have upgraded to 0.2.0)
+
+Use Case: You have the integration configured to use the cloud and you want to go local.
+Current State: You are on 0.2.0 or greater.
+
+- Go into Configuration / Integrations and Delete the cloud integration
+- Add a new integration instace for the local connection.
+
+## Migrate to HACS from Manual Installation
+
+### Currently on 0.1.3
+
+Perform the following steps:
+
+1. Comment out the lennoxs30: section from configuration.yaml (use the #)
+1. Moved the old custom_components/lennoxs30 directory to somewhere else so it wouldn't be found. Or delete it. Make sure the lennoxs30 directory no longer exists
+1. Restart HA
+1. Add custom repository in HACS per the [Instructions](#HACS)
+1. Add integration in HACS per the instructions
+1. Restart HA
+1. Uncomment the lennoxs30: section from configuration.yaml
+1. Restart HA
+
+### Currently on 0.2.0
+
+In 0.2.0 and greater the config for the integration is not stored in configuration.yaml.
+
+Note: These steps are untested. Please provide feedback if this works :-).
+
+Perform the following steps:
+
+1. Moved the old custom_components/lennoxs30 directory to somewhere else so it wouldn't be found. Or delete it. Make sure the lennoxs30 directory no longer exists
+1. Restart HA
+1. Add custom repository in HACS per the [Instructions](#HACS)
+1. Add integration in HACS per the instructions
+1. Restart HA
+
+At this point everything should just work.
 
 # Enhancement Requests
 

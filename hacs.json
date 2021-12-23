@@ -1,5 +1,5 @@
 {
     "name": "Lennox iComfort Component",
-    "domains": ["climate", "sensor", "switch"],
+    "domains": ["climate", "sensor", "switch", "number"],
     "render_readme": true
 }
