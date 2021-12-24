@@ -495,6 +495,8 @@ class Manager(object):
         sytemsWithZones = 0
         loops: int = 0
         numOfSystems = len(self._api.getSystems())
+        # To speed startup, we only want to sleep when a message was not received.
+        got_message: bool = True
         while sytemsWithZones < numOfSystems and loops < self._conf_init_wait_time:
             _LOGGER.debug(
                 f"__init__:async_setup waiting for zone config to arrive host [{self._ip_address}]  numSystems ["
@@ -503,9 +505,11 @@ class Manager(object):
                 + str(sytemsWithZones)
                 + "]"
             )
+            # Only take a breather if we did not get a messagd.
+            if got_message == False:
+                await asyncio.sleep(1.0)
             sytemsWithZones = 0
-            await asyncio.sleep(1.0)
-            await self.messagePump()
+            got_message = await self.messagePump()
             for lsystem in self._api.getSystems():
                 # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
                 if lsystem.config_complete() == False:
@@ -520,7 +524,8 @@ class Manager(object):
                 )
                 if numZones > 0:
                     sytemsWithZones += 1
-            loops += 1
+            if got_message == False:
+                loops += 1
         if sytemsWithZones < numOfSystems:
             raise S30Exception(
                 "Timeout waiting for configuration data from Lennox - this sometimes happens, the connection will be automatically retried.  Consult the readme for more details",
