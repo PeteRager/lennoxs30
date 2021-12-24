@@ -13,6 +13,7 @@ from lennoxs30api import (
     lennox_zone,
 )
 from lennoxs30api.s30api_async import LENNOX_HVAC_EMERGENCY_HEAT, LENNOX_HVAC_HEAT
+from config.custom_components.lennoxs30.const import MANAGER
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -38,10 +39,18 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
-
+from homeassistant.helpers.entity import Entity
 from . import Manager
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,25 +68,12 @@ FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info: Manager = None
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
-    # Discovery info is the API that we passed in, let's make sure it is there.
-    if discovery_info is None:
-        _LOGGER.error(
-            "climate:async_setup_platform expecting API in discovery_info, found None"
-        )
-        return False
-    theType = str(type(discovery_info))
-    if "Manager" not in theType:
-        _LOGGER.error(
-            f"climate:async_setup_platform expecting Manaager in discovery_info, found [{theType}]"
-        )
-        return False
-
     climate_list = []
-    manager: Manager = discovery_info
+    manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager._api.getSystems():
         for zone in system.getZones():
             if zone.is_zone_active() == True:
@@ -91,7 +87,7 @@ async def async_setup_platform(
                     f"Skipping inactive zone - system [{system.sysId}] zone [{zone.name}]"
                 )
     if len(climate_list) != 0:
-        add_entities(climate_list, True)
+        async_add_entities(climate_list, True)
         _LOGGER.debug(
             f"climate:async_setup_platform exit - created [{len(climate_list)}] entitites"
         )
@@ -121,8 +117,7 @@ class S30Climate(ClimateEntity):
 
     @property
     def unique_id(self) -> str:
-        # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_" + str(self._zone.id)).replace("-", "")
+        return self._zone.unique_id
 
     def zone_update_callback(self):
         self.schedule_update_ha_state()
@@ -647,3 +642,11 @@ class S30Climate(ClimateEntity):
                 _LOGGER.error("climate:async_set_fan_mode - error:" + e.message)
             else:
                 _LOGGER.error("climate:async_set_fan_mode - error:" + str(e))
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        result = {
+            "identifiers": {(DOMAIN, self.unique_id)},
+        }
+        return result
