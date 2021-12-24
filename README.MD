@@ -1,6 +1,6 @@
 # Lennox S30/E30 Component
 
-A custom component for Home Assistant to integrate with Lennox iComfort S30 or Lennox iComfort E30 thermostats. Supports both local and cloud connections.
+A custom component for Home Assistant to integrate with Lennox iComfort S30 or Lennox iComfort E30 thermostats and perhaps the E30. Supports both local and cloud connections.
 
 > **Please Note:** This component **does not** support the other models of Lennox Thermostats, though it may work with the M30
 
@@ -22,19 +22,21 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 ## HACS
 
-Install [HACS](https://github.com/hacs/integration) then add the [custom repository](https://hacs.xyz/docs/faq/custom_repositories) for this project
+This assumes you have [HACS](https://github.com/hacs/integration) installed and know how to use it.  If you need help with this, go to the HACS project documentation.
 
-1. Go to any of the sections (integrations, frontend, automation).
+Add custom repository in *HACS*
+
+1. Click on HACS in your menu to open the HACS panel, then click on integrations (https://your.domain/hacs/integrations).
 1. Click on the 3 dots in the top right corner.
 1. Select "Custom repositories"
 1. Add the URL to the repository: `https://github.com/PeteRager/lennoxs30`
 1. Select the integration category.
 1. Click the "ADD" button.
 
-Add integration in HACS
+Add integration in *HACS*
 
-1. In the HACS panel, go to integrations and click the big orange '+' button.
-1. Search for `Lennox iComfort` and click `Install this repository in HACS`.
+1. In the HACS panel, go to integrations and click the '+ Explore & add repositories' button.
+1. Search for `Lennox iComfort WiFi Thermostat Integration` and click `Install this repository in HACS`.
 1. Restart HA to load the integration into HA.<br>
 1. Follow the Configuration Instructions below
 
@@ -201,7 +203,7 @@ The entity also has a set of attributes to provide diagnostic data:
 | last_error_time     | DateTime | Time of the last error response                                                                                                                                                                                                                                         |
 | last_reconnect_time | DateTime | Time of the last reconnect or the time of the initial connect                                                                                                                                                                                                           |
 | last_message_time   | DateTime | Time of the last message from Lennox Cloud. How often messages are received is based on how often data is changing in the thermostat. For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent |
-| sysUpTime           | int      | Number of seconds the S30 has been running since last reboot.                                                                                                                                                                                                           |
+| sysUpTime           | int      | Number of seconds the S30 has been running since last reboot.  Note: for cloud connections this is updated once at startup.  For local connections this updates every minute.                          |
 | diagLevel           | int      | Current Diagnostic Level of the S30. By default this is zero, if using the power diagnostics this should be 1 or 2                                                                                                                                                      |
 | softwareVersion     | string   | Current software version of the S30                                                                                                                                                                                                                                     |
 | hostname            | string   | The hostname used by this connection or None if a cloud connection                                                                                                                                                                                                      |
@@ -239,7 +241,7 @@ sensor:
     round: 2
 ```
 
-This feature is in Alpha and we are looking for feedback and experiences using the data - as it's accuracy.
+This feature is in Alpha and we are looking for feedback and experiences using the data - and it's accuracy.
 
 ## switches
 
@@ -282,7 +284,7 @@ Please create issues to track bugs. Please capture the logs with debug turned on
 
 Debug logging can be enabled by adding the following to your Home Assistant's configuration.yaml:
 
-```
+```yaml
 logger:
   default: warning
   logs:
