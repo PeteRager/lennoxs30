@@ -287,7 +287,7 @@ class S30InverterPowerSensor(SensorEntity):
         self._myname = self._system.name + "_inverter_energy"
 
     def update_callback(self):
-        _LOGGER.debug(f"update_callback myname [{self._myname}]")
+        _LOGGER.debug(f"update_callback S30InverterPowerSenso [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
