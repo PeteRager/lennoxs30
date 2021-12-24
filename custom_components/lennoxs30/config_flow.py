@@ -18,6 +18,7 @@ from .const import (
     CONF_PII_IN_MESSAGE_LOGS,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
+    CONF_LOCAL_CONNECTION,
 )
 from .util import dict_redact_fields, redact_email
 from homeassistant.data_entry_flow import FlowResult
@@ -44,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_ONE = vol.Schema(
     {
+        vol.Required(CONF_LOCAL_CONNECTION, default=True): cv.boolean,
         vol.Required(CONF_CLOUD_CONNECTION, default=False): cv.boolean,
     }
 )
@@ -135,11 +137,16 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(f"async_step_user user_input [{dict_redact_fields(user_input)}]")
         if user_input is not None:
             cloud_local = user_input[CONF_CLOUD_CONNECTION]
-            self.config_input.update(user_input)
-            if cloud_local:
-                return await self.async_step_cloud()
+            local_connection = user_input[CONF_LOCAL_CONNECTION]
+            if cloud_local == local_connection:
+                errors[CONF_LOCAL_CONNECTION] = "select_cloud_or_locsl"
             else:
-                return await self.async_step_local()
+                dict = {CONF_CLOUD_CONNECTION: cloud_local}
+                self.config_input.update(dict)
+                if cloud_local:
+                    return await self.async_step_cloud()
+                else:
+                    return await self.async_step_local()
 
         return self.async_show_form(step_id="user", data_schema=STEP_ONE, errors=errors)
 

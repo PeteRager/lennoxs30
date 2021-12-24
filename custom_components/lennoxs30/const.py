@@ -9,6 +9,7 @@ CONF_MESSAGE_DEBUG_LOGGING = "message_debug_logging"
 CONF_LOG_MESSAGES_TO_FILE = "log_messages_to_file"
 CONF_MESSAGE_DEBUG_FILE = "message_debug_file"
 CONF_CLOUD_CONNECTION = "cloud_connection"
+CONF_LOCAL_CONNECTION = "local_connection"
 
 LENNOX_DEFAULT_CLOUD_APP_ID = "mapp079372367644467046827001"
 LENNOX_DEFAULT_LOCAL_APP_ID = "homeassistant"
