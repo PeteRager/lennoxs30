@@ -250,8 +250,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If no path specified then it goes into the config directory,
     if conf_message_debug_file == "":
         conf_message_debug_file = None
-    if conf_message_debug_file != None and "/" not in conf_message_debug_file:
-        conf_message_debug_file = "config/" + conf_message_debug_file
 
     _LOGGER.debug(
         f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
