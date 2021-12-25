@@ -1,5 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-from config.custom_components.lennoxs30.const import MANAGER
+from .const import MANAGER
 from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,

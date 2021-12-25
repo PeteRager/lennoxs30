@@ -1,6 +1,6 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
 from typing import Any
-from config.custom_components.lennoxs30.const import MANAGER
+from .const import MANAGER
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, CONF_NAME
 from . import Manager
 from homeassistant.core import HomeAssistant

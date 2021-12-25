@@ -13,7 +13,7 @@ from lennoxs30api import (
     lennox_zone,
 )
 from lennoxs30api.s30api_async import LENNOX_HVAC_EMERGENCY_HEAT, LENNOX_HVAC_HEAT
-from config.custom_components.lennoxs30.const import MANAGER
+from .const import MANAGER
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
