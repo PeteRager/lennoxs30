@@ -37,7 +37,7 @@ from .device import (
     S30OutdoorUnit,
     S30ZoneThermostat,
 )
-from .util import dict_redact_fields
+from .util import dict_redact_fields, redact_email
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -377,7 +377,7 @@ class Manager(object):
             self.connection_state = DOMAIN_STATE
         else:
             if ip_address == None:
-                self.connection_state = "lennoxs30.conn_" + email.replace(
+                self.connection_state = "lennoxs30.conn_" + redact_email(email).replace(
                     ".", "_"
                 ).replace("@", "_")
             else:
