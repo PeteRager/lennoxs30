@@ -139,7 +139,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             cloud_local = user_input[CONF_CLOUD_CONNECTION]
             local_connection = user_input[CONF_LOCAL_CONNECTION]
             if cloud_local == local_connection:
-                errors[CONF_LOCAL_CONNECTION] = "select_cloud_or_locsl"
+                errors[CONF_LOCAL_CONNECTION] = "select_cloud_or_local"
             else:
                 dict = {CONF_CLOUD_CONNECTION: cloud_local}
                 self.config_input.update(dict)

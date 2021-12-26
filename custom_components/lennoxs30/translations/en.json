@@ -5,7 +5,7 @@
       "user": {
         "title": "Select whether to use a local or a cloud connection",
         "data": {
-            "local_connection" : "Locsl Connection",
+            "local_connection" : "Local Connection",
 			      "cloud_connection": "Lennox Cloud Connection:"
         }
       },
@@ -45,7 +45,7 @@
       }      
     },
     "error": {
-      "select_cloud_or_locsl": "Select a cloud or local connection",
+      "select_cloud_or_local": "Select a cloud or local connection",
       "already_configured": "Device is already configured", 
       "invalid_hostname" : "Invalid ip address or hostname",
       "unable_to_connect_local" : "Unable to connect to S30, please check IP address",
