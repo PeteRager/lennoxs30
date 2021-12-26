@@ -22,9 +22,11 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 ## HACS
 
-This assumes you have [HACS](https://github.com/hacs/integration) installed and know how to use it.  If you need help with this, go to the HACS project documentation.
+HACS is recommended as it provides automated install and will notify you whem updates are available.
 
-Add custom repository in *HACS*
+This assumes you have [HACS](https://github.com/hacs/integration) installed and know how to use it. If you need help with this, go to the HACS project documentation.
+
+Add custom repository in _HACS_
 
 1. Click on HACS in your menu to open the HACS panel, then click on integrations (https://your.domain/hacs/integrations).
 1. Click on the 3 dots in the top right corner.
@@ -33,7 +35,7 @@ Add custom repository in *HACS*
 1. Select the integration category.
 1. Click the "ADD" button.
 
-Add integration in *HACS*
+Add integration in _HACS_
 
 1. In the HACS panel, go to integrations and click the '+ Explore & add repositories' button.
 1. Search for `Lennox iComfort WiFi Thermostat Integration` and click `Install this repository in HACS`.
@@ -43,7 +45,7 @@ Add integration in *HACS*
 ## Manually
 
 1. Go to [releases](https://github.com/PeteRager/lennoxs30/releases) in this repo and download the latest zip or clone the repo
-1. Extract it into the `custom_components` folder in your HA installation. If upgrading from a prior release, pleast remove ALL files from this folder.
+1. Extract the zip file and copy the `custom_components/lennoxs30` folder and all it's contents including the `translations` subfolder, into the `custom_components` folder in your HA installation. If upgrading from a prior release, pleast remove ALL files from this folder.
 1. Restart HA.
 1. Follow the Configuration Instuctions below
 
@@ -57,41 +59,51 @@ Configuration of the integration is done within the Integrations Panel in Home A
 
 ## Select Cloud or Local
 
-The first step is to determine if you are using a Cloud or a Local connection. Most, will use the Local Connection. To have this work well requires that the S30 has a static IP address (DHCP lease), consult your router docunentation for how to configure this. Local connections are faster and more stable than Cloud Connections. Why would you use a Cooud Connection? Perhaps you want to monitor your vacation home in the Alps? Or your parent's house? You are able to run multiple local and multiple cloud connections at a the same time. Each is configured using this process.
+The first step is to select a Cloud or a Local connection.
 
-1. To use a cloud connection Check the Box, to use a local connection leave it unchecked.
+Most, will use the Local Connection. Local connections are faster and more reliable than Cloud Connections. To have this work requires that the S30 has a static IP address (DHCP lease), consult your router docunentation for how to configure this.
+
+Why would you use a Cooud Connection? Perhaps you want to monitor your vacation home in the Alps? Or your parent's house?
+
+Need both or have multiple S30s? You are able to run multiple local and multiple cloud connections at the same time. Each is configured using this process.
+
+1. Select Cloud or Local (default) connetion
 
 ## Local Configuration
 
-If using a local connections. The next step is to setup the connection information.
+The next step is providing the connection information.
 
-1. Enter the IP address of the S30. Alternatvely, you can use a DNS name. If you have firewalls and do port mapping you may specify the port (host/ip:port) By default the S30 exposes HTTPS on Port 443.
-1. You can use the defaults for the rest of the fields, or adjust as needed. See detailed configuration parameters below
+1. Enter the IP address of the S30. Alternatvely, you can use a DNS name. If you have firewalls and do port mapping you may specify the port (hostname:port or ip:port) By default the S30 exposes HTTPS on Port 443.
+1. You can use the defaults for the rest of the fields, or adjust as needed. See detailed configuration parameters below. Configuration can be changed later when needed. See [Detailed Configuration](#Detailed-Configuration-Parameters)
 1. Submit the form
 
-At this point, the integration will attempt to connect to the S30. If it succeeds the Advanced Congfiguration Page woll appear. If there are error they will be reported. For detailed error information look in the home assistant log file. This should take no more than 5-10 seconds. Go onto the Advanced Configuration section.
+At this point, the integration will attempt to connect to the S30 - this should take no more than 5-10 seconds. If it succeeds, the Advanced Configuration Page will appear. If it is unable to connect errors will be reported and detailed information will be in the Home Assistant log file. Go onto the Advanced Configuration section.
 
 ## Cloud Connection
 
 If using a cloud conection. The next step is to specifiy the connection information.
 
-1. Enter the email address associated with your Lennox iComfoft acount
+1. Enter the email address associated with your Lennox iComfort acount
 1. Enter the password associated with your Lennox iComfort account
-1. Use the defaults for the rest of the fields, or adjust as needed. See [Detailed Condiguration](#Detailed-Configuration-Parameters)
+1. Use the defaults for the rest of the fields, or adjust as needed. See [Detailed Configuration](#Detailed-Configuration-Parameters)
 1. Submit the form
 
-At this point, the integration will attempt to login to the Lennox Cloud. If it succeeds the Advanced Congfiguration Page woll appear. If there are error they will be reported. For detailed error information look in the home assistant log file. This should take no more than 5-10 seconds. Go onto the Advanced Configuration section.
+At this point, the integration will attempt to connect to the S30 - this should take no more than 5-15 seconds. If it succeeds, the Advanced Configuration Page will appear. If it is unable to connect errors will be reported and detailed information will be in the Home Assistant log file. Go onto the Advanced Configuration section.
 
 ## Advanced Configuration
 
 The next page brings up advanced configuration properties with the recommended defaults.
 
-1. Use the defaults (recommended) or adjust using the [Detailed Condiguration](#Detailed-Configuration-Parameters)
+1. Use the defaults (recommended) or adjust using the [Detailed Configuration](#Detailed-Configuration-Parameters)
 1. Press submit
 
-At this point, the integration will connect to the S30, download and process it's configuration (100kb) and create the Entities in Home Assistant. For local connections, this step typically takes 10-30 seconds complete, for cloud connections it an take up to a minute. If it is succesful, you will be presenteed with a list of discovered devices. If it fails, review the error and look in the log file for more detailed information.
+At this point, the integration will connect to the S30, download and process its configuration (100kb) and create the Entities in Home Assistant. For local connections, this step typically takes 10-30 seconds complete, for cloud connections it an takes 15-45 seconds. If it is succesful, you will be presented with a list of discovered devices. If it fails, review the error and look in the log file for more detailed information.
 
-For Local Connections the Integration Instance name is the ip_address / host name. For Cloud Connections the instance name is a redacted version of your email.
+For Local Connections the Integration instance name is the ip_address / host name. For Cloud Connections the instance name is a redacted version of your email.
+
+# Configuration Options
+
+If you want to change the integration configuration, do into the integrations page, find the integration and click configure. This will bring up the set of options you can change. After saving, select Reload or Restart HA for the changes to take affect.
 
 # Temperature Units (Celsius, Fahrenheit)
 
@@ -101,20 +113,20 @@ The integration detects the unit system configured in Home Assistant and reports
 
 The integration will create a full set of devices representing your HVAC system. Note: depending on your HVAC configuration and the configuration options not all devices may have entities. Please don't delete the unused devices, they will be used as we add more entities in future releases
 
-| Device Type  | Description                                                                                       | Name                           | Parent |
-| ------------ | ------------------------------------------------------------------------------------------------- | ------------------------------ | ------ |
-| S30          | This is the HVAC contoller, it is a little box with an attenae located near the indoor unit.      | S30 System Name                | None   |
-| Indoor Unit  | This specifies the type of indoor unit you have. Examples, include Furnace and Air Handler.       | S30 System Name + Outdoor Unit | S30    |
-| Outdoor Unit | This specifies the tyoe of outdoor unit you have. Examples include Heat Pump and Air Conditioner. | S30 System Name + Indoor Unit  | S30    |
-| Thermostat   | One thermostat device is created for each zone.                                                   | S30 System Name + Zone Name    | S30    |
+| Device Type  | Description                                                                                           | Name                           | Parent |
+| ------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------ | ------ |
+| S30          | This is the HVAC contoller, it is a little box with an antenna located near the indoor unit.          | S30 System Name                | None   |
+| Indoor Unit  | This specifies the type of indoor unit you have. Examples, include `Furnace` and `Air Handler`.       | S30 System Name + Outdoor Unit | S30    |
+| Outdoor Unit | This specifies the tyoe of outdoor unit you have. Examples include `Heat Pump` and `Air Conditione`r. | S30 System Name + Indoor Unit  | S30    |
+| Thermostat   | One thermostat device is created for each zone. These are mounted on the walls in your house.         | S30 System Name + Zone Name    | S30    |
 
 # Entities
 
 ## Climate
 
-_Cloud_ - Automatically detects all the zones across the homes and systems in your cloud account. Climate Entity created for each zone. The integration creates internal Entity_Ids using the Cloud GUID of your S30 plus the zone index (0,1,2,3).
+_Cloud_ - Automatically detects all the zones across the homes and systems in your cloud account. Climate Entities created for each zone. The integration creates internal unique_ids using the Cloud GUID of your S30 plus the zone index (0,1,2,3).
 
-_Local_ - Automstically detects all the zones in the S30 it is connected to. Climate Entity created for each zone. The integration creates internal Entity_Ids using the Serial Number of your S30 plus the zone index (0,1,2,3).
+_Local_ - Automstically detects all the zones in the S30 it is connected to. Climate Entities created for each zone. The integration creates internal unique_ids using the Serial Number of your S30 plus the zone index (0,1,2,3).
 
 Entities are attached to the corresponding S30 Device and have default names (which you can change in Home Assistant)
 
@@ -171,10 +183,10 @@ In additon the following extra attributes are provided, to allow for a more deta
 | tempOperation     | Current acvtive temperatue operation heating or cooling                                                                                                                                         |
 | ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                              |
 
-## lennoxs30.state or lennoxs30.conn\_\<hostname\> or lennoxs30.\_<email_addess\>
+## lennoxs30.state or lennoxs30.conn\_\<hostname\> or lennoxs30.\_<redacted email_addess\>
 
 These entities is automatically created for each integration instance and can be used to track the state and health of the Cloud or Local connection to the S30. When using multiple LAN connections, the
-first host in the list will use **lennoxs30.state** for backwards compatibility. Additional local connections will use a naming convention of **lennoxs30.conn\_<hostname>**. Cloud connections wil use lennoxs30.\_<email_addess\>
+first host in the list will use **lennoxs30.state** for backwards compatibility. Additional local connections will use a naming convention of **lennoxs30.conn\_<hostname>**. Cloud connections wil use lennoxs30.\_<redacted email_addess\>
 
 | State            | Description                                                                                                |
 | ---------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -203,7 +215,7 @@ The entity also has a set of attributes to provide diagnostic data:
 | last_error_time     | DateTime | Time of the last error response                                                                                                                                                                                                                                         |
 | last_reconnect_time | DateTime | Time of the last reconnect or the time of the initial connect                                                                                                                                                                                                           |
 | last_message_time   | DateTime | Time of the last message from Lennox Cloud. How often messages are received is based on how often data is changing in the thermostat. For example, a temperature change, a setpoint change will cause a message to be sent. If nothing is changing nothing will be sent |
-| sysUpTime           | int      | Number of seconds the S30 has been running since last reboot.  Note: for cloud connections this is updated once at startup.  For local connections this updates every minute.                          |
+| sysUpTime           | int      | Number of seconds the S30 has been running since last reboot. Note: for cloud connections this is updated once at startup. For local connections this updates every minute.                                                                                             |
 | diagLevel           | int      | Current Diagnostic Level of the S30. By default this is zero, if using the power diagnostics this should be 1 or 2                                                                                                                                                      |
 | softwareVersion     | string   | Current software version of the S30                                                                                                                                                                                                                                     |
 | hostname            | string   | The hostname used by this connection or None if a cloud connection                                                                                                                                                                                                      |
@@ -298,11 +310,10 @@ The Lennox configuration that comes back from the API contains every configurati
 
 # Detailed Configuration Parameters
 
+This section documents the detailed configuration paramaters, that are editable through the UI. This configuration is stored in the config/.storage/core_config_entries file. Editing this file is not recommended.
+
 | Name                     | Type    | Requirement | Default            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------ | ------- | ----------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| email                    | string  | required    | none               | Cloud service account username                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| password                 | string  | required    | none               | Cloud service account password                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| hosts                    | string  | optional    | Cloud              | Comma seperated list of Local LAN IP addresses or hostnames of S30 thermostat. If specified, the integration will talk directly to the S30 instead of using cloud connection. Local connections are currently the recommended approach for reliability and performance                                                                                                                                                                                                                                                             |
 | scan_interval            | int     | optional    | 15                 | Scan interval to check for cloud messages in seconds. 15 seconds is recommended for cloud connections. For local connections this sbould not be set unless instructed                                                                                                                                                                                                                                                                                                                                                              |
 | allergen_defender_switch | bool    | optional    | false              | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | fast_scan_interval       | float   | optional    | 0.75               | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands                                                                                                                                                                                                                                                                                                                                                                       |
@@ -384,6 +395,14 @@ Perform the following steps:
 1. Restart HA
 
 At this point everything should just work.
+
+# Network information
+
+The local connection uses HTTPS to Port 443 outgoing to the S30.
+
+The cloud connection using HTTPS to Port 443 outgoing to the Lennox Cloud.
+
+There are no incomimg connections.
 
 # Enhancement Requests
 
