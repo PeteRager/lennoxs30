@@ -6,7 +6,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30 or L
 
 # Requirements
 
-- Home Assistant >= 2021.6.1 and tested of 2021.12.5
+- Home Assistant >= 2021.6.1 and tested on 2021.12.5
 - S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
 
 # Important Information
