@@ -377,9 +377,9 @@ class Manager(object):
             self.connection_state = DOMAIN_STATE
         else:
             if ip_address == None:
-                self.connection_state = "lennoxs30.conn_" + redact_email(email).replace(
-                    ".", "_"
-                ).replace("@", "_")
+                e_name = email.split("@")
+                redacted_email: str = e_name[0].replace(".", "_")
+                self.connection_state = "lennoxs30.conn_" + redacted_email
             else:
                 self.connection_state = "lennoxs30.conn_" + self._ip_address.replace(
                     ".", "_"
