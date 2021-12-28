@@ -63,7 +63,7 @@ The first step is to select a Cloud or a Local connection.
 
 Most, will use the Local Connection. Local connections are faster and more reliable than Cloud Connections. To have this work requires that the S30 has a static IP address (DHCP lease), consult your router docunentation for how to configure this.
 
-Why would you use a Cooud Connection? Perhaps you want to monitor your vacation home in the Alps? Or your parent's house?
+Why would you use a Cloud Connection? Perhaps you want to monitor your vacation home in the Alps? Or your parent's house?
 
 Need both or have multiple S30s? You are able to run multiple local and multiple cloud connections at the same time. Each is configured using this process.
 
