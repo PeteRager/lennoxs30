@@ -230,18 +230,16 @@ class S30Climate(ClimateEntity):
             return self._zone.minHspC
         if (
             self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
-            and self._system.single_setpoint_mode == False
-        ):
-            if self._manager._is_metric is False:
-                return self._zone.minHsp
-            return self._zone.minHspC
-        if (
-            self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
             and self._system.single_setpoint_mode == True
         ):
             if self._manager._is_metric is False:
                 return self._zone.minCsp
             return self._zone.minCspC
+        # Single Setpoint Mode Not Enabled
+        if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
+            if self._manager._is_metric is False:
+                return self._zone.minHsp
+            return self._zone.minHspC
         _LOGGER.warning(
             f"min_temp - unexpected system mode {self._zone.systemMode} returning default - please raise an issue"
         )
@@ -262,18 +260,16 @@ class S30Climate(ClimateEntity):
             return self._zone.maxHspC
         if (
             self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
-            and self._system.single_setpoint_mode == False
-        ):
-            if self._manager._is_metric is False:
-                return self._zone.maxCsp
-            return self._zone.maxCspC
-        if (
-            self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
             and self._system.single_setpoint_mode == True
         ):
             if self._manager._is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC
+        # Single Setpoint Mode Not Enabled
+        if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
+            if self._manager._is_metric is False:
+                return self._zone.maxCsp
+            return self._zone.maxCspC
         _LOGGER.warning(
             f"max_temp - unexpected system mode {self._zone.systemMode} returning default - please raise an issue"
         )
