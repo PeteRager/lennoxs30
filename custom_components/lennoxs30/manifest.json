@@ -1,7 +1,7 @@
 {
     "domain": "lennoxs30",
     "name": "Lennox S30/E30",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "documentation": "https://github.com/PeteRager/lennoxs30/blob/master/README.MD",
     "issuetracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
