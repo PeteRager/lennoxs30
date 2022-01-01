@@ -12,7 +12,12 @@ from lennoxs30api import (
     lennox_system,
     lennox_zone,
 )
-from lennoxs30api.s30api_async import LENNOX_HVAC_EMERGENCY_HEAT, LENNOX_HVAC_HEAT
+from lennoxs30api.s30api_async import (
+    LENNOX_HVAC_COOL,
+    LENNOX_HVAC_EMERGENCY_HEAT,
+    LENNOX_HVAC_HEAT,
+    LENNOX_HVAC_OFF,
+)
 from .const import MANAGER
 
 from homeassistant.components.climate import ClimateEntity
@@ -213,44 +218,62 @@ class S30Climate(ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        minTemp = None
-        if self._manager._is_metric is False:
-            if self._zone.coolingOption == True:
-                minTemp = self._zone.minCsp
-            elif self._zone.heatingOption == True:
-                minTemp = self._zone.minHsp
-            if minTemp != None:
-                return minTemp
-            return super().min_temp
-        else:
-            if self._zone.coolingOption == True:
-                minTemp = self._zone.minCspC
-            elif self._zone.heatingOption == True:
-                minTemp = self._zone.minHspC
-            if minTemp != None:
-                return minTemp
-            return super().min_temp
+        if self._zone.systemMode == LENNOX_HVAC_OFF:
+            return None
+        if self._zone.systemMode == LENNOX_HVAC_COOL:
+            if self._manager._is_metric is False:
+                return self._zone.minCsp
+            return self._zone.minCspC
+        if self._zone.systemMode == LENNOX_HVAC_HEAT:
+            if self._manager._is_metric is False:
+                return self._zone.minHsp
+            return self._zone.minHspC
+        if (
+            self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
+            and self._system.single_setpoint_mode == True
+        ):
+            if self._manager._is_metric is False:
+                return self._zone.minCsp
+            return self._zone.minCspC
+        # Single Setpoint Mode Not Enabled
+        if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
+            if self._manager._is_metric is False:
+                return self._zone.minHsp
+            return self._zone.minHspC
+        _LOGGER.warning(
+            f"min_temp - unexpected system mode {self._zone.systemMode} returning default - please raise an issue"
+        )
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        maxTemp = None
-        if self._manager._is_metric is False:
-            if self._zone.heatingOption == True:
-                maxTemp = self._zone.maxHsp
-            elif self._zone.coolingOption == True:
-                maxTemp = self._zone.maxCsp
-            if maxTemp != None:
-                return maxTemp
-            return super().max_temp
-        else:
-            if self._zone.heatingOption == True:
-                maxTemp = self._zone.maxHspC
-            elif self._zone.coolingOption == True:
-                maxTemp = self._zone.maxCspC
-            if maxTemp != None:
-                return maxTemp
-            return super().max_temp
+        if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode == None:
+            return None
+        if self._zone.systemMode == LENNOX_HVAC_COOL:
+            if self._manager._is_metric is False:
+                return self._zone.maxCsp
+            return self._zone.maxCspC
+        if self._zone.systemMode == LENNOX_HVAC_HEAT:
+            if self._manager._is_metric is False:
+                return self._zone.maxHsp
+            return self._zone.maxHspC
+        if (
+            self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
+            and self._system.single_setpoint_mode == True
+        ):
+            if self._manager._is_metric is False:
+                return self._zone.maxHsp
+            return self._zone.maxHspC
+        # Single Setpoint Mode Not Enabled
+        if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
+            if self._manager._is_metric is False:
+                return self._zone.maxCsp
+            return self._zone.maxCspC
+        _LOGGER.warning(
+            f"max_temp - unexpected system mode {self._zone.systemMode} returning default - please raise an issue"
+        )
+        return super().max_temp
 
     @property
     def target_temperature(self):

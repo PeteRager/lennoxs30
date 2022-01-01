@@ -1,9 +1,6 @@
 """Test config flow."""
 
-from ipaddress import IPv4Address
-import logging
 from unittest.mock import ANY, patch
-from _pytest import config
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_HOST,
@@ -60,51 +57,6 @@ def loadfile(name) -> json:
     with open(file_path) as f:
         data = json.load(f)
     return data
-
-
-@pytest.fixture
-def manager(hass) -> Manager:
-
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
-    config.unique_id = "12345"
-
-    manager = Manager(
-        hass=hass,
-        config=config,
-        email=None,
-        password=None,
-        poll_interval=1,
-        fast_poll_interval=2,
-        allergenDefenderSwitch=False,
-        app_id="HA",
-        conf_init_wait_time=30,
-        ip_address="10.0.0.1",
-        create_sensors=False,
-        create_inverter_power=False,
-        protocol="https",
-        index=0,
-        pii_message_logs=False,
-        message_debug_logging=True,
-        message_logging_file=None,
-    )
-    api = manager._api
-    data = loadfile("login_response.json")
-    api.process_login_response(data)
-
-    data = loadfile("config_response_system_02.json")
-    api.processMessage(data)
-
-    data = loadfile("equipments_lcc_singlesetpoint.json")
-    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
-    api.processMessage(data)
-
-    data = loadfile("device_response_lcc.json")
-    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
-    api.processMessage(data)
-
-    return manager
 
 
 @pytest.mark.asyncio
