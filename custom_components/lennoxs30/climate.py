@@ -116,7 +116,15 @@ class S30Climate(ClimateEntity):
         self._zone.registerOnUpdateCallback(self.zone_update_callback)
         # We need notification of state of system.manualAwayMode in order to update the preset mode in HA.
         self._system.registerOnUpdateCallback(
-            self.system_update_callback, ["manualAwayMode"]
+            self.system_update_callback,
+            [
+                "manualAwayMode",
+                "sa_enabled",
+                "sa_state",
+                "sa_reset",
+                "sa_cancel",
+                "sa_setpointState",
+            ],
         )
         self._myname = self._system.name + "_" + self._zone.name
 
@@ -419,7 +427,7 @@ class S30Climate(ClimateEntity):
 
     @property
     def preset_mode(self):
-        if self._system.get_manual_away_mode() == True:
+        if self._system.get_away_mode() == True:
             return PRESET_AWAY
         if self._zone.overrideActive == True:
             return PRESET_SCHEDULE_OVERRIDE
@@ -465,16 +473,29 @@ class S30Climate(ClimateEntity):
             )
 
             if preset_mode == PRESET_CANCEL_AWAY_MODE:
-                await self._system.set_manual_away_mode(False)
+                processed = False
+                if self._system.get_manual_away_mode() == True:
+                    await self._system.set_manual_away_mode(False)
+                    processed = True
+                if self._system.get_smart_away_mode() == True:
+                    await self._system.cancel_smart_away()
+                    processed = True
+                if processed == False:
+                    _LOGGER.warning(
+                        "Ignoring request to cancel away mode because system is not in away mode"
+                    )
+                    return
                 await self.async_trigger_fast_poll()
                 return
             if preset_mode == PRESET_AWAY:
                 await self._system.set_manual_away_mode(True)
                 await self.async_trigger_fast_poll()
                 return
-            # Need to cancel away mode before requesting a new preset
+            # Need to cancel away modes before requesting a new preset
             if self._system.get_manual_away_mode() == True:
                 await self._system.set_manual_away_mode(False)
+            if self._system.get_smart_away_mode() == True:
+                await self._system.cancel_smart_away()
 
             if preset_mode == PRESET_CANCEL_HOLD:
                 await self._zone.setScheduleHold(False)
@@ -493,7 +514,7 @@ class S30Climate(ClimateEntity):
     @property
     def is_away_mode_on(self):
         """Return the current away mode status."""
-        return self._system.get_manual_away_mode()
+        return self._system.get_away_mode()
 
     @property
     def fan_mode(self):
