@@ -512,11 +512,6 @@ class S30Climate(ClimateEntity):
             _LOGGER.error("async_set_preset_mode error:" + str(e))
 
     @property
-    def is_away_mode_on(self):
-        """Return the current away mode status."""
-        return self._system.get_away_mode()
-
-    @property
     def fan_mode(self):
         """Return the current fan mode."""
         return self._zone.getFanMode()

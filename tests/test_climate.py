@@ -145,21 +145,16 @@ async def test_climate_preset_mode(hass, manager: Manager, caplog):
     c = S30Climate(hass, manager, system, zone)
     assert system.get_manual_away_mode() == True
     assert c.preset_mode == PRESET_AWAY
-    assert c.is_away_mode_on == True
     system.manualAwayMode = False
     assert zone.scheduleId == zone.getManualModeScheduleId()
     assert c.preset_mode == PRESET_NONE
-    assert c.is_away_mode_on == False
     system.sa_enabled = True
     assert zone.scheduleId == zone.getManualModeScheduleId()
     assert c.preset_mode == PRESET_NONE
-    assert c.is_away_mode_on == False
     system.sa_state = LENNOX_SA_STATE_AWAY
     assert c.preset_mode == PRESET_AWAY
-    assert c.is_away_mode_on == True
     system.sa_state = LENNOX_SA_STATE_DISABLED
     assert c.preset_mode == PRESET_NONE
-    assert c.is_away_mode_on == False
     zone.scheduleId = 2
     assert c.preset_mode == "winter"
     zone.overrideActive = True
