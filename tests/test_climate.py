@@ -1,18 +1,16 @@
-from re import S
-from turtle import up
-
 from lennoxs30api.s30api_async import (
     LENNOX_HVAC_COOL,
     LENNOX_HVAC_HEAT,
     LENNOX_HVAC_HEAT_COOL,
     LENNOX_HVAC_OFF,
-    LENNOX_SA_STATE_AWAY,
     LENNOX_SA_STATE_DISABLED,
+    LENNOX_SA_SETPOINT_STATE_AWAY,
+    LENNOX_SA_SETPOINT_STATE_TRANSITION,
+    LENNOX_SA_SETPOINT_STATE_HOME,
     lennox_system,
     lennox_zone,
 )
 from custom_components.lennoxs30 import (
-    DOMAIN,
     Manager,
 )
 import pytest
@@ -151,7 +149,7 @@ async def test_climate_preset_mode(hass, manager: Manager, caplog):
     system.sa_enabled = True
     assert zone.scheduleId == zone.getManualModeScheduleId()
     assert c.preset_mode == PRESET_NONE
-    system.sa_state = LENNOX_SA_STATE_AWAY
+    system.sa_setpointState = LENNOX_SA_SETPOINT_STATE_AWAY
     assert c.preset_mode == PRESET_AWAY
     system.sa_state = LENNOX_SA_STATE_DISABLED
     assert c.preset_mode == PRESET_NONE
@@ -179,7 +177,7 @@ async def test_set_preset_mode(hass, manager: Manager, caplog):
             assert cancel_smart_away.call_count == 0
 
     system.sa_enabled = True
-    system.sa_state = LENNOX_SA_STATE_AWAY
+    system.sa_setpointState = LENNOX_SA_SETPOINT_STATE_AWAY
     assert system.get_manual_away_mode() == True
     assert system.get_smart_away_mode() == True
     with patch.object(system, "set_manual_away_mode") as set_manual_away:
@@ -192,7 +190,7 @@ async def test_set_preset_mode(hass, manager: Manager, caplog):
 
     system.manualAwayMode = False
     system.sa_enabled = True
-    system.sa_state = LENNOX_SA_STATE_AWAY
+    system.sa_setpoint_state = LENNOX_SA_SETPOINT_STATE_AWAY
     assert system.get_manual_away_mode() == False
     assert system.get_smart_away_mode() == True
     with patch.object(system, "set_manual_away_mode") as set_manual_away:
