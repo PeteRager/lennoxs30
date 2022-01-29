@@ -10,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_PRESENCE,
     BinarySensorEntity,
 )
 
@@ -113,4 +114,4 @@ class S30HomeStateBinarySensor(BinarySensorEntity):
 
     @property
     def device_class(self):
-        return "presence"
+        return DEVICE_CLASS_PRESENCE

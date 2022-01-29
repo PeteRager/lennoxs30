@@ -38,7 +38,7 @@ async def async_setup_entry(
         or manager._create_inverter_power == False
     ):
         _LOGGER.debug(
-            "async_setup_entry - not cresting diagnosrtic level number because inverter power not enabled"
+            "async_setup_entry - not creating diagnostic level number because inverter power not enabled"
         )
         return
     for system in manager._api.getSystems():
