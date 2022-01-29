@@ -1,7 +1,6 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from .const import MANAGER
 from homeassistant.const import (
-    CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
@@ -13,7 +12,6 @@ from homeassistant.const import (
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
-from homeassistant.helpers.entity import Entity
 from lennoxs30api import lennox_system, lennox_zone
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,7 +20,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
-    PLATFORM_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,12 +65,12 @@ async def async_setup_entry(
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
         _LOGGER.debug(
-            f"climate:async_setup_platform exit - created [{len(sensor_list)}] entitites"
+            f"sensor:async_setup_platform exit - created [{len(sensor_list)}] entitites"
         )
         return True
     else:
         _LOGGER.info(
-            f"climate:async_setup_platform exit - no system outdoor temperatures found"
+            f"sensor:async_setup_platform exit - no system outdoor temperatures found"
         )
         return False
 

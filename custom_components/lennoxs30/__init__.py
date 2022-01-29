@@ -51,8 +51,7 @@ from typing import Any
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
-PLATFORMS = ["sensor", "climate", "switch", "number"]
-
+PLATFORMS = ["sensor", "climate", "switch", "number", "binary_sensor"]
 
 DS_CONNECTING = "Connecting"
 DS_DISCONNECTED = "Disconnected"

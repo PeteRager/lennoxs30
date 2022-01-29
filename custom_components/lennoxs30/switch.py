@@ -36,6 +36,12 @@ async def async_setup_entry(
             _LOGGER.info(f"Create S30 allergenDefender switch system [{system.sysId}]")
             switch = S30AllergenDefenderSwitch(hass, manager, system)
             switch_list.append(switch)
+        ma_switch = S30ManualAwayModeSwitch(hass, manager, system)
+        switch_list.append(ma_switch)
+        _LOGGER.info(f"Create S30ManualAwayModeSwitch system [{system.sysId}]")
+        sa_switch = S30SmartAwayEnableSwitch(hass, manager, system)
+        switch_list.append(sa_switch)
+        _LOGGER.info(f"Create S30SmartAwayEnableSwitch system [{system.sysId}]")
 
     if len(switch_list) != 0:
         async_add_entities(switch_list, True)
@@ -197,12 +203,152 @@ class S30AllergenDefenderSwitch(SwitchEntity):
             else:
                 _LOGGER.error("allergenDefender_off:async_turn_off - error:" + str(e))
 
+
+class S30ManualAwayModeSwitch(SwitchEntity):
+    """Class for Lennox S30 thermostat."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "manualAwayMode",
+            ],
+        )
+        self._myname = self._system.name + "_manual_away_mode"
+
+    def update_callback(self):
+        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._system.unique_id() + "_SW_MA").replace("-", "")
+
+    @property
+    def extra_state_attributes(self):
+        return {}
+
+    def update(self):
+        return True
+
+    @property
+    def should_poll(self):
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def is_on(self):
+        return self._system.get_manual_away_mode() == True
+
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return {
-            "name": self._system.name,
-            "identifiers": {(DOMAIN, self._system.unique_id())},
-            "manufacturer": "Lennox",
-            "model": "Lennox S30",
-        }
+        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+
+    async def async_turn_on(self, **kwargs):
+        try:
+            await self._system.set_manual_away_mode(True)
+            self._manager._mp_wakeup_event.set()
+        except Exception as e:
+            if hasattr(e, "message"):
+                _LOGGER.error(
+                    "S30ManualAwayModeSwitch:async_turn_on - error:" + e.message
+                )
+            else:
+                _LOGGER.error("S30ManualAwayModeSwitch:async_turn_on - error:" + str(e))
+
+    async def async_turn_off(self, **kwargs):
+        try:
+            await self._system.set_manual_away_mode(False)
+            self._manager._mp_wakeup_event.set()
+        except Exception as e:
+            if hasattr(e, "message"):
+                _LOGGER.error(
+                    "S30ManualAwayModeSwitch:async_turn_off - error:" + e.message
+                )
+            else:
+                _LOGGER.error(
+                    "S30ManualAwayModeSwitch:async_turn_off - error:" + str(e)
+                )
+
+
+class S30SmartAwayEnableSwitch(SwitchEntity):
+    """Class for Lennox S30 thermostat."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "sa_enabled",
+            ],
+        )
+        self._myname = self._system.name + "_smart_away_enable"
+
+    def update_callback(self):
+        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._system.unique_id() + "_SW_SAE").replace("-", "")
+
+    @property
+    def extra_state_attributes(self):
+        return {}
+
+    def update(self):
+        return True
+
+    @property
+    def should_poll(self):
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def is_on(self):
+        return self._system.sa_enabled == True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+
+    async def async_turn_on(self, **kwargs):
+        try:
+            await self._system.enable_smart_away(True)
+            self._manager._mp_wakeup_event.set()
+        except Exception as e:
+            if hasattr(e, "message"):
+                _LOGGER.error(
+                    "S30SmartAwayEnableSwitch:async_turn_on - error:" + e.message
+                )
+            else:
+                _LOGGER.error(
+                    "S30SmartAwayEnableSwitch:async_turn_on - error:" + str(e)
+                )
+
+    async def async_turn_off(self, **kwargs):
+        try:
+            await self._system.enable_smart_away(False)
+            self._manager._mp_wakeup_event.set()
+        except Exception as e:
+            if hasattr(e, "message"):
+                _LOGGER.error(
+                    "S30SmartAwayEnableSwitch:async_turn_off - error:" + e.message
+                )
+            else:
+                _LOGGER.error(
+                    "S30SmartAwayEnableSwitch:async_turn_off - error:" + str(e)
+                )
