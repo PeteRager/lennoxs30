@@ -39,8 +39,8 @@ async def async_setup_entry(
         )
         return True
     else:
-        _LOGGER.info(
-            f"binary_sensor:async_setup_platform exit - no system outdoor temperatures found"
+        _LOGGER.warning(
+            f"binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen"
         )
         return False
 
