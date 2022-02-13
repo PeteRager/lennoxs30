@@ -1,4 +1,5 @@
 CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
+CONF_FAST_POLL_COUNT = "fast_scan_count"
 CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
 CONF_APP_ID = "app_id"
 CONF_INIT_WAIT_TIME = "init_wait_time"
