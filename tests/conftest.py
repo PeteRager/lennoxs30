@@ -88,6 +88,8 @@ def manager(hass) -> Manager:
         pii_message_logs=False,
         message_debug_logging=True,
         message_logging_file=None,
+        timeout=30,
+        fast_poll_count=10,
     )
     api = manager._api
     data = loadfile("login_response.json")

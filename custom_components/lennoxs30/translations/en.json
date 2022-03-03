@@ -22,7 +22,7 @@
 	  "local": {
         "title": "Define your Lennox S30/E30 connection",
         "data": {
-          "host": "The Lennox S30/E30 - Local IP or Hostnamex",
+          "host": "The Lennox S30/E30 - Local IP or Hostname",
           "allergen_defender_switch": "Create allergenDefender switch",
           "app_id": "Unique application id to use. See documentation",
           "init_wait_time": "Configuration Wait time in seconds",
@@ -36,11 +36,13 @@
         "data": {
           "scan_interval": "Message scan interval seconds.",
           "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
+          "fast_scan_count" : "Numbed of fast scans",
+          "timeout" : "Communication Timeout (seconds)",
           "init_wait_time": "Configuration Wait time in seconds",
           "pii_in_message_logs" : "Personal information in log files",
           "message_debug_logging" : "Debug logging logs messages",
           "message_debug_file" : "Optional file for message logging",
-          "log_messages_to_file": "Log S30 message to seperate file"
+          "log_messages_to_file": "Log S30 message to separate file"
         }
       }      
     },
@@ -61,18 +63,20 @@
         "init": {
             "data": {
               "password": "Your Lennox Account password",
-              "allergen_defender_switch": "Create allergentDefender switch",
+              "allergen_defender_switch": "Create allergenDefender switch",
               "app_id": "Unique application id to use. See documentation",
               "create_sensors": "Create temperature and humidity Sensors",
               "create_inverter_power": "Create inverter power sensor",
               "protocol": "Should be HTTPS unless using simulator",
               "scan_interval": "Message scan interval seconds.",
               "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
+              "fast_scan_count" : "Numbed of fast scans",
+              "timeout" : "Communication Timeout (seconds)",    
               "init_wait_time": "Configuration Wait time in seconds",
               "pii_in_message_logs" : "Personal information in log files",
               "message_debug_logging" : "Debug logging logs messages",
               "message_debug_file" : "Optional file for message logging",
-              "log_messages_to_file": "Log S30 message to seperate file"
+              "log_messages_to_file": "Log S30 message to separate file"
                },
             "description": "Set the options for the connection",
             "title": "Options"

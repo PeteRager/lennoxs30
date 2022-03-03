@@ -1,4 +1,5 @@
 CONF_FAST_POLL_INTERVAL = "fast_scan_interval"
+CONF_FAST_POLL_COUNT = "fast_scan_count"
 CONF_ALLERGEN_DEFENDER_SWITCH = "allergen_defender_switch"
 CONF_APP_ID = "app_id"
 CONF_INIT_WAIT_TIME = "init_wait_time"
@@ -10,6 +11,9 @@ CONF_LOG_MESSAGES_TO_FILE = "log_messages_to_file"
 CONF_MESSAGE_DEBUG_FILE = "message_debug_file"
 CONF_CLOUD_CONNECTION = "cloud_connection"
 CONF_LOCAL_CONNECTION = "local_connection"
+
+DEFAULT_CLOUD_TIMEOUT = 60
+DEFAULT_LOCAL_TIMEOUT = 30
 
 LENNOX_DEFAULT_CLOUD_APP_ID = "mapp079372367644467046827001"
 LENNOX_DEFAULT_LOCAL_APP_ID = "homeassistant"

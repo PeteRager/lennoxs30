@@ -20,11 +20,14 @@ from .const import (
     CONF_CREATE_INVERTER_POWER,
     CONF_CREATE_SENSORS,
     CONF_FAST_POLL_INTERVAL,
+    CONF_FAST_POLL_COUNT,
     CONF_INIT_WAIT_TIME,
     CONF_LOG_MESSAGES_TO_FILE,
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
+    DEFAULT_CLOUD_TIMEOUT,
+    DEFAULT_LOCAL_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
     LENNOX_DOMAIN,
@@ -68,12 +71,13 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
+    CONF_TIMEOUT,
 )
 
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_LOCAL_POLL_INTERVAL: int = 1
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
-MAX_ERRORS = 5
+MAX_ERRORS = 2
 RETRY_INTERVAL_SECONDS = 60
 
 CONFIG_SCHEMA = vol.Schema(
@@ -185,6 +189,27 @@ def create_migration_task(hass, migration_data):
     )
 
 
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    if config_entry.version == 1:
+        old_version = config_entry.version
+        _LOGGER.debug(
+            f"Upgrading configuration for [{config_entry.title}] from version [{config_entry.version}]"
+        )
+        new = {**config_entry.data}
+        new[CONF_FAST_POLL_COUNT] = 10
+        new[CONF_TIMEOUT] = (
+            DEFAULT_CLOUD_TIMEOUT
+            if new[CONF_CLOUD_CONNECTION] == True
+            else DEFAULT_LOCAL_TIMEOUT
+        )
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+        _LOGGER.info(
+            f"Configuration for [{config_entry.title}] upgraded from version [{old_version}] to version [{config_entry.version}]"
+        )
+    return True
+
+
 # Track the title of the first entry, it gets the S30.State object
 _first_entry_title: str = None
 
@@ -221,24 +246,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         app_id: str = None
 
-    t = None
-    if CONF_SCAN_INTERVAL in entry.data:
-        t = entry.data[CONF_SCAN_INTERVAL]
-    if t != None and t > 0:
-        poll_interval = t
-    else:
-        if host_name == None:
-            poll_interval = DEFAULT_POLL_INTERVAL
-        else:
-            poll_interval = DEFAULT_LOCAL_POLL_INTERVAL
+    poll_interval = entry.data[CONF_SCAN_INTERVAL]
+    fast_poll_interval = entry.data[CONF_FAST_POLL_INTERVAL]
+    fast_poll_count = entry.data[CONF_FAST_POLL_COUNT]
+    timeout = entry.data[CONF_TIMEOUT]
 
-    t = None
-    if CONF_FAST_POLL_INTERVAL in entry.data:
-        t = entry.data[CONF_FAST_POLL_INTERVAL]
-    if t != None and t > 0.2:
-        fast_poll_interval = t
-    else:
-        fast_poll_interval = DEFAULT_FAST_POLL_INTERVAL
     allergenDefenderSwitch = entry.data[CONF_ALLERGEN_DEFENDER_SWITCH]
 
     conf_init_wait_time = entry.data[CONF_INIT_WAIT_TIME]
@@ -251,7 +263,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         conf_message_debug_file = None
 
     _LOGGER.debug(
-        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}]"
+        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}] timeout [{timeout}]"
     )
 
     manager = Manager(
@@ -261,6 +273,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=password,
         poll_interval=poll_interval,
         fast_poll_interval=fast_poll_interval,
+        fast_poll_count=fast_poll_count,
+        timeout=timeout,
         allergenDefenderSwitch=allergenDefenderSwitch,
         app_id=app_id,
         conf_init_wait_time=conf_init_wait_time,
@@ -277,7 +291,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listener = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, manager.async_shutdown
         )
-        await manager.s30_initalize()
+        await manager.s30_initialize()
     except S30Exception as e:
         if e.error_code == EC_LOGIN:
             # TODO: encapsulate in manager class
@@ -329,6 +343,8 @@ class Manager(object):
         password: str,
         poll_interval: int,
         fast_poll_interval: float,
+        fast_poll_count: int,
+        timeout: int,
         allergenDefenderSwitch: bool,
         app_id: str,
         conf_init_wait_time: int,
@@ -350,6 +366,7 @@ class Manager(object):
         self._config: ConfigEntry = config
         self._poll_interval: int = poll_interval
         self._fast_poll_interval: float = fast_poll_interval
+        self._fast_poll_count: int = fast_poll_count
         self._protocol = protocol
         self._ip_address = ip_address
         self._pii_message_log = pii_message_logs
@@ -364,6 +381,7 @@ class Manager(object):
             pii_message_logs=self._pii_message_log,
             message_debug_logging=self._message_debug_logging,
             message_logging_file=self._message_logging_file,
+            timeout=timeout,
         )
         self._shutdown = False
         self._retrieve_task = None
@@ -411,7 +429,7 @@ class Manager(object):
                 list["hostname"] = self._ip_address
         return list
 
-    async def s30_initalize(self):
+    async def s30_initialize(self):
         self.updateState(DS_CONNECTING)
         await self.connect_subscribe()
         await self.configuration_initialization()
@@ -460,7 +478,7 @@ class Manager(object):
             await asyncio.sleep(RETRY_INTERVAL_SECONDS)
             self.updateState(DS_CONNECTING)
             try:
-                await self.s30_initalize()
+                await self.s30_initialize()
                 self.updateState(DS_CONNECTED)
                 return
 
@@ -489,23 +507,23 @@ class Manager(object):
 
     async def configuration_initialization(self) -> None:
         # Wait for zones to appear on each system
-        sytemsWithZones = 0
+        systemsWithZones = 0
         loops: int = 0
         numOfSystems = len(self._api.getSystems())
         # To speed startup, we only want to sleep when a message was not received.
         got_message: bool = True
-        while sytemsWithZones < numOfSystems and loops < self._conf_init_wait_time:
+        while systemsWithZones < numOfSystems and loops < self._conf_init_wait_time:
             _LOGGER.debug(
                 f"__init__:async_setup waiting for zone config to arrive host [{self._ip_address}]  numSystems ["
                 + str(numOfSystems)
-                + "] sytemsWithZones ["
-                + str(sytemsWithZones)
+                + "] systemsWithZones ["
+                + str(systemsWithZones)
                 + "]"
             )
             # Only take a breather if we did not get a messagd.
             if got_message == False:
                 await asyncio.sleep(1.0)
-            sytemsWithZones = 0
+            systemsWithZones = 0
             got_message = await self.messagePump()
             for lsystem in self._api.getSystems():
                 # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
@@ -520,10 +538,10 @@ class Manager(object):
                     + "]"
                 )
                 if numZones > 0:
-                    sytemsWithZones += 1
+                    systemsWithZones += 1
             if got_message == False:
                 loops += 1
-        if sytemsWithZones < numOfSystems:
+        if systemsWithZones < numOfSystems:
             raise S30Exception(
                 "Timeout waiting for configuration data from Lennox - this sometimes happens, the connection will be automatically retried.  Consult the readme for more details",
                 EC_CONFIG_TIMEOUT,
@@ -606,7 +624,7 @@ class Manager(object):
                     if res == True:
                         self._mp_wakeup_event.clear()
                         fast_polling = True
-                        fast_polling_cd = 10
+                        fast_polling_cd = self._fast_poll_count
 
         if self._shutdown == True:
             _LOGGER.debug(
@@ -640,17 +658,19 @@ class Manager(object):
                 )
                 self._reinitialize = True
             # If its an HTTP error, we will not log an error, just and info message, unless
-            # this exeeeds the max consecutive error count
+            # this exceeds the max consecutive error count
             elif e.error_code == EC_HTTP_ERR and self._err_cnt < MAX_ERRORS:
                 _LOGGER.debug(
                     f"messagePump_task - http error host [{self._ip_address}] {e.as_string()}"
                 )
+            # Since the S30 will close connections and kill the subscription periodically, these errors
+            # are expected.  Log as warnings
             elif e.error_code == EC_COMMS_ERROR:
-                _LOGGER.error(
+                _LOGGER.warning(
                     f"messagePump_task - communication error to host [{self._ip_address}] {e.as_string()}"
                 )
             else:
-                _LOGGER.error(
+                _LOGGER.warning(
                     f"messagePump_task - general error host [{self._ip_address}] {e.as_string()}"
                 )
             bErr = True
@@ -661,7 +681,10 @@ class Manager(object):
             self._err_cnt += 1
             bErr = True
         # Keep retrying retrive up until we get this number of errors in a row, at which point will try to reconnect
-        if self._err_cnt > MAX_ERRORS:
+        if self._err_cnt >= MAX_ERRORS:
+            _LOGGER.info(
+                f"messagePump_task encountered [{self._err_cnt}] consecutive errors - reinitializing connection"
+            )
             self._reinitialize = True
         if bErr is False:
             self._err_cnt = 0

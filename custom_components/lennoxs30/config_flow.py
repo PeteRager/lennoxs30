@@ -11,11 +11,14 @@ from .const import (
     CONF_CREATE_INVERTER_POWER,
     CONF_CREATE_SENSORS,
     CONF_FAST_POLL_INTERVAL,
+    CONF_FAST_POLL_COUNT,
     CONF_INIT_WAIT_TIME,
     CONF_LOG_MESSAGES_TO_FILE,
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
+    DEFAULT_CLOUD_TIMEOUT,
+    DEFAULT_LOCAL_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
     CONF_LOCAL_CONNECTION,
@@ -30,6 +33,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
 )
 from homeassistant.helpers import config_validation as cv
 import logging
@@ -37,6 +41,7 @@ import logging
 
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
+DEFAULT_FAST_POLL_COUNT: int = 10
 MAX_ERRORS = 5
 RETRY_INTERVAL_SECONDS = 60
 DOMAIN = "lennoxs30"
@@ -96,7 +101,7 @@ def lennox30_entries(hass: HomeAssistant):
 class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Lennox S30 configflow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _host_in_configuration_exists(self, host) -> bool:
@@ -109,9 +114,11 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if is_cloud == True:
             scan_interval = 15
             conf_wait_time = 60
+            timeout = DEFAULT_CLOUD_TIMEOUT
         else:
             scan_interval = 1
             conf_wait_time = 30
+            timeout = DEFAULT_LOCAL_TIMEOUT
         return vol.Schema(
             {
                 vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
@@ -120,8 +127,14 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
                 ): vol.All(vol.Coerce(float), vol.Range(min=0.25, max=300.0)),
+                vol.Optional(
+                    CONF_FAST_POLL_COUNT, default=DEFAULT_FAST_POLL_COUNT
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                 vol.Optional(CONF_INIT_WAIT_TIME, default=conf_wait_time): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=300)
+                ),
+                vol.Optional(CONF_TIMEOUT, default=timeout): vol.All(
+                    vol.Coerce(int), vol.Range(min=15, max=300)
                 ),
                 vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
                 vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
@@ -233,11 +246,13 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
             ip_address = None
             protocol = "https"
+            timeout = DEFAULT_CLOUD_TIMEOUT
         else:
             email = None
             password = None
             ip_address = user_input[CONF_HOST]
             protocol = user_input[CONF_PROTOCOL]
+            timeout = DEFAULT_LOCAL_TIMEOUT
 
         manager = Manager(
             hass=self.hass,
@@ -256,6 +271,8 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             pii_message_logs=False,
             message_debug_logging=True,
             message_logging_file=None,
+            timeout=timeout,
+            fast_poll_count=10,
         )
         await manager.connect()
         await manager.async_shutdown(None)
@@ -337,6 +354,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_FAST_POLL_INTERVAL,
                             default=self.config_entry.data[CONF_FAST_POLL_INTERVAL],
                         ): vol.All(vol.Coerce(float), vol.Range(min=0.25, max=300.0)),
+                        vol.Optional(
+                            CONF_FAST_POLL_COUNT,
+                            default=self.config_entry.data[CONF_FAST_POLL_COUNT],
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                        vol.Optional(
+                            CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]
+                        ): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
                         vol.Optional(
                             CONF_PROTOCOL, default=self.config_entry.data[CONF_PROTOCOL]
                         ): cv.string,
