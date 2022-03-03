@@ -17,6 +17,8 @@ from .const import (
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
+    DEFAULT_CLOUD_TIMEOUT,
+    DEFAULT_LOCAL_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
     CONF_LOCAL_CONNECTION,
@@ -112,11 +114,11 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if is_cloud == True:
             scan_interval = 15
             conf_wait_time = 60
-            timeout = 60
+            timeout = DEFAULT_CLOUD_TIMEOUT
         else:
             scan_interval = 1
             conf_wait_time = 30
-            timeout = 30
+            timeout = DEFAULT_LOCAL_TIMEOUT
         return vol.Schema(
             {
                 vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
@@ -244,11 +246,13 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
             ip_address = None
             protocol = "https"
+            timeout = DEFAULT_CLOUD_TIMEOUT
         else:
             email = None
             password = None
             ip_address = user_input[CONF_HOST]
             protocol = user_input[CONF_PROTOCOL]
+            timeout = DEFAULT_LOCAL_TIMEOUT
 
         manager = Manager(
             hass=self.hass,
@@ -267,6 +271,8 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             pii_message_logs=False,
             message_debug_logging=True,
             message_logging_file=None,
+            timeout=timeout,
+            fast_poll_count=10,
         )
         await manager.connect()
         await manager.async_shutdown(None)

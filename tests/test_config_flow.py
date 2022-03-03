@@ -26,6 +26,7 @@ from custom_components.lennoxs30.const import (
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
     CONF_APP_ID,
+    DEFAULT_CLOUD_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
 )
@@ -505,4 +506,4 @@ async def test_upgrade_config_v1_v2(hass, caplog):
         assert new_data["log_messages_to_file"] == False
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
-        assert new_data["timeout"] == 60
+        assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT

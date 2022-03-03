@@ -26,6 +26,8 @@ from .const import (
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
+    DEFAULT_CLOUD_TIMEOUT,
+    DEFAULT_LOCAL_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
     LENNOX_DOMAIN,
@@ -195,7 +197,11 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         )
         new = {**config_entry.data}
         new[CONF_FAST_POLL_COUNT] = 10
-        new[CONF_TIMEOUT] = 60 if new[CONF_CLOUD_CONNECTION] == True else 30
+        new[CONF_TIMEOUT] = (
+            DEFAULT_CLOUD_TIMEOUT
+            if new[CONF_CLOUD_CONNECTION] == True
+            else DEFAULT_LOCAL_TIMEOUT
+        )
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=new)
         _LOGGER.info(
