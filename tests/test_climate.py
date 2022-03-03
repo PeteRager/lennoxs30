@@ -151,7 +151,7 @@ async def test_climate_preset_mode(hass, manager: Manager, caplog):
     assert c.preset_mode == PRESET_NONE
     system.sa_setpointState = LENNOX_SA_SETPOINT_STATE_AWAY
     assert c.preset_mode == PRESET_AWAY
-    system.sa_state = LENNOX_SA_STATE_DISABLED
+    system.sa_setpointState = LENNOX_SA_SETPOINT_STATE_HOME
     assert c.preset_mode == PRESET_NONE
     zone.scheduleId = 2
     assert c.preset_mode == "winter"
