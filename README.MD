@@ -43,7 +43,7 @@ Add custom repository in _HACS_
 
 Once done, you should see the new repository, appearing in a list like this. Click the **Download** button
 
-![plot](doc_images/hacs_1.png)
+![plot](/doc_images/hacs_1.png)
 
 After clicking download, you will be prompted for which version to download. Select the latest - which will be the default - and click download.
 
