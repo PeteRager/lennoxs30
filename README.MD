@@ -47,7 +47,7 @@ Once done, you should see the new repository, appearing in a list like this. Cli
 
 After clicking download, you will be prompted for which version to download. Select the latest - which will be the default - and click download.
 
-![plot](./doc_images/hacs_2.png)
+![plot](./doc_images/hacs_2.PNG)
 
 Once the download is complete, you will see that to make the component available requires a restart. Restart Home Assistant.
 
