@@ -43,7 +43,7 @@ Add custom repository in _HACS_
 
 Once done, you should see the new repository, appearing in a list like this. Click the **Download** button
 
-![plot](https://github.com/PeteRager/lennoxs30/doc_images/hacs_1.png)
+![plot](./doc_images/hacs_1.PNG)
 
 After clicking download, you will be prompted for which version to download. Select the latest - which will be the default - and click download.
 
@@ -51,15 +51,15 @@ After clicking download, you will be prompted for which version to download. Sel
 
 Once the download is complete, you will see that to make the component available requires a restart. Restart Home Assistant.
 
-![plot](./doc_images/hacs_3.png)
+![plot](./doc_images/hacs_3.PNG)
 
 Once Home Assistant restarts and you navigate to HACS. This screen should appear showing the component is added.
 
-![plot](./doc_images/hacs_4.png)
+![plot](./doc_images/hacs_4.PNG)
 
 Next go to Home Assistant / Configuration / Integrations and select add integration. Search for lennox. Select the integration and follow the [Configuration Steps](#Configuration)
 
-![plot](./doc_images/hacs_5.png)
+![plot](./doc_images/hacs_5.PNG)
 
 Alternate HACS instructions for old versions - Add integration in _HACS_
 
