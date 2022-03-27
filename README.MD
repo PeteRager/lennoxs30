@@ -24,6 +24,10 @@ Cloud Connections depending on the device model. We believe these configurations
 - The Power Inverter Diagnostic are in Alpha. Please review the [documentation](#Sensor-for-Inverter-Power) prior to using
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
+# Donations
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/PeteRage)
+
 # Installation
 
 ## HACS
