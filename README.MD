@@ -11,7 +11,7 @@ Cloud Connections depending on the device model. We believe these configurations
 
 # Requirements
 
-- Home Assistant >= 2021.6.1 and tested on 2021.12.7
+- Home Assistant >= 2021.6.1 and tested on 2022.3.6
 - S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
 
 # Important Information
