@@ -423,7 +423,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             default=self.config_entry.data[CONF_FAST_POLL_COUNT],
                         ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                         vol.Optional(
-                            CONF_TIMEOUT, self.config_entry.data[CONF_TIMEOUT]
+                            CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]
                         ): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
                         vol.Optional(
                             CONF_PII_IN_MESSAGE_LOGS,
