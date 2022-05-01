@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> bool:
 
     sensor_list = []
-    _LOGGER.info("Here3")
+
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager._api.getSystems():
         _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
@@ -262,7 +262,6 @@ class S30OutdoorTempSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-
         return {
             "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
         }
