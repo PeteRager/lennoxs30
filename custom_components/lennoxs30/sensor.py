@@ -76,7 +76,7 @@ async def async_setup_entry(
                         name = diagnostics[e][d]['name']
                         unit = diagnostics[e][d]['unit']
                         val = diagnostics[e][d]['value']
-                        _LOGGER.info(f"e {e} {d} {name} {unit}... {val}")
+                        #_LOGGER.info(f"e {e} {d} {name} {unit}... {val}")
                         diagsensor = S30DiagSensor(hass, manager, system, e, d, name, unit)
                         sensor_list.append(diagsensor)
 
@@ -103,21 +103,30 @@ class S30DiagSensor(SensorEntity):
         self.rname = name
         self.equipment = equipment        
         self.diagnostic = diagnostic
+        self.val = None
         self._system.registerOnUpdateCallbackDiag(
             self.update_callback, [ f"{equipment}_{diagnostic}"]
         )
         self._myname = self._system.name + f"_{equipment}_{diagnostic}_{name}".replace(" ","_")
 
     def update_callback(self, newval):
-        _LOGGER.debug(f"update_callback S30DiagSSensor myname [{self._myname}] value {self.native_value}")
+        _LOGGER.info(f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}")
+        self.val = newval
         self.schedule_update_ha_state()
+
+
+    @property
+    def native_value(self):
+        """Return native value of the sensor."""
+        _LOGGER.info(f"native_value S30DiagSSensor myname [{self._myname}] value {self.val}")
+        return self.val
 
     @property
     def state(self):
-        """Return native value of the sensor."""
-        val = self._system.getDiagnostics()[self.equipment][self.diagnostic]['value']
-        _LOGGER.info(f"native_value S30DiagSSensor myname [{self._myname}] value {val}")
-        return val
+       """Return native value of the sensor."""
+       val = self._system.getDiagnostics()[self.equipment][self.diagnostic]['value']
+       _LOGGER.info(f"state S30DiagSSensor myname [{self._myname}] value {val}")
+       return val
 
     @property
     def extra_state_attributes(self):
@@ -142,12 +151,6 @@ class S30DiagSensor(SensorEntity):
     @property
     def name(self):
         return f"{self.rname}"
-
-    @property
-    def state(self):
-        if self._manager._is_metric is False:
-            return self._system.outdoorTemperature
-        return self._system.outdoorTemperatureC
 
     @property
     def unit_of_measurement(self):
@@ -180,9 +183,9 @@ class S30DiagSensor(SensorEntity):
         elif "CFM" == self.unit:
             return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE 
 
-    @property
-    def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+    #@property
+    #def state_class(self):
+    #   return STATE_CLASS_MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:
