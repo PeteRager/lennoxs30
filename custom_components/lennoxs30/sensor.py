@@ -67,9 +67,7 @@ async def async_setup_entry(
                     humSensor = S30HumiditySensor(hass, manager, zone)
                     sensor_list.append(humSensor)
                     
-            _LOGGER.info("Here1")
             diagnostics = system.getDiagnostics()
-            _LOGGER.info("Here2")
             for e in diagnostics:
                 for d in diagnostics[e]:
                     if(e>0): #equipment 0 has no diagnostic data
@@ -110,7 +108,7 @@ class S30DiagSensor(SensorEntity):
         self._myname = self._system.name + f"_{equipment}_{diagnostic}_{name}".replace(" ","_")
 
     def update_callback(self, newval):
-        _LOGGER.info(f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}")
+        #_LOGGER.info(f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}")
         self.val = newval
         self.schedule_update_ha_state()
 
@@ -118,14 +116,14 @@ class S30DiagSensor(SensorEntity):
     @property
     def native_value(self):
         """Return native value of the sensor."""
-        _LOGGER.info(f"native_value S30DiagSSensor myname [{self._myname}] value {self.val}")
+        #_LOGGER.info(f"native_value S30DiagSSensor myname [{self._myname}] value {self.val}")
         return self.val
 
     @property
     def state(self):
        """Return native value of the sensor."""
        val = self._system.getDiagnostics()[self.equipment][self.diagnostic]['value']
-       _LOGGER.info(f"state S30DiagSSensor myname [{self._myname}] value {val}")
+       #_LOGGER.info(f"state S30DiagSSensor myname [{self._myname}] value {val}")
        return val
 
     @property
@@ -166,26 +164,23 @@ class S30DiagSensor(SensorEntity):
             return ELECTRIC_CURRENT_AMPERE
         elif "CFM" == self.unit:
             return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE    
-        return None
+        return self.unit
 
     @property
     def device_class(self):
-        if "TemperatureC" in self.rname:
+        if self.unit_of_measurement == TEMP_FAHRENHEIT:
             return DEVICE_CLASS_TEMPERATURE
-        elif "Temperature" in self.rname:
+        elif self.unit_of_measurement == TEMP_CELSIUS:
             return DEVICE_CLASS_TEMPERATURE
-        elif "V" == self.unit:
-            return DEVICE_CLASS_VOLTAGE
-        elif "F" == self.unit:
-            return DEVICE_CLASS_TEMPERATURE          
-        elif "A" == self.unit:
+        elif self.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT:
+            return DEVICE_CLASS_VOLTAGE       
+        elif self.unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
             return DEVICE_CLASS_CURRENT
-        elif "CFM" == self.unit:
-            return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE 
+        return None
 
-    #@property
-    #def state_class(self):
-    #   return STATE_CLASS_MEASUREMENT
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:
