@@ -156,13 +156,15 @@ class S30DiagSensor(SensorEntity):
             return TEMP_CELSIUS
         elif "Temperature" in self.rname:
             return TEMP_FAHRENHEIT
-        elif "V" == self.unit:
+        elif "Hz" in self.rname:
+            return FREQUENCY_HERTZ
+        elif "V" in self.unit:
             return ELECTRIC_POTENTIAL_VOLT
-        elif "F" == self.unit:
+        elif "F" in self.unit:
             return TEMP_FAHRENHEIT          
-        elif "A" == self.unit:
+        elif "A" in self.unit:
             return ELECTRIC_CURRENT_AMPERE
-        elif "CFM" == self.unit:
+        elif "CFM" in self.unit:
             return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE    
         return self.unit
 
@@ -176,6 +178,8 @@ class S30DiagSensor(SensorEntity):
             return DEVICE_CLASS_VOLTAGE       
         elif self.unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
             return DEVICE_CLASS_CURRENT
+        elif self.unit_of_measurement == FREQUENCY_HERTZ:
+            return DEVICE_CLASS_FREQUENCY
         return None
 
     @property
@@ -186,7 +190,6 @@ class S30DiagSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         #TODO - use equipment type instad of hard coding
-
         if self.equipment == 1:
             return {
                 "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
