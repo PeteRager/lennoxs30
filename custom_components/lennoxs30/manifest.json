@@ -5,7 +5,7 @@
     "documentation": "https://github.com/PeteRager/lennoxs30/blob/master/README.MD",
     "issue_tracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
-	"requirements": ["lennoxs30api==0.2.1"],
+    "requirements": ["lennoxs30api==0.2.1"],
     "codeowners": ["@PeteRager"],
     "iot_class": "local_polling",
 	"config_flow": true
