@@ -8,9 +8,13 @@ from lennoxs30api import (
     LENNOX_HUMID_OPERATION_DEHUMID,
     LENNOX_HUMID_OPERATION_WAITING,
     LENNOX_HVAC_HEAT_COOL,
+    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_HUMIDITY_MODE_HUMIDIFY,
+    LENNOX_HUMIDITY_MODE_OFF,
     S30Exception,
     lennox_system,
     lennox_zone,
+    EC_BAD_PARAMETERS,
 )
 from lennoxs30api.s30api_async import (
     LENNOX_HVAC_COOL,
@@ -149,6 +153,7 @@ class S30Climate(ClimateEntity):
             attrs["fan"] = FAN_ON
         else:
             attrs["fan"] = FAN_OFF
+        attrs["humidityMode"] = self._zone.humidityMode
         attrs["humOperation"] = self._zone.humOperation
         attrs["tempOperation"] = self._zone.tempOperation
         attrs["ventilation"] = self._zone.ventilation
@@ -363,8 +368,49 @@ class S30Climate(ClimateEntity):
         return 0.5
 
     @property
+    def max_humidity(self):
+        if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
+            return self._zone.maxDehumSp
+        if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
+            return self._zone.maxHumSp
+        return None
+
+    @property
+    def min_humidity(self):
+        if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
+            return self._zone.minDehumSp
+        if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
+            return self._zone.minHumSp
+        return None
+
+    @property
     def target_humidity(self) -> float:
-        return self._zone.desp
+        if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
+            return self._zone.desp
+        if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
+            return self._zone.husp
+        return None
+
+    async def async_set_humidity(self, humidity):
+        """Set new target humidity."""
+        _LOGGER.info(
+            f"climate:async_set_humidity zone [{self._myname}] humidity [{humidity}]"
+        )
+        try:
+            if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
+                await self._zone.perform_humidify_setpoint(r_desp=humidity)
+            elif self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
+                await self._zone.perform_humidify_setpoint(r_husp=humidity)
+            else:
+                raise S30Exception(
+                    f"Unable to set humidity as humidity mode is [{self._zone.humidityMode}] on zone [{self._myname}]",
+                    EC_BAD_PARAMETERS,
+                    1,
+                )
+        except S30Exception as e:
+            _LOGGER.error(e.message)
+        except Exception as e:
+            _LOGGER.exception("Unexpected exception in async_set_humidity")
 
     @property
     def hvac_modes(self):
@@ -375,8 +421,6 @@ class S30Climate(ClimateEntity):
             modes.append(HVAC_MODE_COOL)
         if self._zone.heatingOption == True:
             modes.append(HVAC_MODE_HEAT)
-        if self._zone.dehumidificationOption == True:
-            modes.append(HVAC_MODE_DRY)
         if self._zone.coolingOption == True and self._zone.heatingOption == True:
             modes.append(HVAC_MODE_HEAT_COOL)
         return modes
