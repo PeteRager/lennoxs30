@@ -101,7 +101,7 @@ class HumidityModeSelect(SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         try:
-            await self._zone.setHumidityMode(str)
+            await self._zone.setHumidityMode(option)
         except S30Exception as e:
             _LOGGER.error("async_select_option " + e.as_string())
         except Exception as e:

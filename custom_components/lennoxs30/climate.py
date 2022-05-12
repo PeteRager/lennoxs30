@@ -202,6 +202,9 @@ class S30Climate(ClimateEntity):
         if (
             self._zone.humidificationOption == True
             or self._zone.dehumidificationOption == True
+        ) and (
+            self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
+            or self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY
         ):
             mask |= SUPPORT_TARGET_HUMIDITY
 
