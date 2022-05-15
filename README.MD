@@ -26,6 +26,8 @@ Cloud Connections depending on the device model. We believe these configurations
 
 # Donations
 
+If you like this integration
+
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/PeteRage)
 
 # Installation
@@ -215,7 +217,7 @@ In addition the following extra attributes are provided, to allow for a more det
 | fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                          |
 | heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
 | humidityMode      | The humidity mode that is active - **Humidify**, **Dehumidify**, or **Off**                                                                                                                     |
-| humidityOperation | Current active humidity operation - **Drying**, **Humidifying**, or **Off**                                                                                                                     |
+| humidityOperation | Current active humidity operation - **Humidifying**, **Drying** or **Off**                                                                                                                     |
 | ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                               |
 | tempOperation     | Current active temperature operation heating or cooling                                                                                                                                         |
 | ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                              |
@@ -301,7 +303,7 @@ This feature is in Alpha and we are looking for feedback and experiences using t
 
 If your Lennox System has Humidification or Dehumidification capability, one of these select entities is created per zone to allow you to set the active humidity mode. The available options - depending on your equipment - are **Dehumidify**, **Humidify** and **Off**
 
-switch.<system_name><zone_name>\_humidity_mode
+select.<system_name><zone_name>\_humidity_mode
 
 ## switches
 
