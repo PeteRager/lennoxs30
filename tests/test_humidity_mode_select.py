@@ -90,9 +90,19 @@ async def test_humidity_mode_select_async_select_options(
     c = HumidityModeSelect(hass, manager, system, zone)
 
     with patch.object(zone, "setHumidityMode") as set_humidity_mode:
-        await c.async_select_option("off")
+        await c.async_select_option(LENNOX_HUMIDITY_MODE_OFF)
         assert set_humidity_mode.call_count == 1
+        arg0 = set_humidity_mode.await_args[0][0]
+        assert arg0 == LENNOX_HUMIDITY_MODE_OFF
 
+    with patch.object(zone, "setHumidityMode") as set_humidity_mode:
+        await c.async_select_option(LENNOX_HUMIDITY_MODE_DEHUMIDIFY)
+        assert set_humidity_mode.call_count == 1
+        arg0 = set_humidity_mode.await_args[0][0]
+        assert arg0 == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
 
-#       TODO - I can't figure out why this test does not work.
-#       set_humidity_mode.assert_awaited_with(LENNOX_HUMIDITY_MODE_OFF)
+    with patch.object(zone, "setHumidityMode") as set_humidity_mode:
+        await c.async_select_option(LENNOX_HUMIDITY_MODE_HUMIDIFY)
+        assert set_humidity_mode.call_count == 1
+        arg0 = set_humidity_mode.await_args[0][0]
+        assert arg0 == LENNOX_HUMIDITY_MODE_HUMIDIFY
