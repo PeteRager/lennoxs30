@@ -10,6 +10,9 @@ from lennoxs30api.s30api_async import (
     LENNOX_HUMIDITY_MODE_OFF,
     LENNOX_HUMIDITY_MODE_HUMIDIFY,
     LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_STATUS_GOOD,
+    LENNOX_STATUS_NOT_AVAILABLE,
+    LENNOX_STATUS_NOT_EXIST,
     lennox_system,
     lennox_zone,
 )
@@ -323,10 +326,20 @@ async def test_supported_features(hass, manager: Manager, caplog):
     feat = c.supported_features
     assert c._zone.dehumidificationOption == True
     assert c._zone.humidificationOption == False
+    assert c._zone.humidityMode == LENNOX_HUMIDITY_MODE_OFF
+    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
+    feat = c.supported_features
     assert feat & SUPPORT_TARGET_HUMIDITY != 0
 
     c._zone.dehumidificationOption = False
     c._zone.humidificationOption = True
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_OFF
+    feat = c.supported_features
+    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_HUMIDIFY
     feat = c.supported_features
     assert feat & SUPPORT_TARGET_HUMIDITY != 0
 
@@ -406,3 +419,57 @@ async def test_set_target_humidity(hass, manager: Manager, caplog):
             husp = call.kwargs["r_husp"]
             assert husp == 60
             assert "r_desp" not in call.kwargs
+
+
+@pytest.mark.asyncio
+async def test_humidity_bad_status(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+
+    assert zone.humidityStatus == LENNOX_STATUS_GOOD
+    assert c.current_humidity == zone.humidity
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.humidityStatus = LENNOX_STATUS_NOT_AVAILABLE
+        assert c.current_humidity == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_AVAILABLE in msg
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.humidityStatus = LENNOX_STATUS_NOT_EXIST
+        assert c.current_humidity == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_EXIST in msg
+
+
+@pytest.mark.asyncio
+async def test_temperature_bad_status(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+
+    assert zone.temperatureStatus == LENNOX_STATUS_GOOD
+    assert c.current_temperature == zone.temperature
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.temperatureStatus = LENNOX_STATUS_NOT_AVAILABLE
+        assert c.current_temperature == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_AVAILABLE in msg
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.temperatureStatus = LENNOX_STATUS_NOT_EXIST
+        assert c.current_temperature == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_EXIST in msg
