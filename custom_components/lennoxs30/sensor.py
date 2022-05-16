@@ -12,7 +12,12 @@ from homeassistant.const import (
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
-from lennoxs30api import lennox_system, lennox_zone
+from lennoxs30api import (
+    lennox_system,
+    lennox_zone,
+    LENNOX_STATUS_NOT_AVAILABLE,
+    LENNOX_STATUS_NOT_EXIST,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
@@ -32,16 +37,19 @@ async def async_setup_entry(
 ) -> bool:
 
     sensor_list = []
-
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager._api.getSystems():
-        _LOGGER.info(f"Create S30OutdoorTempSensor sensor system [{system.sysId}]")
-        sensor = S30OutdoorTempSensor(hass, manager, system)
-        sensor_list.append(sensor)
-        if manager._create_inverter_power == True:
+        if system.outdoorTemperatureStatus != LENNOX_STATUS_NOT_EXIST:
+            _LOGGER.info(f"Create S30OutdoorTempSensor system [{system.sysId}]")
+            sensor = S30OutdoorTempSensor(hass, manager, system)
+            sensor_list.append(sensor)
+        else:
             _LOGGER.info(
-                f"Create S30InverterPowerSensor sensor system [{system.sysId}]"
+                f"Not creating S30OutdoorTempSensor system [{system.sysId}] - sensor does not exist"
             )
+
+        if manager._create_inverter_power == True:
+            _LOGGER.info(f"Create S30InverterPowerSensor system [{system.sysId}]")
             if system.diagLevel == None or system.diagLevel == 0:
                 _LOGGER.warning(
                     f"Power Inverter Sensor requires S30 to be in diagLevel 1 or 2, currently in [{system.diagLevel}]"
@@ -83,7 +91,8 @@ class S30OutdoorTempSensor(SensorEntity):
         self._manager = manager
         self._system = system
         self._system.registerOnUpdateCallback(
-            self.update_callback, ["outdoorTemperature", "outdoorTemperatureC"]
+            self.update_callback,
+            ["outdoorTemperature", "outdoorTemperatureC", "outdoorTemperatureStatus"],
         )
         self._myname = self._system.name + "_outdoor_temperature"
 
@@ -116,6 +125,14 @@ class S30OutdoorTempSensor(SensorEntity):
 
     @property
     def state(self):
+        if (
+            self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_EXIST
+            or self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_AVAILABLE
+        ):
+            _LOGGER.warning(
+                f"S30OutdoorTempSensor [{self._myname}] has bad data quality [{self._system.outdoorTemperatureStatus}] returning None "
+            )
+            return None
         if self._manager._is_metric is False:
             return self._system.outdoorTemperature
         return self._system.outdoorTemperatureC

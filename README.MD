@@ -26,6 +26,8 @@ Cloud Connections depending on the device model. We believe these configurations
 
 # Donations
 
+If you like this integration
+
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/PeteRage)
 
 # Installation
@@ -187,6 +189,10 @@ Cancel Manual Away Mode or Smart Away Mode. The **cancel away mode** preset will
 - If the HA Aux Switch is turned off, the S30 Heat Mode will be set to **Heat**
 - If the Lennox Auxiliary Heat is running, the **aux** attribute in the HA Climate entity will be set to True and the HA Climate Entity will show **Heating**
 
+**Humidification and Dehumidification**
+
+Lennox systems may have humidification and dehumidification capability. If so, you will be able to control the humidity setpoint via the Climate Entity and enable / disable humidification/dehumidification via the [humidity mode select entity](#Humidity-Mode). Lennox has separate setpoints for humidification (husp) and dehumidification (desp); however Home Assistant only support one humidity setpoint. Hence, the **Target Humidity** shown in Thermostat is based on the active humidity mode. If no humidity mode is active for the zone, the Target Humidity will be unavailable.
+
 ### Supported Data
 
 The integration provides all of the standard climate attributes, including
@@ -210,7 +216,8 @@ In addition the following extra attributes are provided, to allow for a more det
 | demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                               |
 | fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                          |
 | heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
-| humidityOperation | Current active humidity operation - Drying or humidifying                                                                                                                                       |
+| humidityMode      | The humidity mode that is active - **Humidify**, **Dehumidify**, or **Off**                                                                                                                     |
+| humidityOperation | Current active humidity operation - **Humidifying**, **Drying** or **Off**                                                                                                                     |
 | ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                               |
 | tempOperation     | Current active temperature operation heating or cooling                                                                                                                                         |
 | ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                              |
@@ -289,6 +296,14 @@ sensor:
 ```
 
 This feature is in Alpha and we are looking for feedback and experiences using the data - and it's accuracy.
+
+## select
+
+### Humidity Mode
+
+If your Lennox System has Humidification or Dehumidification capability, one of these select entities is created per zone to allow you to set the active humidity mode. The available options - depending on your equipment - are **Dehumidify**, **Humidify** and **Off**
+
+select.<system_name><zone_name>\_humidity_mode
 
 ## switches
 

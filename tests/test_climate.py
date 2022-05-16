@@ -7,6 +7,12 @@ from lennoxs30api.s30api_async import (
     LENNOX_SA_SETPOINT_STATE_AWAY,
     LENNOX_SA_SETPOINT_STATE_TRANSITION,
     LENNOX_SA_SETPOINT_STATE_HOME,
+    LENNOX_HUMIDITY_MODE_OFF,
+    LENNOX_HUMIDITY_MODE_HUMIDIFY,
+    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_STATUS_GOOD,
+    LENNOX_STATUS_NOT_AVAILABLE,
+    LENNOX_STATUS_NOT_EXIST,
     lennox_system,
     lennox_zone,
 )
@@ -29,6 +35,34 @@ from unittest.mock import patch
 from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_NONE,
+)
+
+from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_IDLE,
+    FAN_AUTO,
+    FAN_OFF,
+    FAN_ON,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    SUPPORT_AUX_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    CONF_NAME,
 )
 
 
@@ -246,3 +280,196 @@ async def test_set_preset_mode(hass, manager: Manager, caplog):
     with patch.object(zone, "setManualMode") as zone_set_manual_mode:
         await c.async_set_preset_mode(PRESET_NONE)
         assert zone_set_manual_mode.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_climate_extra_state_attributes(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+    attrs = c.extra_state_attributes
+    assert attrs["allergenDefender"] == zone.allergenDefender
+    assert attrs["damper"] == zone.damper
+    assert attrs["demand"] == zone.demand
+    assert attrs["fan"] == "on" if zone.fan else "off"
+    assert attrs["humidityMode"] == zone.humidityMode
+    assert attrs["humOperation"] == zone.humOperation
+    assert attrs["tempOperation"] == zone.tempOperation
+    assert attrs["ventilation"] == zone.ventilation
+    assert attrs["heatCoast"] == zone.heatCoast
+    assert attrs["defrost"] == zone.defrost
+    assert attrs["balancePoint"] == zone.balancePoint
+    assert attrs["aux"] == zone.aux
+    assert attrs["coolCoast"] == zone.coolCoast
+    assert attrs["ssr"] == zone.ssr
+
+
+@pytest.mark.asyncio
+async def test_supported_features(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+    feat = c.supported_features
+    assert c.is_single_setpoint_active() == True
+    assert feat & SUPPORT_TARGET_TEMPERATURE != 0
+    assert feat & SUPPORT_TARGET_TEMPERATURE_RANGE == 0
+
+    c._zone._system.single_setpoint_mode = False
+    c._zone.systemMode = LENNOX_HVAC_HEAT_COOL
+    feat = c.supported_features
+    assert c.is_single_setpoint_active() == False
+    assert feat & SUPPORT_TARGET_TEMPERATURE == 0
+    assert feat & SUPPORT_TARGET_TEMPERATURE_RANGE != 0
+
+    feat = c.supported_features
+    assert c._zone.dehumidificationOption == True
+    assert c._zone.humidificationOption == False
+    assert c._zone.humidityMode == LENNOX_HUMIDITY_MODE_OFF
+    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
+    feat = c.supported_features
+    assert feat & SUPPORT_TARGET_HUMIDITY != 0
+
+    c._zone.dehumidificationOption = False
+    c._zone.humidificationOption = True
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_OFF
+    feat = c.supported_features
+    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_HUMIDIFY
+    feat = c.supported_features
+    assert feat & SUPPORT_TARGET_HUMIDITY != 0
+
+    c._zone.humidificationOption = False
+    feat = c.supported_features
+    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+
+    assert feat & SUPPORT_AUX_HEAT == 0
+    assert feat & SUPPORT_PRESET_MODE != 0
+    assert feat & SUPPORT_FAN_MODE != 0
+
+
+@pytest.mark.asyncio
+async def test_target_humidity(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+
+    assert zone.humidityMode == LENNOX_HUMIDITY_MODE_OFF
+    assert c.target_humidity == None
+    assert c.max_humidity == None
+    assert c.min_humidity == None
+
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
+    assert c.target_humidity == zone.desp
+    assert c.max_humidity == zone.maxDehumSp
+    assert c.min_humidity == zone.minDehumSp
+
+    c._zone.humidityMode = LENNOX_HUMIDITY_MODE_HUMIDIFY
+    assert c.target_humidity == c._zone.husp
+    assert c.max_humidity == zone.maxHumSp
+    assert c.min_humidity == zone.minHumSp
+
+
+@pytest.mark.asyncio
+async def test_set_target_humidity(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+
+    assert zone.humidityMode == LENNOX_HUMIDITY_MODE_OFF
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            zone, "perform_humidify_setpoint"
+        ) as perform_humidify_setpoint:
+            await c.async_set_humidity(60)
+            assert len(caplog.records) == 1
+            assert perform_humidify_setpoint.call_count == 0
+
+    zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            zone, "perform_humidify_setpoint"
+        ) as perform_humidify_setpoint:
+            await c.async_set_humidity(60)
+            assert len(caplog.records) == 0
+            assert perform_humidify_setpoint.call_count == 1
+            call = perform_humidify_setpoint.mock_calls[0]
+            desp = call.kwargs["r_desp"]
+            assert desp == 60
+            assert "r_husp" not in call.kwargs
+
+    zone.humidityMode = LENNOX_HUMIDITY_MODE_HUMIDIFY
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            zone, "perform_humidify_setpoint"
+        ) as perform_humidify_setpoint:
+            await c.async_set_humidity(60)
+            assert len(caplog.records) == 0
+            assert perform_humidify_setpoint.call_count == 1
+            call = perform_humidify_setpoint.mock_calls[0]
+            husp = call.kwargs["r_husp"]
+            assert husp == 60
+            assert "r_desp" not in call.kwargs
+
+
+@pytest.mark.asyncio
+async def test_humidity_bad_status(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+
+    assert zone.humidityStatus == LENNOX_STATUS_GOOD
+    assert c.current_humidity == zone.humidity
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.humidityStatus = LENNOX_STATUS_NOT_AVAILABLE
+        assert c.current_humidity == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_AVAILABLE in msg
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.humidityStatus = LENNOX_STATUS_NOT_EXIST
+        assert c.current_humidity == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_EXIST in msg
+
+
+@pytest.mark.asyncio
+async def test_temperature_bad_status(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    manager._is_metric = False
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+
+    assert zone.temperatureStatus == LENNOX_STATUS_GOOD
+    assert c.current_temperature == zone.temperature
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.temperatureStatus = LENNOX_STATUS_NOT_AVAILABLE
+        assert c.current_temperature == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_AVAILABLE in msg
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        zone.temperatureStatus = LENNOX_STATUS_NOT_EXIST
+        assert c.current_temperature == None
+        assert len(caplog.records) == 1
+        msg = caplog.messages[0]
+        assert LENNOX_STATUS_NOT_EXIST in msg
