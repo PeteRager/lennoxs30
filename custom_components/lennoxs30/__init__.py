@@ -427,6 +427,8 @@ class Manager(object):
                 list["diagLevel"] = system.diagLevel
                 list["softwareVersion"] = system.softwareVersion
                 list["hostname"] = self._ip_address
+                list["sibling_id"] = system.sibling_identifier
+                list["sibling_ip"] = system.sibling_ipAddress
         return list
 
     async def s30_initialize(self):
