@@ -508,6 +508,9 @@ It is recommended to _DISABLE_ automatic software updates on the S30.
 # Enhancement Requests
 
 Enhancement requests are welcomed and encouraged. Please log issues for us to track enhancements.
+  
+# Lennox Techinical Documents
+https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/Corp1817-L8f.pdf
 
 # Credits
 
