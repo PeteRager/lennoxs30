@@ -12,6 +12,7 @@ from lennoxs30api import (
     EC_UNAUTHORIZED,
     S30Exception,
     s30api_async,
+    lennox_system,
 )
 import voluptuous as vol
 from .const import (
@@ -421,12 +422,14 @@ class Manager(object):
         # TODO these are at the individual S30 level, when we have a device object we should move this there
         systems = self._api.getSystems()
         if len(systems) > 0:
-            system: s30api_async.lennox_system = self._api.getSystems()[0]
+            system: lennox_system = self._api.getSystems()[0]
             if system != None:
                 list["sysUpTime"] = system.sysUpTime
                 list["diagLevel"] = system.diagLevel
                 list["softwareVersion"] = system.softwareVersion
                 list["hostname"] = self._ip_address
+                list["sibling_id"] = system.sibling_identifier
+                list["sibling_ip"] = system.sibling_ipAddress
         return list
 
     async def s30_initialize(self):
