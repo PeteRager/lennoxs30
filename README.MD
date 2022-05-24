@@ -513,8 +513,9 @@ It is recommended to _DISABLE_ automatic software updates on the S30.
 
 Enhancement requests are welcomed and encouraged. Please log issues for us to track enhancements.
   
-# Lennox Techinical Documents
+# Lennox Technical Documents
 https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/Corp1817-L8f.pdf
+https://resources.lennox.com/pdfs/owners/s30/Lennox_iComfortS30_Homeowner_Manual.pdf
 
 # Credits
 
