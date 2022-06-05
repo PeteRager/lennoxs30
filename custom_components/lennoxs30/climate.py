@@ -10,10 +10,13 @@ from lennoxs30api import (
     LENNOX_HVAC_HEAT_COOL,
     LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
     LENNOX_HUMIDITY_MODE_HUMIDIFY,
+    LENNOX_TEMP_OPERATION_OFF,
     LENNOX_HUMIDITY_MODE_OFF,
     LENNOX_STATUS_GOOD,
     LENNOX_STATUS_NOT_AVAILABLE,
     LENNOX_STATUS_NOT_EXIST,
+    LENNOX_ZONING_MODE_CENTRAL,
+    LENNOX_ZONING_MODE_ZONED,
     S30Exception,
     lennox_system,
     lennox_zone,
@@ -131,6 +134,7 @@ class S30Climate(ClimateEntity):
                 "sa_reset",
                 "sa_cancel",
                 "sa_setpointState",
+                "zoningMode",
             ],
         )
         self._myname = self._system.name + "_" + self._zone.name
@@ -149,23 +153,38 @@ class S30Climate(ClimateEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] = {}
-        attrs["allergenDefender"] = self._zone.allergenDefender
-        attrs["damper"] = self._zone.damper
-        attrs["demand"] = self._zone.demand
-        if self._zone.fan == True:
-            attrs["fan"] = FAN_ON
+        attrs["allergenDefender"] = (
+            self._zone.allergenDefender if self.is_zone_enabled else None
+        )
+        attrs["damper"] = self._zone.damper if self.is_zone_enabled else None
+        attrs["demand"] = self._zone.demand if self.is_zone_enabled else None
+        if self.is_zone_enabled:
+            if self._zone.fan == True:
+                attrs["fan"] = FAN_ON
+            else:
+                attrs["fan"] = FAN_OFF
         else:
-            attrs["fan"] = FAN_OFF
-        attrs["humidityMode"] = self._zone.humidityMode
-        attrs["humOperation"] = self._zone.humOperation
-        attrs["tempOperation"] = self._zone.tempOperation
-        attrs["ventilation"] = self._zone.ventilation
-        attrs["heatCoast"] = self._zone.heatCoast
-        attrs["defrost"] = self._zone.defrost
-        attrs["balancePoint"] = self._zone.balancePoint
-        attrs["aux"] = self._zone.aux
-        attrs["coolCoast"] = self._zone.coolCoast
-        attrs["ssr"] = self._zone.ssr
+            attrs["fan"] = None
+        attrs["humidityMode"] = (
+            self._zone.humidityMode if self.is_zone_enabled else None
+        )
+        attrs["humOperation"] = (
+            self._zone.humOperation if self.is_zone_enabled else None
+        )
+        attrs["tempOperation"] = (
+            self._zone.tempOperation if self.is_zone_enabled else None
+        )
+        attrs["ventilation"] = self._zone.ventilation if self.is_zone_enabled else None
+        attrs["heatCoast"] = self._zone.heatCoast if self.is_zone_enabled else None
+        attrs["defrost"] = self._zone.defrost if self.is_zone_enabled else None
+        attrs["balancePoint"] = (
+            self._zone.balancePoint if self.is_zone_enabled else None
+        )
+        attrs["aux"] = self._zone.aux if self.is_zone_enabled else None
+        attrs["coolCoast"] = self._zone.coolCoast if self.is_zone_enabled else None
+        attrs["ssr"] = self._zone.ssr if self.is_zone_enabled else None
+        attrs["zoneEnabled"] = self.is_zone_enabled
+        attrs["zoningMode"] = self._system.zoningMode
         return attrs
 
     def update(self):
@@ -181,6 +200,15 @@ class S30Climate(ClimateEntity):
     def name(self):
         return self._myname
 
+    @property
+    def is_zone_disabled(self):
+        return self._zone.is_zone_disabled
+
+    @property
+    def is_zone_enabled(self):
+        # When zoning is disabled, only zone 0 is enabled
+        return not self._zone.is_zone_disabled
+
     def is_single_setpoint_active(self) -> bool:
         # If the system is configured to use a single setpoint for both heat and cool
         if self._zone._system.single_setpoint_mode == True:
@@ -193,6 +221,9 @@ class S30Climate(ClimateEntity):
 
     @property
     def supported_features(self):
+        if self.is_zone_disabled:
+            return None
+
         mask = SUPPORT_FLAGS
 
         # Target temperature.
@@ -237,7 +268,11 @@ class S30Climate(ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        if self._zone.systemMode == LENNOX_HVAC_OFF:
+        if (
+            self._zone.systemMode == LENNOX_HVAC_OFF
+            or self._zone.systemMode == None
+            or self.is_zone_disabled
+        ):
             return None
         if self._zone.systemMode == LENNOX_HVAC_COOL:
             if self._manager._is_metric is False:
@@ -267,7 +302,11 @@ class S30Climate(ClimateEntity):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode == None:
+        if (
+            self._zone.systemMode == LENNOX_HVAC_OFF
+            or self._zone.systemMode == None
+            or self.is_zone_disabled
+        ):
             return None
         if self._zone.systemMode == LENNOX_HVAC_COOL:
             if self._manager._is_metric is False:
@@ -296,6 +335,9 @@ class S30Climate(ClimateEntity):
 
     @property
     def target_temperature(self):
+        if self.is_zone_disabled:
+            return None
+
         """Return the temperature we try to reach."""
         if self._manager._is_metric is False:
             return self._zone.getTargetTemperatureF()
@@ -327,6 +369,8 @@ class S30Climate(ClimateEntity):
 
     @property
     def target_temperature_high(self):
+        if self.is_zone_disabled:
+            return None
         if self.is_single_setpoint_active() == True:
             return None
         """Return the highbound target temperature we try to reach."""
@@ -343,6 +387,8 @@ class S30Climate(ClimateEntity):
 
     @property
     def target_temperature_low(self):
+        if self.is_zone_disabled:
+            return None
         if self.is_single_setpoint_active() == True:
             return None
         """Return the lowbound target temperature we try to reach."""
@@ -374,6 +420,8 @@ class S30Climate(ClimateEntity):
 
     @property
     def hvac_mode(self):
+        if self.is_zone_disabled:
+            return None
         """Return the current hvac operation mode."""
         r = self._zone.getSystemMode()
         if r == LENNOX_HVAC_HEAT_COOL:
@@ -391,6 +439,8 @@ class S30Climate(ClimateEntity):
 
     @property
     def max_humidity(self):
+        if self.is_zone_disabled:
+            return None
         if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
             return self._zone.maxDehumSp
         if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
@@ -399,6 +449,8 @@ class S30Climate(ClimateEntity):
 
     @property
     def min_humidity(self):
+        if self.is_zone_disabled:
+            return None
         if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
             return self._zone.minDehumSp
         if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
@@ -407,6 +459,8 @@ class S30Climate(ClimateEntity):
 
     @property
     def target_humidity(self) -> float:
+        if self.is_zone_disabled:
+            return None
         if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
             return self._zone.desp
         if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
@@ -419,6 +473,12 @@ class S30Climate(ClimateEntity):
             f"climate:async_set_humidity zone [{self._myname}] humidity [{humidity}]"
         )
         try:
+            if self.is_zone_disabled:
+                raise S30Exception(
+                    f"Unable to set humidity as zone [{self._myname}] is disabled",
+                    EC_BAD_PARAMETERS,
+                    2,
+                )
             if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
                 await self._zone.perform_humidify_setpoint(r_desp=humidity)
             elif self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
@@ -438,6 +498,8 @@ class S30Climate(ClimateEntity):
     def hvac_modes(self):
         """Return the list of available hvac operation modes."""
         modes = []
+        if self.is_zone_disabled:
+            return modes
         modes.append(HVAC_MODE_OFF)
         if self._zone.coolingOption == True:
             modes.append(HVAC_MODE_COOL)
@@ -453,6 +515,12 @@ class S30Climate(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new hvac operation mode."""
         try:
+            if self.is_zone_disabled:
+                raise S30Exception(
+                    f"Unable to set hvac_mode as zone [{self._myname}] is disabled",
+                    EC_BAD_PARAMETERS,
+                    2,
+                )
             t_hvac_mode = hvac_mode
             # Only this mode needs to be mapped
             if t_hvac_mode == HVAC_MODE_HEAT_COOL:
@@ -476,23 +544,27 @@ class S30Climate(ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current hvac state/action."""
-        # TODO may need to translate
+        if self.is_zone_disabled:
+            return None
         to = self._zone.tempOperation
         ho = self._zone.humOperation
-        if to != "off":
+        if to != LENNOX_TEMP_OPERATION_OFF:
             return to
-        if ho != "off":
+        if ho != LENNOX_TEMP_OPERATION_OFF:
             if ho == LENNOX_HUMID_OPERATION_DEHUMID:
                 return CURRENT_HVAC_DRY
             if ho == LENNOX_HUMID_OPERATION_WAITING:
                 return CURRENT_HVAC_IDLE
             return ho
-        if to == "off" and self._zone.systemMode != "off":
+        if to == LENNOX_TEMP_OPERATION_OFF and self._zone.systemMode != LENNOX_HVAC_OFF:
             return CURRENT_HVAC_IDLE
         return to
 
     @property
     def preset_mode(self):
+        if self.is_zone_disabled:
+            return None
+
         if self._system.get_away_mode() == True:
             return PRESET_AWAY
         if self._zone.overrideActive == True:
@@ -510,6 +582,8 @@ class S30Climate(ClimateEntity):
     @property
     def preset_modes(self):
         presets = []
+        if self.is_zone_disabled:
+            return presets
         for schedule in self._system.getSchedules():
             # Everything above 16 seems to be internal schedules
             if schedule.id >= 16:
@@ -537,7 +611,12 @@ class S30Climate(ClimateEntity):
                 + preset_mode
                 + "]"
             )
-
+            if self.is_zone_disabled:
+                raise S30Exception(
+                    f"Unable to set preset mode [{preset_mode}] as zone [{self._myname}] is disabled",
+                    EC_BAD_PARAMETERS,
+                    2,
+                )
             if preset_mode == PRESET_CANCEL_AWAY_MODE:
                 processed = False
                 if self._system.get_manual_away_mode() == True:
@@ -580,15 +659,21 @@ class S30Climate(ClimateEntity):
     @property
     def fan_mode(self):
         """Return the current fan mode."""
+        if self.is_zone_disabled:
+            return None
         return self._zone.getFanMode()
 
     @property
     def fan_modes(self):
+        if self.is_zone_disabled:
+            return []
         """Return the list of available fan modes."""
         return FAN_MODES
 
     @property
     def is_aux_heat(self) -> bool | None:
+        if self.is_zone_disabled:
+            return None
         res = self._zone.systemMode == LENNOX_HVAC_EMERGENCY_HEAT
         return res
 
@@ -596,6 +681,12 @@ class S30Climate(ClimateEntity):
         """Turn auxiliary heater on."""
         try:
             _LOGGER.debug(f"climate:async_turn_aux_heat_on zone [{self._myname}]")
+            if self.is_zone_disabled:
+                raise S30Exception(
+                    f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled",
+                    EC_BAD_PARAMETERS,
+                    2,
+                )
             await self._zone.setHVACMode(LENNOX_HVAC_EMERGENCY_HEAT)
             await self.async_trigger_fast_poll()
         except S30Exception as e:
@@ -607,6 +698,13 @@ class S30Climate(ClimateEntity):
         try:
             _LOGGER.debug(f"climate:async_turn_aux_heat_off zone [{self._myname}]")
             # When Aux is turned off, we will revert the zone to Heat Mode.
+            if self.is_zone_disabled:
+                raise S30Exception(
+                    f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled",
+                    EC_BAD_PARAMETERS,
+                    2,
+                )
+
             await self._zone.setHVACMode(LENNOX_HVAC_HEAT)
             await self.async_trigger_fast_poll()
         except S30Exception as e:
@@ -616,6 +714,12 @@ class S30Climate(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature"""
+        if self.is_zone_disabled:
+            _LOGGER.error(
+                f"Unable to set_temperature as zone [{self._myname}] is disabled"
+            )
+            return
+
         r_hvacMode = None
         if kwargs.get(ATTR_HVAC_MODE) is not None:
             r_hvacMode = kwargs.get(ATTR_HVAC_MODE)
@@ -738,6 +842,11 @@ class S30Climate(ClimateEntity):
         _LOGGER.debug(
             f"climate:async_set_fan_mode name[{self._myname}] fanMode [{fan_mode}]"
         )
+        if self.is_zone_disabled:
+            _LOGGER.error(
+                f"Unable to set_fan_mode as zone [{self._myname}] is disabled"
+            )
+            return
         try:
             await self._zone.setFanMode(fan_mode)
             await self.async_trigger_fast_poll()
