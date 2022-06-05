@@ -16,7 +16,7 @@ from . import DOMAIN, Manager
 from homeassistant.core import HomeAssistant
 import logging
 from homeassistant.helpers.entity import Entity
-from lennoxs30api import lennox_system, lennox_zone
+from lennoxs30api import lennox_system
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
