@@ -44,6 +44,12 @@ async def async_setup_entry(
     for system in manager._api.getSystems():
         number = DiagnosticLevelNumber(hass, manager, system)
         number_list.append(number)
+        if (
+            system.enhancedDehumidificationOvercoolingF_enable == True
+            and system.is_none(system.dehumidifierType) == False
+        ):
+            number = DehumidificationOverCooling(hass, manager, system)
+            number_list.append(number)
 
     if len(number_list) != 0:
         async_add_entities(number_list, True)
@@ -95,6 +101,97 @@ class DiagnosticLevelNumber(NumberEntity):
             await self._system.set_diagnostic_level(value)
         except S30Exception as e:
             _LOGGER.error(f"DiagnosticLevelNumber::async_set_value [{e.as_string()}]")
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        result = {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
+        return result
+
+
+class DehumidificationOverCooling(NumberEntity):
+    """Set the diagnostic level in the S30."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._myname = self._system.name + "_dehumidification_overcooling"
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "enhancedDehumidificationOvercoolingC_enable",
+                "enhancedDehumidificationOvercoolingF_enable",
+                "enhancedDehumidificationOvercoolingC",
+                "enhancedDehumidificationOvercoolingF",
+                "enhancedDehumidificationOvercoolingF_min",
+                "enhancedDehumidificationOvercoolingF_max",
+                "enhancedDehumidificationOvercoolingF_inc",
+                "enhancedDehumidificationOvercoolingC_min",
+                "enhancedDehumidificationOvercoolingC_max",
+                "enhancedDehumidificationOvercoolingC_inc",
+            ],
+        )
+        _LOGGER.debug(f"Create DehumidificationOverCooling myname [{self._myname}]")
+
+    def update_callback(self):
+        _LOGGER.debug(
+            f"update_callback DehumidificationOverCooling myname [{self._myname}]"
+        )
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._system.unique_id() + "_DOC").replace("-", "")
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def unit_of_measurement(self):
+        if self._manager._is_metric is False:
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
+
+    @property
+    def max_value(self) -> float:
+        if self._manager._is_metric:
+            return self._system.enhancedDehumidificationOvercoolingC_max
+        return self._system.enhancedDehumidificationOvercoolingF_max
+
+    @property
+    def min_value(self) -> float:
+        if self._manager._is_metric:
+            return self._system.enhancedDehumidificationOvercoolingC_min
+        return self._system.enhancedDehumidificationOvercoolingF_min
+
+    @property
+    def step(self) -> float:
+        if self._manager._is_metric:
+            return self._system.enhancedDehumidificationOvercoolingC_inc
+        return self._system.enhancedDehumidificationOvercoolingF_inc
+
+    @property
+    def value(self) -> float:
+        if self._manager._is_metric:
+            return self._system.enhancedDehumidificationOvercoolingC
+        return self._system.enhancedDehumidificationOvercoolingF
+
+    async def async_set_value(self, value: float) -> None:
+        """Update the current value."""
+        try:
+            if self._manager._is_metric:
+                await self._system.set_enhancedDehumidificationOvercooling(r_c=value)
+            else:
+                await self._system.set_enhancedDehumidificationOvercooling(r_f=value)
+        except S30Exception as e:
+            _LOGGER.error(
+                f"DehumidificationOverCooling::async_set_value [{e.as_string()}]"
+            )
 
     @property
     def device_info(self) -> DeviceInfo:
