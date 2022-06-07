@@ -16,7 +16,11 @@ from . import DOMAIN, Manager
 from homeassistant.core import HomeAssistant
 import logging
 from homeassistant.helpers.entity import Entity
-from lennoxs30api import lennox_system
+from lennoxs30api import (
+    lennox_system,
+    LENNOX_CIRCULATE_TIME_MAX,
+    LENNOX_CIRCULATE_TIME_MIN,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
@@ -32,24 +36,26 @@ async def async_setup_entry(
     _LOGGER.debug("number:async_setup_platform enter")
     number_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    # We do not support setting diag level from a cloud connection
-    if (
-        entry.data[CONF_CLOUD_CONNECTION] == True
-        or manager._create_inverter_power == False
-    ):
-        _LOGGER.debug(
-            "async_setup_entry - not creating diagnostic level number because inverter power not enabled"
-        )
-        return
+
     for system in manager._api.getSystems():
-        number = DiagnosticLevelNumber(hass, manager, system)
-        number_list.append(number)
+        # We do not support setting diag level from a cloud connection
+        if (
+            entry.data[CONF_CLOUD_CONNECTION] == True
+            or manager._create_inverter_power == False
+        ):
+            _LOGGER.debug(
+                "async_setup_entry - not creating diagnostic level number because inverter power not enabled"
+            )
+        else:
+            number = DiagnosticLevelNumber(hass, manager, system)
+            number_list.append(number)
         if (
             system.enhancedDehumidificationOvercoolingF_enable == True
             and system.is_none(system.dehumidifierType) == False
         ):
             number = DehumidificationOverCooling(hass, manager, system)
             number_list.append(number)
+        number = CirculateTime(hass, manager, system)
 
     if len(number_list) != 0:
         async_add_entities(number_list, True)
@@ -192,6 +198,71 @@ class DehumidificationOverCooling(NumberEntity):
             _LOGGER.error(
                 f"DehumidificationOverCooling::async_set_value [{e.as_string()}]"
             )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        result = {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
+        return result
+
+
+class CirculateTime(NumberEntity):
+    """Set the diagnostic level in the S30."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._myname = self._system.name + "_circulate_time"
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "circulateTime",
+            ],
+        )
+        _LOGGER.debug(f"Create CirculateTime myname [{self._myname}]")
+
+    def update_callback(self):
+        _LOGGER.debug(f"update_callback CirculateTime myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._system.unique_id() + "_CIRC_TIME").replace("-", "")
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def unit_of_measurement(self):
+        return PERCENTAGE
+
+    @property
+    def max_value(self) -> float:
+        return LENNOX_CIRCULATE_TIME_MAX
+
+    @property
+    def min_value(self) -> float:
+        return LENNOX_CIRCULATE_TIME_MIN
+
+    @property
+    def step(self) -> float:
+        return 1.0
+
+    @property
+    def value(self) -> float:
+        return self._system.circulateTime
+
+    async def async_set_value(self, value: float) -> None:
+        """Update the current value."""
+        try:
+            await self._system.set_circulateTime(value)
+        except S30Exception as e:
+            _LOGGER.error(f"CirculateTime::async_set_value [{e.as_string()}]")
 
     @property
     def device_info(self) -> DeviceInfo:

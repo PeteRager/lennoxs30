@@ -1,14 +1,9 @@
 import logging
 from lennoxs30api.s30api_async import (
-    LENNOX_HUMIDITY_MODE_OFF,
-    LENNOX_HUMIDITY_MODE_HUMIDIFY,
-    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
     LENNOX_DEHUMIDIFICATION_MODE_HIGH,
     LENNOX_DEHUMIDIFICATION_MODE_MEDIUM,
     LENNOX_DEHUMIDIFICATION_MODE_AUTO,
     lennox_system,
-    lennox_zone,
-    LENNOX_ZONING_MODE_CENTRAL,
 )
 from custom_components.lennoxs30 import (
     Manager,

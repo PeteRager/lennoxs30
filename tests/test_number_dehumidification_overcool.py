@@ -1,11 +1,6 @@
 import logging
 from lennoxs30api.s30api_async import (
-    LENNOX_HUMIDITY_MODE_OFF,
-    LENNOX_HUMIDITY_MODE_HUMIDIFY,
-    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
     lennox_system,
-    lennox_zone,
-    LENNOX_ZONING_MODE_CENTRAL,
 )
 from custom_components.lennoxs30 import (
     Manager,
@@ -18,12 +13,6 @@ from custom_components.lennoxs30.number import (
 )
 
 from homeassistant.const import (
-    CONF_NAME,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -36,7 +25,7 @@ async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
     c = DehumidificationOverCooling(hass, manager, system)
 
-    assert c.unique_id == system.unique_id() + "_DOC"
+    assert c.unique_id == (system.unique_id() + "_DOC").replace("-", "")
 
 
 @pytest.mark.asyncio
