@@ -667,12 +667,12 @@ async def test_supported_features(hass, manager_mz: Manager, caplog):
     zone1: lennox_zone = system._zoneList[1]
     c1 = S30Climate(hass, manager, system, zone1)
     feat = c1.supported_features
-    assert feat != None
+    assert feat != 0
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     feat = c1.supported_features
-    assert feat is None
+    assert feat == 0
     feat = c.supported_features
-    assert feat != None
+    assert feat != 0
 
 
 @pytest.mark.asyncio

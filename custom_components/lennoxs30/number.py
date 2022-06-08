@@ -56,6 +56,7 @@ async def async_setup_entry(
             number = DehumidificationOverCooling(hass, manager, system)
             number_list.append(number)
         number = CirculateTime(hass, manager, system)
+        number_list.append(number)
 
     if len(number_list) != 0:
         async_add_entities(number_list, True)

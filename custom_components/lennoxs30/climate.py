@@ -222,7 +222,7 @@ class S30Climate(ClimateEntity):
     @property
     def supported_features(self):
         if self.is_zone_disabled:
-            return None
+            return 0
 
         mask = SUPPORT_FLAGS
 
