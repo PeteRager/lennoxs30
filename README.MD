@@ -20,9 +20,14 @@ Cloud Connections depending on the device model. We believe these configurations
 - If you are migrating from Cloud to Local connection. Please review the [cloud to local migration section](#Cloud-to-Local-Migration)
 - If you are upgrading from 0.1.3 to this release. Please review the [upgrade migration section](#New-Releases)
 - If you are migrating from a custom install to a HACS install. Please review the [HACS migration section](#Migrate-to-HACS-from-Manual-Installation)
+- If you have more than one S30 in your local network, please use a different app_id for each instance (e.g. homeassistant_1, homeassistant_2)
 - If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
 - The Power Inverter Diagnostic are in Alpha. Please review the [documentation](#Sensor-for-Inverter-Power) prior to using
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
+
+# Overview
+
+![plot](./doc_images/overview.png)
 
 # Donations
 
@@ -204,24 +209,24 @@ The integration provides all of the standard climate attributes, including
 5. Active Preset
 
 In addition the following extra attributes are provided, to allow for a more detailed information on the current zone operation.
-image.pngimage.png
-| Attribute Name | Description |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| allergenDefender | Indicates if this is enabled on the zone |
-| aux | Auxiliary Heating is On when True, off when False. Typically this means the hest pump is disabled and the furnace is running instead. |
-| balancePoint | This is related to heatpump lockout, details / values are not well known yet - if you know let us know! |
-| coolCoast | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
-| damper | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open. |
-| defrost | Defrost is active |
-| demand | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers |
-| fan | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.) |
-| heatCoast | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
-| humidityOperation | Current active humidity operation - **Humidifying**, **Drying** or **Off** |
-| ssr | Not known what this attribute indicates. If you know let us know! |
-| tempOperation | Current active temperature operation heating or cooling |
-| ventilation | Indicates if external ventilation is currently active on this zone |
-| zoneEnabled | Indicates if the zone is currently enabled. When in a multi-zone system, disabling iHarmony Zoning, turns the system into a single zone system controlled by Zone 1. The other climate entities are disabled except for reporting Ambient Temperature and Humidity|
-| zoningMode | The system zoning mode - **central** or **zoned** |
+
+| Attribute Name    | Description                                                                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                                                                                           |
+| aux               | Auxiliary Heating is On when True, off when False. Typically this means the hest pump is disabled and the furnace is running instead.                                                                                                                              |
+| balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                                                                                            |
+| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                    |
+| damper            | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open.                                                                                                                                                             |
+| defrost           | Defrost is active                                                                                                                                                                                                                                                  |
+| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                                                                                                  |
+| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                                                                                             |
+| heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                    |
+| humidityOperation | Current active humidity operation - **Humidifying**, **Drying** or **Off**                                                                                                                                                                                         |
+| ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                                                                                                  |
+| tempOperation     | Current active temperature operation heating or cooling                                                                                                                                                                                                            |
+| ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                                                                                                 |
+| zoneEnabled       | Indicates if the zone is currently enabled. When in a multi-zone system, disabling iHarmony Zoning, turns the system into a single zone system controlled by Zone 1. The other climate entities are disabled except for reporting Ambient Temperature and Humidity |
+| zoningMode        | The system zoning mode - **central** or **zoned**                                                                                                                                                                                                                  |
 
 ## lennoxs30.state or lennoxs30.conn\_\<hostname\> or lennoxs30.\_<redacted email_address\>
 
