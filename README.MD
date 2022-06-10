@@ -27,6 +27,8 @@ Cloud Connections depending on the device model. We believe these configurations
 
 # Overview
 
+This image shows the main entities and controls available for the Lennox S30 integration. Specific entity documentation appears later in this document.
+
 ![plot](./doc_images/overview.png)
 
 # Donations
