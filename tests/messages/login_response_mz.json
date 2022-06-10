@@ -1,0 +1,57 @@
+{
+    "readyHomes": {
+        "homes": [
+            {
+                "id": 0,
+                "homeId": "1234567",
+                "writeAccess": null,
+                "type": null,
+                "name": "MoetownHouse",
+                "notifyAlertsToDealer": true,
+                "notifyRemindersToDealer": true,
+                "dealerPermissionToUpdate": "none",
+                "dealerPermissionExpiresAt": "",
+                "dealerPermissionToView": true,
+                "address": {
+                    "streetAddress1": "10 Moetown Avenue",
+                    "streetAddress2": "Apt 55",
+                    "city": "Moetown",
+                    "state": "New Jersey",
+                    "country": "US",
+                    "zip": "00000",
+                    "latitude": "41.815917969",
+                    "longitude": "-74.9609375"
+                },
+                "systems": [
+                    {
+                        "id": 1,
+                        "sysId": "0000000-0000-0000-0000-000000000001",
+                        "controlModelNumber": null
+                    }
+                ]
+            }
+        ]
+    },
+    "ServerAssignedRoot": {
+        "serverAssigned": {
+            "identities": null,
+            "urls": null,
+            "security": {
+                "certificateToken": null,
+                "lccToken": null,
+                "userToken": {
+                    "type": "user",
+                    "issueTime": 1623851334.0,
+                    "expiryTime": 1625147334.0,
+                    "encoded": "bearer myveryshortversionofthebearertokenfortesting",
+                    "refreshToken": "bearer myveryshortversionofthebearertokenfortesting"
+                },
+                "doNotPersist": false
+            }
+        }
+    },
+    "myPresence": {
+        "0000000-0000-0000-0000-000000000001": "online",
+        "0000000-0000-0000-0000-000000000002": "online"
+    }
+}

@@ -20,9 +20,16 @@ Cloud Connections depending on the device model. We believe these configurations
 - If you are migrating from Cloud to Local connection. Please review the [cloud to local migration section](#Cloud-to-Local-Migration)
 - If you are upgrading from 0.1.3 to this release. Please review the [upgrade migration section](#New-Releases)
 - If you are migrating from a custom install to a HACS install. Please review the [HACS migration section](#Migrate-to-HACS-from-Manual-Installation)
+- If you have more than one S30 in your local network, please use a different app_id for each instance (e.g. homeassistant_1, homeassistant_2)
 - If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
 - The Power Inverter Diagnostic are in Alpha. Please review the [documentation](#Sensor-for-Inverter-Power) prior to using
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
+
+# Overview
+
+This image shows the main entities and controls available for the Lennox S30 integration. Specific entity documentation appears later in this document.
+
+![plot](./doc_images/overview.png)
 
 # Donations
 
@@ -205,22 +212,23 @@ The integration provides all of the standard climate attributes, including
 
 In addition the following extra attributes are provided, to allow for a more detailed information on the current zone operation.
 
-| Attribute Name    | Description                                                                                                                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                        |
-| aux               | Auxiliary Heating is On when True, off when False. Typically this means the hest pump is disabled and the furnace is running instead.                                                           |
-| balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                         |
-| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
-| damper            | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open.                                                                                          |
-| defrost           | Defrost is active                                                                                                                                                                               |
-| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                               |
-| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                          |
-| heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature |
-| humidityMode      | The humidity mode that is active - **Humidify**, **Dehumidify**, or **Off**                                                                                                                     |
-| humidityOperation | Current active humidity operation - **Humidifying**, **Drying** or **Off**                                                                                                                      |
-| ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                               |
-| tempOperation     | Current active temperature operation heating or cooling                                                                                                                                         |
-| ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                              |
+| Attribute Name    | Description                                                                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                                                                                           |
+| aux               | Auxiliary Heating is On when True, off when False. Typically this means the hest pump is disabled and the furnace is running instead.                                                                                                                              |
+| balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                                                                                            |
+| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                    |
+| damper            | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open.                                                                                                                                                             |
+| defrost           | Defrost is active                                                                                                                                                                                                                                                  |
+| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                                                                                                  |
+| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                                                                                             |
+| heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                    |
+| humidityOperation | Current active humidity operation - **Humidifying**, **Drying** or **Off**                                                                                                                                                                                         |
+| ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                                                                                                  |
+| tempOperation     | Current active temperature operation heating or cooling                                                                                                                                                                                                            |
+| ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                                                                                                 |
+| zoneEnabled       | Indicates if the zone is currently enabled. When in a multi-zone system, disabling iHarmony Zoning, turns the system into a single zone system controlled by Zone 1. The other climate entities are disabled except for reporting Ambient Temperature and Humidity |
+| zoningMode        | The system zoning mode - **central** or **zoned**                                                                                                                                                                                                                  |
 
 ## lennoxs30.state or lennoxs30.conn\_\<hostname\> or lennoxs30.\_<redacted email_address\>
 
@@ -301,7 +309,7 @@ sensor:
 
 This feature is in Alpha and we are looking for feedback and experiences using the data - and it's accuracy.
 
-## select
+## Select Entities
 
 ### Humidity Mode
 
@@ -309,7 +317,13 @@ If your Lennox System has Humidification or Dehumidification capability, one of 
 
 select.<system_name><zone_name>\_humidity_mode
 
-## switches
+### Dehumidification Modes
+
+Some Lennox systems support dehumidification and have several different settings available. The available options are **Normal**, **Max** and **Climate IQ**
+
+select.<system_name>\_dehumidification_mode
+
+## Switch Entities
 
 ### allergen_defender
 
@@ -346,7 +360,17 @@ The switch has the following attributes:
 | ventilatingUntilTime     | int  | integer timestamp of the end time of the ventilation action              |
 | diagVentilationRuntime   | int  | total number of minutes the system has ventilated for over it's lifetime |
 
-## Binary Sensors
+### zoning mode
+
+If your system has iHarmony Zoning, this switch allows you to turn iHarmony Zoning on and off, just like in the Lennox UI.
+
+When iHarmony zoning is disabled the following occurs:
+
+1.  Zone 1 is used to control heating, cooling and humidity
+2.  Zone 2,3,4 are disabled for control, but still report Temperature and Humidity
+3.  The Climate Entity Attributes **zoningMode** and **zoneEnabled** show the zoning and zone enablement status
+
+## Binary Sensor Entities
 
 ### home state
 
@@ -377,15 +401,27 @@ Smart Away State Values
 | enabled inactive  | Smart away detection is enabled, and smart away has determined you are home                              |
 | disabled          | Smart away is disabled                                                                                   |
 
-## Number
+## Number Entities
 
-### diagnostic level
+### diagnostic_level
 
 **ALPHA** When the power inverter option is enable, a Number entity is created to allow setting and reporting on the active diagnostic level in the S30. A value of zero indicates diagnostics is disabled. Values of 1 or 2 will cause the inverter power to be sent. Other values are invalid. The name of the entity is:
 
 number.<system_name>\_diagnostic_level
 
 Note: This capability in in _Alpha_ Mode. When enabled the S30 sends much more information. If you are using their IOS / Android App - this may impact the performance. It is not recommended to be toggling this mode frequently. Early on there were reports of the S30 rebooting that may have been caused by this - but it has not reproduced. If you are using this feature, you may want to monitor the lennoxS30.state sysuptime attribute. This value will reset to zero when the S30 reboots. The integration will log a warning if this is detected. Please report on your findings - we want to know if its working or not working for you!
+
+### circulate_time
+
+The circulate time number allows you to set the percentage of time the fan is on when in circulate mode.
+
+Note: In the Lennox UI it shows Minutes+Seconds per hour for circulate time. However, the underlying commands to the S30 use whole number percents (e.g. 20.0). The Home Assistant Sliders are best suited for numbers not mm:ss, so the decision was made to represent this as percents in Home Assistant. That decision can be revisited if needed.
+
+number.<system_name>\_circulate_time
+
+### dehumidification_overcooling
+
+Lennox systems with dehumidifiers may have the ability to provide overcooling to lower the humidity when the dehumidification mode is **Max**. This number allow you to set this over-cooling. Typically is is 0-4 degrees F or 0-2 degrees Celsius.
 
 # Reporting Bugs
 
@@ -512,8 +548,9 @@ It is recommended to _DISABLE_ automatic software updates on the S30.
 # Enhancement Requests
 
 Enhancement requests are welcomed and encouraged. Please log issues for us to track enhancements.
-  
+
 # Lennox Technical Documents
+
 https://tech.lennoxintl.com/C03e7o14l/VIu12Ch2uV/Corp1817-L8f.pdf
 https://resources.lennox.com/pdfs/owners/s30/Lennox_iComfortS30_Homeowner_Manual.pdf
 

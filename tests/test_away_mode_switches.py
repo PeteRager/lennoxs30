@@ -1,12 +1,7 @@
 from lennoxs30api.s30api_async import (
-    LENNOX_SA_STATE_DISABLED,
-    LENNOX_SA_SETPOINT_STATE_HOME,
-    LENNOX_SA_SETPOINT_STATE_AWAY,
-    LENNOX_SA_STATE_ENABLED_ACTIVE,
     lennox_system,
 )
 from custom_components.lennoxs30 import (
-    DOMAIN,
     Manager,
 )
 

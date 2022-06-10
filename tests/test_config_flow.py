@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
 )
 
 import pytest
@@ -29,6 +30,8 @@ from custom_components.lennoxs30.const import (
     DEFAULT_CLOUD_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
+    CONF_FAST_POLL_COUNT,
+    DEFAULT_LOCAL_TIMEOUT,
 )
 
 
@@ -88,6 +91,10 @@ async def test_migrate_local_config_min(hass, caplog):
             assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
             assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_LOCAL_POLL_INTERVAL
+            assert migration_data[CONF_FAST_POLL_COUNT] == 10
+            assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
+
             assert len(caplog.records) == 1
 
             config_flow = lennoxs30ConfigFlow()
@@ -129,6 +136,11 @@ async def test_migrate_local_config_min(hass, caplog):
                 )
                 assert data[CONF_CLOUD_CONNECTION] == False
                 assert data[CONF_APP_ID] == LENNOX_DEFAULT_LOCAL_APP_ID
+                assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
+                assert (
+                    migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
+                )
+                assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
 @pytest.mark.asyncio
@@ -172,6 +184,9 @@ async def test_migrate_local_config_full(hass, caplog):
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
             assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
             assert migration_data[CONF_APP_ID] == "ha_prod"
+            assert migration_data[CONF_FAST_POLL_COUNT] == 10
+            assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
+
             assert len(caplog.records) == 1
 
             config_flow = lennoxs30ConfigFlow()
@@ -213,6 +228,11 @@ async def test_migrate_local_config_full(hass, caplog):
                 )
                 assert data[CONF_CLOUD_CONNECTION] == False
                 assert data[CONF_APP_ID] == "ha_prod"
+                assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
+                assert (
+                    migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
+                )
+                assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
 @pytest.mark.asyncio
@@ -253,6 +273,9 @@ async def test_migrate_local_config_multiple(hass, caplog):
             assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
             assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_LOCAL_POLL_INTERVAL
+            assert migration_data[CONF_FAST_POLL_COUNT] == 10
+            assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
 
             migration_data = mock_migration_task.mock_calls[1][1][1]
             assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_LOCAL_POLL_INTERVAL
@@ -268,6 +291,9 @@ async def test_migrate_local_config_multiple(hass, caplog):
             assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
             assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_LOCAL_POLL_INTERVAL
+            assert migration_data[CONF_FAST_POLL_COUNT] == 10
+            assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
 
             assert len(caplog.records) == 1
 
@@ -310,6 +336,10 @@ async def test_migrate_cloud_config_min(hass, caplog):
             assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
             assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_POLL_INTERVAL
+            assert migration_data[CONF_FAST_POLL_COUNT] == 10
+            assert migration_data[CONF_TIMEOUT] == DEFAULT_CLOUD_TIMEOUT
+
             config_flow = lennoxs30ConfigFlow()
             with patch.object(config_flow, "async_set_unique_id") as unique_id_mock:
                 result = await config_flow.async_step_import(migration_data)
@@ -345,6 +375,11 @@ async def test_migrate_cloud_config_min(hass, caplog):
                 )
                 assert data[CONF_CLOUD_CONNECTION] == True
                 assert data[CONF_APP_ID] == LENNOX_DEFAULT_CLOUD_APP_ID
+                assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
+                assert (
+                    migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
+                )
+                assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
 @pytest.mark.asyncio
@@ -387,6 +422,9 @@ async def test_migrate_cloud_config_full(hass, caplog):
             assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
             assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_FAST_POLL_COUNT] == 10
+            assert migration_data[CONF_TIMEOUT] == DEFAULT_CLOUD_TIMEOUT
+
             config_flow = lennoxs30ConfigFlow()
             with patch.object(config_flow, "async_set_unique_id") as unique_id_mock:
                 result = await config_flow.async_step_import(migration_data)
@@ -422,6 +460,11 @@ async def test_migrate_cloud_config_full(hass, caplog):
                 )
                 assert data[CONF_CLOUD_CONNECTION] == True
                 assert data[CONF_APP_ID] == "thisismyapp_id"
+                assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
+                assert (
+                    migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
+                )
+                assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
 @pytest.mark.asyncio

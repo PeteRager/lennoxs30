@@ -36,6 +36,11 @@ async def async_setup_entry(
             _LOGGER.info(f"Create S30 allergenDefender switch system [{system.sysId}]")
             switch = S30AllergenDefenderSwitch(hass, manager, system)
             switch_list.append(switch)
+        if system.numberOfZones > 1:
+            _LOGGER.info(f"Create S30 zoning switch system [{system.sysId}]")
+            switch = S30ZoningSwitch(hass, manager, system)
+            switch_list.append(switch)
+
         ma_switch = S30ManualAwayModeSwitch(hass, manager, system)
         switch_list.append(ma_switch)
         _LOGGER.info(f"Create S30ManualAwayModeSwitch system [{system.sysId}]")
@@ -352,3 +357,71 @@ class S30SmartAwayEnableSwitch(SwitchEntity):
                 _LOGGER.error(
                     "S30SmartAwayEnableSwitch:async_turn_off - error:" + str(e)
                 )
+
+
+class S30ZoningSwitch(SwitchEntity):
+    """Class for iHarmony Zoning"""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "centralMode",
+            ],
+        )
+        self._myname = self._system.name + "_zoning_enable"
+
+    def update_callback(self):
+        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._system.unique_id() + "_SW_ZE").replace("-", "")
+
+    @property
+    def extra_state_attributes(self):
+        return {}
+
+    def update(self):
+        return True
+
+    @property
+    def should_poll(self):
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def is_on(self):
+        return self._system.centralMode == False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+
+    async def async_turn_on(self, **kwargs):
+        try:
+            await self._system.centralMode_off()
+            self._manager._mp_wakeup_event.set()
+        except Exception as e:
+            if hasattr(e, "message"):
+                _LOGGER.error("S30ZoningSwitch:async_turn_on - error:" + e.message)
+            else:
+                _LOGGER.error("S30ZoningSwitch:async_turn_on - error:" + str(e))
+
+    async def async_turn_off(self, **kwargs):
+        try:
+            await self._system.centralMode_on()
+            self._manager._mp_wakeup_event.set()
+        except Exception as e:
+            if hasattr(e, "message"):
+                _LOGGER.error("S30ZoningSwitch:async_turn_off - error:" + e.message)
+            else:
+                _LOGGER.error("S30ZoningSwitch:async_turn_off - error:" + str(e))

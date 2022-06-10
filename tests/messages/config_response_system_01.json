@@ -232,7 +232,7 @@
                                         "csp": 77,
                                         "hsp": 64,
                                         "hspC": 18,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 22.5,
                                         "cspC": 25,
                                         "isCspChanged": true,
@@ -253,7 +253,7 @@
                                         "hsp": 65,
                                         "hspC": 18.5,
                                         "startTime": 0,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 22.5,
                                         "cspC": 26
                                     }
@@ -777,7 +777,7 @@
                                 "hsp": 64,
                                 "hspC": 18,
                                 "startTime": 0,
-                                "humidityMode": "dehumidify",
+                                "humidityMode": "off",
                                 "spC": 23,
                                 "cspC": 25
                             },
@@ -862,7 +862,7 @@
                                         "csp": 78,
                                         "hsp": 69,
                                         "hspC": 20.5,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 23,
                                         "cspC": 25.5,
                                         "isCspChanged": true,
@@ -883,7 +883,7 @@
                                         "hsp": 64,
                                         "hspC": 17.5,
                                         "startTime": 0,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 22.5,
                                         "cspC": 27.5
                                     }
@@ -1407,7 +1407,7 @@
                                 "hsp": 69,
                                 "hspC": 20.5,
                                 "startTime": 0,
-                                "humidityMode": "dehumidify",
+                                "humidityMode": "off",
                                 "spC": 23,
                                 "cspC": 25.5
                             },
@@ -1495,7 +1495,7 @@
                                         "csp": 71,
                                         "hsp": 40,
                                         "hspC": 4.5,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 23,
                                         "cspC": 21.5,
                                         "isCspChanged": true,
@@ -1516,7 +1516,7 @@
                                         "hsp": 40,
                                         "hspC": 4.5,
                                         "startTime": 0,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 22.5,
                                         "cspC": 25.5
                                     }
@@ -2040,7 +2040,7 @@
                                 "hsp": 40,
                                 "hspC": 4.5,
                                 "startTime": 0,
-                                "humidityMode": "dehumidify",
+                                "humidityMode": "off",
                                 "spC": 23,
                                 "cspC": 21.5
                             },
@@ -2131,7 +2131,7 @@
                                         "csp": 72,
                                         "hsp": 64,
                                         "hspC": 18,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 23,
                                         "cspC": 21,
                                         "isCspChanged": true,
@@ -2152,7 +2152,7 @@
                                         "hsp": 63,
                                         "hspC": 17.5,
                                         "startTime": 0,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "spC": 22.5,
                                         "cspC": 25.5
                                     }
@@ -2676,7 +2676,7 @@
                                 "hsp": 64,
                                 "hspC": 18,
                                 "startTime": 0,
-                                "humidityMode": "dehumidify",
+                                "humidityMode": "off",
                                 "spC": 23,
                                 "cspC": 22
                             },
@@ -2707,7 +2707,7 @@
                     }
                 ],
                 "occupancy": {
-                    "manualAway": false,
+                    "manualAway": true,
                     "smartAway": {
                         "config": {
                             "enabled": true,
@@ -5412,7 +5412,7 @@
                                         "cspC": 25,
                                         "sp": 73,
                                         "spC": 22.5,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "husp": 40,
                                         "desp": 50,
                                         "fanMode": "auto",
@@ -5444,7 +5444,7 @@
                                         "cspC": 25.5,
                                         "sp": 73,
                                         "spC": 23,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "husp": 40,
                                         "desp": 50,
                                         "fanMode": "auto",
@@ -5476,7 +5476,7 @@
                                         "cspC": 21.5,
                                         "sp": 73,
                                         "spC": 23,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "husp": 40,
                                         "desp": 50,
                                         "fanMode": "auto",
@@ -5508,7 +5508,7 @@
                                         "cspC": 21,
                                         "sp": 73,
                                         "spC": 23,
-                                        "humidityMode": "dehumidify",
+                                        "humidityMode": "off",
                                         "husp": 40,
                                         "desp": 50,
                                         "fanMode": "auto",
