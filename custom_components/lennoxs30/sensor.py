@@ -4,10 +4,15 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
+    DEVICE_CLASS_CURRENT,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    ELECTRIC_CURRENT_AMPERE,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    ELECTRIC_POTENTIAL_VOLT,
 )
 from . import Manager
 from homeassistant.core import HomeAssistant
@@ -69,6 +74,17 @@ async def async_setup_entry(
                     )
                     humSensor = S30HumiditySensor(hass, manager, zone)
                     sensor_list.append(humSensor)
+                    
+            diagnostics = system.getDiagnostics()
+            for e in diagnostics:
+                for d in diagnostics[e]:
+                    if(e>0): #equipment 0 has no diagnostic data
+                        name = diagnostics[e][d]['name']
+                        unit = diagnostics[e][d]['unit']
+                        val = diagnostics[e][d]['value']
+                        #_LOGGER.info(f"e {e} {d} {name} {unit}... {val}")
+                        diagsensor = S30DiagSensor(hass, manager, system, e, d, name, unit)
+                        sensor_list.append(diagsensor)
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
@@ -81,6 +97,115 @@ async def async_setup_entry(
             f"sensor:async_setup_platform exit - no system outdoor temperatures found"
         )
         return False
+
+class S30DiagSensor(SensorEntity):
+    """Class for Lennox S30 thermostat."""
+
+    def __init__(self, hass, manager, system, equipment, diagnostic, name, unit):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self.unit = unit
+        self.rname = name
+        self.equipment = equipment        
+        self.diagnostic = diagnostic
+        self.val = None
+        self._system.registerOnUpdateCallbackDiag(
+            self.update_callback, [ f"{equipment}_{diagnostic}"]
+        )
+        self._myname = self._system.name + f"_{equipment}_{diagnostic}_{name}".replace(" ","_")
+
+    def update_callback(self, newval):
+        #_LOGGER.info(f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}")
+        self.val = newval
+        self.schedule_update_ha_state()
+
+
+    @property
+    def native_value(self):
+        """Return native value of the sensor."""
+        #_LOGGER.info(f"native_value S30DiagSSensor myname [{self._myname}] value {self.val}")
+        return self.val
+
+    @property
+    def state(self):
+       """Return native value of the sensor."""
+       val = self._system.getDiagnostics()[self.equipment][self.diagnostic]['value']
+       #_LOGGER.info(f"state S30DiagSSensor myname [{self._myname}] value {val}")
+       return val
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {}
+
+    def update(self):
+        """Update data from the thermostat API."""
+        return True
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._myname).replace("-", "")
+
+
+    @property
+    def name(self):
+        return f"{self.rname}"
+
+    @property
+    def unit_of_measurement(self):
+        if "TemperatureC" in self.rname:
+            return TEMP_CELSIUS
+        elif "Temperature" in self.rname:
+            return TEMP_FAHRENHEIT
+        elif "Hz" in self.rname:
+            return FREQUENCY_HERTZ
+        elif "V" in self.unit:
+            return ELECTRIC_POTENTIAL_VOLT
+        elif "F" in self.unit:
+            return TEMP_FAHRENHEIT          
+        elif "A" in self.unit:
+            return ELECTRIC_CURRENT_AMPERE
+        elif "CFM" in self.unit:
+            return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE    
+        return self.unit
+
+    @property
+    def device_class(self):
+        if self.unit_of_measurement == TEMP_FAHRENHEIT:
+            return DEVICE_CLASS_TEMPERATURE
+        elif self.unit_of_measurement == TEMP_CELSIUS:
+            return DEVICE_CLASS_TEMPERATURE
+        elif self.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT:
+            return DEVICE_CLASS_VOLTAGE       
+        elif self.unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
+            return DEVICE_CLASS_CURRENT
+        elif self.unit_of_measurement == FREQUENCY_HERTZ:
+            return DEVICE_CLASS_FREQUENCY
+        return None
+
+    @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        #TODO - use equipment type instad of hard coding
+        if self.equipment == 1:
+            return {
+                "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
+            }
+        else: 
+            return {
+                "identifiers": {(DOMAIN, self._system.unique_id() + "_iu")},
+            }
 
 
 class S30OutdoorTempSensor(SensorEntity):
