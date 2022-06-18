@@ -5,24 +5,24 @@
       "user": {
         "title": "Select whether to use a local or a cloud connection",
         "data": {
-            "local_connection" : "Locsl Connection",
-			      "cloud_connection": "Lennox Cloud Connection:"
+          "local_connection" : "Local Connection",
+          "cloud_connection": "Lennox Cloud Connection:"
         }
       },
-	  "cloud": {
+      "cloud": {
         "title": "Define your Lennox S30/E30 connection",
         "data": {
           "email": "Lennox account email",
           "password": "Lennox Account password",
           "allergen_defender_switch": "Create allergenDefender switch",
-          "app_id": "Unique application id to use. See documentation",
+          "app_id": "Unique application id to use. See documentation.",
           "create_sensors": "Create Temperature and Humidity Sensors"
         }
       },
-	  "local": {
+      "local": {
         "title": "Define your Lennox S30/E30 connection",
         "data": {
-          "host": "The Lennox S30/E30 - Local IP or Hostnamex",
+          "host": "The Lennox S30/E30 - Local IP or Hostname",
           "allergen_defender_switch": "Create allergenDefender switch",
           "app_id": "Unique application id to use. See documentation",
           "init_wait_time": "Configuration Wait time in seconds",
@@ -40,13 +40,13 @@
           "pii_in_message_logs" : "Personal information in log files",
           "message_debug_logging" : "Debug logging logs messages",
           "message_debug_file" : "Optional file for message logging",
-          "log_messages_to_file": "Log S30 message to seperate file"
+          "log_messages_to_file": "Log S30 message to separate file"
         }
-      }      
+      }
     },
     "error": {
-      "select_cloud_or_locsl": "Select a cloud or local connection",
-      "already_configured": "Device is already configured", 
+      "select_cloud_or_local": "Select a cloud or local connection",
+      "already_configured": "Device is already configured",
       "invalid_hostname" : "Invalid ip address or hostname",
       "unable_to_connect_local" : "Unable to connect to S30, please check IP address",
       "unable_to_connect_login" : "Email / password combination is invalid",
@@ -58,25 +58,25 @@
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-              "password": "Your Lennox Account password",
-              "allergen_defender_switch": "Create allergentDefender switch",
-              "app_id": "Unique application id to use. See documentation",
-              "create_sensors": "Create temperature and humidity Sensors",
-              "create_inverter_power": "Create inverter power sensor",
-              "protocol": "Should be HTTPS unless using simulator",
-              "scan_interval": "Message scan interval seconds.",
-              "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
-              "init_wait_time": "Configuration Wait time in seconds",
-              "pii_in_message_logs" : "Personal information in log files",
-              "message_debug_logging" : "Debug logging logs messages",
-              "message_debug_file" : "Optional file for message logging",
-              "log_messages_to_file": "Log S30 message to seperate file"
-               },
-            "description": "Set the options for the connection",
-            "title": "Options"
-        }
+      "init": {
+        "data": {
+          "password": "Your Lennox Account password",
+          "allergen_defender_switch": "Create Allergen Defender switch",
+          "app_id": "Unique application id to use. See documentation.",
+          "create_sensors": "Create temperature and humidity Sensors",
+          "create_inverter_power": "Create inverter power sensor",
+          "protocol": "Should be HTTPS unless using simulator",
+          "scan_interval": "Message scan interval seconds.",
+          "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
+          "init_wait_time": "Configuration Wait time in seconds",
+          "pii_in_message_logs" : "Personal information in log files",
+          "message_debug_logging" : "Debug logging logs messages",
+          "message_debug_file" : "Optional file for message logging",
+          "log_messages_to_file": "Log S30 message to separate file"
+        },
+        "description": "Set the options for the connection",
+        "title": "Options"
+      }
     }
-}  
+  }
 }

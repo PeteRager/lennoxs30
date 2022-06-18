@@ -12,6 +12,7 @@ from lennoxs30api import (
     EC_UNAUTHORIZED,
     S30Exception,
     s30api_async,
+    lennox_system,
 )
 import voluptuous as vol
 from .const import (
@@ -54,7 +55,7 @@ from typing import Any
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
-PLATFORMS = ["sensor", "climate", "switch", "number", "binary_sensor"]
+PLATFORMS = ["sensor", "climate", "switch", "number", "binary_sensor", "select"]
 
 DS_CONNECTING = "Connecting"
 DS_DISCONNECTED = "Disconnected"
@@ -175,6 +176,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
             migration_data[CONF_CREATE_INVERTER_POWER] = config.get(DOMAIN).get(
                 CONF_CREATE_INVERTER_POWER
             )
+        # Make sure when migrating YAML, that any new configuration defaults are added.
+        _upgrade_config(migration_data, 1)
         create_migration_task(hass, migration_data)
     return True
 
@@ -189,20 +192,27 @@ def create_migration_task(hass, migration_data):
     )
 
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
-    if config_entry.version == 1:
-        old_version = config_entry.version
-        _LOGGER.debug(
-            f"Upgrading configuration for [{config_entry.title}] from version [{config_entry.version}]"
-        )
-        new = {**config_entry.data}
-        new[CONF_FAST_POLL_COUNT] = 10
-        new[CONF_TIMEOUT] = (
+def _upgrade_config(config: dict, current_version: int) -> int:
+    if current_version == 1:
+        config[CONF_FAST_POLL_COUNT] = 10
+        config[CONF_TIMEOUT] = (
             DEFAULT_CLOUD_TIMEOUT
-            if new[CONF_CLOUD_CONNECTION] == True
+            if config[CONF_CLOUD_CONNECTION] == True
             else DEFAULT_LOCAL_TIMEOUT
         )
-        config_entry.version = 2
+        current_version = 2
+    return current_version
+
+
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    _LOGGER.info(
+        f"Upgrading configuration for [{config_entry.title}] from version [{config_entry.version}]"
+    )
+    new = {**config_entry.data}
+    old_version = config_entry.version
+    new_version = _upgrade_config(new, old_version)
+    if new_version > old_version:
+        config_entry.version = new_version
         hass.config_entries.async_update_entry(config_entry, data=new)
         _LOGGER.info(
             f"Configuration for [{config_entry.title}] upgraded from version [{old_version}] to version [{config_entry.version}]"
@@ -421,12 +431,14 @@ class Manager(object):
         # TODO these are at the individual S30 level, when we have a device object we should move this there
         systems = self._api.getSystems()
         if len(systems) > 0:
-            system: s30api_async.lennox_system = self._api.getSystems()[0]
+            system: lennox_system = self._api.getSystems()[0]
             if system != None:
                 list["sysUpTime"] = system.sysUpTime
                 list["diagLevel"] = system.diagLevel
                 list["softwareVersion"] = system.softwareVersion
                 list["hostname"] = self._ip_address
+                list["sibling_id"] = system.sibling_identifier
+                list["sibling_ip"] = system.sibling_ipAddress
         return list
 
     async def s30_initialize(self):
