@@ -28,6 +28,7 @@
           "init_wait_time": "Configuration Wait time in seconds",
           "create_sensors": "Create Temperature and Humidity Sensors",
           "create_inverter_power": "ALPHA- Create Inverter Power Sensor",
+          "create_diagnostic_sensors": "ALPHA- Create Diagnostic Sensors",
           "protocol": "Should be HTTPS unless using simulator"
         }
       },
@@ -65,6 +66,7 @@
           "app_id": "Unique application id to use. See documentation.",
           "create_sensors": "Create temperature and humidity Sensors",
           "create_inverter_power": "Create inverter power sensor",
+          "create_diagnostic_sensors": "ALPHA- Create Diagnostic Sensors",
           "protocol": "Should be HTTPS unless using simulator",
           "scan_interval": "Message scan interval seconds.",
           "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
