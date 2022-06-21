@@ -22,3 +22,5 @@ MANAGER = "manager"
 
 LENNOX_DOMAIN = "lennoxs30"
 LENNOX_MFG = "Lennox"
+
+UNIQUE_ID_SUFFIX_DIAG_SENSOR = "DS"

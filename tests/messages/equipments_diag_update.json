@@ -1,0 +1,32 @@
+{
+    "Data": {
+        "equipments": [
+            {
+                "equipment": {
+                    "diagnostics": [
+                        {
+                            "diagnostic": {
+                                "value": "Yes"
+                            },
+                            "id": 0
+                        },
+                        {
+                            "diagnostic": {
+                                "value": "10.0"
+                            },
+                            "id": 1
+                        }
+                    ],
+                    "szDiagnostics": 23,
+                    "szFeatures": 35,
+                    "szParameters": 8
+                },
+                "id": 1
+            }
+        ]
+    },
+    "MessageId": 0,
+    "MessageType": "PropertyChange",
+    "SenderID": "LCC",
+    "TargetID": "python_client"
+}

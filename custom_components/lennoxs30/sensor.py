@@ -1,18 +1,19 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-from .const import MANAGER
+from .const import MANAGER, UNIQUE_ID_SUFFIX_DIAG_SENSOR
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    DEVICE_CLASS_CURRENT,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    FREQUENCY_HERTZ,
     ELECTRIC_CURRENT_AMPERE,
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
     ELECTRIC_POTENTIAL_VOLT,
+    TIME_MINUTES,
+    TIME_SECONDS,
 )
 from . import Manager
 from homeassistant.core import HomeAssistant
@@ -25,11 +26,12 @@ from lennoxs30api import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorDeviceClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,10 +59,27 @@ async def async_setup_entry(
             _LOGGER.info(f"Create S30InverterPowerSensor system [{system.sysId}]")
             if system.diagLevel == None or system.diagLevel == 0:
                 _LOGGER.warning(
-                    f"Power Inverter Sensor requires S30 to be in diagLevel 1 or 2, currently in [{system.diagLevel}]"
+                    f"Power Inverter Sensor requires S30 to be in diagLevel 2 and isolated from the internet, currently in [{system.diagLevel}]"
                 )
             power_sensor = S30InverterPowerSensor(hass, manager, system)
             sensor_list.append(power_sensor)
+
+        if manager._create_diagnostic_sensors == True:
+            _LOGGER.info(f"Create Diagnostic Sensors system [{system.sysId}]")
+            if system.diagLevel == None or system.diagLevel == 0:
+                _LOGGER.warning(
+                    f"Diagnostics requires S30 to be in diagLevel 2 and isolated from the internet, currently in [{system.diagLevel}]"
+                )
+            diagnostics = system.getDiagnostics()
+            for e in diagnostics:
+                for d in diagnostics[e]:
+                    if e > 0:  # equipment 0 has no diagnostic data
+                        _LOGGER.info(
+                            f"Create Diagsensor system [{system.sysId}] eid [{e}] did [{d}] name [{diagnostics[e][d]['name']}]"
+                        )
+                        diagsensor = S30DiagSensor(hass, manager, system, e, d)
+                        sensor_list.append(diagsensor)
+
         if manager._createSensors == True:
             for zone in system.getZoneList():
                 if zone.is_zone_active() == True:
@@ -74,17 +93,6 @@ async def async_setup_entry(
                     )
                     humSensor = S30HumiditySensor(hass, manager, zone)
                     sensor_list.append(humSensor)
-                    
-            diagnostics = system.getDiagnostics()
-            for e in diagnostics:
-                for d in diagnostics[e]:
-                    if(e>0): #equipment 0 has no diagnostic data
-                        name = diagnostics[e][d]['name']
-                        unit = diagnostics[e][d]['unit']
-                        val = diagnostics[e][d]['value']
-                        #_LOGGER.info(f"e {e} {d} {name} {unit}... {val}")
-                        diagsensor = S30DiagSensor(hass, manager, system, e, d, name, unit)
-                        sensor_list.append(diagsensor)
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
@@ -98,41 +106,39 @@ async def async_setup_entry(
         )
         return False
 
+
 class S30DiagSensor(SensorEntity):
     """Class for Lennox S30 thermostat."""
 
-    def __init__(self, hass, manager, system, equipment, diagnostic, name, unit):
+    def __init__(self, hass, manager, system, eid, did):
         self._hass = hass
         self._manager = manager
-        self._system = system
-        self.unit = unit
-        self.rname = name
-        self.equipment = equipment        
-        self.diagnostic = diagnostic
-        self.val = None
+        self._system: lennox_system = system
+        self.rname = system.getDiagnostics()[eid][did]["name"]
+        self.eid = eid
+        self.did = did
+        self._myname = self._system.name + f"_{eid}_{self.rname}".replace(" ", "_")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
         self._system.registerOnUpdateCallbackDiag(
-            self.update_callback, [ f"{equipment}_{diagnostic}"]
+            self.update_callback, [f"{self.eid}_{self.did}"]
         )
-        self._myname = self._system.name + f"_{equipment}_{diagnostic}_{name}".replace(" ","_")
 
-    def update_callback(self, newval):
-        #_LOGGER.info(f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}")
-        self.val = newval
+    def update_callback(self, eid_did, newval):
+        _LOGGER.debug(
+            f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}"
+        )
         self.schedule_update_ha_state()
-
-
-    @property
-    def native_value(self):
-        """Return native value of the sensor."""
-        #_LOGGER.info(f"native_value S30DiagSSensor myname [{self._myname}] value {self.val}")
-        return self.val
 
     @property
     def state(self):
-       """Return native value of the sensor."""
-       val = self._system.getDiagnostics()[self.equipment][self.diagnostic]['value']
-       #_LOGGER.info(f"state S30DiagSSensor myname [{self._myname}] value {val}")
-       return val
+        """Return native value of the sensor."""
+        try:
+            return self._system.getDiagnostics()[self.eid][self.did]["value"]
+        except Exception as e:
+            _LOGGER.error(f"Error getting state [{self._myname}] [{e}]")
+            return None
 
     @property
     def extra_state_attributes(self):
@@ -151,8 +157,9 @@ class S30DiagSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._myname).replace("-", "")
-
+        return (
+            f"{self._system.unique_id()}_{UNIQUE_ID_SUFFIX_DIAG_SENSOR}_{self.eid}_{self.rname}"
+        ).replace("-", "")
 
     @property
     def name(self):
@@ -160,34 +167,47 @@ class S30DiagSensor(SensorEntity):
 
     @property
     def unit_of_measurement(self):
-        if "TemperatureC" in self.rname:
-            return TEMP_CELSIUS
-        elif "Temperature" in self.rname:
+        unit = None
+        try:
+            unit = self._system.getDiagnostics()[self.eid][self.did]["unit"]
+        except Exception as e:
+            _LOGGER.error(f"Error getting unit [{self._myname}] [{e}]")
+            return None
+
+        if unit == "F":
             return TEMP_FAHRENHEIT
-        elif "Hz" in self.rname:
+        if unit == "C":
+            return TEMP_CELSIUS  ## Not validated - do no know if European Units report
+        if unit == "CFM":
+            return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE
+        if unit == "min":
+            return TIME_MINUTES
+        if unit == "sec":
+            return TIME_SECONDS
+        if unit == "%":
+            return PERCENTAGE
+        if unit == "Hz":
             return FREQUENCY_HERTZ
-        elif "V" in self.unit:
+        if unit == "V":
             return ELECTRIC_POTENTIAL_VOLT
-        elif "F" in self.unit:
-            return TEMP_FAHRENHEIT          
-        elif "A" in self.unit:
+        if unit == "A":
             return ELECTRIC_CURRENT_AMPERE
-        elif "CFM" in self.unit:
-            return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE    
+        if unit == "":
+            return None
         return self.unit
 
     @property
     def device_class(self):
         if self.unit_of_measurement == TEMP_FAHRENHEIT:
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         elif self.unit_of_measurement == TEMP_CELSIUS:
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         elif self.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT:
-            return DEVICE_CLASS_VOLTAGE       
+            return SensorDeviceClass.VOLTAGE
         elif self.unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
-            return DEVICE_CLASS_CURRENT
+            return SensorDeviceClass.CURRENT
         elif self.unit_of_measurement == FREQUENCY_HERTZ:
-            return DEVICE_CLASS_FREQUENCY
+            return SensorDeviceClass.FREQUENCY
         return None
 
     @property
@@ -197,15 +217,24 @@ class S30DiagSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        #TODO - use equipment type instad of hard coding
-        if self.equipment == 1:
+        if self.eid == 1:
             return {
                 "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
             }
-        else: 
+        if self.eid == 2:
             return {
                 "identifiers": {(DOMAIN, self._system.unique_id() + "_iu")},
             }
+        _LOGGER.warning(
+            f"Unexpected equipment id [{self.eid}], please raise an issue and post a mesage log"
+        )
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
+
+    @property
+    def entity_category(self):
+        return EntityCategory.DIAGNOSTIC
 
 
 class S30OutdoorTempSensor(SensorEntity):

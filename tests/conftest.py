@@ -54,11 +54,13 @@ async def caplog_setup_text(caplog):
     yield caplog.text
 
 
-def loadfile(name) -> json:
+def loadfile(name: str, sysId: str = None) -> json:
     script_dir = os.path.dirname(__file__) + "/messages/"
     file_path = os.path.join(script_dir, name)
     with open(file_path) as f:
         data = json.load(f)
+    if sysId != None:
+        data["SenderID"] = sysId
     return data
 
 

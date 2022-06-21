@@ -366,6 +366,7 @@ class Manager(object):
         pii_message_logs: bool = False,
         message_debug_logging: bool = True,
         message_logging_file: str = None,
+        create_diagnostic_sensors: bool = False,
     ):
         self._config_entry: ConfigEntry = config
         self._reinitialize: bool = False
@@ -398,6 +399,7 @@ class Manager(object):
         self._allergenDefenderSwitch = allergenDefenderSwitch
         self._createSensors: bool = create_sensors
         self._create_inverter_power: bool = create_inverter_power
+        self._create_diagnostic_sensors: bool = create_diagnostic_sensors
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
         if index == 0:
