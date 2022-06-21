@@ -19,6 +19,7 @@ from .const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
     CONF_CREATE_INVERTER_POWER,
+    CONF_CREATE_DIAGNOSTICS_SENSORS,
     CONF_CREATE_SENSORS,
     CONF_FAST_POLL_INTERVAL,
     CONF_FAST_POLL_COUNT,
@@ -201,6 +202,9 @@ def _upgrade_config(config: dict, current_version: int) -> int:
             else DEFAULT_LOCAL_TIMEOUT
         )
         current_version = 2
+    if current_version == 2:
+        config[CONF_CREATE_DIAGNOSTICS_SENSORS] = False
+        current_version = 3
     return current_version
 
 
@@ -238,17 +242,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         index = 0
 
     is_cloud = entry.data[CONF_CLOUD_CONNECTION]
+
+    create_inverter_power: bool = False
+    conf_protocol: str = None
+    create_diagnostic_sensors: bool = False
+
     if is_cloud == True:
         host_name: str = None
         email = entry.data[CONF_EMAIL]
         password = entry.data[CONF_PASSWORD]
-        create_inverter_power: bool = False
-        conf_protocol: str = None
     else:
         host_name = entry.data[CONF_HOST]
         email: str = None
         password: str = None
         create_inverter_power: bool = entry.data[CONF_CREATE_INVERTER_POWER]
+        create_diagnostic_sensors = entry.data[CONF_CREATE_DIAGNOSTICS_SENSORS]
         conf_protocol: str = entry.data[CONF_PROTOCOL]
 
     if CONF_APP_ID in entry.data:
@@ -273,7 +281,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         conf_message_debug_file = None
 
     _LOGGER.debug(
-        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}] timeout [{timeout}]"
+        f"async_setup starting scan_interval [{poll_interval}] fast_scan_interval[{fast_poll_interval}] app_id [{app_id}] config_init_wait_time [{conf_init_wait_time}] create_sensors [{create_sensors}] create_inverter_power [{create_inverter_power}] create_diagnostic_sensors [{create_diagnostic_sensors}] timeout [{timeout}]"
     )
 
     manager = Manager(
@@ -296,6 +304,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pii_message_logs=conf_pii_in_message_logs,
         message_debug_logging=conf_message_debug_logging,
         message_logging_file=conf_message_debug_file,
+        create_diagnostic_sensors=create_diagnostic_sensors,
     )
     try:
         listener = hass.bus.async_listen_once(

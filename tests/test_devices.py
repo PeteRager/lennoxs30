@@ -1,34 +1,13 @@
 """Test config flow."""
 
 from unittest.mock import ANY, patch
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_HOST,
-    CONF_HOSTS,
-    CONF_PASSWORD,
-    CONF_PROTOCOL,
-    CONF_SCAN_INTERVAL,
-)
 from lennoxs30api.s30api_async import lennox_zone, LENNOX_NONE_STR
 
 import pytest
 import os
 import json
 
-from homeassistant import config_entries, data_entry_flow
-from custom_components.lennoxs30.config_flow import lennoxs30ConfigFlow
 from custom_components.lennoxs30.const import (
-    CONF_ALLERGEN_DEFENDER_SWITCH,
-    CONF_CLOUD_CONNECTION,
-    CONF_CREATE_INVERTER_POWER,
-    CONF_CREATE_SENSORS,
-    CONF_FAST_POLL_INTERVAL,
-    CONF_MESSAGE_DEBUG_FILE,
-    CONF_MESSAGE_DEBUG_LOGGING,
-    CONF_PII_IN_MESSAGE_LOGS,
-    CONF_APP_ID,
-    LENNOX_DEFAULT_CLOUD_APP_ID,
-    LENNOX_DEFAULT_LOCAL_APP_ID,
     LENNOX_MFG,
 )
 
@@ -36,17 +15,9 @@ from custom_components.lennoxs30.const import (
 # from tests.common import MockConfigEntry
 
 from custom_components.lennoxs30 import (
-    DEFAULT_LOCAL_POLL_INTERVAL,
-    DEFAULT_POLL_INTERVAL,
     DOMAIN,
     Manager,
-    async_setup,
-    create_migration_task,
 )
-from homeassistant.components import sensor
-from homeassistant.helpers import entity_registry, entity_component
-
-from custom_components.lennoxs30.util import redact_email
 
 from homeassistant.helpers import device_registry as dr
 
