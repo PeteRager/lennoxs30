@@ -1,16 +1,22 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from typing import Any
-from .const import MANAGER
+from .const import (
+    CONF_CLOUD_CONNECTION,
+    MANAGER,
+    UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR,
+    UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR,
+)
 from . import Manager
 from homeassistant.core import HomeAssistant
 import logging
 from lennoxs30api import lennox_system
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PRESENCE,
+    DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
 
@@ -32,6 +38,12 @@ async def async_setup_entry(
         )
         sensor = S30HomeStateBinarySensor(hass, manager, system)
         sensor_list.append(sensor)
+
+        if entry.data[CONF_CLOUD_CONNECTION] == False:
+            sensor = S30InternetStatus(hass, manager, system)
+            sensor_list.append(sensor)
+            sensor = S30RelayServerStatus(hass, manager, system)
+            sensor_list.append(sensor)
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
@@ -115,3 +127,139 @@ class S30HomeStateBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         return DEVICE_CLASS_PRESENCE
+
+
+class S30InternetStatus(BinarySensorEntity):
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._myname = self._system.name + "_internet_status"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "internetStatus",
+            ],
+        )
+
+    def update_callback(self):
+        _LOGGER.debug(f"update_callback S30InternetStatus myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (
+            self._system.unique_id() + UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR
+        ).replace("-", "")
+
+    @property
+    def extra_state_attributes(self):
+        return {}
+
+    def update(self):
+        """Update data from the thermostat API."""
+        return True
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def available(self):
+        return False if self._system.internetStatus == None else True
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def is_on(self):
+        return self._system.internetStatus == True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_CONNECTIVITY
+
+    @property
+    def entity_category(self):
+        return EntityCategory.DIAGNOSTIC
+
+
+class S30RelayServerStatus(BinarySensorEntity):
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        self._hass = hass
+        self._manager = manager
+        self._system = system
+        self._myname = self._system.name + "_relay_server_connected"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "relayServerConnected",
+            ],
+        )
+
+    def update_callback(self):
+        _LOGGER.debug(f"update_callback S30RelayServerStatus myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (
+            self._system.unique_id() + UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR
+        ).replace("-", "")
+
+    @property
+    def extra_state_attributes(self):
+        return {}
+
+    def update(self):
+        """Update data from the thermostat API."""
+        return True
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def available(self):
+        return False if self._system.relayServerConnected == None else True
+
+    @property
+    def is_on(self):
+        return self._system.relayServerConnected == True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_CONNECTIVITY
+
+    @property
+    def entity_category(self):
+        return EntityCategory.DIAGNOSTIC
