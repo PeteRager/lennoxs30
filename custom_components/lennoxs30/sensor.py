@@ -21,6 +21,8 @@ import logging
 from lennoxs30api import (
     lennox_system,
     lennox_zone,
+    lennox_equipment,
+    lennox_equipment_diagnostic,
     LENNOX_STATUS_NOT_AVAILABLE,
     LENNOX_STATUS_NOT_EXIST,
 )
@@ -70,15 +72,18 @@ async def async_setup_entry(
                 _LOGGER.warning(
                     f"Diagnostics requires S30 to be in diagLevel 2 and isolated from the internet, currently in [{system.diagLevel}]"
                 )
-            diagnostics = system.getDiagnostics()
-            for e in diagnostics:
-                for d in diagnostics[e]:
-                    if e > 0:  # equipment 0 has no diagnostic data
-                        _LOGGER.info(
-                            f"Create Diagsensor system [{system.sysId}] eid [{e}] did [{d}] name [{diagnostics[e][d]['name']}]"
-                        )
-                        diagsensor = S30DiagSensor(hass, manager, system, e, d)
-                        sensor_list.append(diagsensor)
+            for e_id, eq in system.equipment.items():
+                equip: lennox_equipment = eq
+                if equip.equipment_id != 0:
+                    for did, diagnostic in equip.diagnostics.items():
+                        if diagnostic.valid == True:
+                            _LOGGER.info(
+                                f"Create Diagsensor system [{system.sysId}] eid [{equip.equipment_id}] did [{diagnostic.diagnostic_id}] name [{diagnostic.name}]"
+                            )
+                            diagsensor = S30DiagSensor(
+                                hass, manager, system, equip, diagnostic
+                            )
+                            sensor_list.append(diagsensor)
 
         if manager._createSensors == True:
             for zone in system.getZoneList():
@@ -110,19 +115,31 @@ async def async_setup_entry(
 class S30DiagSensor(SensorEntity):
     """Class for Lennox S30 thermostat."""
 
-    def __init__(self, hass, manager, system, eid, did):
+    def __init__(
+        self,
+        hass,
+        manager: Manager,
+        system: lennox_system,
+        equipment: lennox_equipment,
+        diagnostic: lennox_equipment_diagnostic,
+    ):
         self._hass = hass
         self._manager = manager
         self._system: lennox_system = system
-        self.rname = system.getDiagnostics()[eid][did]["name"]
-        self.eid = eid
-        self.did = did
-        self._myname = self._system.name + f"_{eid}_{self.rname}".replace(" ", "_")
+        self._equipment: lennox_equipment = equipment
+        self._diagnostic: lennox_equipment_diagnostic = diagnostic
+        self._myname = (
+            self._system.name
+            + f"_{self._equipment.equipment_id}_{self._diagnostic.name}".replace(
+                " ", "_"
+            )
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._system.registerOnUpdateCallbackDiag(
-            self.update_callback, [f"{self.eid}_{self.did}"]
+            self.update_callback,
+            [f"{self._equipment.equipment_id}_{self._diagnostic.diagnostic_id}"],
         )
 
     def update_callback(self, eid_did, newval):
@@ -134,11 +151,7 @@ class S30DiagSensor(SensorEntity):
     @property
     def state(self):
         """Return native value of the sensor."""
-        try:
-            return self._system.getDiagnostics()[self.eid][self.did]["value"]
-        except Exception as e:
-            _LOGGER.error(f"Error getting state [{self._myname}] [{e}]")
-            return None
+        return self._diagnostic.value
 
     @property
     def extra_state_attributes(self):
@@ -158,21 +171,16 @@ class S30DiagSensor(SensorEntity):
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
         return (
-            f"{self._system.unique_id()}_{UNIQUE_ID_SUFFIX_DIAG_SENSOR}_{self.eid}_{self.rname}"
+            f"{self._system.unique_id()}_{UNIQUE_ID_SUFFIX_DIAG_SENSOR}_{self._equipment.equipment_id}_{self._diagnostic.name}"
         ).replace("-", "")
 
     @property
     def name(self):
-        return f"{self.rname}"
+        return self._diagnostic.name
 
     @property
     def unit_of_measurement(self):
-        unit = None
-        try:
-            unit = self._system.getDiagnostics()[self.eid][self.did]["unit"]
-        except Exception as e:
-            _LOGGER.error(f"Error getting unit [{self._myname}] [{e}]")
-            return None
+        unit = self._diagnostic.unit
 
         if unit == "F":
             return TEMP_FAHRENHEIT
@@ -217,11 +225,11 @@ class S30DiagSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        if self.eid == 1:
+        if self._equipment.equipment_id == 1:
             return {
                 "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
             }
-        if self.eid == 2:
+        if self._equipment.equipment_id == 2:
             return {
                 "identifiers": {(DOMAIN, self._system.unique_id() + "_iu")},
             }

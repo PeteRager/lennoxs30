@@ -8,7 +8,7 @@ from custom_components.lennoxs30 import (
     Manager,
 )
 import pytest
-from custom_components.lennoxs30.const import LENNOX_DOMAIN, MANAGER
+from custom_components.lennoxs30.const import MANAGER
 
 from custom_components.lennoxs30.sensor import (
     S30DiagSensor,
@@ -18,8 +18,6 @@ from custom_components.lennoxs30.sensor import (
     async_setup_entry,
     S30OutdoorTempSensor,
 )
-
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE
 
 
 from unittest.mock import Mock
