@@ -36,6 +36,12 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
+    assert system.diagLevel == 0 or system.diagLevel == None
+    assert s.available == False
+
+    system.diagLevel = 2
+
+    assert s.available == True
     assert s.state == "No"
     assert s.extra_state_attributes == {}
     assert s.update() == True
@@ -56,20 +62,26 @@ async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
     assert system._diagcallbacks[0]["func"] == s.update_callback
     assert system._diagcallbacks[0]["match"] == ["1_0"]
 
+    assert len(system._callbacks) == 1
+    assert system._callbacks[0]["func"] == s.system_update_callback
+
 
 @pytest.mark.asyncio
 async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
+    system.diagLevel = 2
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
     await s.async_added_to_hass()
+    assert s.available == True
     assert s.state == "No"
 
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[1]
     s1 = S30DiagSensor(hass, manager, system, equipment, diagnostic)
     await s1.async_added_to_hass()
+    assert s1.available == True
     assert s1.state == "0.0"
 
     api = manager._api
@@ -78,8 +90,19 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
     with patch.object(s, "schedule_update_ha_state") as update_callback:
         api.processMessage(data)
         assert update_callback.call_count == 1
+    assert s1.available == True
     assert s.state == "Yes"
     assert s1.state == "10.0"
+
+    with patch.object(s, "schedule_update_ha_state") as s_update_callback:
+        with patch.object(s1, "schedule_update_ha_state") as s1_update_callback:
+            set = {"diagLevel": 0}
+            system.attr_updater(set, "diagLevel")
+            system.executeOnUpdateCallbacks()
+            assert s_update_callback.call_count == 1
+            assert s.available == False
+            assert s1_update_callback.call_count == 1
+            assert s1.available == False
 
 
 @pytest.mark.asyncio

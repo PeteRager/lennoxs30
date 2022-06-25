@@ -141,12 +141,26 @@ class S30DiagSensor(SensorEntity):
             self.update_callback,
             [f"{self._equipment.equipment_id}_{self._diagnostic.diagnostic_id}"],
         )
+        self._system.registerOnUpdateCallback(
+            self.system_update_callback, ["diagLevel"]
+        )
+        _LOGGER.debug(f"Create DiagnosticLevelNumber myname [{self._myname}]")
 
     def update_callback(self, eid_did, newval):
         _LOGGER.debug(
             f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}"
         )
         self.schedule_update_ha_state()
+
+    def system_update_callback(self):
+        _LOGGER.debug(f"system_update_callback S30DiagSSensor myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        if self._system.diagLevel not in (1, 2):
+            return False
+        return super().available
 
     @property
     def state(self):
