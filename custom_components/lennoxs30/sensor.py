@@ -59,18 +59,26 @@ async def async_setup_entry(
 
         if manager._create_inverter_power == True:
             _LOGGER.info(f"Create S30InverterPowerSensor system [{system.sysId}]")
-            if system.diagLevel == None or system.diagLevel == 0:
+            if system.diagLevel != 2:
                 _LOGGER.warning(
-                    f"Power Inverter Sensor requires S30 to be in diagLevel 2 and isolated from the internet, currently in [{system.diagLevel}]"
+                    f"Power Inverter Sensor requires S30 to be in diagLevel 2, currently in [{system.diagLevel}]"
+                )
+            if system.internetStatus == True or system.relayServerConnected == True:
+                _LOGGER.warning(
+                    f"To prevent S30 instability - Power Inverter Sensor requires S30 to be isolated from internet - internetStatus [{system.internetStatus}] relayServerConnected [{system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 )
             power_sensor = S30InverterPowerSensor(hass, manager, system)
             sensor_list.append(power_sensor)
 
         if manager._create_diagnostic_sensors == True:
             _LOGGER.info(f"Create Diagnostic Sensors system [{system.sysId}]")
-            if system.diagLevel == None or system.diagLevel == 0:
+            if system.diagLevel != 2:
                 _LOGGER.warning(
-                    f"Diagnostics requires S30 to be in diagLevel 2 and isolated from the internet, currently in [{system.diagLevel}]"
+                    f"Diagnostics requires S30 to be in diagLevel 2, currently in [{system.diagLevel}]"
+                )
+            if system.internetStatus == True or system.relayServerConnected == True:
+                _LOGGER.warning(
+                    f"To prevent S30 instability - diagnostics requires S30 to be isolated from internet - internetStatus [{system.internetStatus}] relayServerConnected [{system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 )
             for e_id, eq in system.equipment.items():
                 equip: lennox_equipment = eq

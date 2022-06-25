@@ -59,13 +59,19 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         manager._createSensors = False
         manager._create_diagnostic_sensors = False
         async_add_entities = Mock()
-        assert system.diagLevel == None
+
+        system.relayServerConnected = False
+        system.internetStatus = False
+        system.diagLevel = 0
+
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
         assert len(sensor_list) == 1
         assert isinstance(sensor_list[0], S30InverterPowerSensor)
         assert len(caplog.records) == 1
+        assert "diagLevel" in caplog.messages[0]
+        assert "2" in caplog.messages[0]
 
     # Inverter Power Sensor
     with caplog.at_level(logging.WARNING):
@@ -75,6 +81,50 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         manager._createSensors = False
         manager._create_diagnostic_sensors = False
         async_add_entities = Mock()
+
+        system.relayServerConnected = True
+        system.internetStatus = False
+        system.diagLevel = 2
+
+        await async_setup_entry(hass, entry, async_add_entities)
+        assert async_add_entities.called == 1
+        sensor_list = async_add_entities.call_args[0][0]
+        assert len(sensor_list) == 1
+        assert isinstance(sensor_list[0], S30InverterPowerSensor)
+        assert len(caplog.records) == 1
+        assert "relayServerConnected" in caplog.messages[0]
+
+    # Inverter Power Sensor
+    with caplog.at_level(logging.WARNING):
+        caplog.clear()
+        system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
+        manager._create_inverter_power = True
+        manager._createSensors = False
+        manager._create_diagnostic_sensors = False
+        async_add_entities = Mock()
+
+        system.relayServerConnected = False
+        system.internetStatus = True
+        system.diagLevel = 2
+
+        await async_setup_entry(hass, entry, async_add_entities)
+        assert async_add_entities.called == 1
+        sensor_list = async_add_entities.call_args[0][0]
+        assert len(sensor_list) == 1
+        assert isinstance(sensor_list[0], S30InverterPowerSensor)
+        assert len(caplog.records) == 1
+        assert "internetStatus" in caplog.messages[0]
+
+    # Inverter Power Sensor
+    with caplog.at_level(logging.WARNING):
+        caplog.clear()
+        system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
+        manager._create_inverter_power = True
+        manager._createSensors = False
+        manager._create_diagnostic_sensors = False
+        async_add_entities = Mock()
+        system.relayServerConnected = False
+        system.internetStatus = False
         system.diagLevel = 2
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
