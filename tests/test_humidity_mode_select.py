@@ -8,6 +8,7 @@ from lennoxs30api.s30api_async import (
     LENNOX_ZONING_MODE_CENTRAL,
 )
 from custom_components.lennoxs30 import (
+    DS_RETRY_WAIT,
     Manager,
 )
 import pytest
@@ -68,24 +69,47 @@ async def test_humidity_mode_select_current_option_z1(
     zone: lennox_zone = system._zoneList[1]
 
     c = HumidityModeSelect(hass, manager, system, zone)
+    await c.async_added_to_hass()
     c.entity_id = "select.my_select_zone_1"
     assert c.current_option == LENNOX_HUMIDITY_MODE_OFF
+    assert c.available == True
 
     with patch.object(c, "schedule_update_ha_state") as update_callback:
-        zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
-        c.zone_update_callback()
+        zone.humidityMode = None
+        set = {"humidityMode": LENNOX_HUMIDITY_MODE_DEHUMIDIFY}
+        zone.attr_updater(set, "humidityMode")
+        zone.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.current_option == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
+        assert c.available == True
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        set = {"humidityMode": LENNOX_HUMIDITY_MODE_HUMIDIFY}
+        zone.attr_updater(set, "humidityMode")
+        zone.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.current_option == LENNOX_HUMIDITY_MODE_HUMIDIFY
+        assert c.available == True
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        set = {"humidityMode": LENNOX_HUMIDITY_MODE_DEHUMIDIFY}
+        zone.attr_updater(set, "humidityMode")
+        zone.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
         assert c.current_option == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
 
-        zone.humidityMode = LENNOX_HUMIDITY_MODE_HUMIDIFY
-        c.zone_update_callback()
-        assert c.current_option == LENNOX_HUMIDITY_MODE_HUMIDIFY
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        set = {"zoningMode": LENNOX_ZONING_MODE_CENTRAL}
+        system.attr_updater(set, "zoningMode")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.current_option == None
+        assert c.available == True
 
-    zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
-    c.zone_update_callback()
-    assert c.current_option == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
-
-    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.current_option == None
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False
 
 
 @pytest.mark.asyncio

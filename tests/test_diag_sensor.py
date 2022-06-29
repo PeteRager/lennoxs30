@@ -1,7 +1,6 @@
-from lennoxs30api.s30api_async import (
-    lennox_system,
-)
+from lennoxs30api.s30api_async import lennox_system, lennox_equipment_diagnostic
 from custom_components.lennoxs30 import (
+    DS_RETRY_WAIT,
     Manager,
 )
 import pytest
@@ -34,7 +33,7 @@ from tests.conftest import loadfile
 async def test_diag_sensor_state(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
     equipment = system.equipment[1]
-    diagnostic = equipment.diagnostics[0]
+    diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
     assert system.diagLevel == 0 or system.diagLevel == None
     assert s.available == False
@@ -49,6 +48,9 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
     assert s.name == "Comp. Short Cycle Delay Active"
     assert s.state_class == STATE_CLASS_MEASUREMENT
     assert s.entity_category == EntityCategory.DIAGNOSTIC
+
+    diagnostic.value = "waiting..."
+    assert s.state == None
 
 
 @pytest.mark.asyncio
@@ -103,6 +105,21 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
             assert s.available == False
             assert s1_update_callback.call_count == 1
             assert s1.available == False
+
+    with patch.object(s, "schedule_update_ha_state") as s_update_callback:
+        with patch.object(s1, "schedule_update_ha_state") as s1_update_callback:
+            set = {"diagLevel": 2}
+            system.attr_updater(set, "diagLevel")
+            system.executeOnUpdateCallbacks()
+            assert s_update_callback.call_count == 1
+            assert s.available == True
+            assert s1_update_callback.call_count == 1
+            assert s1.available == True
+
+    with patch.object(s, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert s.available == False
 
 
 @pytest.mark.asyncio

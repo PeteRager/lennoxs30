@@ -7,6 +7,7 @@ from lennoxs30api.s30api_async import (
 )
 from custom_components.lennoxs30 import (
     DOMAIN,
+    DS_RETRY_WAIT,
     Manager,
 )
 
@@ -23,6 +24,8 @@ async def test_away_mode_subscription(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
     manager._is_metric = False
     c = S30HomeStateBinarySensor(hass, manager, system)
+    await c.async_added_to_hass()
+    assert c.available == True
 
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         set = {
@@ -48,6 +51,11 @@ async def test_away_mode_subscription(hass, manager: Manager, caplog):
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 5
 
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False
+
 
 @pytest.mark.asyncio
 async def test_away_mode_value(hass, manager: Manager, caplog):
@@ -58,6 +66,9 @@ async def test_away_mode_value(hass, manager: Manager, caplog):
     assert c.unique_id == (system.unique_id() + "_HS").replace("-", "")
     assert c.name == system.name + "_home_state"
     assert c.device_class == "presence"
+    assert c.available == True
+    assert c.should_poll == False
+    assert c.update() == True
 
     identifiers = c.device_info["identifiers"]
     for x in identifiers:

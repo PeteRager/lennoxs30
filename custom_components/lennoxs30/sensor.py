@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+from .base_entity import S30BaseEntity
 from .const import MANAGER, UNIQUE_ID_SUFFIX_DIAG_SENSOR
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -120,9 +121,7 @@ async def async_setup_entry(
         return False
 
 
-class S30DiagSensor(SensorEntity):
-    """Class for Lennox S30 thermostat."""
-
+class S30DiagSensor(S30BaseEntity, SensorEntity):
     def __init__(
         self,
         hass,
@@ -131,8 +130,8 @@ class S30DiagSensor(SensorEntity):
         equipment: lennox_equipment,
         diagnostic: lennox_equipment_diagnostic,
     ):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system: lennox_system = system
         self._equipment: lennox_equipment = equipment
         self._diagnostic: lennox_equipment_diagnostic = diagnostic
@@ -142,9 +141,11 @@ class S30DiagSensor(SensorEntity):
                 " ", "_"
             )
         )
+        _LOGGER.debug(f"Create S30DiagSensor myname [{self._myname}]")
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30DiagSensor myname [{self._myname}]")
         self._system.registerOnUpdateCallbackDiag(
             self.update_callback,
             [f"{self._equipment.equipment_id}_{self._diagnostic.diagnostic_id}"],
@@ -152,7 +153,7 @@ class S30DiagSensor(SensorEntity):
         self._system.registerOnUpdateCallback(
             self.system_update_callback, ["diagLevel"]
         )
-        _LOGGER.debug(f"Create DiagnosticLevelNumber myname [{self._myname}]")
+        await super().async_added_to_hass()
 
     def update_callback(self, eid_did, newval):
         _LOGGER.debug(
@@ -173,21 +174,14 @@ class S30DiagSensor(SensorEntity):
     @property
     def state(self):
         """Return native value of the sensor."""
+        if self._diagnostic.value == "waiting...":
+            return None
         return self._diagnostic.value
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {}
-
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self) -> str:
@@ -267,18 +261,25 @@ class S30DiagSensor(SensorEntity):
         return EntityCategory.DIAGNOSTIC
 
 
-class S30OutdoorTempSensor(SensorEntity):
+class S30OutdoorTempSensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_outdoor_temperature"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass S30OutdoorTempSensor myname [{self._myname}]"
+        )
         self._system.registerOnUpdateCallback(
             self.update_callback,
             ["outdoorTemperature", "outdoorTemperatureC", "outdoorTemperatureStatus"],
         )
-        self._myname = self._system.name + "_outdoor_temperature"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback S30OutdoorTempSensor myname [{self._myname}]")
@@ -293,15 +294,6 @@ class S30OutdoorTempSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {}
-
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -343,17 +335,22 @@ class S30OutdoorTempSensor(SensorEntity):
         }
 
 
-class S30TempSensor(SensorEntity):
+class S30TempSensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, zone: lennox_zone):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._zone = zone
+        self._myname = self._zone._system.name + "_" + self._zone.name + "_temperature"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30TempSensor myname [{self._myname}]")
         self._zone.registerOnUpdateCallback(
             self.update_callback, ["temperature", "temperatureC"]
         )
-        self._myname = self._zone._system.name + "_" + self._zone.name + "_temperature"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback S30TempSensor myname [{self._myname}]")
@@ -370,15 +367,6 @@ class S30TempSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {}
-
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -401,6 +389,10 @@ class S30TempSensor(SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
+    def state_class(self):
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
@@ -408,15 +400,20 @@ class S30TempSensor(SensorEntity):
         }
 
 
-class S30HumiditySensor(SensorEntity):
+class S30HumiditySensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, zone: lennox_zone):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._zone = zone
-        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity"])
         self._myname = self._zone._system.name + "_" + self._zone.name + "_humidity"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30TempSensor myname [{self._myname}]")
+        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity"])
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback S30HumiditySensor myname [{self._myname}]")
@@ -433,15 +430,6 @@ class S30HumiditySensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {}
-
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -471,18 +459,23 @@ class S30HumiditySensor(SensorEntity):
         }
 
 
-class S30InverterPowerSensor(SensorEntity):
+class S30InverterPowerSensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 inverter power."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_inverter_energy"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30TempSensor myname [{self._myname}]")
         self._system.registerOnUpdateCallback(
             self.update_callback,
             ["diagInverterInputVoltage", "diagInverterInputCurrent"],
         )
-        self._myname = self._system.name + "_inverter_energy"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback S30InverterPowerSensor [{self._myname}]")
@@ -493,18 +486,14 @@ class S30InverterPowerSensor(SensorEntity):
         # HA fails with dashes in IDs
         return (self._system.unique_id() + "_IE").replace("-", "")
 
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
     @property
     def name(self):
         return self._myname
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {}
 
     @property
     def state(self):
@@ -528,7 +517,9 @@ class S30InverterPowerSensor(SensorEntity):
                 * float(self._system.diagInverterInputCurrent)
             )
         except ValueError as e:
-            _LOGGER.warning(f"state myname [{self._myname}] failed: {e}")
+            _LOGGER.warning(
+                f"state myname [{self._myname}] diagInverterInputVoltage [{self._system.diagInverterInputVoltage}] diagInverterInputCurrent [{self._system.diagInverterInputCurrent}] failed: {e}"
+            )
             pass
         return None
 

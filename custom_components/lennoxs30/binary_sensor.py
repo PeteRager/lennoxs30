@@ -1,5 +1,7 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from typing import Any
+
+from .base_entity import S30BaseEntity
 from .const import (
     CONF_CLOUD_CONNECTION,
     MANAGER,
@@ -58,11 +60,18 @@ async def async_setup_entry(
         return False
 
 
-class S30HomeStateBinarySensor(BinarySensorEntity):
+class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_home_state"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass S30HomeStateBinarySensor myname [{self._myname}]"
+        )
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -74,7 +83,7 @@ class S30HomeStateBinarySensor(BinarySensorEntity):
                 "sa_setpointState",
             ],
         )
-        self._myname = self._system.name + "_home_state"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(
@@ -100,15 +109,6 @@ class S30HomeStateBinarySensor(BinarySensorEntity):
         attrs["smart_away_setpoint_state"] = self._system.sa_setpointState
         return attrs
 
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
     @property
     def name(self):
         return self._myname
@@ -129,21 +129,23 @@ class S30HomeStateBinarySensor(BinarySensorEntity):
         return DEVICE_CLASS_PRESENCE
 
 
-class S30InternetStatus(BinarySensorEntity):
+class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
         self._myname = self._system.name + "_internet_status"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30InternetStatus myname [{self._myname}]")
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
                 "internetStatus",
             ],
         )
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback S30InternetStatus myname [{self._myname}]")
@@ -160,18 +162,11 @@ class S30InternetStatus(BinarySensorEntity):
     def extra_state_attributes(self):
         return {}
 
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
     @property
     def available(self):
-        return False if self._system.internetStatus == None else True
+        if self._system.internetStatus == None:
+            return False
+        return super().available
 
     @property
     def name(self):
@@ -197,21 +192,25 @@ class S30InternetStatus(BinarySensorEntity):
         return EntityCategory.DIAGNOSTIC
 
 
-class S30RelayServerStatus(BinarySensorEntity):
+class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
         self._myname = self._system.name + "_relay_server_connected"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass S30RelayServerStatus myname [{self._myname}]"
+        )
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
                 "relayServerConnected",
             ],
         )
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback S30RelayServerStatus myname [{self._myname}]")
@@ -228,22 +227,15 @@ class S30RelayServerStatus(BinarySensorEntity):
     def extra_state_attributes(self):
         return {}
 
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
     @property
     def name(self):
         return self._myname
 
     @property
     def available(self):
-        return False if self._system.relayServerConnected == None else True
+        if self._system.relayServerConnected == None:
+            return False
+        return super().available
 
     @property
     def is_on(self):

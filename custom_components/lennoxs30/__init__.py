@@ -411,6 +411,8 @@ class Manager(object):
         self._create_diagnostic_sensors: bool = create_diagnostic_sensors
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
+        self.connected = False
+        self._cs_callbacks = []
         if index == 0:
             self.connection_state = DOMAIN_STATE
         else:
@@ -433,9 +435,34 @@ class Manager(object):
         _LOGGER.debug(f"async_shutdown complete [{self._ip_address}]")
 
     def updateState(self, state: int) -> None:
+        if state == DS_CONNECTED and self.connected == False:
+            self.connected = True
+            self.executeConnectionStateCallbacks()
+        elif (
+            state
+            in (
+                DS_RETRY_WAIT,
+                DS_LOGIN_FAILED,
+            )
+            and self.connected == True
+        ):
+            self.connected = False
+            self.executeConnectionStateCallbacks()
         self._hass.states.async_set(
             self.connection_state, state, self.getMetricsList(), force_update=True
         )
+
+    def registerConnectionStateCallback(self, callbackfunc):
+        self._cs_callbacks.append({"func": callbackfunc})
+
+    def executeConnectionStateCallbacks(self):
+        for callback in self._cs_callbacks:
+            callbackfunc = callback["func"]
+            try:
+                callbackfunc(self.connected)
+            except Exception as e:
+                # Log and eat this exception so we can process other callbacks
+                _LOGGER.exception("executeConnectionStateCallbacks - failed ")
 
     def getMetricsList(self):
         list = self._api.metrics.getMetricList()

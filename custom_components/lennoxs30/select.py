@@ -1,5 +1,7 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from lennoxs30api.s30exception import S30Exception
+
+from .base_entity import S30BaseEntity
 from .const import MANAGER
 from homeassistant.components.select import SelectEntity
 from . import DOMAIN, Manager
@@ -16,7 +18,6 @@ from lennoxs30api.s30api_async import (
     LENNOX_DEHUMIDIFICATION_MODE_HIGH,
     LENNOX_DEHUMIDIFICATION_MODE_MEDIUM,
     LENNOX_DEHUMIDIFICATION_MODE_AUTO,
-    LENNOX_DEHUMIDIFICATION_MODES,
     lennox_system,
     lennox_zone,
     EC_BAD_PARAMETERS,
@@ -57,7 +58,7 @@ async def async_setup_entry(
         async_add_entities(select_list, True)
 
 
-class HumidityModeSelect(SelectEntity):
+class HumidityModeSelect(S30BaseEntity, SelectEntity):
     """Set the humidity mode"""
 
     def __init__(
@@ -67,36 +68,39 @@ class HumidityModeSelect(SelectEntity):
         system: lennox_system,
         zone: lennox_zone,
     ):
+        super().__init__(manager)
         self.hass: HomeAssistant = hass
-        self._manager: Manager = manager
         self._system = system
         self._zone = zone
-        self._zone.registerOnUpdateCallback(self.zone_update_callback)
+        self._myname = self._system.name + "_" + self._zone.name + "_humidity_mode"
+        _LOGGER.debug(f"Create HumidityModeSelect myname [{self._myname}]")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass HumidityModeSelect myname [{self._myname}]")
+        self._zone.registerOnUpdateCallback(
+            self.zone_update_callback,
+            [
+                "humidityMode",
+            ],
+        )
         self._system.registerOnUpdateCallback(
             self.system_update_callback,
             [
                 "zoningMode",
             ],
         )
-
-        self._myname = self._system.name + "_" + self._zone.name + "_humidity_mode"
-        self._currentOption = self._zone.humidityMode
-        _LOGGER.debug(f"Create HumidityModeSelect myname [{self._myname}]")
+        await super().async_added_to_hass()
 
     def zone_update_callback(self):
         _LOGGER.debug(
-            f"zone_update_callback HumidityModeSelect myname [{self._myname}] current_hvac_mode [{self._currentOption}] updated_hvac_mode [{self._zone.humidityMode}]"
+            f"zone_update_callback HumidityModeSelect myname [{self._myname}] humidityMode [{self._zone.humidityMode}]"
         )
-        if self._currentOption != self._zone.humidityMode:
-            _LOGGER.debug(
-                f"update_callback DiagnosticLevelNumber myname [{self._myname}]"
-            )
-            self._currentOption = self._zone.humidityMode
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     def system_update_callback(self):
         _LOGGER.debug(
-            f"system_update_callback HumidityModeSelect myname [{self._myname}]"
+            f"system_update_callback HumidityModeSelect myname [{self._myname}] system zoning mode [{self._system.zoningMode}]"
         )
         self.schedule_update_ha_state()
 
@@ -113,7 +117,7 @@ class HumidityModeSelect(SelectEntity):
     def current_option(self) -> str:
         if self._zone.is_zone_disabled == True:
             return None
-        return self._currentOption
+        return self._zone.humidityMode
 
     @property
     def options(self) -> list:
@@ -150,7 +154,7 @@ class HumidityModeSelect(SelectEntity):
         return result
 
 
-class DehumidificationModeSelect(SelectEntity):
+class DehumidificationModeSelect(S30BaseEntity, SelectEntity):
     """Set the humidity mode"""
 
     def __init__(
@@ -159,28 +163,30 @@ class DehumidificationModeSelect(SelectEntity):
         manager: Manager,
         system: lennox_system,
     ):
+        super().__init__(manager)
         self.hass: HomeAssistant = hass
-        self._manager: Manager = manager
         self._system = system
+        self._myname = self._system.name + "_dehumidification_mode"
+        _LOGGER.debug(f"Create DehumidificationModeSelect myname [{self._myname}]")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass DehumidificationModeSelect myname [{self._myname}]"
+        )
         self._system.registerOnUpdateCallback(
             self.system_update_callback,
             [
                 "dehumidificationMode",
             ],
         )
-
-        self._myname = self._system.name + "_dehumidification_mode"
-        self._currentOption = self._system.dehumidificationMode
-        _LOGGER.debug(f"Create DehumidificationModeSelect myname [{self._myname}]")
+        await super().async_added_to_hass()
 
     def system_update_callback(self):
         _LOGGER.debug(
-            f"system_update_callback DehumidificationModeSelect myname [{self._myname}] updated__dehumidification_mode [{self._system.dehumidificationMode}]"
+            f"system_update_callback DehumidificationModeSelect myname [{self._myname}] dehumidification_mode [{self._system.dehumidificationMode}]"
         )
-        if self._currentOption != self._system.dehumidificationMode:
-            _LOGGER.debug(f"update_callback HumidityModeSelect myname [{self._myname}]")
-            self._currentOption = self._system.dehumidificationMode
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:

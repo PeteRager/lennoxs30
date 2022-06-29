@@ -6,6 +6,7 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from custom_components.lennoxs30 import (
+    DS_RETRY_WAIT,
     Manager,
 )
 import pytest
@@ -41,12 +42,55 @@ async def test_dehumidifier_mode_mode_select_current_option(
 
     assert system.dehumidificationMode == LENNOX_DEHUMIDIFICATION_MODE_AUTO
     assert c.current_option == "climate IQ"
+    assert c.available == True
 
     system.dehumidificationMode = LENNOX_DEHUMIDIFICATION_MODE_HIGH
     assert c.current_option == "max"
+    assert c.available == True
 
     system.dehumidificationMode = LENNOX_DEHUMIDIFICATION_MODE_MEDIUM
     assert c.current_option == "normal"
+    assert c.available == True
+
+
+@pytest.mark.asyncio
+async def test_dehumidifier_mode_mode_select_subscription(
+    hass, manager_mz: Manager, caplog
+):
+    manager = manager_mz
+    system: lennox_system = manager._api._systemList[0]
+    system.dehumidificationMode = None
+    c = DehumidificationModeSelect(hass, manager, system)
+    await c.async_added_to_hass()
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        set = {"dehumidificationMode": LENNOX_DEHUMIDIFICATION_MODE_HIGH}
+        system.attr_updater(set, "dehumidificationMode")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.current_option == "max"
+        assert c.available == True
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        set = {"dehumidificationMode": LENNOX_DEHUMIDIFICATION_MODE_MEDIUM}
+        system.attr_updater(set, "dehumidificationMode")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.current_option == "normal"
+        assert c.available == True
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        set = {"dehumidificationMode": LENNOX_DEHUMIDIFICATION_MODE_AUTO}
+        system.attr_updater(set, "dehumidificationMode")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.current_option == "climate IQ"
+        assert c.available == True
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False
 
 
 @pytest.mark.asyncio

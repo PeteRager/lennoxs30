@@ -24,11 +24,11 @@ from lennoxs30api.s30api_async import (
     lennox_zone,
 )
 from custom_components.lennoxs30 import (
+    DS_RETRY_WAIT,
     Manager,
 )
 import pytest
 import logging
-import asyncio
 
 from custom_components.lennoxs30.climate import (
     PRESET_CANCEL_AWAY_MODE,
@@ -45,16 +45,9 @@ from homeassistant.components.climate.const import (
 )
 
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_DRY,
     CURRENT_HVAC_IDLE,
-    FAN_AUTO,
-    FAN_OFF,
-    FAN_ON,
     HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
@@ -86,6 +79,7 @@ async def test_climate_min_max_c(hass, manager_mz: Manager, caplog):
 
     # Metric Tests
     assert manager._is_metric == True
+    assert c.temperature_unit == TEMP_CELSIUS
     zone.systemMode = LENNOX_HVAC_OFF
     assert c.min_temp == None
     assert c.max_temp == None
@@ -132,6 +126,7 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     manager._is_metric = False
 
     assert manager._is_metric == False
+    assert c.temperature_unit == TEMP_FAHRENHEIT
     zone.systemMode = LENNOX_HVAC_OFF
     assert c.min_temp == None
     assert c.max_temp == None
@@ -359,6 +354,7 @@ async def test_climate_system_subscription(hass, manager_mz: Manager, caplog):
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
+    await c.async_added_to_hass()
 
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         set = {
@@ -387,6 +383,11 @@ async def test_climate_system_subscription(hass, manager_mz: Manager, caplog):
         system.attr_updater(set, "zoningMode", "zoningMode")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 6
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False
 
 
 @pytest.mark.asyncio

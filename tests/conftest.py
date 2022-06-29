@@ -93,6 +93,7 @@ def manager(hass) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
+    manager.connected = True
     api = manager._api
     data = loadfile("login_response.json")
     api.process_login_response(data)
@@ -140,6 +141,7 @@ def manager_mz(hass) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
+    manager.connected = True
     api = manager._api
     data = loadfile("login_response_mz.json")
     api.process_login_response(data)

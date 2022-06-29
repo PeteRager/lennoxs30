@@ -11,12 +11,8 @@ from lennoxs30api import (
     LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
     LENNOX_HUMIDITY_MODE_HUMIDIFY,
     LENNOX_TEMP_OPERATION_OFF,
-    LENNOX_HUMIDITY_MODE_OFF,
-    LENNOX_STATUS_GOOD,
     LENNOX_STATUS_NOT_AVAILABLE,
     LENNOX_STATUS_NOT_EXIST,
-    LENNOX_ZONING_MODE_CENTRAL,
-    LENNOX_ZONING_MODE_ZONED,
     S30Exception,
     lennox_system,
     lennox_zone,
@@ -28,6 +24,8 @@ from lennoxs30api.s30api_async import (
     LENNOX_HVAC_HEAT,
     LENNOX_HVAC_OFF,
 )
+
+from .base_entity import S30BaseEntity
 from .const import MANAGER
 
 from homeassistant.components.climate import ClimateEntity
@@ -41,7 +39,6 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
     FAN_ON,
     HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
@@ -58,7 +55,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
@@ -112,17 +108,22 @@ async def async_setup_entry(
         return False
 
 
-class S30Climate(ClimateEntity):
+class S30Climate(S30BaseEntity, ClimateEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(
         self, hass, manager: Manager, system: lennox_system, zone: lennox_zone
     ):
         """Initialize the climate device."""
+        super().__init__(manager)
         self.hass: HomeAssistant = hass
-        self._manager: Manager = manager
         self._system = system
         self._zone = zone
+        self._myname = self._system.name + "_" + self._zone.name
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30Climate myname [{self._myname}]")
         self._zone.registerOnUpdateCallback(self.zone_update_callback)
         # We need notification of state of system.manualAwayMode in order to update the preset mode in HA.
         self._system.registerOnUpdateCallback(
@@ -137,7 +138,7 @@ class S30Climate(ClimateEntity):
                 "zoningMode",
             ],
         )
-        self._myname = self._system.name + "_" + self._zone.name
+        await super().async_added_to_hass()
 
     @property
     def unique_id(self) -> str:
@@ -186,15 +187,6 @@ class S30Climate(ClimateEntity):
         attrs["zoneEnabled"] = self.is_zone_enabled
         attrs["zoningMode"] = self._system.zoningMode
         return attrs
-
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

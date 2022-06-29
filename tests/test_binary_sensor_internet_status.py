@@ -3,6 +3,7 @@ from lennoxs30api.s30api_async import (
 )
 from custom_components.lennoxs30 import (
     DOMAIN,
+    DS_RETRY_WAIT,
     Manager,
 )
 
@@ -70,5 +71,20 @@ async def test_internet_status_subscription(hass, manager: Manager, caplog):
         }
         system.attr_updater(set, "internetStatus", "internetStatus")
         system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.available == False
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        set = {
+            "internetStatus": False,
+        }
+        system.attr_updater(set, "internetStatus", "internetStatus")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert c.is_on == False
+        assert c.available == True
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
         assert update_callback.call_count == 1
         assert c.available == False
