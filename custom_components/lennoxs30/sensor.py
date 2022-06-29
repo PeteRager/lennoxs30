@@ -475,11 +475,26 @@ class S30InverterPowerSensor(S30BaseEntity, SensorEntity):
             self.update_callback,
             ["diagInverterInputVoltage", "diagInverterInputCurrent"],
         )
+        self._system.registerOnUpdateCallback(
+            self.system_update_callback, ["diagLevel"]
+        )
         await super().async_added_to_hass()
+
+    def system_update_callback(self):
+        _LOGGER.debug(
+            f"system_update_callback S30InverterPowerSensor myname [{self._myname}]"
+        )
+        self.schedule_update_ha_state()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback S30InverterPowerSensor [{self._myname}]")
         self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        if self._system.diagLevel not in (1, 2):
+            return False
+        return super().available
 
     @property
     def unique_id(self) -> str:

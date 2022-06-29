@@ -8,6 +8,7 @@ from lennoxs30api.s30api_async import (
     lennox_zone,
 )
 from custom_components.lennoxs30 import (
+    DS_CONNECTED,
     DS_RETRY_WAIT,
     Manager,
 )
@@ -32,6 +33,7 @@ from unittest.mock import patch
 async def test_power_inverter_sensor(hass, manager: Manager, caplog):
     manager._is_metric = False
     system: lennox_system = manager._api._systemList[0]
+    system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
 
     assert s.unique_id == (system.unique_id() + "_IE").replace("-", "")
@@ -78,6 +80,7 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
 @pytest.mark.asyncio
 async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
+    system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
     await s.async_added_to_hass()
 
@@ -99,3 +102,22 @@ async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog
         manager.updateState(DS_RETRY_WAIT)
         assert update_callback.call_count == 1
         assert s.available == False
+
+    with patch.object(s, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_CONNECTED)
+        assert update_callback.call_count == 1
+        assert s.available == True
+
+    with patch.object(s, "schedule_update_ha_state") as s_update_callback:
+        set = {"diagLevel": 0}
+        system.attr_updater(set, "diagLevel")
+        system.executeOnUpdateCallbacks()
+        assert s_update_callback.call_count == 1
+        assert s.available == False
+
+    with patch.object(s, "schedule_update_ha_state") as s_update_callback:
+        set = {"diagLevel": 2}
+        system.attr_updater(set, "diagLevel")
+        system.executeOnUpdateCallbacks()
+        assert s_update_callback.call_count == 1
+        assert s.available == True
