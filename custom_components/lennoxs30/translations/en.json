@@ -16,7 +16,7 @@
           "password": "Lennox Account password",
           "allergen_defender_switch": "Create allergenDefender switch",
           "app_id": "Unique application id to use. See documentation",
-          "create_sensors": "Create Temperature and Humidity Sensors"
+          "create_sensors": "Temperature and Humidity Sensors"
         }
       },
 	  "local": {
@@ -26,9 +26,9 @@
           "allergen_defender_switch": "Create allergenDefender switch",
           "app_id": "Unique application id to use. See documentation",
           "init_wait_time": "Configuration Wait time in seconds",
-          "create_sensors": "Create Temperature and Humidity Sensors",
-          "create_inverter_power": "ALPHA- Create Inverter Power Sensor",
-          "create_diagnostic_sensors": "ALPHA- Create Diagnostic Sensors",
+          "create_sensors": "Temperature and Humidity Sensors",
+          "create_inverter_power": "WARN!- Inverter Power Sensor",
+          "create_diagnostic_sensors": "WARN!- Diagnostic Sensors",
           "protocol": "Should be HTTPS unless using simulator"
         }
       },
@@ -66,9 +66,9 @@
               "password": "Your Lennox Account password",
               "allergen_defender_switch": "Create allergenDefender switch",
               "app_id": "Unique application id to use. See documentation",
-              "create_sensors": "Create temperature and humidity Sensors",
-              "create_inverter_power": "APHA - Create inverter power sensor",
-              "create_diagnostic_sensors": "ALPHA - Create Diagnostic Sensors",
+              "create_sensors": "Temperature and humidity Sensors",
+              "create_inverter_power": "WARN!- Inverter power sensor",
+              "create_diagnostic_sensors": "WARN!- Diagnostic Sensors",
               "protocol": "Should be HTTPS unless using simulator",
               "scan_interval": "Message scan interval seconds.",
               "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
