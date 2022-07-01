@@ -135,11 +135,14 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
         self._system: lennox_system = system
         self._equipment: lennox_equipment = equipment
         self._diagnostic: lennox_equipment_diagnostic = diagnostic
-        self._myname = (
-            self._system.name
-            + f"_{self._equipment.equipment_id}_{self._diagnostic.name}".replace(
-                " ", "_"
-            )
+
+        suffix = str(self._equipment.equipment_id)
+        if self._equipment.equipment_id == 1:
+            suffix = "ou"
+        elif self._equipment.equipment_id == 2:
+            suffix = "iu"
+        self._myname = f"{self._system.name}_{suffix}_{self._diagnostic.name}".replace(
+            " ", "_"
         )
         _LOGGER.debug(f"Create S30DiagSensor myname [{self._myname}]")
 
@@ -192,12 +195,7 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
 
     @property
     def name(self):
-        suffix = str(self._equipment.equipment_id)
-        if self._equipment.equipment_id == 1:
-            suffix = "ou"
-        elif self._equipment.equipment_id == 2:
-            suffix = "iu"
-        return f"{self._system.name}_{suffix}_{self._diagnostic.name}".replace(" ", "_")
+        return self._myname
 
     @property
     def unit_of_measurement(self):
