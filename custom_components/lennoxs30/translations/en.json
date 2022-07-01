@@ -37,7 +37,7 @@
         "data": {
           "scan_interval": "Message scan interval seconds.",
           "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
-          "fast_scan_count" : "Numbed of fast scans",
+          "fast_scan_count" : "Number of fast scans",
           "timeout" : "Communication Timeout (seconds)",
           "init_wait_time": "Configuration Wait time in seconds",
           "pii_in_message_logs" : "Personal information in log files",
@@ -72,7 +72,7 @@
               "protocol": "Should be HTTPS unless using simulator",
               "scan_interval": "Message scan interval seconds.",
               "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
-              "fast_scan_count" : "Numbed of fast scans",
+              "fast_scan_count" : "Number of fast scans",
               "timeout" : "Communication Timeout (seconds)",    
               "init_wait_time": "Configuration Wait time in seconds",
               "pii_in_message_logs" : "Personal information in log files",

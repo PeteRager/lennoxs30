@@ -35,9 +35,9 @@ async def async_setup_entry(
 
     for system in manager._api.getSystems():
         # We do not support setting diag level from a cloud connection
-        if (
-            entry.data[CONF_CLOUD_CONNECTION] == True
-            or manager._create_inverter_power == False
+        if manager._api._isLANConnection == False or (
+            manager._create_inverter_power == False
+            and manager._create_diagnostic_sensors == False
         ):
             _LOGGER.debug(
                 "async_setup_entry - not creating diagnostic level number because inverter power not enabled"

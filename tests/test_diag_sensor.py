@@ -45,12 +45,19 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
     assert s.extra_state_attributes == {}
     assert s.update() == True
     assert s.should_poll == False
-    assert s.name == "Comp. Short Cycle Delay Active"
+    assert s.name == f"{system.name}_ou_Comp._Short_Cycle_Delay_Active".replace(
+        " ", "_"
+    )
     assert s.state_class == STATE_CLASS_MEASUREMENT
     assert s.entity_category == EntityCategory.DIAGNOSTIC
 
     diagnostic.value = "waiting..."
     assert s.state == None
+
+    equipment = system.equipment[2]
+    diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[0]
+    s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
+    assert s.name == f"{system.name}_iu_{diagnostic.name}".replace(" ", "_")
 
 
 @pytest.mark.asyncio

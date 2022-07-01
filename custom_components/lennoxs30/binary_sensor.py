@@ -197,7 +197,7 @@ class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
         super().__init__(manager)
         self._hass = hass
         self._system = system
-        self._myname = self._system.name + "_relay_server_connected"
+        self._myname = self._system.name + "_relay_server"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

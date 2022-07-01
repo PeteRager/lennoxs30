@@ -192,7 +192,12 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
 
     @property
     def name(self):
-        return self._diagnostic.name
+        suffix = str(self._equipment.equipment_id)
+        if self._equipment.equipment_id == 1:
+            suffix = "ou"
+        elif self._equipment.equipment_id == 2:
+            suffix = "iu"
+        return f"{self._system.name}_{suffix}_{self._diagnostic.name}".replace(" ", "_")
 
     @property
     def unit_of_measurement(self):

@@ -27,7 +27,7 @@ async def test_relay_service_status_init(hass, manager: Manager, caplog):
     assert c.extra_state_attributes == {}
     assert c.update() == True
     assert c.should_poll == False
-    assert c.name == system.name + "_relay_server_connected"
+    assert c.name == system.name + "_relay_server"
     assert system.relayServerConnected == None
     assert c.available == False
     assert c.entity_category == "diagnostic"
