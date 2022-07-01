@@ -108,6 +108,17 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
         try:
+            if value == 1:
+                _LOGGER.warning(
+                    "Diagnostic Level Number - setting to a value of 1 is not recommeded. See https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                )
+            if value != 0 and (
+                self._system.internetStatus == True
+                or self._system.relayServerConnected == True
+            ):
+                _LOGGER.warning(
+                    f"Diagnostic Level Number - setting to a non-zer value is not recommended for systems connected to the lennox cloud internetStatus [{self._system.internetStatus}] relayServerConnected [{self._system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                )
             await self._system.set_diagnostic_level(value)
         except S30Exception as e:
             _LOGGER.error(f"DiagnosticLevelNumber::async_set_value [{e.as_string()}]")

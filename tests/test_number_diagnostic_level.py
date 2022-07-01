@@ -91,13 +91,108 @@ async def test_diagnostic_level_value(hass, manager: Manager, caplog):
 @pytest.mark.asyncio
 async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
-    manager._is_metric = True
     c = DiagnosticLevelNumber(hass, manager, system)
 
     with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
         await c.async_set_value(2)
         assert set_diagnostic_level.call_count == 1
         assert set_diagnostic_level.call_args[0][0] == 2
+
+    system.internetStatus = False
+    system.relayServerConnected = False
+    with caplog.at_level(logging.WARNING):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            await c.async_set_value(1)
+            assert len(caplog.records) == 1
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[0]
+            )
+            caplog.clear()
+            await c.async_set_value(2)
+            assert len(caplog.records) == 0
+            caplog.clear()
+            await c.async_set_value(0)
+            assert len(caplog.records) == 0
+
+    system.internetStatus = True
+    system.relayServerConnected = False
+    with caplog.at_level(logging.WARNING):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            await c.async_set_value(1)
+            assert len(caplog.records) == 2
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[0]
+            )
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[1]
+            )
+            caplog.clear()
+            await c.async_set_value(2)
+            assert len(caplog.records) == 1
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[0]
+            )
+            caplog.clear()
+            await c.async_set_value(0)
+            assert len(caplog.records) == 0
+
+    system.internetStatus = False
+    system.relayServerConnected = True
+    with caplog.at_level(logging.WARNING):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            await c.async_set_value(1)
+            assert len(caplog.records) == 2
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[0]
+            )
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[1]
+            )
+            caplog.clear()
+            await c.async_set_value(2)
+            assert len(caplog.records) == 1
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[0]
+            )
+            caplog.clear()
+            await c.async_set_value(0)
+            assert len(caplog.records) == 0
+
+    system.internetStatus = True
+    system.relayServerConnected = True
+    with caplog.at_level(logging.WARNING):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            await c.async_set_value(1)
+            assert len(caplog.records) == 2
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[0]
+            )
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[1]
+            )
+            caplog.clear()
+            await c.async_set_value(2)
+            assert len(caplog.records) == 1
+            assert (
+                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                in caplog.messages[0]
+            )
+            caplog.clear()
+            await c.async_set_value(0)
+            assert len(caplog.records) == 0
 
 
 @pytest.mark.asyncio
