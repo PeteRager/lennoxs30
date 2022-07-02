@@ -138,7 +138,6 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
         self._myname = self._system.name + "_dehumidification_overcooling"
         _LOGGER.debug(f"Create DehumidificationOverCooling myname [{self._myname}]")

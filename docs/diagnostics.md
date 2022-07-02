@@ -32,7 +32,7 @@ There are two items that should be setup.
 
 1.  Block DNS
 2.  Block outgoing on all ports, all protocols - Lennox uses both TCP and UDP outgoing
-3.  Allow access to an NTP time server to keep the S30 clock synced
+3.  Allow access to an NTP time server to keep the S30 clock synced (recommended may not be required?)
 
 Once that is configured, you'll need to restart the router or the S30, as firewalls do not block already established connections.
 

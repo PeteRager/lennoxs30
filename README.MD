@@ -19,7 +19,7 @@ Cloud Connections depending on the device model. We believe these configurations
 - It is recommended to disable automatic software updates on the S30. This will prevent outages if new versions are not compatible with this integration.
 - If you have more than one S30 in your local network, please use a different app_id for each instance (e.g. homeassistant_1, homeassistant_2)
 - If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
-- **WARNING** If using the Power Inverter or Diagnostic Sensors - stability problems may arise if your system should be not connected to the Lennox Cloud. Please review [docs/diagnostics.md](./docs/diagnostics.md) before using.
+- **WARNING** If using the Power Inverter or Diagnostic Sensors - S30 stability problems may arise if your system is connected to the Lennox Cloud. Please review [docs/diagnostics.md](./docs/diagnostics.md) before using.
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
 # Overview
