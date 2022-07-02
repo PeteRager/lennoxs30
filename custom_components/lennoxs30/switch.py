@@ -1,5 +1,7 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
 from typing import Any
+
+from .base_entity import S30BaseEntity
 from .const import MANAGER
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, CONF_NAME
 from . import Manager
@@ -59,13 +61,17 @@ async def async_setup_entry(
         return False
 
 
-class S30VentilationSwitch(SwitchEntity):
+class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_ventilation"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -75,7 +81,7 @@ class S30VentilationSwitch(SwitchEntity):
                 "ventilationMode",
             ],
         )
-        self._myname = self._system.name + "_ventilation"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
@@ -94,15 +100,6 @@ class S30VentilationSwitch(SwitchEntity):
         attrs["ventilatingUntilTime"] = self._system.ventilatingUntilTime
         attrs["diagVentilationRuntime"] = self._system.diagVentilationRuntime
         return attrs
-
-    def update(self):
-        """Update data from the thermostat API."""
-        return True
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -138,17 +135,21 @@ class S30VentilationSwitch(SwitchEntity):
                 _LOGGER.error("ventilation_off:async_turn_off - error:" + str(e))
 
 
-class S30AllergenDefenderSwitch(SwitchEntity):
+class S30AllergenDefenderSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_allergen_defender"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
         self._system.registerOnUpdateCallback(
             self.update_callback, ["allergenDefender"]
         )
-        self._myname = self._system.name + "_allergen_defender"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
@@ -209,20 +210,24 @@ class S30AllergenDefenderSwitch(SwitchEntity):
                 _LOGGER.error("allergenDefender_off:async_turn_off - error:" + str(e))
 
 
-class S30ManualAwayModeSwitch(SwitchEntity):
+class S30ManualAwayModeSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_manual_away_mode"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
                 "manualAwayMode",
             ],
         )
-        self._myname = self._system.name + "_manual_away_mode"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
@@ -236,13 +241,6 @@ class S30ManualAwayModeSwitch(SwitchEntity):
     @property
     def extra_state_attributes(self):
         return {}
-
-    def update(self):
-        return True
-
-    @property
-    def should_poll(self):
-        return False
 
     @property
     def name(self):
@@ -283,20 +281,24 @@ class S30ManualAwayModeSwitch(SwitchEntity):
                 )
 
 
-class S30SmartAwayEnableSwitch(SwitchEntity):
+class S30SmartAwayEnableSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         self._hass = hass
         self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_smart_away_enable"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
                 "sa_enabled",
             ],
         )
-        self._myname = self._system.name + "_smart_away_enable"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")
@@ -359,20 +361,24 @@ class S30SmartAwayEnableSwitch(SwitchEntity):
                 )
 
 
-class S30ZoningSwitch(SwitchEntity):
+class S30ZoningSwitch(S30BaseEntity, SwitchEntity):
     """Class for iHarmony Zoning"""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         self._hass = hass
         self._manager = manager
         self._system = system
+        self._myname = self._system.name + "_zoning_enable"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
                 "centralMode",
             ],
         )
-        self._myname = self._system.name + "_zoning_enable"
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.info(f"update_callback myname [{self._myname}]")

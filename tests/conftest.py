@@ -54,11 +54,13 @@ async def caplog_setup_text(caplog):
     yield caplog.text
 
 
-def loadfile(name) -> json:
+def loadfile(name: str, sysId: str = None) -> json:
     script_dir = os.path.dirname(__file__) + "/messages/"
     file_path = os.path.join(script_dir, name)
     with open(file_path) as f:
         data = json.load(f)
+    if sysId != None:
+        data["SenderID"] = sysId
     return data
 
 
@@ -91,6 +93,7 @@ def manager(hass) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
+    manager.connected = True
     api = manager._api
     data = loadfile("login_response.json")
     api.process_login_response(data)
@@ -138,6 +141,7 @@ def manager_mz(hass) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
+    manager.connected = True
     api = manager._api
     data = loadfile("login_response_mz.json")
     api.process_login_response(data)

@@ -9,6 +9,7 @@ from .const import (
     CONF_APP_ID,
     CONF_CLOUD_CONNECTION,
     CONF_CREATE_INVERTER_POWER,
+    CONF_CREATE_DIAGNOSTICS_SENSORS,
     CONF_CREATE_SENSORS,
     CONF_FAST_POLL_INTERVAL,
     CONF_FAST_POLL_COUNT,
@@ -72,6 +73,7 @@ STEP_LOCAL = vol.Schema(
         vol.Optional(CONF_CREATE_SENSORS, default=True): cv.boolean,
         vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
         vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
+        vol.Optional(CONF_CREATE_DIAGNOSTICS_SENSORS, default=False): cv.boolean,
         vol.Optional(CONF_PROTOCOL, default="https"): cv.string,
     }
 )
@@ -101,7 +103,7 @@ def lennox30_entries(hass: HomeAssistant):
 class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Lennox S30 configflow."""
 
-    VERSION = 2
+    VERSION = 3
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _host_in_configuration_exists(self, host) -> bool:
@@ -341,6 +343,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Optional(
                             CONF_CREATE_INVERTER_POWER,
                             default=self.config_entry.data[CONF_CREATE_INVERTER_POWER],
+                        ): cv.boolean,
+                        vol.Optional(
+                            CONF_CREATE_DIAGNOSTICS_SENSORS,
+                            default=self.config_entry.data[
+                                CONF_CREATE_DIAGNOSTICS_SENSORS
+                            ],
                         ): cv.boolean,
                         vol.Optional(
                             CONF_SCAN_INTERVAL,

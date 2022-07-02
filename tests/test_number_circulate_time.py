@@ -4,6 +4,7 @@ from lennoxs30api.s30api_async import (
     LENNOX_CIRCULATE_TIME_MIN,
 )
 from custom_components.lennoxs30 import (
+    DS_RETRY_WAIT,
     Manager,
 )
 import pytest
@@ -102,6 +103,7 @@ async def test_circulate_time_subscription(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
     manager._is_metric = True
     c = CirculateTime(hass, manager, system)
+    await c.async_added_to_hass()
 
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         set = {
@@ -110,3 +112,8 @@ async def test_circulate_time_subscription(hass, manager: Manager, caplog):
         system.attr_updater(set, "circulateTime")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False

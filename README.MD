@@ -11,18 +11,15 @@ Cloud Connections depending on the device model. We believe these configurations
 
 # Requirements
 
-- Home Assistant >= 2021.6.1 and tested on 2022.3.6
+- Home Assistant tested on 2022.6.7
 - S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
 
 # Important Information
 
 - It is recommended to disable automatic software updates on the S30. This will prevent outages if new versions are not compatible with this integration.
-- If you are migrating from Cloud to Local connection. Please review the [cloud to local migration section](#Cloud-to-Local-Migration)
-- If you are upgrading from 0.1.3 to this release. Please review the [upgrade migration section](#New-Releases)
-- If you are migrating from a custom install to a HACS install. Please review the [HACS migration section](#Migrate-to-HACS-from-Manual-Installation)
 - If you have more than one S30 in your local network, please use a different app_id for each instance (e.g. homeassistant_1, homeassistant_2)
 - If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
-- The Power Inverter Diagnostic are in Alpha. Please review the [documentation](#Sensor-for-Inverter-Power) prior to using
+- **WARNING** If using the Power Inverter or Diagnostic Sensors - S30 stability problems may arise if your system is connected to the Lennox Cloud. Please review [docs/diagnostics.md](./docs/diagnostics.md) before using.
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
 # Overview
@@ -30,6 +27,10 @@ Cloud Connections depending on the device model. We believe these configurations
 This image shows the main entities and controls available for the Lennox S30 integration. Specific entity documentation appears later in this document.
 
 ![plot](./doc_images/overview.png)
+
+This image shows diagnostic data being collected from the **RageHouse** Lennox S30 system with an Air Handler and Outdoor Compressor
+
+![plot](./doc_images/diagnostics_ragehouse.PNG)
 
 # Donations
 
@@ -139,6 +140,8 @@ The next page brings up advanced configuration properties with the recommended d
 At this point, the integration will connect to the S30, download and process its configuration (100kb) and create the Entities in Home Assistant. For local connections, this step typically takes 10-30 seconds complete, for cloud connections it an takes 15-45 seconds. If it is successful, you will be presented with a list of discovered devices. If it fails, review the error and look in the log file for more detailed information.
 
 For Local Connections the Integration instance name is the ip_address / host name. For Cloud Connections the instance name is a redacted version of your email.
+
+![plot](./doc_images/local_config.png)
 
 # Configuration Options
 
@@ -286,11 +289,13 @@ sensor.<system_name>\_<zone_name>\_humidity
 
 Lennox systems may have an outdoor temperature sensor. If your system has one a sensor will be automatically created and attached to the Outdoor Unit Device. It's name will be
 
-sensor.<system*name>\_outdoor_temperature - \_ALPHA*
+sensor.<system_name>\_outdoor_temperature
 
 ## Sensor for Inverter Power
 
 When the **create_inverter_power** configuration parameter is set, a power sensor entity will be created. Inverter Power can only be enabled for Local Connections. To get this information the S30 must be placed in Diagnostic Mode 2. To set the diagnostic mode see [diagnostic level](#diagnostic-level)
+
+**WARNING** S30 instability may result please review [docs/diagnostics.md](./docs/diagnostics.md) for configuration recommendations.
 
 When diagnostics is enabled it should begin updating with the current power draw of the system. It's name will be
 
@@ -307,7 +312,15 @@ sensor:
     round: 2
 ```
 
-This feature is in Alpha and we are looking for feedback and experiences using the data - and it's accuracy.
+### Diagnostic Sensors
+
+**WARNING** S30 instability may result please review [docs/diagnostics.md](./docs/diagnostics.md) for configuration recommendations.
+
+When the option to create diagnostic sensors is enabled, sensors are created for every diagnostic that is available in your system. Hence, the exact list depends on the specific Lennox Equipment you have installed. The names will be
+
+sensor.<system_name>\*<eq>\_<diagnostic_name>
+
+Where eq is IU for your indoor unit (e.g. air handler, furnace); OU for your outdoor unit (Compressor, HeatPump)
 
 ## Select Entities
 
@@ -401,15 +414,33 @@ Smart Away State Values
 | enabled inactive  | Smart away detection is enabled, and smart away has determined you are home                              |
 | disabled          | Smart away is disabled                                                                                   |
 
+### internet_status (local connections only)
+
+This sensor indicates if the S30 has connectivity to the internet. If you use the Lennox App on your phone, you want this to be in a connected state. If you are using diagnostics you want this is a disconnected state
+
+binary_sensor.<system_name>\_internet_status
+
+Note: The S30 can take a while to update this sensor. To accelerate the update, go to the S30 panel, press settings and select WIFI - this seems to cause the S30 to immediately ping the internet.
+
+### relay_server (local connections only)
+
+This sensor indicates if the S30 is connected to the Lennox Cloud Relay Server. If you use the Lennox App on your phone, you want this to be in a connected state. If you are using diagnostics you want this is a disconnected state.
+
+Note: The S30 can take a while to update this sensor. To accelerate the update, go to the S30 panel, press settings and select WIFI - this seems to cause the S30 to immediately check the connection to the relay server.
+
+binary_sensor.<system_name>\_relay_server
+
 ## Number Entities
 
 ### diagnostic_level
 
-**ALPHA** When the power inverter option is enable, a Number entity is created to allow setting and reporting on the active diagnostic level in the S30. A value of zero indicates diagnostics is disabled. Values of 1 or 2 will cause the inverter power to be sent. Other values are invalid. The name of the entity is:
+**WARNING** Setting the Diagnostic Level may cause system instability if your system is connected to the Lennox Cloud Relay Server. Please review this documentation before proceeding. [docs/diagnostics.md](./docs/diagnostics.md)
+
+When the **power inverter** or **diagnostic sensors** option is enabled, a Number entity is created to allow setting and reporting on the active diagnostic level in the S30. A value of zero indicates diagnostics is disabled. Values of 2 will cause the inverter power and diagnostics to be sent. Other values are invalid. The name of the entity is:
 
 number.<system_name>\_diagnostic_level
 
-Note: This capability in in _Alpha_ Mode. When enabled the S30 sends much more information. If you are using their IOS / Android App - this may impact the performance. It is not recommended to be toggling this mode frequently. Early on there were reports of the S30 rebooting that may have been caused by this - but it has not reproduced. If you are using this feature, you may want to monitor the lennoxS30.state sysuptime attribute. This value will reset to zero when the S30 reboots. The integration will log a warning if this is detected. Please report on your findings - we want to know if its working or not working for you!
+Note: When enabled the S30 sends much more information. If you are using their IOS / Android App - this may impact the performance and cause S30 crashes. It is not recommended to be toggling this mode frequently. If you are using this feature, you may want to monitor the lennoxS30.state sysuptime attribute. This value will reset to zero when the S30 reboots. The integration will log a warning if this is detected.
 
 ### circulate_time
 
@@ -425,7 +456,13 @@ Lennox systems with dehumidifiers may have the ability to provide overcooling to
 
 # Reporting Bugs
 
-Please create issues to track bugs. Please capture the logs with debug turned on.
+Please create issues to track bugs. Please include the following information
+
+- HA version and Integration Version
+- Configuration Settings (local, cloud)
+- Are you using Diagnostic
+
+Please capture the logs with debug turned on.
 
 Debug logging can be enabled by adding the following to your Home Assistant's configuration.yaml:
 
@@ -437,6 +474,13 @@ logger:
     lennoxs30api: debug
 ```
 
+Some times I will need a message log. To enable message logging do the following:
+
+- Go into the integrations configuration
+- Check the "Debug Logging Logs Message" and "Log S30 Messages to a separate file" and enter a file name.
+
+![plot](./doc_images/local_config.png)
+
 ## A note on Debug Log Files
 
 The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information. The system by default redacts this information in the log files. Still the recommendation is not to publicly post these. If we need them to debug an issue we can use email.
@@ -445,21 +489,21 @@ The Lennox configuration that comes back from the API contains every configurati
 
 This section documents the detailed configuration parameters, that are editable through the UI. This configuration is stored in the config/.storage/core_config_entries file. Editing this file is not recommended.
 
-| Parameter Name           | Type    | Requirement | Default                                                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------------ | ------- | ----------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| scan_interval            | int     | optional    | 15                                                          | Scan interval to check for cloud messages in seconds. 15 seconds is recommended for cloud connections. For local connections this should not be set unless instructed                                                                                                                                                                                                                                                                                                                                                              |
-| allergen_defender_switch | bool    | optional    | false                                                       | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| fast_scan_interval       | float   | optional    | 0.75                                                        | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands. Primarily used for Cloud Connections. This parameter is the delay between checking for messages.                                                                                                                                                                                                                                                                     |
-| fast_scan_count          | int     | optional    | 10                                                          | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands. Primarily used for Cloud Connections. This parameter is the number of scans to execute at the faster speed, increasing this may improve UI response time.                                                                                                                                                                                                            |
-| timeout                  | int     | optional    | 30 seconds local connections; 60 seconds cloud connections. | Number of seconds to wait for network calls to complete before declaring a timeout. Use of defaults is recommended.                                                                                                                                                                                                                                                                                                                                                                                                                |
-| init_wait_time           | int     | optional    | 30                                                          | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                                                                                                                                                  |
-| app_id                   | string  | optional    | uniquely generated                                          | Specify the unique application id to use. For Cloud connections, Lennox is very particular - please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. For local connections use a string like ha_dev or ha_prod - must be unique for each connection                                                                                                                       |
-| create_sensors           | bool    | optional    | false                                                       | Creates temperature and humidity sensors for each zone                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| create_inverter_power    | bool    | optional    | false                                                       | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 2, as opposed to the default value of 0. Use the number.diagnostic_level entity to set this,.                                                                                                                                                                                                                                                                                                               |
-| protocol                 | string  | optional    | https                                                       | Selects the protocol to use. The only reason to use this is when developing using the S30 simulator, in which case this should be set to HTTP                                                                                                                                                                                                                                                                                                                                                                                      |
-| message_debug_logging    | boolean | optional    | True                                                        | When True messages are logged when debug is enabled. Setting to False omits the message from the debug log file.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| log_messages_to_file     | string  | optional    |                                                             | When set all S30 messages for this connection will the logged to the specified file. If no path is specified, the file will appear on the home asssistant config directory - the same place the home_assistant.log file is. If you want the fie to be elsewhere specific a full path or relative path to the home assistant root directory. Messages will be logged regardless of debug settings. This provides an easy way to submit the message logs without having to submit all the stuff in the full home assistant log file. |
-| pii_in_message_logs      | boolean | optional    | False                                                       | When set to False personal information - email, passwords, street addresses, etc. are redacted from the log files. False is the default and the recommended setting for submitting logs. This parameter exists in the unlikely event this information is needed in troubleshooting.                                                                                                                                                                                                                                                |
+| Parameter Name           | Type    | Requirement | Default                                                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------ | ------- | ----------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| scan_interval            | int     | optional    | 15                                                          | Scan interval to check for cloud messages in seconds. 15 seconds is recommended for cloud connections. For local connections this should not be set unless instructed                                                                                                                                                                                                                                                                                                                                                             |
+| allergen_defender_switch | bool    | optional    | false                                                       | When true creates a switch entity to allow control of allergenDefender mode                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| fast_scan_interval       | float   | optional    | 0.75                                                        | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands. Primarily used for Cloud Connections. This parameter is the delay between checking for messages.                                                                                                                                                                                                                                                                    |
+| fast_scan_count          | int     | optional    | 10                                                          | After issuing a command (setpoint change, hvac mode change, etc.) The system goes into a fast scan mode, in order to make the UI more responsive to commands. Primarily used for Cloud Connections. This parameter is the number of scans to execute at the faster speed, increasing this may improve UI response time.                                                                                                                                                                                                           |
+| timeout                  | int     | optional    | 30 seconds local connections; 60 seconds cloud connections. | Number of seconds to wait for network calls to complete before declaring a timeout. Use of defaults is recommended.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| init_wait_time           | int     | optional    | 30                                                          | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                                                                                                                                                 |
+| app_id                   | string  | optional    | uniquely generated                                          | Specify the unique application id to use. For Cloud connections, Lennox is very particular - please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. For local connections use a string like ha_dev or ha_prod - must be unique for each connection                                                                                                                      |
+| create_sensors           | bool    | optional    | false                                                       | Creates temperature and humidity sensors for each zone                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| create_inverter_power    | bool    | optional    | false                                                       | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 2, as opposed to the default value of 0. Use the number.diagnostic_level entity to set this,.                                                                                                                                                                                                                                                                                                              |
+| protocol                 | string  | optional    | https                                                       | Selects the protocol to use. The only reason to use this is when developing using the S30 simulator, in which case this should be set to HTTP                                                                                                                                                                                                                                                                                                                                                                                     |
+| message_debug_logging    | boolean | optional    | True                                                        | When True messages are logged when debug is enabled. Setting to False omits the message from the debug log file.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| log_messages_to_file     | string  | optional    |                                                             | When set all S30 messages for this connection will the logged to the specified file. If no path is specified, the file will appear on the Home Assistant config directory - the same place the home_assistant.log file is. If you want the fie to be elsewhere specific a full path or relative path to the home assistant root directory. Messages will be logged regardless of debug settings. This provides an easy way to submit the message logs without having to submit all the stuff in the full home assistant log file. |
+| pii_in_message_logs      | boolean | optional    | False                                                       | When set to False personal information - email, passwords, street addresses, etc. are redacted from the log files. False is the default and the recommended setting for submitting logs. This parameter exists in the unlikely event this information is needed in troubleshooting.                                                                                                                                                                                                                                               |
 
 # Migration
 

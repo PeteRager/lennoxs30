@@ -468,7 +468,7 @@ async def test_migrate_cloud_config_full(hass, caplog):
 
 
 @pytest.mark.asyncio
-async def test_upgrade_config_v1_v2(hass, caplog):
+async def test_upgrade_config_v1(hass, caplog):
     data = {
         "cloud_connection": False,
         "host": "192.168.1.93",
@@ -491,13 +491,14 @@ async def test_upgrade_config_v1_v2(hass, caplog):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 2
+        assert config_entry.version == 3
         assert new_data["cloud_connection"] == False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
         assert new_data["create_sensors"] == True
         assert new_data["allergen_defender_switch"] == False
         assert new_data["create_inverter_power"] == False
+        assert new_data["create_diagnostic_sensors"] == False
         assert new_data["protocol"] == "https"
         assert new_data["scan_interval"] == 1
         assert new_data["fast_scan_interval"] == 0.75
@@ -532,7 +533,99 @@ async def test_upgrade_config_v1_v2(hass, caplog):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 2
+        assert config_entry.version == 3
+        assert new_data["cloud_connection"] == True
+        assert new_data["email"] == "pete@pete.com"
+        assert new_data["password"] == "secret"
+        assert new_data["app_id"] == "homeassistant"
+        assert new_data["create_sensors"] == True
+        assert new_data["allergen_defender_switch"] == False
+        assert new_data["create_inverter_power"] == False
+        assert new_data["create_diagnostic_sensors"] == False
+        assert new_data["protocol"] == "https"
+        assert new_data["scan_interval"] == 1
+        assert new_data["fast_scan_interval"] == 0.75
+        assert new_data["init_wait_time"] == 30
+        assert new_data["pii_in_message_logs"] == False
+        assert new_data["message_debug_logging"] == True
+        assert new_data["log_messages_to_file"] == False
+        assert new_data["message_debug_file"] == ""
+        assert new_data["fast_scan_count"] == 10
+        assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
+
+
+@pytest.mark.asyncio
+async def test_upgrade_config_v2(hass, caplog):
+    data = {
+        "cloud_connection": False,
+        "host": "192.168.1.93",
+        "app_id": "homeassistant",
+        "create_sensors": True,
+        "allergen_defender_switch": False,
+        "create_inverter_power": False,
+        "protocol": "https",
+        "scan_interval": 1,
+        "fast_scan_interval": 0.75,
+        "init_wait_time": 30,
+        "pii_in_message_logs": False,
+        "message_debug_logging": True,
+        "log_messages_to_file": False,
+        "message_debug_file": "",
+        "fast_scan_count": 10,
+        "timeout": 30,
+    }
+
+    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    with patch.object(hass.config_entries, "async_update_entry") as update_entry:
+        await async_migrate_entry(hass, config_entry)
+        assert update_entry.call_count == 1
+        new_data = update_entry.call_args_list[0].kwargs["data"]
+        assert config_entry.version == 3
+        assert new_data["cloud_connection"] == False
+        assert new_data["host"] == "192.168.1.93"
+        assert new_data["app_id"] == "homeassistant"
+        assert new_data["create_sensors"] == True
+        assert new_data["allergen_defender_switch"] == False
+        assert new_data["create_inverter_power"] == False
+        assert new_data["protocol"] == "https"
+        assert new_data["scan_interval"] == 1
+        assert new_data["fast_scan_interval"] == 0.75
+        assert new_data["init_wait_time"] == 30
+        assert new_data["pii_in_message_logs"] == False
+        assert new_data["message_debug_logging"] == True
+        assert new_data["log_messages_to_file"] == False
+        assert new_data["message_debug_file"] == ""
+        assert new_data["fast_scan_count"] == 10
+        assert new_data["timeout"] == 30
+
+        assert new_data["create_diagnostic_sensors"] == False
+
+    data = {
+        "cloud_connection": True,
+        "email": "pete@pete.com",
+        "password": "secret",
+        "app_id": "homeassistant",
+        "create_sensors": True,
+        "allergen_defender_switch": False,
+        "create_inverter_power": False,
+        "protocol": "https",
+        "scan_interval": 1,
+        "fast_scan_interval": 0.75,
+        "init_wait_time": 30,
+        "pii_in_message_logs": False,
+        "message_debug_logging": True,
+        "log_messages_to_file": False,
+        "message_debug_file": "",
+        "fast_scan_count": 10,
+        "timeout": 30,
+    }
+
+    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    with patch.object(hass.config_entries, "async_update_entry") as update_entry:
+        await async_migrate_entry(hass, config_entry)
+        assert update_entry.call_count == 1
+        new_data = update_entry.call_args_list[0].kwargs["data"]
+        assert config_entry.version == 3
         assert new_data["cloud_connection"] == True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
@@ -550,3 +643,5 @@ async def test_upgrade_config_v1_v2(hass, caplog):
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
+
+        assert new_data["create_diagnostic_sensors"] == False

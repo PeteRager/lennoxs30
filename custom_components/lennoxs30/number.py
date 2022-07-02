@@ -1,21 +1,17 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from lennoxs30api.s30exception import S30Exception
+
+from .base_entity import S30BaseEntity
 from .const import CONF_CLOUD_CONNECTION, MANAGER
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (
-    CONF_NAME,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from . import DOMAIN, Manager
 from homeassistant.core import HomeAssistant
 import logging
-from homeassistant.helpers.entity import Entity
 from lennoxs30api import (
     lennox_system,
     LENNOX_CIRCULATE_TIME_MAX,
@@ -39,9 +35,9 @@ async def async_setup_entry(
 
     for system in manager._api.getSystems():
         # We do not support setting diag level from a cloud connection
-        if (
-            entry.data[CONF_CLOUD_CONNECTION] == True
-            or manager._create_inverter_power == False
+        if manager._api._isLANConnection == False or (
+            manager._create_inverter_power == False
+            and manager._create_diagnostic_sensors == False
         ):
             _LOGGER.debug(
                 "async_setup_entry - not creating diagnostic level number because inverter power not enabled"
@@ -62,16 +58,23 @@ async def async_setup_entry(
         async_add_entities(number_list, True)
 
 
-class DiagnosticLevelNumber(NumberEntity):
+class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
         self._myname = self._system.name + "_diagnostic_level"
-        self._system.registerOnUpdateCallback(self.update_callback, ["diagLevel"])
         _LOGGER.debug(f"Create DiagnosticLevelNumber myname [{self._myname}]")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass DiagnosticLevelNumber myname [{self._myname}]"
+        )
+        self._system.registerOnUpdateCallback(self.update_callback, ["diagLevel"])
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback DiagnosticLevelNumber myname [{self._myname}]")
@@ -105,6 +108,17 @@ class DiagnosticLevelNumber(NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
         try:
+            if value == 1:
+                _LOGGER.warning(
+                    "Diagnostic Level Number - setting to a value of 1 is not recommeded. See https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                )
+            if value != 0 and (
+                self._system.internetStatus == True
+                or self._system.relayServerConnected == True
+            ):
+                _LOGGER.warning(
+                    f"Diagnostic Level Number - setting to a non-zer value is not recommended for systems connected to the lennox cloud internetStatus [{self._system.internetStatus}] relayServerConnected [{self._system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                )
             await self._system.set_diagnostic_level(value)
         except S30Exception as e:
             _LOGGER.error(f"DiagnosticLevelNumber::async_set_value [{e.as_string()}]")
@@ -118,14 +132,21 @@ class DiagnosticLevelNumber(NumberEntity):
         return result
 
 
-class DehumidificationOverCooling(NumberEntity):
+class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
         self._myname = self._system.name + "_dehumidification_overcooling"
+        _LOGGER.debug(f"Create DehumidificationOverCooling myname [{self._myname}]")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass DehumidificationOverCooling myname [{self._myname}]"
+        )
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -141,7 +162,7 @@ class DehumidificationOverCooling(NumberEntity):
                 "enhancedDehumidificationOvercoolingC_inc",
             ],
         )
-        _LOGGER.debug(f"Create DehumidificationOverCooling myname [{self._myname}]")
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(
@@ -209,21 +230,26 @@ class DehumidificationOverCooling(NumberEntity):
         return result
 
 
-class CirculateTime(NumberEntity):
+class CirculateTime(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager)
         self._hass = hass
-        self._manager = manager
         self._system = system
         self._myname = self._system.name + "_circulate_time"
+        _LOGGER.debug(f"Create CirculateTime myname [{self._myname}]")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass CirculateTime myname [{self._myname}]")
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
                 "circulateTime",
             ],
         )
-        _LOGGER.debug(f"Create CirculateTime myname [{self._myname}]")
+        await super().async_added_to_hass()
 
     def update_callback(self):
         _LOGGER.debug(f"update_callback CirculateTime myname [{self._myname}]")

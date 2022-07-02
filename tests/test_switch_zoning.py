@@ -2,6 +2,7 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from custom_components.lennoxs30 import (
+    DS_RETRY_WAIT,
     Manager,
 )
 
@@ -19,12 +20,18 @@ from unittest.mock import patch
 async def test_zoning_switch_subscription(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
     c = S30ZoningSwitch(hass, manager, system)
+    await c.async_added_to_hass()
 
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         set = {"centralMode": not system.centralMode}
         system.attr_updater(set, "centralMode", "centralMode")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False
 
 
 @pytest.mark.asyncio
@@ -34,6 +41,10 @@ async def test_zoning_switch(hass, manager: Manager, caplog):
 
     assert c.unique_id == (system.unique_id() + "_SW_ZE").replace("-", "")
     assert c.name == system.name + "_zoning_enable"
+    assert len(c.extra_state_attributes) == 0
+    assert c.update() == True
+    assert c.should_poll == False
+
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
