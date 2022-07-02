@@ -308,6 +308,7 @@ sensor:
   - platform: integration
     source: sensor.<system_name>_inverter_energy
     name: <system_name>_inverter_kwh
+    method: left
     unit_prefix: k
     round: 2
 ```
