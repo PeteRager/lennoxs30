@@ -185,9 +185,14 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, 
     assert s.device_class == SensorDeviceClass.VOLTAGE
 
     equipment = system.equipment[2]
-    diagnostic = equipment.diagnostics[1]
+    diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[1]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
     assert s.unit_of_measurement == VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE
+    assert s.device_class == None
+
+    diagnostic.unit = "my_custom_unit"
+    s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
+    assert s.unit_of_measurement == "my_custom_unit"
     assert s.device_class == None
 
 

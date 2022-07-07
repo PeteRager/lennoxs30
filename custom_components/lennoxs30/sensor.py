@@ -221,7 +221,7 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
             return ELECTRIC_CURRENT_AMPERE
         if unit == "":
             return None
-        return self.unit
+        return unit
 
     @property
     def device_class(self):
