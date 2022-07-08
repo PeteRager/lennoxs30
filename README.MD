@@ -1,7 +1,5 @@
 # Lennox S30/E30 Component
 
-ALERT:  INTEGRATION DOES NOT WORK IN 2022.7.0 - under investigation.
-
 A custom component for Home Assistant to integrate with Lennox iComfort S30, E30 or M30 thermostats; supporting local LAN connections and Lennox
 Cloud Connections depending on the device model. We believe these configurations work - let us know if your experience is different!
 
@@ -13,7 +11,7 @@ Cloud Connections depending on the device model. We believe these configurations
 
 # Requirements
 
-- Home Assistant tested on 2022.6.7
+- Home Assistant tested on 2022.6.7 and 2022.7.0
 - S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
 
 # Important Information
