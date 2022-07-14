@@ -37,6 +37,7 @@ from .const import (
     MANAGER,
 )
 from .device import (
+    S30AuxiliaryUnit,
     S30ControllerDevice,
     S30IndoorUnit,
     S30OutdoorUnit,
@@ -505,16 +506,37 @@ class Manager(object):
                 self._hass, self._config_entry, system
             )
             s30.register_device()
+
+            registered_eq_ids = {}
             if system.has_outdoor_unit:
                 s30_outdoor_unit = S30OutdoorUnit(
                     self._hass, self._config_entry, system, s30
                 )
                 s30_outdoor_unit.register_device()
+                if s30_outdoor_unit.eq != None:
+                    registered_eq_ids[
+                        s30_outdoor_unit.eq.equipment_id
+                    ] = s30_outdoor_unit.eq
             if system.has_indoor_unit:
                 s30_indoor_unit = S30IndoorUnit(
                     self._hass, self._config_entry, system, s30
                 )
                 s30_indoor_unit.register_device()
+                if s30_indoor_unit.eq != None:
+                    registered_eq_ids[
+                        s30_indoor_unit.eq.equipment_id
+                    ] = s30_indoor_unit.eq
+
+            for eq in system.equipment.values():
+                if (
+                    eq.equipment_id != 0
+                    and registered_eq_ids.get(eq.equipment_id) == None
+                ):
+                    aux_unit = S30AuxiliaryUnit(
+                        self._hass, self._config_entry, system, s30, eq
+                    )
+                    aux_unit.register_device()
+
             for zone in system._zoneList:
                 if zone.is_zone_active() == True:
                     z: S30ZoneThermostat = S30ZoneThermostat(

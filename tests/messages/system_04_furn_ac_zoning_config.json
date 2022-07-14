@@ -1,0 +1,219 @@
+{
+    "MessageId": 0,
+    "SenderID": "LCC",
+    "TargetID": "homeassistant",
+    "MessageType": "PropertyChange",
+    "Data": {
+        "system": {
+            "clock": {
+                "setRtcTime": "1657535223",
+                "tz": "mountain",
+                "format": "12hour",
+                "localSetRtcTime": "1604450730",
+                "enableDst": true,
+                "dstOffset": 3600,
+                "writeAccess": "remote",
+                "offset": -25200
+            },
+            "registration": {
+                "state": "registered",
+                "eula": "accepted",
+                "statusMsg": ""
+            },
+            "test": {
+                "list": [
+                    {
+                        "test": {
+                            "tid": 0,
+                            "explanation": "Check Blower Operation",
+                            "name": "Blower"
+                        },
+                        "id": 0
+                    },
+                    {
+                        "test": {
+                            "tid": 10,
+                            "explanation": "Check Min Rate Cooling Operation",
+                            "name": "Cooling - Minimum Rate"
+                        },
+                        "id": 1
+                    },
+                    {
+                        "test": {
+                            "tid": 12,
+                            "explanation": "Check Max Rate Cooling Operation",
+                            "name": "Cooling - Maximum Rate"
+                        },
+                        "id": 2
+                    },
+                    {
+                        "test": {
+                            "tid": 19,
+                            "explanation": "Check Minimum Gas Heat Operation",
+                            "name": "Gas Heat - Minimum Rate"
+                        },
+                        "id": 3
+                    },
+                    {
+                        "test": {
+                            "tid": 20,
+                            "explanation": "Check Maximum Gas Heat Operation",
+                            "name": "Gas Heat - Maximum Rate"
+                        },
+                        "id": 4
+                    },
+                    {
+                        "test": {
+                            "tid": 25,
+                            "explanation": "Check Humidification Operation",
+                            "name": "Humidification"
+                        },
+                        "id": 5
+                    }
+                ],
+                "szTest": 6
+            },
+            "config": {
+                "name": "System",
+                "language": "english",
+                "centralMode": false,
+                "temperatureUnit": "C",
+                "circulateTime": 37,
+                "humidificationMode": "basic",
+                "enhancedDehumidificationOvercoolingC": 0.5,
+                "ventilationMode": "installer",
+                "writeAccess": "openAll",
+                "enhancedDehumidificationOvercoolingF": 0.9,
+                "lccGroupId": 1,
+                "allergenDefender": false,
+                "options": {
+                    "enhancedDehumidificationPidat": false,
+                    "indoorUnitType": "furnace",
+                    "indoorUnitStaging": 0,
+                    "humidifierType": "24v",
+                    "enhancedDehumidificationOvercoolingF": {
+                        "range": {
+                            "enable": true,
+                            "min": 0,
+                            "max": 4,
+                            "def": 2,
+                            "unit": "F",
+                            "inc": 1
+                        }
+                    },
+                    "outdoorUnitCommunicating": true,
+                    "pureAir": {
+                        "unitType": ""
+                    },
+                    "enhancedDehumidificationOvercoolingC": {
+                        "range": {
+                            "enable": true,
+                            "min": 0,
+                            "max": 2,
+                            "def": 1,
+                            "unit": "C",
+                            "inc": 0.5
+                        }
+                    },
+                    "ventilation": {
+                        "unitType": "2_stage_hrv",
+                        "controlMode": "ashrae"
+                    },
+                    "productType": "S30",
+                    "outdoorUnitStaging": 0,
+                    "outdoorUnitType": "air conditioner",
+                    "dehumidifierType": "air conditioner"
+                },
+                "dehumidificationMode": "auto"
+            },
+            "ports": [
+                {
+                    "id": 0,
+                    "port": {
+                        "name": "",
+                        "boardId": "",
+                        "controllerSerialNumber": "",
+                        "enabled": false,
+                        "valid": false,
+                        "address": "",
+                        "partNumber": "",
+                        "swRevision": "",
+                        "type": "system",
+                        "controllerModelNumber": ""
+                    }
+                }
+            ],
+            "status": {
+                "diagLevel": 0,
+                "outdoorTemperature": 81,
+                "doNotPersist": true,
+                "diagRuntime": 13434,
+                "configured": false,
+                "diagVentilationRuntime": 0,
+                "diagPoweredHours": 14701,
+                "unknownDeviceFound": false,
+                "ventilationRemainingTime": 0,
+                "wideSetpointRange": true,
+                "outdoorTemperatureStatus": "good",
+                "ventilatingUntilTime": "",
+                "writeAccess": "local",
+                "reminder": false,
+                "configProblem": false,
+                "zoningMode": "zoned",
+                "replacementPart": false,
+                "alert": "none",
+                "feelsLikeMode": false,
+                "numberOfZones": 3,
+                "singleSetpointMode": false,
+                "missingDeviceFound": false,
+                "rsbusMode": "normal",
+                "replaced": false,
+                "outdoorTemperatureC": 27,
+                "incompleteSystem": false
+            },
+            "publisher": {
+                "writeAccess": "openAll",
+                "publisherName": "unknown",
+                "doNotPersist": true
+            },
+            "internalStatus": {
+                "pureAir": {
+                    "pressureSensorStatus": false,
+                    "uvSensorCalibrationStatus": false,
+                    "remainingPurifierLamp": 0,
+                    "doNotPersist": true,
+                    "uvSensorStatus": false,
+                    "pressureSensorCalibrationStatus": false,
+                    "remainingFilterLife": 0,
+                    "uvLightStatus": false
+                },
+                "ventilation": {
+                    "currentCfm": 185,
+                    "doNotPersist": true,
+                    "totalAirVolume": 256089.16666662102,
+                    "equipment": "hrv"
+                },
+                "writeAccess": "internal",
+                "doNotPersist": true
+            },
+            "capacityPrognostics": {
+                "persistenceCountThreshold": 0,
+                "persistentThreshold": 0,
+                "doNotPersist": true,
+                "isValid": false,
+                "filterGain": 0,
+                "alertThreshold": 0
+            },
+            "configOverrides": {
+                "centralMode": false,
+                "writeAccess": "internal",
+                "doNotPersist": true
+            },
+            "time": {
+                "doNotPersist": true,
+                "currentTime": "1657642623",
+                "sysUpTime": 107460
+            }
+        }
+    }
+}
