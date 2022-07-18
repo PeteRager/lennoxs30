@@ -1,3 +1,4 @@
+import logging
 from lennoxs30api.s30api_async import lennox_system, lennox_equipment_diagnostic
 from custom_components.lennoxs30 import (
     DS_RETRY_WAIT,
@@ -197,7 +198,11 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, 
 
 
 @pytest.mark.asyncio
-async def test_diag_sensor_device_info(hass, manager: Manager, caplog):
+async def test_diag_sensor_device_info(
+    hass, manager_system_04_furn_ac_zoning: Manager, caplog
+):
+    manager = manager_system_04_furn_ac_zoning
+    await manager.create_devices()
     system: lennox_system = manager._api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
@@ -218,3 +223,57 @@ async def test_diag_sensor_device_info(hass, manager: Manager, caplog):
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
         assert x[1] == system.unique_id() + "_iu"
+
+    equipment = system.equipment[3]
+    diagnostic = equipment.diagnostics[1]
+    s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
+    identifiers = s.device_info["identifiers"]
+    for x in identifiers:
+        assert x[0] == LENNOX_DOMAIN
+        assert x[1] == system.unique_id() + "_BT21B13000"
+
+
+@pytest.mark.asyncio
+async def test_diag_sensor_device_info_no_device_errors(
+    hass, manager_system_04_furn_ac_zoning: Manager, caplog
+):
+    manager = manager_system_04_furn_ac_zoning
+    await manager.create_devices()
+    system: lennox_system = manager._api._systemList[0]
+    equipment = system.equipment[1]
+    diagnostic = equipment.diagnostics[0]
+    s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
+    manager.system_equip_device_map = {}
+
+    with caplog.at_level(logging.WARNING):
+        caplog.clear()
+        identifiers = s.device_info["identifiers"]
+        for x in identifiers:
+            assert x[0] == LENNOX_DOMAIN
+            assert x[1] == system.unique_id()
+        assert len(caplog.records) == 1
+        assert "[1]" in caplog.messages[0]
+        assert "No equipment device map found" in caplog.messages[0]
+
+
+@pytest.mark.asyncio
+async def test_diag_sensor_device_info_no_device_errors_1(
+    hass, manager_system_04_furn_ac_zoning: Manager, caplog
+):
+    manager = manager_system_04_furn_ac_zoning
+    await manager.create_devices()
+    system: lennox_system = manager._api._systemList[0]
+    equipment = system.equipment[1]
+    diagnostic = equipment.diagnostics[0]
+    s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
+    manager.system_equip_device_map[system.sysId].pop(1)
+
+    with caplog.at_level(logging.WARNING):
+        caplog.clear()
+        identifiers = s.device_info["identifiers"]
+        for x in identifiers:
+            assert x[0] == LENNOX_DOMAIN
+            assert x[1] == system.unique_id()
+        assert len(caplog.records) == 1
+        assert "[1]" in caplog.messages[0]
+        assert "Unable to find" in caplog.messages[0]

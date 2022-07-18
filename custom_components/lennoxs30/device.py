@@ -10,16 +10,14 @@ class Device(object):
         self.eq: lennox_equipment = eq
 
     @property
-    def device_model(self):
-        if self.eq != None:
-            return self.eq.unit_model_number
-        return self._system.outdoorUnitType
-
-    @property
     def hw_version(self):
         if self.eq != None:
             return self.eq.unit_serial_number
         return None
+
+    @property
+    def unique_name(self) -> str:
+        raise NotImplemented
 
 
 class S30ControllerDevice(Device):
@@ -68,6 +66,12 @@ class S30OutdoorUnit(Device):
     def unique_name(self) -> str:
         return self._system.unique_id() + "_ou"
 
+    @property
+    def device_model(self):
+        if self.eq != None:
+            return self.eq.unit_model_number
+        return self._system.outdoorUnitType
+
     def register_device(self):
         device_registry = dr.async_get(self._hass)
         if self.eq != None:
@@ -103,6 +107,12 @@ class S30IndoorUnit(Device):
     @property
     def unique_name(self) -> str:
         return self._system.unique_id() + "_iu"
+
+    @property
+    def device_model(self):
+        if self.eq != None:
+            return self.eq.unit_model_number
+        return self._system.indoorUnitType
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)
@@ -146,6 +156,12 @@ class S30AuxiliaryUnit(Device):
         else:
             suffix = self.eq.unit_serial_number
         return f"{self._system.unique_id()}_{suffix}"
+
+    @property
+    def device_model(self):
+        if self.eq != None:
+            return self.eq.unit_model_number
+        return None
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)

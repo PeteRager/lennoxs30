@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+from .device import Device
 from .base_entity import S30BaseEntity
 from .const import MANAGER, UNIQUE_ID_SUFFIX_DIAG_SENSOR
 from homeassistant.const import (
@@ -244,17 +245,20 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        if self._equipment.equipment_id == 1:
-            return {
-                "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
-            }
-        if self._equipment.equipment_id == 2:
-            return {
-                "identifiers": {(DOMAIN, self._system.unique_id() + "_iu")},
-            }
-        _LOGGER.warning(
-            f"Unexpected equipment id [{self.eid}], please raise an issue and post a mesage log"
-        )
+        equip_device_map = self._manager.system_equip_device_map.get(self._system.sysId)
+        if equip_device_map != None:
+            device = equip_device_map.get(self._equipment.equipment_id)
+            if device != None:
+                return {
+                    "identifiers": {(DOMAIN, device.unique_name)},
+                }
+            _LOGGER.warning(
+                f"Unable to find equipment in device map [{self._equipment.equipment_id}] [{self._equipment.equipment_name}] [{self._equipment.equipment_type_name}] [{self._equipment.equipType}], please raise an issue and post a message log"
+            )
+        else:
+            _LOGGER.error(
+                f"No equipment device map found for sysId [{self._system.sysId}] equipment [{self._equipment.equipment_id}] [{self._equipment.equipment_name}] [{self._equipment.equipment_type_name}] [{self._equipment.equipType}], please raise an issue and post a message log"
+            )
         return {
             "identifiers": {(DOMAIN, self._system.unique_id())},
         }

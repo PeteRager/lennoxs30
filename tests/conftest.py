@@ -113,6 +113,65 @@ def manager(hass) -> Manager:
 
 
 @pytest.fixture
+def manager_2_systems(hass) -> Manager:
+
+    config = config_entries.ConfigEntry(
+        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
+    )
+    config.unique_id = "12345"
+
+    manager = Manager(
+        hass=hass,
+        config=config,
+        email=None,
+        password=None,
+        poll_interval=1,
+        fast_poll_interval=2,
+        allergenDefenderSwitch=False,
+        app_id="HA",
+        conf_init_wait_time=30,
+        ip_address="10.0.0.1",
+        create_sensors=False,
+        create_inverter_power=False,
+        protocol="https",
+        index=0,
+        pii_message_logs=False,
+        message_debug_logging=True,
+        message_logging_file=None,
+        timeout=30,
+        fast_poll_count=10,
+    )
+    manager.connected = True
+    api = manager._api
+    data = loadfile("login_response_2_systems.json")
+    api.process_login_response(data)
+
+    data = loadfile("config_response_system_02.json")
+    api.processMessage(data)
+
+    data = loadfile("equipments_lcc_singlesetpoint.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
+    api.processMessage(data)
+
+    data = loadfile("device_response_lcc.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
+    api.processMessage(data)
+
+    data = loadfile("config_response_system_01.json")
+    api.processMessage(data)
+
+    data = loadfile("equipments_lcc_singlesetpoint.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000001"
+    api.processMessage(data)
+
+    data = loadfile("device_response_lcc.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000001"
+    api.processMessage(data)
+
+    return manager
+
+
+@pytest.fixture
 def manager_mz(hass) -> Manager:
 
     config = config_entries.ConfigEntry(
