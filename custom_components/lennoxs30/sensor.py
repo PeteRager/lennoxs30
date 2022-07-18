@@ -33,6 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 from homeassistant.components.sensor import (
+    SensorStateClass,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorDeviceClass,
@@ -176,7 +177,7 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
         return super().available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return native value of the sensor."""
         if self._diagnostic.value == "waiting...":
             return None
@@ -199,7 +200,7 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
         return self._myname
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         unit = self._diagnostic.unit
 
         if unit == "F":
@@ -226,21 +227,22 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
 
     @property
     def device_class(self):
-        if self.unit_of_measurement == TEMP_FAHRENHEIT:
+        uom = self.native_unit_of_measurement
+        if uom == TEMP_FAHRENHEIT:
             return SensorDeviceClass.TEMPERATURE
-        elif self.unit_of_measurement == TEMP_CELSIUS:
+        elif uom == TEMP_CELSIUS:
             return SensorDeviceClass.TEMPERATURE
-        elif self.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT:
+        elif uom == ELECTRIC_POTENTIAL_VOLT:
             return SensorDeviceClass.VOLTAGE
-        elif self.unit_of_measurement == ELECTRIC_CURRENT_AMPERE:
+        elif uom == ELECTRIC_CURRENT_AMPERE:
             return SensorDeviceClass.CURRENT
-        elif self.unit_of_measurement == FREQUENCY_HERTZ:
+        elif uom == FREQUENCY_HERTZ:
             return SensorDeviceClass.FREQUENCY
         return None
 
     @property
     def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -307,7 +309,7 @@ class S30OutdoorTempSensor(S30BaseEntity, SensorEntity):
         return self._myname
 
     @property
-    def state(self):
+    def native_value(self):
         if (
             self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_EXIST
             or self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_AVAILABLE
@@ -321,18 +323,18 @@ class S30OutdoorTempSensor(S30BaseEntity, SensorEntity):
         return self._system.outdoorTemperatureC
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         if self._manager._is_metric is False:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_TEMPERATURE
+        return SensorDeviceClass.TEMPERATURE
 
     @property
     def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -380,24 +382,24 @@ class S30TempSensor(S30BaseEntity, SensorEntity):
         return self._myname
 
     @property
-    def state(self):
+    def native_value(self):
         if self._manager._is_metric is False:
             return self._zone.getTemperature()
         return self._zone.getTemperatureC()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         if self._manager._is_metric is False:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_TEMPERATURE
+        return SensorDeviceClass.TEMPERATURE
 
     @property
     def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -443,20 +445,20 @@ class S30HumiditySensor(S30BaseEntity, SensorEntity):
         return self._myname
 
     @property
-    def state(self):
+    def native_value(self):
         return self._zone.getHumidity()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         return PERCENTAGE
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_HUMIDITY
+        return SensorDeviceClass.HUMIDITY
 
     @property
     def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -518,7 +520,7 @@ class S30InverterPowerSensor(S30BaseEntity, SensorEntity):
         return {}
 
     @property
-    def state(self):
+    def native_value(self):
         if (
             self._system.diagInverterInputVoltage is None
             or self._system.diagInverterInputCurrent is None
@@ -546,16 +548,16 @@ class S30InverterPowerSensor(S30BaseEntity, SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         return POWER_WATT
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_POWER
+        return SensorDeviceClass.POWER
 
     @property
     def state_class(self):
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -158,7 +158,7 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, 
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[9]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.unit_of_measurement == TEMP_FAHRENHEIT
+    assert s.native_unit_of_measurement == TEMP_FAHRENHEIT
     assert s.device_class == SensorDeviceClass.TEMPERATURE
 
     equipment = system.equipment[1]

@@ -45,11 +45,11 @@ async def test_temperature_sensor(hass, manager: Manager, caplog):
     assert len(s.extra_state_attributes) == 0
 
     manager._is_metric = False
-    assert s.state == zone.temperature
-    assert s.unit_of_measurement == TEMP_FAHRENHEIT
+    assert s.native_value == zone.temperature
+    assert s.native_unit_of_measurement == TEMP_FAHRENHEIT
     manager._is_metric = True
-    assert s.state == zone.temperatureC
-    assert s.unit_of_measurement == TEMP_CELSIUS
+    assert s.native_value == zone.temperatureC
+    assert s.native_unit_of_measurement == TEMP_CELSIUS
 
     assert s.device_class == DEVICE_CLASS_TEMPERATURE
     assert s.state_class == STATE_CLASS_MEASUREMENT
@@ -73,7 +73,7 @@ async def test_temperature_sensor_subscription(hass, manager: Manager, caplog):
         zone.attr_updater(set, "temperature")
         zone.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
-        assert s.state == zone.temperature
+        assert s.native_value == zone.temperature
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
         manager._is_metric = True
@@ -81,7 +81,7 @@ async def test_temperature_sensor_subscription(hass, manager: Manager, caplog):
         zone.attr_updater(set, "temperatureC")
         zone.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
-        assert s.state == zone.temperatureC
+        assert s.native_value == zone.temperatureC
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
         manager.updateState(DS_RETRY_WAIT)

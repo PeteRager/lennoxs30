@@ -41,11 +41,11 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     assert s.name == system.name + "_outdoor_temperature"
     assert len(s.extra_state_attributes) == 0
     manager._is_metric = False
-    assert s.state == system.outdoorTemperature
-    assert s.unit_of_measurement == TEMP_FAHRENHEIT
+    assert s.native_value == system.outdoorTemperature
+    assert s.native_unit_of_measurement == TEMP_FAHRENHEIT
     manager._is_metric = True
-    assert s.state == system.outdoorTemperatureC
-    assert s.unit_of_measurement == TEMP_CELSIUS
+    assert s.native_value == system.outdoorTemperatureC
+    assert s.native_unit_of_measurement == TEMP_CELSIUS
 
     assert s.device_class == DEVICE_CLASS_TEMPERATURE
     assert s.state_class == STATE_CLASS_MEASUREMENT
@@ -58,7 +58,7 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     caplog.clear()
     with caplog.at_level(logging.WARNING):
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
-        assert s.state == None
+        assert s.native_value == None
         assert len(caplog.records) == 1
         msg = caplog.messages[0]
         assert LENNOX_STATUS_NOT_EXIST in msg
@@ -66,7 +66,7 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     caplog.clear()
     with caplog.at_level(logging.WARNING):
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_AVAILABLE
-        assert s.state == None
+        assert s.native_value == None
         assert len(caplog.records) == 1
         msg = caplog.messages[0]
         assert LENNOX_STATUS_NOT_AVAILABLE in msg
