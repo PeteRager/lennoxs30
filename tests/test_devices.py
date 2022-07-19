@@ -436,7 +436,10 @@ async def test_create_device_no_equipment(
         identifiers = call.kwargs["identifiers"]
         assert call.kwargs["manufacturer"] == LENNOX_MFG
         assert call.kwargs["suggested_area"] == "outside"
-        assert call.kwargs["name"] == manager._api._systemList[0].name + " outdoor unit"
+        assert (
+            call.kwargs["name"]
+            == manager._api._systemList[0].name + " " + system.outdoorUnitType
+        )
         assert call.kwargs["model"] == "air conditioner"
         assert call.kwargs["hw_version"] == None
         assert "sw_version" not in call.kwargs
@@ -451,7 +454,10 @@ async def test_create_device_no_equipment(
         identifiers = call.kwargs["identifiers"]
         assert call.kwargs["manufacturer"] == LENNOX_MFG
         assert call.kwargs["suggested_area"] == "basement"
-        assert call.kwargs["name"] == manager._api._systemList[0].name + " indoor unit"
+        assert (
+            call.kwargs["name"]
+            == manager._api._systemList[0].name + " " + system.indoorUnitType
+        )
         assert call.kwargs["model"] == "furnace"
         assert call.kwargs["hw_version"] == None
         assert "sw_version" not in call.kwargs

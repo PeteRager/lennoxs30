@@ -74,10 +74,13 @@ class S30OutdoorUnit(Device):
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)
-        if self.eq != None:
+        if self.eq != None and self.eq.equipment_type_name != None:
             name = f"{self._system.name} {self.eq.equipment_type_name}"
+        elif self._system.outdoorUnitType != None:
+            name = f"{self._system.name} {self._system.outdoorUnitType}"
         else:
             name = f"{self._system.name} outdoor unit"
+
         device_registry.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
             identifiers={(LENNOX_DOMAIN, self.unique_name)},
@@ -116,8 +119,10 @@ class S30IndoorUnit(Device):
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)
-        if self.eq != None:
+        if self.eq != None and self.eq.equipment_type_name != None:
             name = f"{self._system.name} {self.eq.equipment_type_name}"
+        elif self._system.indoorUnitType != None:
+            name = f"{self._system.name} {self._system.indoorUnitType}"
         else:
             name = f"{self._system.name} indoor unit"
 
