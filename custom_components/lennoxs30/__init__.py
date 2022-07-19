@@ -37,6 +37,8 @@ from .const import (
     MANAGER,
 )
 from .device import (
+    Device,
+    S30AuxiliaryUnit,
     S30ControllerDevice,
     S30IndoorUnit,
     S30OutdoorUnit,
@@ -413,6 +415,7 @@ class Manager(object):
         self._is_metric: bool = hass.config.units.is_metric
         self.connected = False
         self._cs_callbacks = []
+        self.system_equip_device_map: dict[str, dict[int, Device]] = {}
         if index == 0:
             self.connection_state = DOMAIN_STATE
         else:
@@ -501,20 +504,47 @@ class Manager(object):
 
     async def create_devices(self):
         for system in self._api._systemList:
+            equip_device_map: dict[int, Device] = self.system_equip_device_map.get(
+                system.sysId
+            )
+            if equip_device_map is None:
+                equip_device_map = {}
+                self.system_equip_device_map[system.sysId] = equip_device_map
             s30: S30ControllerDevice = S30ControllerDevice(
                 self._hass, self._config_entry, system
             )
             s30.register_device()
+            if s30.eq != None:
+                equip_device_map[s30.eq.equipment_id] = s30
+
             if system.has_outdoor_unit:
                 s30_outdoor_unit = S30OutdoorUnit(
                     self._hass, self._config_entry, system, s30
                 )
                 s30_outdoor_unit.register_device()
+                if s30_outdoor_unit.eq != None:
+                    equip_device_map[
+                        s30_outdoor_unit.eq.equipment_id
+                    ] = s30_outdoor_unit
             if system.has_indoor_unit:
                 s30_indoor_unit = S30IndoorUnit(
                     self._hass, self._config_entry, system, s30
                 )
                 s30_indoor_unit.register_device()
+                if s30_indoor_unit.eq != None:
+                    equip_device_map[s30_indoor_unit.eq.equipment_id] = s30_indoor_unit
+
+            for eq in system.equipment.values():
+                if (
+                    eq.equipment_id != 0
+                    and equip_device_map.get(eq.equipment_id) == None
+                ):
+                    aux_unit = S30AuxiliaryUnit(
+                        self._hass, self._config_entry, system, s30, eq
+                    )
+                    aux_unit.register_device()
+                    equip_device_map[aux_unit.eq.equipment_id] = aux_unit
+
             for zone in system._zoneList:
                 if zone.is_zone_active() == True:
                     z: S30ZoneThermostat = S30ZoneThermostat(

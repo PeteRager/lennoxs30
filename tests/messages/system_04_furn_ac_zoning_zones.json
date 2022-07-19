@@ -1,0 +1,524 @@
+{
+    "MessageId": 0,
+    "SenderID": "LCC",
+    "TargetID": "homeassistant",
+    "MessageType": "PropertyChange",
+    "Data": {
+        "zones": [
+            {
+                "id": 0,
+                "maxItems": 8,
+                "writeAccess": "remote",
+                "config": {
+                    "name": "Main Floor",
+                    "writeAccess": "openAll",
+                    "scheduleId": 16,
+                    "scheduleHold": {
+                        "enabled": false,
+                        "exceptionType": "hold",
+                        "scheduleId": 32,
+                        "expirationMode": "nextPeriod"
+                    },
+                    "temperatureDeadband": 3,
+                    "minCspC": 16,
+                    "minHumSp": 15,
+                    "heatingOption": true,
+                    "maxHsp": 86,
+                    "temperatureDeadbandC": 1.5,
+                    "humidificationOption": true,
+                    "coolingOption": true,
+                    "singleSetpointAvailable": false,
+                    "humidityDeadband": 5,
+                    "humidificationNotAdjustable": false,
+                    "minHspC": 4.5,
+                    "minCsp": 61,
+                    "maxCspC": 37,
+                    "emergencyHeatingOption": false,
+                    "maxHumSp": 45,
+                    "maxCsp": 99,
+                    "dehumidificationNotAdjustable": false,
+                    "minDehumSp": 40,
+                    "dehumidificationOption": true,
+                    "maxDehumSp": 60,
+                    "minHsp": 40,
+                    "maxHspC": 30
+                },
+                "schedule": {
+                    "periodCount": 1,
+                    "name": "manual zone 0",
+                    "periods": [
+                        {
+                            "id": 0,
+                            "enabled": true,
+                            "period": {
+                                "startTime": 0,
+                                "systemMode": "heat and cool",
+                                "fanMode": "auto",
+                                "husp": 32,
+                                "away": false,
+                                "sp": 73,
+                                "desp": 44,
+                                "csp": 72,
+                                "hsp": 64,
+                                "hspC": 18,
+                                "humidityMode": "dehumidify",
+                                "spC": 22.5,
+                                "cspC": 22,
+                                "isCspChanged": true,
+                                "isHspChanged": false
+                            }
+                        },
+                        {
+                            "enabled": false,
+                            "id": 1,
+                            "period": {
+                                "systemMode": "heat and cool",
+                                "fanMode": "auto",
+                                "husp": 32,
+                                "away": true,
+                                "sp": 73,
+                                "desp": 50,
+                                "csp": 85,
+                                "hsp": 62,
+                                "hspC": 16.5,
+                                "startTime": 3600,
+                                "humidityMode": "humidify",
+                                "spC": 22.5,
+                                "cspC": 29.5
+                            }
+                        }
+                    ]
+                },
+                "status": {
+                    "temperatureStatus": "good",
+                    "humidityStatus": "good",
+                    "doNotPersist": true,
+                    "fan": false,
+                    "allergenDefender": false,
+                    "humidity": 50,
+                    "temperature": 68.875,
+                    "damper": 100,
+                    "heatCoast": false,
+                    "defrost": false,
+                    "humOperation": "off",
+                    "scheduleExceptionIds": [],
+                    "balancePoint": "none",
+                    "tempOperation": "off",
+                    "ventilation": true,
+                    "demand": 0,
+                    "aux": false,
+                    "coolCoast": false,
+                    "ssr": false,
+                    "temperatureC": 20.5,
+                    "period": {
+                        "systemMode": "heat and cool",
+                        "fanMode": "auto",
+                        "husp": 32,
+                        "sp": 73,
+                        "desp": 44,
+                        "csp": 72,
+                        "hsp": 64,
+                        "hspC": 18,
+                        "startTime": 0,
+                        "humidityMode": "dehumidify",
+                        "spC": 22.5,
+                        "cspC": 22
+                    }
+                },
+                "sensors": [
+                    {
+                        "id": 0,
+                        "writeAccess": "local",
+                        "doNotPersist": true,
+                        "tempStatus": "good",
+                        "hum": 49.81412636411713,
+                        "tsense": 68.76014804301984,
+                        "humStatus": "good",
+                        "tant": 68.76014819745487
+                    }
+                ],
+                "inputs": [
+                    {
+                        "id": 0,
+                        "doNotPersist": true
+                    }
+                ],
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 1,
+                "config": {
+                    "name": "Upper Floor",
+                    "writeAccess": "openAll",
+                    "scheduleId": 17,
+                    "scheduleHold": {
+                        "enabled": false,
+                        "exceptionType": "hold",
+                        "scheduleId": 33,
+                        "expirationMode": "nextPeriod"
+                    },
+                    "temperatureDeadband": 3,
+                    "minCspC": 16,
+                    "minHumSp": 15,
+                    "heatingOption": true,
+                    "maxHsp": 86,
+                    "temperatureDeadbandC": 1.5,
+                    "humidificationOption": true,
+                    "coolingOption": true,
+                    "singleSetpointAvailable": false,
+                    "humidityDeadband": 5,
+                    "humidificationNotAdjustable": false,
+                    "minHspC": 4.5,
+                    "minCsp": 61,
+                    "maxCspC": 37,
+                    "emergencyHeatingOption": false,
+                    "maxHumSp": 45,
+                    "maxCsp": 99,
+                    "dehumidificationNotAdjustable": false,
+                    "minDehumSp": 40,
+                    "dehumidificationOption": true,
+                    "maxDehumSp": 60,
+                    "minHsp": 40,
+                    "maxHspC": 30
+                },
+                "schedule": {
+                    "periodCount": 1,
+                    "name": "manual zone 1",
+                    "periods": [
+                        {
+                            "id": 0,
+                            "enabled": true,
+                            "period": {
+                                "startTime": 0,
+                                "systemMode": "heat and cool",
+                                "fanMode": "auto",
+                                "husp": 32,
+                                "away": false,
+                                "sp": 73,
+                                "desp": 44,
+                                "csp": 72,
+                                "hsp": 59,
+                                "hspC": 15,
+                                "humidityMode": "dehumidify",
+                                "spC": 22.5,
+                                "cspC": 22,
+                                "isCspChanged": true,
+                                "isHspChanged": false
+                            }
+                        },
+                        {
+                            "enabled": false,
+                            "id": 1,
+                            "period": {
+                                "systemMode": "heat and cool",
+                                "fanMode": "auto",
+                                "husp": 32,
+                                "away": true,
+                                "sp": 73,
+                                "desp": 50,
+                                "csp": 85,
+                                "hsp": 62,
+                                "hspC": 16.5,
+                                "startTime": 3600,
+                                "humidityMode": "humidify",
+                                "spC": 22.5,
+                                "cspC": 29.5
+                            }
+                        }
+                    ]
+                },
+                "status": {
+                    "temperatureStatus": "good",
+                    "humidityStatus": "good",
+                    "doNotPersist": true,
+                    "fan": false,
+                    "allergenDefender": false,
+                    "humidity": 50,
+                    "temperature": 71.625,
+                    "damper": 100,
+                    "heatCoast": false,
+                    "defrost": false,
+                    "humOperation": "off",
+                    "scheduleExceptionIds": [],
+                    "balancePoint": "none",
+                    "tempOperation": "off",
+                    "ventilation": true,
+                    "demand": 0,
+                    "aux": false,
+                    "coolCoast": false,
+                    "ssr": false,
+                    "temperatureC": 22,
+                    "period": {
+                        "systemMode": "heat and cool",
+                        "fanMode": "auto",
+                        "husp": 32,
+                        "sp": 73,
+                        "desp": 44,
+                        "csp": 72,
+                        "hsp": 59,
+                        "hspC": 15,
+                        "startTime": 0,
+                        "humidityMode": "dehumidify",
+                        "spC": 22.5,
+                        "cspC": 22
+                    }
+                },
+                "sensors": [
+                    {
+                        "id": 0,
+                        "doNotPersist": true,
+                        "tempStatus": "good",
+                        "tsense": 71.0625,
+                        "tant": 71.0625
+                    }
+                ],
+                "inputs": [
+                    {
+                        "id": 0,
+                        "doNotPersist": true
+                    }
+                ],
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 2,
+                "config": {
+                    "name": "Basement",
+                    "writeAccess": "openAll",
+                    "scheduleId": 18,
+                    "scheduleHold": {
+                        "enabled": false,
+                        "exceptionType": "hold",
+                        "scheduleId": 34,
+                        "expirationMode": "nextPeriod"
+                    },
+                    "temperatureDeadband": 3,
+                    "minCspC": 16,
+                    "minHumSp": 15,
+                    "heatingOption": true,
+                    "maxHsp": 86,
+                    "temperatureDeadbandC": 1.5,
+                    "humidificationOption": true,
+                    "coolingOption": true,
+                    "singleSetpointAvailable": false,
+                    "humidityDeadband": 5,
+                    "humidificationNotAdjustable": false,
+                    "minHspC": 4.5,
+                    "minCsp": 61,
+                    "maxCspC": 37,
+                    "emergencyHeatingOption": false,
+                    "maxHumSp": 45,
+                    "maxCsp": 99,
+                    "dehumidificationNotAdjustable": false,
+                    "minDehumSp": 40,
+                    "dehumidificationOption": true,
+                    "maxDehumSp": 60,
+                    "minHsp": 40,
+                    "maxHspC": 30
+                },
+                "schedule": {
+                    "periodCount": 1,
+                    "name": "manual zone 2",
+                    "periods": [
+                        {
+                            "id": 0,
+                            "enabled": true,
+                            "period": {
+                                "startTime": 0,
+                                "systemMode": "off",
+                                "fanMode": "auto",
+                                "husp": 32,
+                                "away": false,
+                                "sp": 73,
+                                "desp": 44,
+                                "csp": 82,
+                                "hsp": 64,
+                                "hspC": 17.5,
+                                "humidityMode": "dehumidify",
+                                "spC": 22.5,
+                                "cspC": 28,
+                                "isCspChanged": false,
+                                "isHspChanged": true
+                            }
+                        },
+                        {
+                            "enabled": false,
+                            "id": 1,
+                            "period": {
+                                "systemMode": "heat and cool",
+                                "fanMode": "auto",
+                                "husp": 32,
+                                "away": true,
+                                "sp": 73,
+                                "desp": 50,
+                                "csp": 85,
+                                "hsp": 62,
+                                "hspC": 16.5,
+                                "startTime": 3600,
+                                "humidityMode": "humidify",
+                                "spC": 22.5,
+                                "cspC": 29.5
+                            }
+                        }
+                    ]
+                },
+                "status": {
+                    "temperatureStatus": "good",
+                    "humidityStatus": "good",
+                    "doNotPersist": true,
+                    "fan": false,
+                    "allergenDefender": false,
+                    "humidity": 50,
+                    "temperature": 63.5,
+                    "damper": 100,
+                    "heatCoast": false,
+                    "defrost": false,
+                    "humOperation": "off",
+                    "scheduleExceptionIds": [],
+                    "balancePoint": "none",
+                    "tempOperation": "off",
+                    "ventilation": true,
+                    "demand": 0,
+                    "aux": false,
+                    "coolCoast": false,
+                    "ssr": false,
+                    "temperatureC": 17.5,
+                    "period": {
+                        "systemMode": "off",
+                        "fanMode": "auto",
+                        "husp": 32,
+                        "sp": 73,
+                        "desp": 44,
+                        "csp": 82,
+                        "hsp": 64,
+                        "hspC": 17.5,
+                        "startTime": 0,
+                        "humidityMode": "dehumidify",
+                        "spC": 22.5,
+                        "cspC": 28
+                    }
+                },
+                "sensors": [
+                    {
+                        "id": 0,
+                        "doNotPersist": true,
+                        "tempStatus": "good",
+                        "tsense": 63.25,
+                        "tant": 63.25
+                    }
+                ],
+                "inputs": [
+                    {
+                        "id": 0,
+                        "doNotPersist": true
+                    },
+                    {
+                        "id": 1
+                    },
+                    {
+                        "hsp": 18.5,
+                        "id": 2,
+                        "csp": 28
+                    }
+                ],
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 3,
+                "config": {
+                    "name": "Zone 4",
+                    "writeAccess": "openAll",
+                    "scheduleId": 19,
+                    "scheduleHold": {
+                        "enabled": false,
+                        "exceptionType": "hold",
+                        "scheduleId": 35,
+                        "expirationMode": "nextPeriod"
+                    },
+                    "temperatureDeadband": 3,
+                    "minCspC": 15.5,
+                    "minHumSp": 15,
+                    "heatingOption": true,
+                    "maxHsp": 90,
+                    "temperatureDeadbandC": 1.5,
+                    "humidificationOption": true,
+                    "coolingOption": false,
+                    "singleSetpointAvailable": false,
+                    "humidityDeadband": 5,
+                    "humidificationNotAdjustable": false,
+                    "minHspC": 4.5,
+                    "minCsp": 60,
+                    "maxCspC": 37,
+                    "emergencyHeatingOption": false,
+                    "maxHumSp": 45,
+                    "maxCsp": 99,
+                    "dehumidificationNotAdjustable": false,
+                    "minDehumSp": 40,
+                    "dehumidificationOption": false,
+                    "maxDehumSp": 60,
+                    "minHsp": 40,
+                    "maxHspC": 32
+                },
+                "schedule": {
+                    "periodCount": 1,
+                    "name": "manual zone 3",
+                    "periods": [
+                        {
+                            "id": 0,
+                            "enabled": true,
+                            "period": {
+                                "startTime": 0,
+                                "systemMode": "off",
+                                "fanMode": "auto",
+                                "husp": 40,
+                                "away": false,
+                                "sp": 73,
+                                "desp": 55,
+                                "csp": 78,
+                                "hsp": 70,
+                                "hspC": 21,
+                                "humidityMode": "off",
+                                "spC": 22.5,
+                                "cspC": 25.5
+                            }
+                        }
+                    ]
+                },
+                "status": {
+                    "temperatureStatus": "not_available",
+                    "humidityStatus": "not_available",
+                    "doNotPersist": true
+                },
+                "sensors": [
+                    {
+                        "id": 0,
+                        "doNotPersist": true
+                    }
+                ],
+                "inputs": [
+                    {
+                        "id": 0,
+                        "doNotPersist": true
+                    }
+                ],
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            }
+        ]
+    }
+}
