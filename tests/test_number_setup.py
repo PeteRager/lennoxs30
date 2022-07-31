@@ -2,6 +2,7 @@ import logging
 from lennoxs30api.s30api_async import (
     LENNOX_STATUS_NOT_EXIST,
     LENNOX_STATUS_GOOD,
+    LENNOX_VENTILATION_DAMPER,
     lennox_system,
 )
 from custom_components.lennoxs30 import (
@@ -14,6 +15,7 @@ from custom_components.lennoxs30.number import (
     DiagnosticLevelNumber,
     DehumidificationOverCooling,
     CirculateTime,
+    TimedVentilationNumber,
     async_setup_entry,
 )
 
@@ -139,3 +141,20 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[0], DiagnosticLevelNumber)
     assert isinstance(sensor_list[1], DehumidificationOverCooling)
     assert isinstance(sensor_list[2], CirculateTime)
+
+    # DiagnosticLevelNumber, DehumidificationOverCooling and circulate time should be created
+    system.api._isLANConnection = True
+    system.dehumidifierType = "Dehumidifier"
+    system.enhancedDehumidificationOvercoolingF_enable = True
+    system.ventilationUnitType = LENNOX_VENTILATION_DAMPER
+    manager._create_diagnostic_sensors = True
+    manager._create_inverter_power = True
+    async_add_entities = Mock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 4
+    assert isinstance(sensor_list[0], DiagnosticLevelNumber)
+    assert isinstance(sensor_list[1], DehumidificationOverCooling)
+    assert isinstance(sensor_list[2], CirculateTime)
+    assert isinstance(sensor_list[3], TimedVentilationNumber)

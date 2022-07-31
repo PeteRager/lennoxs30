@@ -99,6 +99,8 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
         attrs["ventilationRemainingTime"] = self._system.ventilationRemainingTime
         attrs["ventilatingUntilTime"] = self._system.ventilatingUntilTime
         attrs["diagVentilationRuntime"] = self._system.diagVentilationRuntime
+        attrs["alwaysOn"] = self._system.ventilationMode == "on"
+        attrs["timed"] = self._system.ventilationRemainingTime != 0
         return attrs
 
     @property
@@ -107,7 +109,10 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        return self._system.ventilationMode == "on"
+        return (
+            self._system.ventilationMode == "on"
+            or self._system.ventilationRemainingTime > 0
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -126,8 +131,18 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         try:
-            await self._system.ventilation_off()
-            self._manager._mp_wakeup_event.set()
+            _LOGGER.debug("ventilation:async_turn_off")
+            called = False
+            if self._system.ventilationMode == "on":
+                _LOGGER.debug("ventilation:async_turn_off calling ventilation_off")
+                await self._system.ventilation_off()
+                called = True
+            if self._system.ventilationRemainingTime > 0:
+                await self._system.ventilation_timed(0)
+                _LOGGER.debug("ventilation:async_turn_off calling ventilation_timed(0)")
+                called = True
+            if called:
+                self._manager._mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("ventilation_off:async_turn_off - error:" + e.message)
