@@ -1,7 +1,4 @@
-import logging
 from lennoxs30api.s30api_async import (
-    LENNOX_STATUS_NOT_EXIST,
-    LENNOX_STATUS_GOOD,
     LENNOX_VENTILATION_DAMPER,
     lennox_system,
 )
@@ -9,7 +6,7 @@ from custom_components.lennoxs30 import (
     Manager,
 )
 import pytest
-from custom_components.lennoxs30.const import CONF_CLOUD_CONNECTION, MANAGER
+from custom_components.lennoxs30.const import MANAGER
 
 from custom_components.lennoxs30.number import (
     DiagnosticLevelNumber,

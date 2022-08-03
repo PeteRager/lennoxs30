@@ -592,6 +592,9 @@ class Manager(object):
         numOfSystems = len(self._api.getSystems())
         # To speed startup, we only want to sleep when a message was not received.
         got_message: bool = True
+
+        offline_error_logged = {}
+
         while systemsWithZones < numOfSystems and loops < self._conf_init_wait_time:
             _LOGGER.debug(
                 f"__init__:async_setup waiting for zone config to arrive host [{self._ip_address}]  numSystems ["
@@ -600,12 +603,18 @@ class Manager(object):
                 + str(systemsWithZones)
                 + "]"
             )
-            # Only take a breather if we did not get a messagd.
+            # Only take a breather if we did not get a message.
             if got_message == False:
                 await asyncio.sleep(1.0)
             systemsWithZones = 0
             got_message = await self.messagePump()
             for lsystem in self._api.getSystems():
+                if lsystem.cloud_status == "offline":
+                    if offline_error_logged.get(lsystem.sysId) == None:
+                        _LOGGER.error(
+                            f"The Lennox System with id [{lsystem.sysId}] is not connected to the Lennox Cloud.  Cloud Status [{lsystem.cloud_status}].  Please check your thermostats internet connection and retry."
+                        )
+                        offline_error_logged[lsystem.sysId] = True
                 # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
                 if lsystem.config_complete() == False:
                     continue
