@@ -35,6 +35,7 @@ from .const import (
     LENNOX_DOMAIN,
     CONF_CLOUD_CONNECTION,
     MANAGER,
+    VENTILATION_EQUIPMENT_ID,
 )
 from .device import (
     Device,
@@ -42,6 +43,7 @@ from .device import (
     S30ControllerDevice,
     S30IndoorUnit,
     S30OutdoorUnit,
+    S30VentilationUnit,
     S30ZoneThermostat,
 )
 from .util import dict_redact_fields, redact_email
@@ -544,6 +546,13 @@ class Manager(object):
                     )
                     aux_unit.register_device()
                     equip_device_map[aux_unit.eq.equipment_id] = aux_unit
+
+            if system.supports_ventilation():
+                d: S30VentilationUnit = S30VentilationUnit(
+                    self._hass, self._config_entry, system, s30
+                )
+                d.register_device()
+                equip_device_map[VENTILATION_EQUIPMENT_ID] = d
 
             for zone in system._zoneList:
                 if zone.is_zone_active() == True:

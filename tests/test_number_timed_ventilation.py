@@ -1,3 +1,4 @@
+import logging
 from lennoxs30api.s30api_async import (
     lennox_system,
     LENNOX_CIRCULATE_TIME_MAX,
@@ -11,6 +12,7 @@ import pytest
 from custom_components.lennoxs30.const import (
     LENNOX_DOMAIN,
     UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
+    VENTILATION_EQUIPMENT_ID,
 )
 
 from custom_components.lennoxs30.number import (
@@ -111,12 +113,48 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_device_info(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
+    system.ventilationUnitType = "ventilation"
+    await manager.create_devices()
     manager._is_metric = True
     c = TimedVentilationNumber(hass, manager, system)
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert (
+            x[1]
+            == manager.system_equip_device_map[system.sysId][
+                VENTILATION_EQUIPMENT_ID
+            ].unique_name
+        )
+
+    system.ventilationUnitType = None
+    manager.system_equip_device_map = {}
+    await manager.create_devices()
+    manager._is_metric = True
+    c = TimedVentilationNumber(hass, manager, system)
+    with caplog.at_level(logging.WARNING):
+        caplog.clear()
+        identifiers = c.device_info["identifiers"]
+        for x in identifiers:
+            assert x[0] == LENNOX_DOMAIN
+            assert x[1] == system.unique_id()
+        assert len(caplog.records) == 1
+        assert "Unable to find VENTILATION_EQUIPMENT_ID" in caplog.messages[0]
+        assert caplog.records[0].levelname == "WARNING"
+
+    system.ventilationUnitType = None
+    manager.system_equip_device_map = {}
+    manager._is_metric = True
+    c = TimedVentilationNumber(hass, manager, system)
+    with caplog.at_level(logging.WARNING):
+        caplog.clear()
+        identifiers = c.device_info["identifiers"]
+        for x in identifiers:
+            assert x[0] == LENNOX_DOMAIN
+            assert x[1] == system.unique_id()
+        assert len(caplog.records) == 1
+        assert "No equipment device map found for sysId" in caplog.messages[0]
+        assert caplog.records[0].levelname == "ERROR"
 
 
 @pytest.mark.asyncio

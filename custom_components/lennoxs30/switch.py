@@ -2,7 +2,7 @@
 from typing import Any
 
 from .base_entity import S30BaseEntity
-from .const import MANAGER
+from .const import MANAGER, VENTILATION_EQUIPMENT_ID
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, CONF_NAME
 from . import Manager
 from homeassistant.core import HomeAssistant
@@ -117,7 +117,23 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+        equip_device_map = self._manager.system_equip_device_map.get(self._system.sysId)
+        if equip_device_map != None:
+            device = equip_device_map.get(VENTILATION_EQUIPMENT_ID)
+            if device != None:
+                return {
+                    "identifiers": {(DOMAIN, device.unique_name)},
+                }
+            _LOGGER.warning(
+                f"Unable to find VENTILATION_EQUIPMENT_ID in device map, please raise an issue"
+            )
+        else:
+            _LOGGER.error(
+                f"No equipment device map found for sysId [{self._system.sysId}] equipment VENTILATION_EQUIPMENT_ID, please raise an issue"
+            )
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
 
     async def async_turn_on(self, **kwargs):
         try:
