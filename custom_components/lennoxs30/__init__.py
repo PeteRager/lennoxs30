@@ -2,6 +2,7 @@
 import asyncio
 from asyncio.locks import Event, Lock
 import logging
+import time
 
 from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
 
@@ -416,6 +417,8 @@ class Manager(object):
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
         self.connected = False
+        self.last_cloud_presence_poll: float = None
+
         self._cs_callbacks = []
         self.system_equip_device_map: dict[str, dict[int, Device]] = {}
         if index == 0:
@@ -689,6 +692,51 @@ class Manager(object):
             return False
         return self._mp_wakeup_event.is_set()
 
+    async def update_cloud_presence(self):
+        if self.last_cloud_presence_poll == None:
+            self.last_cloud_presence_poll = time.time()
+            return
+        if time.time() - self.last_cloud_presence_poll < 60.0:
+            return
+
+        self.last_cloud_presence_poll = time.time()
+
+        for system in self._api._systemList:
+            _LOGGER.debug(f"update_cloud_presence sysId [{system.sysId}]")
+            old_status = system.cloud_status
+            try:
+                await system.update_system_online_cloud()
+                new_status = system.cloud_status
+                if new_status == "offline" and old_status == "online":
+                    _LOGGER.error(
+                        f"cloud status changed to offline for sysId [{system.sysId}]"
+                    )
+                elif old_status == "offline" and new_status == "online":
+                    _LOGGER.info(
+                        f"cloud status changed to online for sysId [{system.sysId}] - resubscribing"
+                    )
+                    try:
+                        await self._api.subscribe(system)
+                    except S30Exception as e:
+                        _LOGGER.error(
+                            f"update_cloud_presence resubscribe error sysid [{system.sysId}] error {e.as_string()}"
+                        )
+                        self._reinitialize = True
+                    except Exception as e:
+                        _LOGGER.exception(
+                            f"update_cloud_presence resubscribe error unexpected exception sysid [{system.sysId}] error {e}"
+                        )
+                        self._reinitialize = True
+
+            except S30Exception as e:
+                _LOGGER.error(
+                    f"update_cloud_presence sysid [{system.sysId}] error {e.as_string()}"
+                )
+            except Exception as e:
+                _LOGGER.exception(
+                    f"update_cloud_presence unexpected exception sysid [{system.sysId}] error {e}"
+                )
+
     async def messagePump_task(self) -> None:
         await asyncio.sleep(self._poll_interval)
         self._reinitialize = False
@@ -704,6 +752,10 @@ class Manager(object):
                     f"messagePump_task host [{self._ip_address}] unexpected exception:"
                     + str(e)
                 )
+
+            if self._api._isLANConnection == False:
+                await self.update_cloud_presence()
+
             if fast_polling == True:
                 fast_polling_cd = fast_polling_cd - 1
                 if fast_polling_cd <= 0:

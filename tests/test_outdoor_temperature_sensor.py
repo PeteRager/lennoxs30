@@ -6,6 +6,7 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from custom_components.lennoxs30 import (
+    DS_CONNECTED,
     DS_RETRY_WAIT,
     Manager,
 )
@@ -101,3 +102,17 @@ async def test_outdoor_temperature_sensor_subscription(hass, manager: Manager, c
         manager.updateState(DS_RETRY_WAIT)
         assert update_callback.call_count == 1
         assert s.available == False
+
+    c = s
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_CONNECTED)
+        assert update_callback.call_count == 1
+        assert c.available == True
+        system.attr_updater({"status": "online"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 2
+        assert c.available == True
+        system.attr_updater({"status": "offline"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 3
+        assert c.available == False

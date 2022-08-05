@@ -1,6 +1,7 @@
 import logging
 from lennoxs30api.s30api_async import lennox_system, lennox_equipment_diagnostic
 from custom_components.lennoxs30 import (
+    DS_CONNECTED,
     DS_RETRY_WAIT,
     Manager,
 )
@@ -72,8 +73,9 @@ async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
     assert system._diagcallbacks[0]["func"] == s.update_callback
     assert system._diagcallbacks[0]["match"] == ["1_0"]
 
-    assert len(system._callbacks) == 1
+    assert len(system._callbacks) == 2
     assert system._callbacks[0]["func"] == s.system_update_callback
+    assert system._callbacks[1]["func"] == s.cloud_status_update_callback
 
 
 @pytest.mark.asyncio
@@ -128,6 +130,20 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
         manager.updateState(DS_RETRY_WAIT)
         assert update_callback.call_count == 1
         assert s.available == False
+
+    c = s
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_CONNECTED)
+        assert update_callback.call_count == 1
+        assert c.available == True
+        system.attr_updater({"status": "online"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 2
+        assert c.available == True
+        system.attr_updater({"status": "offline"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 3
+        assert c.available == False
 
 
 @pytest.mark.asyncio

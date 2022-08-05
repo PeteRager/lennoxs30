@@ -76,9 +76,8 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_diagnostic_level"
         _LOGGER.debug(f"Create DiagnosticLevelNumber myname [{self._myname}]")
 
@@ -150,9 +149,8 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_dehumidification_overcooling"
         _LOGGER.debug(f"Create DehumidificationOverCooling myname [{self._myname}]")
 
@@ -248,9 +246,8 @@ class CirculateTime(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_circulate_time"
         _LOGGER.debug(f"Create CirculateTime myname [{self._myname}]")
 
@@ -318,9 +315,8 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
     """Set timed ventilation."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_timed_ventilation"
         _LOGGER.debug(f"Create TimedVentilationNumber myname [{self._myname}]")
 

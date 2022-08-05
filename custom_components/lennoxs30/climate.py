@@ -115,9 +115,8 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         self, hass, manager: Manager, system: lennox_system, zone: lennox_zone
     ):
         """Initialize the climate device."""
-        super().__init__(manager)
+        super().__init__(manager, system)
         self.hass: HomeAssistant = hass
-        self._system = system
         self._zone = zone
         self._myname = self._system.name + "_" + self._zone.name
 

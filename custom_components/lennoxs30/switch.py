@@ -65,9 +65,8 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_ventilation"
 
     async def async_added_to_hass(self) -> None:
@@ -170,9 +169,8 @@ class S30AllergenDefenderSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_allergen_defender"
 
     async def async_added_to_hass(self) -> None:
@@ -245,9 +243,8 @@ class S30ManualAwayModeSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_manual_away_mode"
 
     async def async_added_to_hass(self) -> None:
@@ -316,9 +313,8 @@ class S30SmartAwayEnableSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager, system)
         self._hass = hass
-        self._manager = manager
-        self._system = system
         self._myname = self._system.name + "_smart_away_enable"
 
     async def async_added_to_hass(self) -> None:
@@ -396,9 +392,8 @@ class S30ZoningSwitch(S30BaseEntity, SwitchEntity):
     """Class for iHarmony Zoning"""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager, system)
         self._hass = hass
-        self._manager = manager
-        self._system = system
         self._myname = self._system.name + "_zoning_enable"
 
     async def async_added_to_hass(self) -> None:

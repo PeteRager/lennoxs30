@@ -3,6 +3,7 @@ from lennoxs30api.s30api_async import (
 )
 from custom_components.lennoxs30 import (
     DOMAIN,
+    DS_CONNECTED,
     DS_RETRY_WAIT,
     Manager,
 )
@@ -86,4 +87,17 @@ async def test_relay_service_status_subscription(hass, manager: Manager, caplog)
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         manager.updateState(DS_RETRY_WAIT)
         assert update_callback.call_count == 1
+        assert c.available == False
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_CONNECTED)
+        assert update_callback.call_count == 1
+        assert c.available == True
+        system.attr_updater({"status": "online"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 2
+        assert c.available == True
+        system.attr_updater({"status": "offline"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 3
         assert c.available == False
