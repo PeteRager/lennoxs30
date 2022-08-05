@@ -696,7 +696,7 @@ class Manager(object):
         if self.last_cloud_presence_poll == None:
             self.last_cloud_presence_poll = time.time()
             return
-        if time.time() - self.last_cloud_presence_poll < 60.0:
+        if time.time() - self.last_cloud_presence_poll < 600.0:
             return
 
         self.last_cloud_presence_poll = time.time()

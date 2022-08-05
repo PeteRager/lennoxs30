@@ -226,7 +226,7 @@ In addition the following extra attributes are provided, to allow for a more det
 | demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                                                                                                  |
 | fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                                                                                             |
 | heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                    |
-| humidityOperation | Current active humidity operation - **Waiting**,**Humidifying**, **Drying** or **Off**                                                                                                                                                                                         |
+| humidityOperation | Current active humidity operation - **Waiting**,**Humidifying**, **Drying** or **Off**                                                                                                                                                                             |
 | ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                                                                                                  |
 | tempOperation     | Current active temperature operation heating or cooling                                                                                                                                                                                                            |
 | ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                                                                                                 |
@@ -361,7 +361,7 @@ switch.<system_name>\_manual_away_mode
 
 ### ventilation
 
-If your system has an external outdoor air damper a switch will be created.
+If your system has an external outdoor air damper, a 1 or 2 stage ERV, or a 1 or 2 stage HRV, a switch will be created.
 
 switch.<system_name>\_ventilation
 
@@ -373,6 +373,10 @@ The switch has the following attributes:
 | ventilationRemainingTime | int  | number of minutes remaining in ventilation action                        |
 | ventilatingUntilTime     | int  | integer timestamp of the end time of the ventilation action              |
 | diagVentilationRuntime   | int  | total number of minutes the system has ventilated for over it's lifetime |
+| alwaysOn                 | bool | indicates if the switch is on because of an **always on** command        |
+| timed                    | bool | indicates if the switch is on because a timed ventilation is active      |
+
+Turning this switch on is equivalent to selecting "Always On" from the S30 Panel. If a timed ventilation is active, this switch will be on and turning it off will cancel the timed ventilation.
 
 ### zoning mode
 
@@ -431,6 +435,12 @@ Note: The S30 can take a while to update this sensor. To accelerate the update, 
 
 binary_sensor.<system_name>\_relay_server
 
+### cloud_connected (cloud connections only)
+
+This sensor indicates if the themostat is "Online" in the Lennox Cloud. The state should be connected. A **disconnected** state indicates that the integration is able to communicate to the Lennox Cloud but the thermostat is not able to. Typically this indicates a Wifi config issue with the thermostat.
+
+During testing, turning off the wifi router the S30 was connected caused this sensor to become **disconnected** after 5 minutes. The sensor is configured to be updated every 10 minutes.
+
 ## Number Entities
 
 ### diagnostic_level
@@ -454,6 +464,12 @@ number.<system_name>\_circulate_time
 ### dehumidification_overcooling
 
 Lennox systems with dehumidifiers may have the ability to provide overcooling to lower the humidity when the dehumidification mode is **Max**. This number allow you to set this over-cooling. Typically is is 0-4 degrees F or 0-2 degrees Celsius.
+
+### timed_ventilation
+
+Lennox Systems with ventilation configured for timed mode (not ASHRAE) will have this number entity created. The entity is in units of minutes. Setting this to a non-zero number will place the system into ventilation mode for the specified number of minutes. This is equivalent to selecting a timed ventilation from the S30 panel. As the amount of remaining time decreases, the value of the number will update.
+
+For example, setting this to 10 - will start ventilation for 10 minutes. After 1 minute has elapsed; this value will be 9; after another minute it will be 8. Setting this to Zero cancels any in-progress timed ventilaion. Another way to cancel a timed ventilation is to turn the ventilation switch entity off.
 
 # Reporting Bugs
 
