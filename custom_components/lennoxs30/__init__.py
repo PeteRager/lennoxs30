@@ -709,11 +709,11 @@ class Manager(object):
                 new_status = system.cloud_status
                 if new_status == "offline" and old_status == "online":
                     _LOGGER.error(
-                        f"cloud status changed to offline for sysId [{system.sysId}]"
+                        f"cloud status changed to offline for sysId [{system.sysId}] name [{system.name}]"
                     )
                 elif old_status == "offline" and new_status == "online":
                     _LOGGER.info(
-                        f"cloud status changed to online for sysId [{system.sysId}] - resubscribing"
+                        f"cloud status changed to online for sysId [{system.sysId}] name [{system.name}] - resubscribing"
                     )
                     try:
                         await self._api.subscribe(system)
