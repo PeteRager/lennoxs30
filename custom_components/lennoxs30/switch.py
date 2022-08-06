@@ -2,7 +2,7 @@
 from typing import Any
 
 from .base_entity import S30BaseEntity
-from .const import MANAGER
+from .const import MANAGER, VENTILATION_EQUIPMENT_ID
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, CONF_NAME
 from . import Manager
 from homeassistant.core import HomeAssistant
@@ -65,9 +65,8 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_ventilation"
 
     async def async_added_to_hass(self) -> None:
@@ -99,6 +98,8 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
         attrs["ventilationRemainingTime"] = self._system.ventilationRemainingTime
         attrs["ventilatingUntilTime"] = self._system.ventilatingUntilTime
         attrs["diagVentilationRuntime"] = self._system.diagVentilationRuntime
+        attrs["alwaysOn"] = self._system.ventilationMode == "on"
+        attrs["timed"] = self._system.ventilationRemainingTime != 0
         return attrs
 
     @property
@@ -107,12 +108,31 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        return self._system.ventilationMode == "on"
+        return (
+            self._system.ventilationMode == "on"
+            or self._system.ventilationRemainingTime > 0
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+        equip_device_map = self._manager.system_equip_device_map.get(self._system.sysId)
+        if equip_device_map != None:
+            device = equip_device_map.get(VENTILATION_EQUIPMENT_ID)
+            if device != None:
+                return {
+                    "identifiers": {(DOMAIN, device.unique_name)},
+                }
+            _LOGGER.warning(
+                f"Unable to find VENTILATION_EQUIPMENT_ID in device map, please raise an issue"
+            )
+        else:
+            _LOGGER.error(
+                f"No equipment device map found for sysId [{self._system.sysId}] equipment VENTILATION_EQUIPMENT_ID, please raise an issue"
+            )
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
 
     async def async_turn_on(self, **kwargs):
         try:
@@ -126,8 +146,18 @@ class S30VentilationSwitch(S30BaseEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         try:
-            await self._system.ventilation_off()
-            self._manager._mp_wakeup_event.set()
+            _LOGGER.debug("ventilation:async_turn_off")
+            called = False
+            if self._system.ventilationMode == "on":
+                _LOGGER.debug("ventilation:async_turn_off calling ventilation_off")
+                await self._system.ventilation_off()
+                called = True
+            if self._system.ventilationRemainingTime > 0:
+                await self._system.ventilation_timed(0)
+                _LOGGER.debug("ventilation:async_turn_off calling ventilation_timed(0)")
+                called = True
+            if called:
+                self._manager._mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("ventilation_off:async_turn_off - error:" + e.message)
@@ -139,9 +169,8 @@ class S30AllergenDefenderSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_allergen_defender"
 
     async def async_added_to_hass(self) -> None:
@@ -214,9 +243,8 @@ class S30ManualAwayModeSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_manual_away_mode"
 
     async def async_added_to_hass(self) -> None:
@@ -285,9 +313,8 @@ class S30SmartAwayEnableSwitch(S30BaseEntity, SwitchEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager, system)
         self._hass = hass
-        self._manager = manager
-        self._system = system
         self._myname = self._system.name + "_smart_away_enable"
 
     async def async_added_to_hass(self) -> None:
@@ -365,9 +392,8 @@ class S30ZoningSwitch(S30BaseEntity, SwitchEntity):
     """Class for iHarmony Zoning"""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager, system)
         self._hass = hass
-        self._manager = manager
-        self._system = system
         self._myname = self._system.name + "_zoning_enable"
 
     async def async_added_to_hass(self) -> None:

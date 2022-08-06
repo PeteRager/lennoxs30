@@ -102,12 +102,12 @@ async def async_setup_entry(
                     _LOGGER.info(
                         f"Create S30TempSensor sensor system [{system.sysId}] zone [{zone.id}]"
                     )
-                    tempSensor = S30TempSensor(hass, manager, zone)
+                    tempSensor = S30TempSensor(hass, manager, system, zone)
                     sensor_list.append(tempSensor)
                     _LOGGER.info(
                         f"Create S30HumSensor sensor system [{system.sysId}] zone [{zone.id}]"
                     )
-                    humSensor = S30HumiditySensor(hass, manager, zone)
+                    humSensor = S30HumiditySensor(hass, manager, system, zone)
                     sensor_list.append(humSensor)
 
     if len(sensor_list) != 0:
@@ -132,9 +132,8 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
         equipment: lennox_equipment,
         diagnostic: lennox_equipment_diagnostic,
     ):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system: lennox_system = system
         self._equipment: lennox_equipment = equipment
         self._diagnostic: lennox_equipment_diagnostic = diagnostic
 
@@ -274,9 +273,8 @@ class S30OutdoorTempSensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 thermostat."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_outdoor_temperature"
 
     async def async_added_to_hass(self) -> None:
@@ -347,8 +345,14 @@ class S30OutdoorTempSensor(S30BaseEntity, SensorEntity):
 class S30TempSensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
 
-    def __init__(self, hass: HomeAssistant, manager: Manager, zone: lennox_zone):
-        super().__init__(manager)
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+        zone: lennox_zone,
+    ):
+        super().__init__(manager, system)
         self._hass = hass
         self._zone = zone
         self._myname = self._zone._system.name + "_" + self._zone.name + "_temperature"
@@ -412,8 +416,14 @@ class S30TempSensor(S30BaseEntity, SensorEntity):
 class S30HumiditySensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 thermostat temperature."""
 
-    def __init__(self, hass: HomeAssistant, manager: Manager, zone: lennox_zone):
-        super().__init__(manager)
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+        zone: lennox_zone,
+    ):
+        super().__init__(manager, system)
         self._hass = hass
         self._zone = zone
         self._myname = self._zone._system.name + "_" + self._zone.name + "_humidity"
@@ -472,9 +482,8 @@ class S30InverterPowerSensor(S30BaseEntity, SensorEntity):
     """Class for Lennox S30 inverter power."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_inverter_energy"
 
     async def async_added_to_hass(self) -> None:

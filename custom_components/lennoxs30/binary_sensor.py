@@ -5,6 +5,7 @@ from .base_entity import S30BaseEntity
 from .const import (
     CONF_CLOUD_CONNECTION,
     MANAGER,
+    UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR,
     UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR,
     UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR,
 )
@@ -41,10 +42,13 @@ async def async_setup_entry(
         sensor = S30HomeStateBinarySensor(hass, manager, system)
         sensor_list.append(sensor)
 
-        if entry.data[CONF_CLOUD_CONNECTION] == False:
+        if manager._api._isLANConnection == True:
             sensor = S30InternetStatus(hass, manager, system)
             sensor_list.append(sensor)
             sensor = S30RelayServerStatus(hass, manager, system)
+            sensor_list.append(sensor)
+        else:
+            sensor = S30CloudConnectedStatus(hass, manager, system)
             sensor_list.append(sensor)
 
     if len(sensor_list) != 0:
@@ -62,9 +66,8 @@ async def async_setup_entry(
 
 class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_home_state"
 
     async def async_added_to_hass(self) -> None:
@@ -131,9 +134,8 @@ class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
 
 class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_internet_status"
 
     async def async_added_to_hass(self) -> None:
@@ -194,9 +196,8 @@ class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
 
 class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_relay_server"
 
     async def async_added_to_hass(self) -> None:
@@ -240,6 +241,82 @@ class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
     @property
     def is_on(self):
         return self._system.relayServerConnected == True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_CONNECTIVITY
+
+    @property
+    def entity_category(self):
+        return EntityCategory.DIAGNOSTIC
+
+
+class S30CloudConnectedStatus(S30BaseEntity, BinarySensorEntity):
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._myname = self._system.name + "_cloud_connected"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass S30CloudConnectedStatus myname [{self._myname}]"
+        )
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "cloud_status",
+            ],
+        )
+        await super().async_added_to_hass()
+
+    @property
+    def base_ignore_cloud_status(self):
+        return True
+
+    def update_callback(self):
+        _LOGGER.debug(
+            f"update_callback S30CloudConnectedStatus myname [{self._myname}]"
+        )
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (
+            self._system.unique_id() + UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR
+        ).replace("-", "")
+
+    @property
+    def extra_state_attributes(self):
+        return {}
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def available(self):
+        if self._system.cloud_status == None:
+            return False
+        return super().available
+
+    @property
+    def is_on(self):
+        if self._system.cloud_status == "online":
+            return True
+        elif self._system.cloud_status == "offline":
+            return False
+        elif self._system.is_none(self._system.cloud_status):
+            return None
+        return False
 
     @property
     def device_info(self) -> DeviceInfo:

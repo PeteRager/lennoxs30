@@ -2,6 +2,7 @@
 import asyncio
 from asyncio.locks import Event, Lock
 import logging
+import time
 
 from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
 
@@ -35,6 +36,7 @@ from .const import (
     LENNOX_DOMAIN,
     CONF_CLOUD_CONNECTION,
     MANAGER,
+    VENTILATION_EQUIPMENT_ID,
 )
 from .device import (
     Device,
@@ -42,6 +44,7 @@ from .device import (
     S30ControllerDevice,
     S30IndoorUnit,
     S30OutdoorUnit,
+    S30VentilationUnit,
     S30ZoneThermostat,
 )
 from .util import dict_redact_fields, redact_email
@@ -414,6 +417,8 @@ class Manager(object):
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
         self.connected = False
+        self.last_cloud_presence_poll: float = None
+
         self._cs_callbacks = []
         self.system_equip_device_map: dict[str, dict[int, Device]] = {}
         if index == 0:
@@ -545,6 +550,13 @@ class Manager(object):
                     aux_unit.register_device()
                     equip_device_map[aux_unit.eq.equipment_id] = aux_unit
 
+            if system.supports_ventilation():
+                d: S30VentilationUnit = S30VentilationUnit(
+                    self._hass, self._config_entry, system, s30
+                )
+                d.register_device()
+                equip_device_map[VENTILATION_EQUIPMENT_ID] = d
+
             for zone in system._zoneList:
                 if zone.is_zone_active() == True:
                     z: S30ZoneThermostat = S30ZoneThermostat(
@@ -592,6 +604,9 @@ class Manager(object):
         numOfSystems = len(self._api.getSystems())
         # To speed startup, we only want to sleep when a message was not received.
         got_message: bool = True
+
+        offline_error_logged = {}
+
         while systemsWithZones < numOfSystems and loops < self._conf_init_wait_time:
             _LOGGER.debug(
                 f"__init__:async_setup waiting for zone config to arrive host [{self._ip_address}]  numSystems ["
@@ -600,12 +615,18 @@ class Manager(object):
                 + str(systemsWithZones)
                 + "]"
             )
-            # Only take a breather if we did not get a messagd.
+            # Only take a breather if we did not get a message.
             if got_message == False:
                 await asyncio.sleep(1.0)
             systemsWithZones = 0
             got_message = await self.messagePump()
             for lsystem in self._api.getSystems():
+                if lsystem.cloud_status == "offline":
+                    if offline_error_logged.get(lsystem.sysId) == None:
+                        _LOGGER.error(
+                            f"The Lennox System with id [{lsystem.sysId}] is not connected to the Lennox Cloud.  Cloud Status [{lsystem.cloud_status}].  Please check your thermostats internet connection and retry."
+                        )
+                        offline_error_logged[lsystem.sysId] = True
                 # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
                 if lsystem.config_complete() == False:
                     continue
@@ -671,6 +692,51 @@ class Manager(object):
             return False
         return self._mp_wakeup_event.is_set()
 
+    async def update_cloud_presence(self):
+        if self.last_cloud_presence_poll == None:
+            self.last_cloud_presence_poll = time.time()
+            return
+        if time.time() - self.last_cloud_presence_poll < 300.0:
+            return
+
+        self.last_cloud_presence_poll = time.time()
+
+        for system in self._api._systemList:
+            _LOGGER.debug(f"update_cloud_presence sysId [{system.sysId}]")
+            old_status = system.cloud_status
+            try:
+                await system.update_system_online_cloud()
+                new_status = system.cloud_status
+                if new_status == "offline" and old_status == "online":
+                    _LOGGER.error(
+                        f"cloud status changed to offline for sysId [{system.sysId}] name [{system.name}]"
+                    )
+                elif old_status == "offline" and new_status == "online":
+                    _LOGGER.info(
+                        f"cloud status changed to online for sysId [{system.sysId}] name [{system.name}] - resubscribing"
+                    )
+                    try:
+                        await self._api.subscribe(system)
+                    except S30Exception as e:
+                        _LOGGER.error(
+                            f"update_cloud_presence resubscribe error sysid [{system.sysId}] error {e.as_string()}"
+                        )
+                        self._reinitialize = True
+                    except Exception as e:
+                        _LOGGER.exception(
+                            f"update_cloud_presence resubscribe error unexpected exception sysid [{system.sysId}] error {e}"
+                        )
+                        self._reinitialize = True
+
+            except S30Exception as e:
+                _LOGGER.error(
+                    f"update_cloud_presence sysid [{system.sysId}] error {e.as_string()}"
+                )
+            except Exception as e:
+                _LOGGER.exception(
+                    f"update_cloud_presence unexpected exception sysid [{system.sysId}] error {e}"
+                )
+
     async def messagePump_task(self) -> None:
         await asyncio.sleep(self._poll_interval)
         self._reinitialize = False
@@ -686,6 +752,10 @@ class Manager(object):
                     f"messagePump_task host [{self._ip_address}] unexpected exception:"
                     + str(e)
                 )
+
+            if self._api._isLANConnection == False:
+                await self.update_cloud_presence()
+
             if fast_polling == True:
                 fast_polling_cd = fast_polling_cd - 1
                 if fast_polling_cd <= 0:

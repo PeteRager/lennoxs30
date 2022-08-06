@@ -68,9 +68,8 @@ class HumidityModeSelect(S30BaseEntity, SelectEntity):
         system: lennox_system,
         zone: lennox_zone,
     ):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self.hass: HomeAssistant = hass
-        self._system = system
         self._zone = zone
         self._myname = self._system.name + "_" + self._zone.name + "_humidity_mode"
         _LOGGER.debug(f"Create HumidityModeSelect myname [{self._myname}]")
@@ -163,9 +162,8 @@ class DehumidificationModeSelect(S30BaseEntity, SelectEntity):
         manager: Manager,
         system: lennox_system,
     ):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self.hass: HomeAssistant = hass
-        self._system = system
         self._myname = self._system.name + "_dehumidification_mode"
         _LOGGER.debug(f"Create DehumidificationModeSelect myname [{self._myname}]")
 

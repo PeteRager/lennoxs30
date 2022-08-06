@@ -103,10 +103,19 @@ async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog
         assert update_callback.call_count == 1
         assert s.available == False
 
-    with patch.object(s, "schedule_update_ha_state") as update_callback:
+    c = s
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
         manager.updateState(DS_CONNECTED)
         assert update_callback.call_count == 1
-        assert s.available == True
+        assert c.available == True
+        system.attr_updater({"status": "online"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 2
+        assert c.available == True
+        system.attr_updater({"status": "offline"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 3
+        assert c.available == False
 
     with patch.object(s, "schedule_update_ha_state") as s_update_callback:
         set = {"diagLevel": 0}
@@ -116,8 +125,11 @@ async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog
         assert s.available == False
 
     with patch.object(s, "schedule_update_ha_state") as s_update_callback:
+        system.attr_updater({"status": "online"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert s_update_callback.call_count == 1
         set = {"diagLevel": 2}
         system.attr_updater(set, "diagLevel")
         system.executeOnUpdateCallbacks()
-        assert s_update_callback.call_count == 1
+        assert s_update_callback.call_count == 2
         assert s.available == True

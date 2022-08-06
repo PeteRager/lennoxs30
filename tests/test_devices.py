@@ -9,6 +9,7 @@ import json
 
 from custom_components.lennoxs30.const import (
     LENNOX_MFG,
+    VENTILATION_EQUIPMENT_ID,
 )
 
 
@@ -26,6 +27,7 @@ from custom_components.lennoxs30.device import (
     S30ControllerDevice,
     S30IndoorUnit,
     S30OutdoorUnit,
+    S30VentilationUnit,
 )
 
 
@@ -49,7 +51,7 @@ async def test_create_devices_multiple_times(hass, manager_2_systems: Manager, c
             len(manager.system_equip_device_map[manager._api._systemList[0].sysId]) == 3
         )
         assert (
-            len(manager.system_equip_device_map[manager._api._systemList[1].sysId]) == 3
+            len(manager.system_equip_device_map[manager._api._systemList[1].sysId]) == 4
         )
         assert len(manager.system_equip_device_map) == 2
 
@@ -58,7 +60,7 @@ async def test_create_devices_multiple_times(hass, manager_2_systems: Manager, c
             len(manager.system_equip_device_map[manager._api._systemList[0].sysId]) == 3
         )
         assert (
-            len(manager.system_equip_device_map[manager._api._systemList[1].sysId]) == 3
+            len(manager.system_equip_device_map[manager._api._systemList[1].sysId]) == 4
         )
         assert len(manager.system_equip_device_map) == 2
 
@@ -75,7 +77,7 @@ async def test_create_devices(hass, manager_2_systems: Manager, caplog):
             len(manager.system_equip_device_map[manager._api._systemList[0].sysId]) == 3
         )
         assert (
-            len(manager.system_equip_device_map[manager._api._systemList[1].sysId]) == 3
+            len(manager.system_equip_device_map[manager._api._systemList[1].sysId]) == 4
         )
         assert len(manager.system_equip_device_map) == 2
 
@@ -279,7 +281,7 @@ async def test_create_devices_furn_ac_zoning(
         await manager.create_devices()
         call = mock_create_device.mock_calls[0]
 
-        assert len(manager.system_equip_device_map[system.sysId]) == 4
+        assert len(manager.system_equip_device_map[system.sysId]) == 5
 
         identifiers = call.kwargs["identifiers"]
         assert call.kwargs["manufacturer"] == LENNOX_MFG
@@ -355,6 +357,17 @@ async def test_create_devices_furn_ac_zoning(
         assert device.unique_name == system.unique_id() + "_BT21B13000"
 
         call = mock_create_device.mock_calls[4]
+        identifiers = call.kwargs["identifiers"]
+        assert call.kwargs["manufacturer"] == LENNOX_MFG
+        assert call.kwargs["name"] == manager._api._systemList[0].name + " Ventilator"
+        assert call.kwargs["model"] == "2_stage_hrv"
+        assert "sw_version" not in call.kwargs
+        assert call.kwargs["via_device"][0] == DOMAIN
+        assert call.kwargs["via_device"][1] == manager._api._systemList[0].unique_id()
+        device = manager.system_equip_device_map[system.sysId][VENTILATION_EQUIPMENT_ID]
+        assert isinstance(device, S30VentilationUnit)
+
+        call = mock_create_device.mock_calls[5]
         zone: lennox_zone = manager._api._systemList[0]._zoneList[0]
         identifiers = call.kwargs["identifiers"]
         assert call.kwargs["manufacturer"] == LENNOX_MFG
@@ -369,7 +382,7 @@ async def test_create_devices_furn_ac_zoning(
         assert elem[0] == DOMAIN
         assert elem[1] == zone.unique_id
 
-        call = mock_create_device.mock_calls[5]
+        call = mock_create_device.mock_calls[6]
         zone: lennox_zone = manager._api._systemList[0]._zoneList[1]
         identifiers = call.kwargs["identifiers"]
         assert call.kwargs["manufacturer"] == LENNOX_MFG
@@ -384,7 +397,7 @@ async def test_create_devices_furn_ac_zoning(
         assert elem[0] == DOMAIN
         assert elem[1] == zone.unique_id
 
-        call = mock_create_device.mock_calls[6]
+        call = mock_create_device.mock_calls[7]
         zone: lennox_zone = manager._api._systemList[0]._zoneList[2]
         identifiers = call.kwargs["identifiers"]
         assert call.kwargs["manufacturer"] == LENNOX_MFG
@@ -399,7 +412,7 @@ async def test_create_devices_furn_ac_zoning(
         assert elem[0] == DOMAIN
         assert elem[1] == zone.unique_id
 
-        assert mock_create_device.call_count == 7
+        assert mock_create_device.call_count == 8
 
 
 @pytest.mark.asyncio
@@ -412,9 +425,11 @@ async def test_create_device_no_equipment(
     system = manager._api._systemList[0]
     # Wipe out the equipment list.
     system.equipment = {}
+    system.ventilationUnitType = None
     with patch.object(device_registry, "async_get_or_create") as mock_create_device:
         await manager.create_devices()
 
+        # Ventilators gets put in this list.
         assert (
             len(manager.system_equip_device_map[manager._api._systemList[0].sysId]) == 0
         )
@@ -467,3 +482,19 @@ async def test_create_device_no_equipment(
             break
         assert elem[0] == DOMAIN
         assert elem[1] == manager._api._systemList[0].unique_id() + "_iu"
+
+
+@pytest.mark.asyncio
+async def test_S30VentilationUnit_device_model(
+    hass, manager_2_systems: Manager, caplog
+):
+    manager = manager_2_systems
+    system = manager._api._systemList[1]
+    s30 = S30ControllerDevice(hass, manager._config_entry, system)
+    system.ventilationUnitType = "ventilation"
+    vent = S30VentilationUnit(hass, manager._config_entry, system, s30)
+    assert vent.device_model == "Fresh Air Damper"
+
+    system.ventilationUnitType = "1_stage_hrv"
+    vent = S30VentilationUnit(hass, manager._config_entry, system, s30)
+    assert vent.device_model == "1_stage_hrv"

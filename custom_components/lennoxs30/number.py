@@ -2,12 +2,18 @@
 from lennoxs30api.s30exception import S30Exception
 
 from .base_entity import S30BaseEntity
-from .const import CONF_CLOUD_CONNECTION, MANAGER
+from .const import (
+    CONF_CLOUD_CONNECTION,
+    MANAGER,
+    UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
+    VENTILATION_EQUIPMENT_ID,
+)
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_MINUTES,
 )
 from . import DOMAIN, Manager
 from homeassistant.core import HomeAssistant
@@ -16,6 +22,7 @@ from lennoxs30api import (
     lennox_system,
     LENNOX_CIRCULATE_TIME_MAX,
     LENNOX_CIRCULATE_TIME_MIN,
+    LENNOX_VENTILATION_CONTROL_MODE_TIMED,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,6 +61,13 @@ async def async_setup_entry(
         number = CirculateTime(hass, manager, system)
         number_list.append(number)
 
+        if (
+            system.supports_ventilation()
+            and system.ventilationControlMode == LENNOX_VENTILATION_CONTROL_MODE_TIMED
+        ):
+            number = TimedVentilationNumber(hass, manager, system)
+            number_list.append(number)
+
     if len(number_list) != 0:
         async_add_entities(number_list, True)
 
@@ -62,9 +76,8 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_diagnostic_level"
         _LOGGER.debug(f"Create DiagnosticLevelNumber myname [{self._myname}]")
 
@@ -136,9 +149,8 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_dehumidification_overcooling"
         _LOGGER.debug(f"Create DehumidificationOverCooling myname [{self._myname}]")
 
@@ -234,9 +246,8 @@ class CirculateTime(S30BaseEntity, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
-        super().__init__(manager)
+        super().__init__(manager, system)
         self._hass = hass
-        self._system = system
         self._myname = self._system.name + "_circulate_time"
         _LOGGER.debug(f"Create CirculateTime myname [{self._myname}]")
 
@@ -298,3 +309,93 @@ class CirculateTime(S30BaseEntity, NumberEntity):
             "identifiers": {(DOMAIN, self._system.unique_id())},
         }
         return result
+
+
+class TimedVentilationNumber(S30BaseEntity, NumberEntity):
+    """Set timed ventilation."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._myname = self._system.name + "_timed_ventilation"
+        _LOGGER.debug(f"Create TimedVentilationNumber myname [{self._myname}]")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass TimedVentilationNumber myname [{self._myname}]"
+        )
+        self._system.registerOnUpdateCallback(
+            self.update_callback, ["ventilationRemainingTime"]
+        )
+        await super().async_added_to_hass()
+
+    def update_callback(self):
+        _LOGGER.debug(f"update_callback TimedVentilationNumber myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (
+            self._system.unique_id() + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER
+        ).replace("-", "")
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def max_value(self) -> float:
+        return 1440
+
+    @property
+    def min_value(self) -> float:
+        return 0
+
+    @property
+    def step(self) -> float:
+        return 1
+
+    @property
+    def value(self) -> float:
+        return int(self._system.ventilationRemainingTime / 60)
+
+    async def async_set_value(self, value: float) -> None:
+        """Update the current value."""
+        _LOGGER.info(f"TimedVentilationNumber set value to [{value}]")
+        try:
+            value_i = int(value)
+            value_seconds = value_i * 60
+            await self._system.ventilation_timed(value_seconds)
+        except S30Exception as e:
+            _LOGGER.error(f"TimedVentilationNumber::async_set_value [{e.as_string()}]")
+        except ValueError as v:
+            _LOGGER.error(
+                f"TimedVentilationNumber::async_set_value invalid value [{value}] ValueError [{v}]"
+            )
+
+    @property
+    def unit_of_measurement(self):
+        return TIME_MINUTES
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        equip_device_map = self._manager.system_equip_device_map.get(self._system.sysId)
+        if equip_device_map != None:
+            device = equip_device_map.get(VENTILATION_EQUIPMENT_ID)
+            if device != None:
+                return {
+                    "identifiers": {(DOMAIN, device.unique_name)},
+                }
+            _LOGGER.warning(
+                f"Unable to find VENTILATION_EQUIPMENT_ID in device map, please raise an issue"
+            )
+        else:
+            _LOGGER.error(
+                f"No equipment device map found for sysId [{self._system.sysId}] equipment VENTILATION_EQUIPMENT_ID, please raise an issue"
+            )
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id())},
+        }
