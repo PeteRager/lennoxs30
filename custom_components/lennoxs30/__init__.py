@@ -310,6 +310,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         message_debug_logging=conf_message_debug_logging,
         message_logging_file=conf_message_debug_file,
         create_diagnostic_sensors=create_diagnostic_sensors,
+        create_equipment_parameters=True,
     )
     try:
         listener = hass.bus.async_listen_once(

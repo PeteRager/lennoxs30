@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 from lennoxs30api.s30api_async import (
     LENNOX_HUMIDITY_MODE_OFF,
@@ -330,8 +330,10 @@ class EquipmentParameterSelect(S30BaseEntity, SelectEntity):
 
     @property
     def options(self) -> list:
-        list = self.parameter.radio.values()
-        return list
+        l = []
+        for i in self.parameter.radio.values():
+            l.append(i)
+        return l
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
@@ -357,3 +359,7 @@ class EquipmentParameterSelect(S30BaseEntity, SelectEntity):
         return helper_get_equipment_device_info(
             self._manager, self._system, self.equipment.equipment_id
         )
+
+    @property
+    def entity_category(self):
+        return EntityCategory.CONFIG

@@ -78,4 +78,9 @@ def helper_create_equipment_entity_name(
     elif equipment.equipment_id == 2:
         suffix = "iu"
 
-    return f"{system.name}_{suffix}_{name}".replace(" ", "_")
+    return (
+        f"{system.name}_{suffix}_{name}".replace(" ", "_")
+        .replace("-", "")
+        .replace(".", "")
+        .replace("__", "_")
+    )

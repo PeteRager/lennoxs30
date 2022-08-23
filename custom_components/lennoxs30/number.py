@@ -40,7 +40,7 @@ from lennoxs30api.lennox_equipment import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -459,12 +459,14 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
         self._myname = helper_create_equipment_entity_name(
             system, equipment, parameter.name
         )
-        _LOGGER.debug(f"Create EquipmentParameterNumber myname [{self._myname}]")
+        _LOGGER.debug(
+            f"Create EquipmentParameterNumber eq [{equipment.equipment_id}] pid [{parameter.pid}] myname [{self._myname}]"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         _LOGGER.debug(
-            f"async_added_to_hass EquipmentParameterNumber myname [{self._myname}]"
+            f"async_added_to_hass EquipmentParameterNumber eq [{self.equipment.equipment_id}] pid [{self.parameter.pid}]  myname [{self._myname}]"
         )
         self._system.registerOnUpdateCallbackEqParameters(
             self.update_callback,
@@ -533,3 +535,11 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
         return helper_get_equipment_device_info(
             self._manager, self._system, self.equipment.equipment_id
         )
+
+    @property
+    def entity_category(self):
+        return EntityCategory.CONFIG
+
+    @property
+    def mode(self):
+        return "box"

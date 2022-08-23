@@ -109,3 +109,11 @@ async def test_helpers_create_equipment_entity_name(manager: Manager, caplog):
     assert helper_create_equipment_entity_name(
         system, equipment, "test"
     ) == f"{system.name}_iu_test".replace(" ", "_")
+
+    assert helper_create_equipment_entity_name(
+        system, equipment, "test.."
+    ) == f"{system.name}_iu_test".replace(" ", "_")
+
+    assert helper_create_equipment_entity_name(
+        system, equipment, "test - h"
+    ) == f"{system.name}_iu_test_h".replace(" ", "_")

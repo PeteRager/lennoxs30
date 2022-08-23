@@ -1,8 +1,6 @@
 import logging
 from lennoxs30api.s30api_async import (
     lennox_system,
-    LENNOX_CIRCULATE_TIME_MAX,
-    LENNOX_CIRCULATE_TIME_MIN,
 )
 from custom_components.lennoxs30 import (
     DS_CONNECTED,
@@ -13,7 +11,6 @@ import pytest
 from custom_components.lennoxs30.const import (
     LENNOX_DOMAIN,
     UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
-    VENTILATION_EQUIPMENT_ID,
 )
 from lennoxs30api.s30exception import S30Exception
 
@@ -22,21 +19,8 @@ from custom_components.lennoxs30.number import (
 )
 
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    FREQUENCY_HERTZ,
-    ELECTRIC_CURRENT_AMPERE,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    ELECTRIC_POTENTIAL_VOLT,
-    TIME_MINUTES,
-    TIME_SECONDS,
 )
-
 
 from unittest.mock import patch
 
@@ -203,3 +187,19 @@ async def test_equipment_parameter_number_subscription(hass, manager: Manager, c
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 3
         assert c.available == False
+
+
+def test_equipment_parameter_number_entity_category(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    equipment = system.equipment[0]
+    parameter = equipment.parameters[72]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    assert c.entity_category == "config"
+
+
+def test_equipment_parameter_number_mode(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    equipment = system.equipment[0]
+    parameter = equipment.parameters[72]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    assert c.mode == "box"

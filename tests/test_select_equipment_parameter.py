@@ -1,8 +1,5 @@
 import logging
 from lennoxs30api.s30api_async import (
-    LENNOX_DEHUMIDIFICATION_MODE_HIGH,
-    LENNOX_DEHUMIDIFICATION_MODE_MEDIUM,
-    LENNOX_DEHUMIDIFICATION_MODE_AUTO,
     lennox_system,
 )
 from custom_components.lennoxs30 import (
@@ -18,7 +15,6 @@ from custom_components.lennoxs30.select import (
 )
 
 from lennoxs30api.s30exception import S30Exception
-
 
 from unittest.mock import patch
 
@@ -201,3 +197,11 @@ async def test_equipment_parameter_select_device_info(hass, manager: Manager, ca
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
         assert x[1] == system.unique_id() + "_iu"
+
+
+def test_equipment_parameter_select_entity_category(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    equipment = system.equipment[0]
+    parameter = equipment.parameters[72]
+    c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
+    assert c.entity_category == "config"
