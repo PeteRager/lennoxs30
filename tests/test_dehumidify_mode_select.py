@@ -17,6 +17,8 @@ from custom_components.lennoxs30.select import (
 )
 
 from unittest.mock import patch
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
+from lennoxs30api.s30exception import S30Exception
 
 
 @pytest.mark.asyncio
@@ -51,6 +53,10 @@ async def test_dehumidifier_mode_mode_select_current_option(
 
     system.dehumidificationMode = LENNOX_DEHUMIDIFICATION_MODE_MEDIUM
     assert c.current_option == "normal"
+    assert c.available == True
+
+    system.dehumidificationMode = "UNKNOWN MODE"
+    assert c.current_option == None
     assert c.available == True
 
 
@@ -159,3 +165,45 @@ async def test_dehumidifier_mode_mode_select_async_select_options(
             assert "max" in msg
             assert "normal" in msg
             assert "climate IQ" in msg
+
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        with patch.object(
+            system, "set_dehumidificationMode"
+        ) as set_dehumidificationMode:
+            set_dehumidificationMode.side_effect = S30Exception(
+                "This is the error", 100, 200
+            )
+            await c.async_select_option("normal")
+            assert set_dehumidificationMode.call_count == 1
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert "DehumidificationModeSelect async_select_option" in msg
+            assert "This is the error" in msg
+
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        with patch.object(
+            system, "set_dehumidificationMode"
+        ) as set_dehumidificationMode:
+            set_dehumidificationMode.side_effect = ValueError("This is the error")
+            await c.async_select_option("normal")
+            assert set_dehumidificationMode.call_count == 1
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert "async_select_option unexpected exception please log an issue" in msg
+
+
+@pytest.mark.asyncio
+async def test_dehumidifier_mode_mode_select_device_info(
+    hass, manager_mz: Manager, caplog
+):
+    manager = manager_mz
+    await manager.create_devices()
+    system: lennox_system = manager._api._systemList[0]
+    c = DehumidificationModeSelect(hass, manager, system)
+
+    identifiers = c.device_info["identifiers"]
+    for x in identifiers:
+        assert x[0] == LENNOX_DOMAIN
+        assert x[1] == system.unique_id()

@@ -1,10 +1,16 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from lennoxs30api.s30exception import S30Exception
 
+from .helpers import (
+    helper_create_equipment_entity_name,
+    helper_get_equipment_device_info,
+    lennox_uom_to_ha_uom,
+)
+
 from .base_entity import S30BaseEntity
 from .const import (
-    CONF_CLOUD_CONNECTION,
     MANAGER,
+    UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
     UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
     VENTILATION_EQUIPMENT_ID,
 )
@@ -24,6 +30,14 @@ from lennoxs30api import (
     LENNOX_CIRCULATE_TIME_MIN,
     LENNOX_VENTILATION_CONTROL_MODE_TIMED,
 )
+
+from lennoxs30api.lennox_equipment import (
+    LENNOX_EQUIPMENT_PARAMETER_FORMAT_RANGE,
+    lennox_equipment_parameter,
+    lennox_equipment,
+)
+
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
@@ -67,6 +81,19 @@ async def async_setup_entry(
         ):
             number = TimedVentilationNumber(hass, manager, system)
             number_list.append(number)
+
+        if manager._create_equipment_parameters == True:
+            for equipment in system.equipment.values():
+                for parameter in equipment.parameters.values():
+                    if (
+                        parameter.enabled == True
+                        and parameter.descriptor
+                        == LENNOX_EQUIPMENT_PARAMETER_FORMAT_RANGE
+                    ):
+                        number = EquipmentParameterNumber(
+                            hass, manager, system, equipment, parameter
+                        )
+                        number_list.append(number)
 
     if len(number_list) != 0:
         async_add_entities(number_list, True)
@@ -130,11 +157,15 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
                 or self._system.relayServerConnected == True
             ):
                 _LOGGER.warning(
-                    f"Diagnostic Level Number - setting to a non-zer value is not recommended for systems connected to the lennox cloud internetStatus [{self._system.internetStatus}] relayServerConnected [{self._system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                    f"Diagnostic Level Number - setting to a non-zero value is not recommended for systems connected to the lennox cloud internetStatus [{self._system.internetStatus}] relayServerConnected [{self._system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 )
             await self._system.set_diagnostic_level(value)
         except S30Exception as e:
             _LOGGER.error(f"DiagnosticLevelNumber::async_set_value [{e.as_string()}]")
+        except Exception as e:
+            _LOGGER.exception(
+                "DiagnosticLevelNumber::async_set_value - unexpected exception - please raise an issue"
+            )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -223,6 +254,9 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
+        _LOGGER.info(
+            f"DehumidificationOverCooling::async_set_value [{self._myname}] value [{value}]"
+        )
         try:
             if self._manager._is_metric:
                 await self._system.set_enhancedDehumidificationOvercooling(r_c=value)
@@ -230,7 +264,11 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
                 await self._system.set_enhancedDehumidificationOvercooling(r_f=value)
         except S30Exception as e:
             _LOGGER.error(
-                f"DehumidificationOverCooling::async_set_value [{e.as_string()}]"
+                f"DehumidificationOverCooling::async_set_value value [{value}] error [{e.as_string()}]"
+            )
+        except Exception as e:
+            _LOGGER.exception(
+                f"DehumidificationOverCooling::async_set_value unexpected exception - please raise an issue"
             )
 
     @property
@@ -297,10 +335,19 @@ class CirculateTime(S30BaseEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
+        _LOGGER.info(
+            f"CirculateTime::async_set_value myname [{self._myname}] value [{value}]"
+        )
         try:
             await self._system.set_circulateTime(value)
         except S30Exception as e:
-            _LOGGER.error(f"CirculateTime::async_set_value [{e.as_string()}]")
+            _LOGGER.error(
+                f"CirculateTime::async_set_value value myname [{self._myname}] value [{value}] error [{e.as_string()}]"
+            )
+        except Exception as e:
+            _LOGGER.exception(
+                f"CirculateTime::async_set_value unexpected exception - please raise an issue - myname [{self._myname}] value [{value}] error [{e}]"
+            )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -369,10 +416,16 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
             value_seconds = value_i * 60
             await self._system.ventilation_timed(value_seconds)
         except S30Exception as e:
-            _LOGGER.error(f"TimedVentilationNumber::async_set_value [{e.as_string()}]")
+            _LOGGER.error(
+                f"TimedVentilationNumber::async_set_value value [{value}] - error [{e.as_string()}]"
+            )
         except ValueError as v:
             _LOGGER.error(
                 f"TimedVentilationNumber::async_set_value invalid value [{value}] ValueError [{v}]"
+            )
+        except Exception as e:
+            _LOGGER.exception(
+                f"TimedVentilationNumber::async_set_value unexpected exception - please raise an issue [{value}] error [{e}]"
             )
 
     @property
@@ -382,20 +435,101 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        equip_device_map = self._manager.system_equip_device_map.get(self._system.sysId)
-        if equip_device_map != None:
-            device = equip_device_map.get(VENTILATION_EQUIPMENT_ID)
-            if device != None:
-                return {
-                    "identifiers": {(DOMAIN, device.unique_name)},
-                }
-            _LOGGER.warning(
-                f"Unable to find VENTILATION_EQUIPMENT_ID in device map, please raise an issue"
+        return helper_get_equipment_device_info(
+            self._manager, self._system, VENTILATION_EQUIPMENT_ID
+        )
+
+
+class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
+    """Set timed ventilation."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+        equipment: lennox_equipment,
+        parameter: lennox_equipment_parameter,
+    ):
+        super().__init__(manager, system)
+        self._hass = hass
+        self.equipment = equipment
+        self.parameter = parameter
+
+        self._myname = helper_create_equipment_entity_name(
+            system, equipment, parameter.name
+        )
+        _LOGGER.debug(f"Create EquipmentParameterNumber myname [{self._myname}]")
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(
+            f"async_added_to_hass EquipmentParameterNumber myname [{self._myname}]"
+        )
+        self._system.registerOnUpdateCallbackEqParameters(
+            self.update_callback,
+            [f"{self.equipment.equipment_id}_{self.parameter.pid}"],
+        )
+        await super().async_added_to_hass()
+
+    def update_callback(self, id: str):
+        _LOGGER.debug(
+            f"update_callback EquipmentParameterNumber myname [{self._myname}] [{id}]"
+        )
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (
+            f"{self._system.unique_id()}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_{self.equipment.equipment_id}_{self.parameter.pid}"
+        ).replace("-", "")
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def max_value(self) -> float:
+        return float(self.parameter.range_max)
+
+    @property
+    def min_value(self) -> float:
+        return float(self.parameter.range_min)
+
+    @property
+    def step(self) -> float:
+        return float(self.parameter.range_inc)
+
+    @property
+    def value(self) -> float:
+        return self.parameter.value
+
+    async def async_set_value(self, value: float) -> None:
+        """Update the current value."""
+        _LOGGER.info(
+            f"EquipmentParameterNumber [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
+        )
+        try:
+            await self._system.set_equipment_parameter_value(
+                self.equipment.equipment_id, self.parameter.pid, value
             )
-        else:
+        except S30Exception as e:
             _LOGGER.error(
-                f"No equipment device map found for sysId [{self._system.sysId}] equipment VENTILATION_EQUIPMENT_ID, please raise an issue"
+                f"EquipmentParameterNumber::async_set_value [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}] error [{e.as_string()}]"
             )
-        return {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
-        }
+        except Exception as e:
+            _LOGGER.exception(
+                f"EquipmentParameterNumber::async_set_value unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
+            )
+
+    @property
+    def unit_of_measurement(self):
+        return lennox_uom_to_ha_uom(self.parameter.unit)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return helper_get_equipment_device_info(
+            self._manager, self._system, self.equipment.equipment_id
+        )

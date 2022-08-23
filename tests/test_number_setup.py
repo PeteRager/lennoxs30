@@ -12,6 +12,7 @@ from custom_components.lennoxs30.number import (
     DiagnosticLevelNumber,
     DehumidificationOverCooling,
     CirculateTime,
+    EquipmentParameterNumber,
     TimedVentilationNumber,
     async_setup_entry,
 )
@@ -155,3 +156,24 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[1], DehumidificationOverCooling)
     assert isinstance(sensor_list[2], CirculateTime)
     assert isinstance(sensor_list[3], TimedVentilationNumber)
+
+    # Only circulate time and equipment parameters should be created
+    system.api._isLANConnection = False
+    system.dehumidifierType = "Dehumidifier"
+    system.enhancedDehumidificationOvercoolingF_enable = False
+    system.ventilationUnitType = None
+    manager._create_diagnostic_sensors = False
+    manager._create_inverter_power = False
+    manager._create_equipment_parameters = True
+    async_add_entities = Mock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 41
+    assert isinstance(sensor_list[0], CirculateTime)
+    for i in range(1, 40):
+        assert isinstance(sensor_list[i], EquipmentParameterNumber)
+
+    ep: EquipmentParameterNumber = sensor_list[1]
+    assert ep.equipment.equipment_id == 0
+    assert ep.parameter.pid == 72

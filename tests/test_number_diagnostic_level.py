@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 
 from unittest.mock import patch
+from lennoxs30api.s30exception import S30Exception
 
 
 @pytest.mark.asyncio
@@ -194,6 +195,30 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
             caplog.clear()
             await c.async_set_value(0)
             assert len(caplog.records) == 0
+
+    system.internetStatus = False
+    system.relayServerConnected = False
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            set_diagnostic_level.side_effect = S30Exception(
+                "This is the error", 100, 200
+            )
+            await c.async_set_value(1)
+            assert len(caplog.records) == 1
+            assert "DiagnosticLevelNumber::async_set_value" in caplog.messages[0]
+            assert "This is the error" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            set_diagnostic_level.side_effect = ValueError("This is the error")
+            await c.async_set_value(1)
+            assert len(caplog.records) == 1
+            assert (
+                "DiagnosticLevelNumber::async_set_value - unexpected exception - please raise an issue"
+                in caplog.messages[0]
+            )
 
 
 @pytest.mark.asyncio

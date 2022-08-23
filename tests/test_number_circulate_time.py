@@ -18,8 +18,10 @@ from custom_components.lennoxs30.number import (
 from homeassistant.const import (
     PERCENTAGE,
 )
+from lennoxs30api.s30exception import S30Exception
 
 from unittest.mock import patch
+import logging
 
 
 @pytest.mark.asyncio
@@ -86,6 +88,27 @@ async def test_circulate_time_set_value(hass, manager: Manager, caplog):
         assert set_circulateTime.call_count == 1
         arg0 = set_circulateTime.await_args[0][0]
         assert arg0 == 22.0
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "set_circulateTime") as set_circulateTime:
+            caplog.clear()
+            set_circulateTime.side_effect = S30Exception("This is the error", 100, 200)
+            await c.async_set_value(101)
+            assert len(caplog.records) == 1
+            assert "CirculateTime::async_set_value" in caplog.messages[0]
+            assert "This is the error" in caplog.messages[0]
+            assert "101" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "set_circulateTime") as set_circulateTime:
+            caplog.clear()
+            set_circulateTime.side_effect = Exception("This is the error")
+            await c.async_set_value(1)
+            assert len(caplog.records) == 1
+            assert (
+                "CirculateTime::async_set_value unexpected exception - please raise an issue"
+                in caplog.messages[0]
+            )
 
 
 @pytest.mark.asyncio

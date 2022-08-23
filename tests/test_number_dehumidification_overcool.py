@@ -21,6 +21,8 @@ from homeassistant.const import (
 
 from unittest.mock import patch
 
+from lennoxs30api.s30exception import S30Exception
+
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
@@ -111,6 +113,35 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
         await c.async_set_value(2.0)
         assert set_enhancedDehumidificationOvercooling.call_count == 1
         assert set_enhancedDehumidificationOvercooling.call_args.kwargs["r_f"] == 2.0
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            system, "set_enhancedDehumidificationOvercooling"
+        ) as set_enhancedDehumidificationOvercooling:
+            caplog.clear()
+            set_enhancedDehumidificationOvercooling.side_effect = S30Exception(
+                "This is the error", 100, 200
+            )
+            await c.async_set_value(101)
+            assert len(caplog.records) == 1
+            assert "DehumidificationOverCooling::async_set_value" in caplog.messages[0]
+            assert "This is the error" in caplog.messages[0]
+            assert "101" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            system, "set_enhancedDehumidificationOvercooling"
+        ) as set_enhancedDehumidificationOvercooling:
+            caplog.clear()
+            set_enhancedDehumidificationOvercooling.side_effect = Exception(
+                "This is the error"
+            )
+            await c.async_set_value(1)
+            assert len(caplog.records) == 1
+            assert (
+                "DehumidificationOverCooling::async_set_value unexpected exception - please raise an issue"
+                in caplog.messages[0]
+            )
 
 
 @pytest.mark.asyncio

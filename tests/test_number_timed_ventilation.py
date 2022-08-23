@@ -20,6 +20,9 @@ from custom_components.lennoxs30.number import (
     TimedVentilationNumber,
 )
 
+from lennoxs30api.s30exception import S30Exception
+
+
 from homeassistant.const import (
     TIME_MINUTES,
 )
@@ -109,6 +112,36 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
         assert ventilation_timed.call_count == 1
         arg0 = ventilation_timed.await_args[0][0]
         assert arg0 == 60
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        await c.async_set_value("abc")
+        assert len(caplog.records) == 1
+        assert (
+            "TimedVentilationNumber::async_set_value invalid value"
+            in caplog.messages[0]
+        )
+        assert "abc" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "ventilation_timed") as ventilation_timed:
+            caplog.clear()
+            ventilation_timed.side_effect = S30Exception("This is the error", 100, 200)
+            await c.async_set_value(101)
+            assert len(caplog.records) == 1
+            assert "TimedVentilationNumber::async_set_value" in caplog.messages[0]
+            assert "This is the error" in caplog.messages[0]
+            assert "101" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "ventilation_timed") as ventilation_timed:
+            caplog.clear()
+            ventilation_timed.side_effect = Exception("This is the error")
+            await c.async_set_value(1)
+            assert len(caplog.records) == 1
+            assert (
+                "TimedVentilationNumber::async_set_value unexpected exception - please raise an issue"
+                in caplog.messages[0]
+            )
 
 
 @pytest.mark.asyncio
@@ -140,7 +173,8 @@ async def test_timed_ventilation_time_device_info(hass, manager: Manager, caplog
             assert x[0] == LENNOX_DOMAIN
             assert x[1] == system.unique_id()
         assert len(caplog.records) == 1
-        assert "Unable to find VENTILATION_EQUIPMENT_ID" in caplog.messages[0]
+        assert "Unable to find" in caplog.messages[0]
+        assert str(VENTILATION_EQUIPMENT_ID) in caplog.messages[0]
         assert caplog.records[0].levelname == "WARNING"
 
     system.ventilationUnitType = None
