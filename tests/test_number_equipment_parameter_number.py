@@ -42,12 +42,7 @@ async def test_equipment_parameter_number_name(hass, manager: Manager, caplog):
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
-    assert (
-        c.name
-        == f"{system.name}_{equipment.equipment_name}_{parameter.name}".replace(
-            " ", "_"
-        )
-    )
+    assert c.name == f"{system.name}_par_{parameter.name}".replace(" ", "_")
 
 
 @pytest.mark.asyncio

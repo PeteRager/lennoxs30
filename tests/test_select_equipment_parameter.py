@@ -39,7 +39,7 @@ async def test_equipment_parameter_select_name(hass, manager: Manager, caplog):
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
-    assert c.name == "South_Moetown_Subnet_Controller_Smooth_Setback_Recovery"
+    assert c.name == "South_Moetown_par_Smooth_Setback_Recovery"
 
 
 @pytest.mark.asyncio

@@ -286,7 +286,7 @@ class EquipmentParameterSelect(S30BaseEntity, SelectEntity):
         self.equipment = equipment
         self.parameter = parameter
         self._myname = helper_create_equipment_entity_name(
-            system, equipment, parameter.name
+            system, equipment, parameter.name, prefix="par"
         )
         _LOGGER.debug(f"Create EquipmentParameterSelect myname [{self._myname}]")
 

@@ -1,4 +1,5 @@
 import logging
+from tkinter import E
 from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -70,17 +71,28 @@ def helper_get_equipment_device_info(
 
 
 def helper_create_equipment_entity_name(
-    system: lennox_system, equipment: lennox_equipment, name: str
+    system: lennox_system, equipment: lennox_equipment, name: str, prefix: str = None
 ) -> str:
     suffix = str(equipment.equipment_name)
     if equipment.equipment_id == 1:
         suffix = "ou"
     elif equipment.equipment_id == 2:
         suffix = "iu"
+    elif equipment.equipment_id == 0:
+        suffix = None
 
-    return (
-        f"{system.name}_{suffix}_{name}".replace(" ", "_")
-        .replace("-", "")
-        .replace(".", "")
-        .replace("__", "_")
+    result: str = system.name
+
+    if prefix != None:
+        result = result + "_" + prefix
+
+    if suffix != None:
+        result = result + "_" + suffix
+
+    result = result + "_" + name
+
+    result = (
+        result.replace(" ", "_").replace("-", "").replace(".", "").replace("__", "_")
     )
+
+    return result
