@@ -21,6 +21,7 @@ from .const import (
     CONF_APP_ID,
     CONF_CREATE_INVERTER_POWER,
     CONF_CREATE_DIAGNOSTICS_SENSORS,
+    CONF_CREATE_PARAMETERS,
     CONF_CREATE_SENSORS,
     CONF_FAST_POLL_INTERVAL,
     CONF_FAST_POLL_COUNT,
@@ -210,6 +211,10 @@ def _upgrade_config(config: dict, current_version: int) -> int:
     if current_version == 2:
         config[CONF_CREATE_DIAGNOSTICS_SENSORS] = False
         current_version = 3
+    if current_version == 3:
+        if config[CONF_CLOUD_CONNECTION] == False:
+            config[CONF_CREATE_PARAMETERS] = False
+        current_version = 4
     return current_version
 
 
@@ -251,6 +256,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     create_inverter_power: bool = False
     conf_protocol: str = None
     create_diagnostic_sensors: bool = False
+    create_parameters: bool = False
 
     if is_cloud == True:
         host_name: str = None
@@ -262,6 +268,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password: str = None
         create_inverter_power: bool = entry.data[CONF_CREATE_INVERTER_POWER]
         create_diagnostic_sensors = entry.data[CONF_CREATE_DIAGNOSTICS_SENSORS]
+        create_parameters = entry.data[CONF_CREATE_PARAMETERS]
         conf_protocol: str = entry.data[CONF_PROTOCOL]
 
     if CONF_APP_ID in entry.data:
@@ -310,7 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         message_debug_logging=conf_message_debug_logging,
         message_logging_file=conf_message_debug_file,
         create_diagnostic_sensors=create_diagnostic_sensors,
-        create_equipment_parameters=True,
+        create_equipment_parameters=create_parameters,
     )
     try:
         listener = hass.bus.async_listen_once(

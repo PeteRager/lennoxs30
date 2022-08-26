@@ -19,6 +19,38 @@ from custom_components.lennoxs30 import (
     Manager,
 )
 
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_PROTOCOL,
+    CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
+)
+
+
+from custom_components.lennoxs30.const import (
+    CONF_ALLERGEN_DEFENDER_SWITCH,
+    CONF_APP_ID,
+    CONF_CLOUD_CONNECTION,
+    CONF_CREATE_INVERTER_POWER,
+    CONF_CREATE_DIAGNOSTICS_SENSORS,
+    CONF_CREATE_SENSORS,
+    CONF_FAST_POLL_INTERVAL,
+    CONF_FAST_POLL_COUNT,
+    CONF_INIT_WAIT_TIME,
+    CONF_LOG_MESSAGES_TO_FILE,
+    CONF_MESSAGE_DEBUG_FILE,
+    CONF_MESSAGE_DEBUG_LOGGING,
+    CONF_PII_IN_MESSAGE_LOGS,
+    DEFAULT_CLOUD_TIMEOUT,
+    DEFAULT_LOCAL_TIMEOUT,
+    LENNOX_DEFAULT_CLOUD_APP_ID,
+    LENNOX_DEFAULT_LOCAL_APP_ID,
+    CONF_LOCAL_CONNECTION,
+    CONF_CREATE_PARAMETERS,
+)
+
 pytest_plugins = "pytest_homeassistant_custom_component"
 
 
@@ -65,12 +97,63 @@ def loadfile(name: str, sysId: str = None) -> json:
 
 
 @pytest.fixture
-def manager(hass) -> Manager:
-
+def config_entry_local() -> config_entries.ConfigEntry:
     config = config_entries.ConfigEntry(
         version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
     )
     config.unique_id = "12345"
+    config.data = {}
+    config.data[CONF_CLOUD_CONNECTION] = False
+    config.data[CONF_HOST] = "10.0.0.1"
+    config.data[CONF_APP_ID] = "ha_prod"
+    config.data[CONF_CREATE_SENSORS] = True
+    config.data[CONF_ALLERGEN_DEFENDER_SWITCH] = True
+    config.data[CONF_CREATE_INVERTER_POWER] = True
+    config.data[CONF_CREATE_DIAGNOSTICS_SENSORS] = True
+    config.data[CONF_CREATE_PARAMETERS] = True
+    config.data[CONF_SCAN_INTERVAL] = 10
+    config.data[CONF_INIT_WAIT_TIME] = 30
+    config.data[CONF_FAST_POLL_INTERVAL] = 1.0
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_TIMEOUT] = 30
+    config.data[CONF_PROTOCOL] = "https"
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_PII_IN_MESSAGE_LOGS] = False
+    config.data[CONF_MESSAGE_DEBUG_LOGGING] = False
+    config.data[CONF_LOG_MESSAGES_TO_FILE] = False
+    config.data[CONF_MESSAGE_DEBUG_FILE] = ""
+    return config
+
+
+@pytest.fixture
+def config_entry_cloud() -> config_entries.ConfigEntry:
+    config = config_entries.ConfigEntry(
+        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
+    )
+    config.unique_id = "12345"
+    config.data = {}
+    config.data[CONF_CLOUD_CONNECTION] = True
+    config.data[CONF_EMAIL] = "pete.rage@rage.com"
+    config.data[CONF_PASSWORD] = "secret"
+    config.data[CONF_APP_ID] = "ha_prod"
+    config.data[CONF_CREATE_SENSORS] = True
+    config.data[CONF_ALLERGEN_DEFENDER_SWITCH] = True
+    config.data[CONF_SCAN_INTERVAL] = 10
+    config.data[CONF_INIT_WAIT_TIME] = 30
+    config.data[CONF_FAST_POLL_INTERVAL] = 1.0
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_TIMEOUT] = 30
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_PII_IN_MESSAGE_LOGS] = False
+    config.data[CONF_MESSAGE_DEBUG_LOGGING] = False
+    config.data[CONF_LOG_MESSAGES_TO_FILE] = False
+    config.data[CONF_MESSAGE_DEBUG_FILE] = ""
+    return config
+
+
+@pytest.fixture
+def manager(hass, config_entry_local) -> Manager:
+    config = config_entry_local
 
     manager = Manager(
         hass=hass,

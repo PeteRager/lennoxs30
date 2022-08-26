@@ -29,6 +29,7 @@
           "create_sensors": "Temperature and Humidity Sensors",
           "create_inverter_power": "WARN! - Inverter Power Sensor",
           "create_diagnostic_sensors": "WARN!- Diagnostic Sensors",
+          "create_parameters": "Advanced Equipment Parameters",
           "protocol": "Should be HTTPS unless using simulator"
         }
       },
@@ -67,6 +68,7 @@
           "create_sensors": "Temperature and humidity Sensors",
           "create_inverter_power": "WARN! - Inverter power sensor",
           "create_diagnostic_sensors": "WARN!- Diagnostic Sensors",
+          "create_parameters": "Advanced Equipment Parameters",
           "protocol": "Should be HTTPS unless using simulator",
           "scan_interval": "Message scan interval seconds.",
           "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",

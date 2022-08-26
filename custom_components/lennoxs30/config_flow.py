@@ -23,6 +23,7 @@ from .const import (
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
     CONF_LOCAL_CONNECTION,
+    CONF_CREATE_PARAMETERS,
 )
 from .util import dict_redact_fields, redact_email
 from homeassistant.data_entry_flow import FlowResult
@@ -74,6 +75,7 @@ STEP_LOCAL = vol.Schema(
         vol.Optional(CONF_ALLERGEN_DEFENDER_SWITCH, default=False): cv.boolean,
         vol.Optional(CONF_CREATE_INVERTER_POWER, default=False): cv.boolean,
         vol.Optional(CONF_CREATE_DIAGNOSTICS_SENSORS, default=False): cv.boolean,
+        vol.Optional(CONF_CREATE_PARAMETERS, default=False): cv.boolean,
         vol.Optional(CONF_PROTOCOL, default="https"): cv.string,
     }
 )
@@ -103,7 +105,7 @@ def lennox30_entries(hass: HomeAssistant):
 class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Lennox S30 configflow."""
 
-    VERSION = 3
+    VERSION = 4
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _host_in_configuration_exists(self, host) -> bool:
@@ -151,14 +153,14 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.config_input = {}
         _LOGGER.debug(f"async_step_user user_input [{dict_redact_fields(user_input)}]")
         if user_input is not None:
-            cloud_local = user_input[CONF_CLOUD_CONNECTION]
+            cloud_connection = user_input[CONF_CLOUD_CONNECTION]
             local_connection = user_input[CONF_LOCAL_CONNECTION]
-            if cloud_local == local_connection:
+            if cloud_connection == local_connection:
                 errors[CONF_LOCAL_CONNECTION] = "select_cloud_or_local"
             else:
-                dict = {CONF_CLOUD_CONNECTION: cloud_local}
+                dict = {CONF_CLOUD_CONNECTION: cloud_connection}
                 self.config_input.update(dict)
-                if cloud_local:
+                if cloud_connection:
                     return await self.async_step_cloud()
                 else:
                     return await self.async_step_local()
@@ -177,7 +179,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.config_input.update(user_input)
                 return await self.async_step_advanced()
             except S30Exception as e:
-                _LOGGER.error(e.as_string())
+                _LOGGER.error(f"async_step_cloud error [{e.as_string()}]")
                 if e.error_code == EC_LOGIN:
                     errors["base"] = "unable_to_connect_login"
                 else:
@@ -205,7 +207,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.config_input.update(user_input)
                     return await self.async_step_advanced()
                 except S30Exception as e:
-                    _LOGGER.error(e.as_string())
+                    _LOGGER.error(f"async_step_local error [{e.as_string()}]")
                     errors[CONF_HOST] = "unable_to_connect_local"
         return self.async_show_form(
             step_id="local", data_schema=STEP_LOCAL, errors=errors
@@ -256,7 +258,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             protocol = user_input[CONF_PROTOCOL]
             timeout = DEFAULT_LOCAL_TIMEOUT
 
-        manager = Manager(
+        self.manager = Manager(
             hass=self.hass,
             config=None,
             email=email,
@@ -276,8 +278,8 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             timeout=timeout,
             fast_poll_count=10,
         )
-        await manager.connect()
-        await manager.async_shutdown(None)
+        await self.manager.connect()
+        await self.manager.async_shutdown(None)
 
     async def async_step_import(self, user_input) -> FlowResult:
         """Handle the import step."""
@@ -349,6 +351,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             default=self.config_entry.data[
                                 CONF_CREATE_DIAGNOSTICS_SENSORS
                             ],
+                        ): cv.boolean,
+                        vol.Optional(
+                            CONF_CREATE_PARAMETERS,
+                            default=self.config_entry.data[CONF_CREATE_PARAMETERS],
                         ): cv.boolean,
                         vol.Optional(
                             CONF_SCAN_INTERVAL,

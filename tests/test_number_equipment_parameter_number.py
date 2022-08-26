@@ -136,9 +136,6 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager, capl
             )
 
 
-1
-
-
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_device_info(hass, manager: Manager, caplog):
     system: lennox_system = manager._api._systemList[0]
