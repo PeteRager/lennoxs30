@@ -102,7 +102,7 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
     with patch.object(
         system, "set_enhancedDehumidificationOvercooling"
     ) as set_enhancedDehumidificationOvercooling:
-        await c.async_set_value(2.0)
+        await c.async_set_native_value(2.0)
         assert set_enhancedDehumidificationOvercooling.call_count == 1
         assert set_enhancedDehumidificationOvercooling.call_args.kwargs["r_c"] == 2.0
 
@@ -110,7 +110,7 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
     with patch.object(
         system, "set_enhancedDehumidificationOvercooling"
     ) as set_enhancedDehumidificationOvercooling:
-        await c.async_set_value(2.0)
+        await c.async_set_native_value(2.0)
         assert set_enhancedDehumidificationOvercooling.call_count == 1
         assert set_enhancedDehumidificationOvercooling.call_args.kwargs["r_f"] == 2.0
 
@@ -122,9 +122,12 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
             set_enhancedDehumidificationOvercooling.side_effect = S30Exception(
                 "This is the error", 100, 200
             )
-            await c.async_set_value(101)
+            await c.async_set_native_value(101)
             assert len(caplog.records) == 1
-            assert "DehumidificationOverCooling::async_set_value" in caplog.messages[0]
+            assert (
+                "DehumidificationOverCooling::async_set_native_value"
+                in caplog.messages[0]
+            )
             assert "This is the error" in caplog.messages[0]
             assert "101" in caplog.messages[0]
 
@@ -136,10 +139,10 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
             set_enhancedDehumidificationOvercooling.side_effect = Exception(
                 "This is the error"
             )
-            await c.async_set_value(1)
+            await c.async_set_native_value(1)
             assert len(caplog.records) == 1
             assert (
-                "DehumidificationOverCooling::async_set_value unexpected exception - please raise an issue"
+                "DehumidificationOverCooling::async_set_native_value unexpected exception - please raise an issue"
                 in caplog.messages[0]
             )
 

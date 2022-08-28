@@ -96,28 +96,28 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
     c = TimedVentilationNumber(hass, manager, system)
 
     with patch.object(system, "ventilation_timed") as ventilation_timed:
-        await c.async_set_value(60.0)
+        await c.async_set_native_value(60.0)
         assert ventilation_timed.call_count == 1
         arg0 = ventilation_timed.await_args[0][0]
         assert arg0 == 3600
 
     with patch.object(system, "ventilation_timed") as ventilation_timed:
-        await c.async_set_value(0)
+        await c.async_set_native_value(0)
         assert ventilation_timed.call_count == 1
         arg0 = ventilation_timed.await_args[0][0]
         assert arg0 == 0
 
     with patch.object(system, "ventilation_timed") as ventilation_timed:
-        await c.async_set_value(1)
+        await c.async_set_native_value(1)
         assert ventilation_timed.call_count == 1
         arg0 = ventilation_timed.await_args[0][0]
         assert arg0 == 60
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        await c.async_set_value("abc")
+        await c.async_set_native_value("abc")
         assert len(caplog.records) == 1
         assert (
-            "TimedVentilationNumber::async_set_value invalid value"
+            "TimedVentilationNumber::async_set_native_value invalid value"
             in caplog.messages[0]
         )
         assert "abc" in caplog.messages[0]
@@ -126,9 +126,11 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
         with patch.object(system, "ventilation_timed") as ventilation_timed:
             caplog.clear()
             ventilation_timed.side_effect = S30Exception("This is the error", 100, 200)
-            await c.async_set_value(101)
+            await c.async_set_native_value(101)
             assert len(caplog.records) == 1
-            assert "TimedVentilationNumber::async_set_value" in caplog.messages[0]
+            assert (
+                "TimedVentilationNumber::async_set_native_value" in caplog.messages[0]
+            )
             assert "This is the error" in caplog.messages[0]
             assert "101" in caplog.messages[0]
 
@@ -136,10 +138,10 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
         with patch.object(system, "ventilation_timed") as ventilation_timed:
             caplog.clear()
             ventilation_timed.side_effect = Exception("This is the error")
-            await c.async_set_value(1)
+            await c.async_set_native_value(1)
             assert len(caplog.records) == 1
             assert (
-                "TimedVentilationNumber::async_set_value unexpected exception - please raise an issue"
+                "TimedVentilationNumber::async_set_native_value unexpected exception - please raise an issue"
                 in caplog.messages[0]
             )
 

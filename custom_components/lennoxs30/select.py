@@ -15,6 +15,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.exceptions import HomeAssistantError
 
 from lennoxs30api.s30api_async import (
     LENNOX_HUMIDITY_MODE_OFF,
@@ -340,6 +341,12 @@ class EquipmentParameterSelect(S30BaseEntity, SelectEntity):
         _LOGGER.info(
             f"EquipmentParameterSelect [{self._myname}] set value to [{option}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
         )
+
+        if self._manager.parameter_safety_on(self._system.sysId):
+            raise HomeAssistantError(
+                f"Unable to set parameter [{self._myname}] parameter safety switch is on"
+            )
+
         try:
             await self._system.set_equipment_parameter_value(
                 self.equipment.equipment_id, self.parameter.pid, option

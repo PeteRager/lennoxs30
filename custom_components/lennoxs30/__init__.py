@@ -391,6 +391,7 @@ class Manager(object):
         create_diagnostic_sensors: bool = False,
         create_equipment_parameters: bool = False,
     ):
+        self.system_parameter_safety_on = {}
         self._config_entry: ConfigEntry = config
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -849,3 +850,12 @@ class Manager(object):
         if bErr is False:
             self._err_cnt = 0
         return received
+
+    def parameter_safety_on(self, sysId: str) -> bool:
+        return self.system_parameter_safety_on.get(sysId, False)
+
+    def parameter_safety_turn_on(self, sysId: str) -> None:
+        self.system_parameter_safety_on[sysId] = True
+
+    def parameter_safety_turn_off(self, sysId: str) -> None:
+        self.system_parameter_safety_on[sysId] = False

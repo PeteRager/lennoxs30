@@ -13,7 +13,7 @@ from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.select import (
     EquipmentParameterSelect,
 )
-
+from homeassistant.exceptions import HomeAssistantError
 from lennoxs30api.s30exception import S30Exception
 
 from unittest.mock import patch
@@ -139,6 +139,46 @@ async def test_equipment_parameter_select_async_select_options(
         assert set_equipment_parameter_value.await_args[0][0] == equipment.equipment_id
         assert set_equipment_parameter_value.await_args[0][1] == parameter.pid
         assert set_equipment_parameter_value.await_args[0][2] == "Enabled"
+
+    manager.parameter_safety_turn_on(system.sysId)
+    with patch.object(
+        system, "set_equipment_parameter_value"
+    ) as set_equipment_parameter_value:
+        ex: HomeAssistantError = None
+        try:
+            await c.async_select_option("Enabled")
+        except HomeAssistantError as e:
+            ex = e
+        assert ex != None
+        assert set_equipment_parameter_value.call_count == 0
+        s = str(ex)
+        assert "Unable to set parameter" in s
+        assert c._myname in s
+        assert "safety switch is on" in s
+
+    manager.parameter_safety_turn_off(system.sysId)
+    with patch.object(
+        system, "set_equipment_parameter_value"
+    ) as set_equipment_parameter_value:
+        await c.async_select_option("Enabled")
+        assert set_equipment_parameter_value.call_count == 1
+        assert set_equipment_parameter_value.await_args[0][0] == equipment.equipment_id
+        assert set_equipment_parameter_value.await_args[0][1] == parameter.pid
+        assert set_equipment_parameter_value.await_args[0][2] == "Enabled"
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            system, "set_equipment_parameter_value"
+        ) as set_equipment_parameter_value:
+            caplog.clear()
+            set_equipment_parameter_value.side_effect = S30Exception(
+                "This is the error", 100, 200
+            )
+            await c.async_select_option(101)
+            assert len(caplog.records) == 1
+            assert "EquipmentParameterSelect::async_select_option" in caplog.messages[0]
+            assert "This is the error" in caplog.messages[0]
+            assert "101" in caplog.messages[0]
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()

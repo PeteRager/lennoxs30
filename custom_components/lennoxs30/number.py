@@ -21,6 +21,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_MINUTES,
 )
+
+from homeassistant.exceptions import HomeAssistantError
+
 from . import DOMAIN, Manager
 from homeassistant.core import HomeAssistant
 import logging
@@ -130,22 +133,22 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
         return self._myname
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         return 2
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         return 0
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         return 1
 
     @property
     def value(self) -> float:
         return self._system.diagLevel
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         try:
             if value == 1:
@@ -161,10 +164,12 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
                 )
             await self._system.set_diagnostic_level(value)
         except S30Exception as e:
-            _LOGGER.error(f"DiagnosticLevelNumber::async_set_value [{e.as_string()}]")
+            _LOGGER.error(
+                f"DiagnosticLevelNumber::async_set_native_value [{e.as_string()}]"
+            )
         except Exception as e:
             _LOGGER.exception(
-                "DiagnosticLevelNumber::async_set_value - unexpected exception - please raise an issue"
+                "DiagnosticLevelNumber::async_set_native_value - unexpected exception - please raise an issue"
             )
 
     @property
@@ -223,25 +228,25 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
         return self._myname
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         if self._manager._is_metric is False:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         if self._manager._is_metric:
             return self._system.enhancedDehumidificationOvercoolingC_max
         return self._system.enhancedDehumidificationOvercoolingF_max
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         if self._manager._is_metric:
             return self._system.enhancedDehumidificationOvercoolingC_min
         return self._system.enhancedDehumidificationOvercoolingF_min
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         if self._manager._is_metric:
             return self._system.enhancedDehumidificationOvercoolingC_inc
         return self._system.enhancedDehumidificationOvercoolingF_inc
@@ -252,10 +257,10 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
             return self._system.enhancedDehumidificationOvercoolingC
         return self._system.enhancedDehumidificationOvercoolingF
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         _LOGGER.info(
-            f"DehumidificationOverCooling::async_set_value [{self._myname}] value [{value}]"
+            f"DehumidificationOverCooling::async_set_native_value [{self._myname}] value [{value}]"
         )
         try:
             if self._manager._is_metric:
@@ -264,11 +269,11 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
                 await self._system.set_enhancedDehumidificationOvercooling(r_f=value)
         except S30Exception as e:
             _LOGGER.error(
-                f"DehumidificationOverCooling::async_set_value value [{value}] error [{e.as_string()}]"
+                f"DehumidificationOverCooling::async_set_native_value value [{value}] error [{e.as_string()}]"
             )
         except Exception as e:
             _LOGGER.exception(
-                f"DehumidificationOverCooling::async_set_value unexpected exception - please raise an issue"
+                f"DehumidificationOverCooling::async_set_native_value unexpected exception - please raise an issue"
             )
 
     @property
@@ -314,39 +319,39 @@ class CirculateTime(S30BaseEntity, NumberEntity):
         return self._myname
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         return PERCENTAGE
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         return LENNOX_CIRCULATE_TIME_MAX
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         return LENNOX_CIRCULATE_TIME_MIN
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         return 1.0
 
     @property
     def value(self) -> float:
         return self._system.circulateTime
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         _LOGGER.info(
-            f"CirculateTime::async_set_value myname [{self._myname}] value [{value}]"
+            f"CirculateTime::async_set_native_value myname [{self._myname}] value [{value}]"
         )
         try:
             await self._system.set_circulateTime(value)
         except S30Exception as e:
             _LOGGER.error(
-                f"CirculateTime::async_set_value value myname [{self._myname}] value [{value}] error [{e.as_string()}]"
+                f"CirculateTime::async_set_native_value value myname [{self._myname}] value [{value}] error [{e.as_string()}]"
             )
         except Exception as e:
             _LOGGER.exception(
-                f"CirculateTime::async_set_value unexpected exception - please raise an issue - myname [{self._myname}] value [{value}] error [{e}]"
+                f"CirculateTime::async_set_native_value unexpected exception - please raise an issue - myname [{self._myname}] value [{value}] error [{e}]"
             )
 
     @property
@@ -393,22 +398,22 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
         return self._myname
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         return 1440
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         return 0
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         return 1
 
     @property
     def value(self) -> float:
         return int(self._system.ventilationRemainingTime / 60)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         _LOGGER.info(f"TimedVentilationNumber set value to [{value}]")
         try:
@@ -417,19 +422,19 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
             await self._system.ventilation_timed(value_seconds)
         except S30Exception as e:
             _LOGGER.error(
-                f"TimedVentilationNumber::async_set_value value [{value}] - error [{e.as_string()}]"
+                f"TimedVentilationNumber::async_set_native_value value [{value}] - error [{e.as_string()}]"
             )
         except ValueError as v:
             _LOGGER.error(
-                f"TimedVentilationNumber::async_set_value invalid value [{value}] ValueError [{v}]"
+                f"TimedVentilationNumber::async_set_native_value invalid value [{value}] ValueError [{v}]"
             )
         except Exception as e:
             _LOGGER.exception(
-                f"TimedVentilationNumber::async_set_value unexpected exception - please raise an issue [{value}] error [{e}]"
+                f"TimedVentilationNumber::async_set_native_value unexpected exception - please raise an issue [{value}] error [{e}]"
             )
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         return TIME_MINUTES
 
     @property
@@ -492,41 +497,47 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
         return self._myname
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         return float(self.parameter.range_max)
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         return float(self.parameter.range_min)
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         return float(self.parameter.range_inc)
 
     @property
     def value(self) -> float:
         return self.parameter.value
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         _LOGGER.info(
             f"EquipmentParameterNumber [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
         )
+
+        if self._manager.parameter_safety_on(self._system.sysId):
+            raise HomeAssistantError(
+                f"Unable to set parameter [{self._myname}] parameter safety switch is on"
+            )
+
         try:
             await self._system.set_equipment_parameter_value(
                 self.equipment.equipment_id, self.parameter.pid, value
             )
         except S30Exception as e:
             _LOGGER.error(
-                f"EquipmentParameterNumber::async_set_value [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}] error [{e.as_string()}]"
+                f"EquipmentParameterNumber::async_set_native_value [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}] error [{e.as_string()}]"
             )
         except Exception as e:
             _LOGGER.exception(
-                f"EquipmentParameterNumber::async_set_value unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
+                f"EquipmentParameterNumber::async_set_native_value unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
             )
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         return lennox_uom_to_ha_uom(self.parameter.unit)
 
     @property
@@ -543,3 +554,6 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
     @property
     def mode(self):
         return "box"
+
+
+# TODO extra attributes with PID and EQTYPE

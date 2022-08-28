@@ -1,5 +1,4 @@
 import logging
-from tkinter import E
 from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
