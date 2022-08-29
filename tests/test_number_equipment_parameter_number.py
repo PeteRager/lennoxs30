@@ -24,6 +24,8 @@ from homeassistant.const import (
 
 from unittest.mock import patch
 
+from tests.conftest import conftest_parameter_extra_attributes
+
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_unique_id(hass, manager: Manager, caplog):
@@ -223,3 +225,11 @@ def test_equipment_parameter_number_mode(hass, manager: Manager, caplog):
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
     assert c.mode == "box"
+
+
+def test_equipment_parameter_select_extra_attributes(hass, manager: Manager, caplog):
+    system: lennox_system = manager._api._systemList[0]
+    equipment = system.equipment[0]
+    parameter = equipment.parameters[72]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    conftest_parameter_extra_attributes(c.extra_state_attributes, equipment, parameter)

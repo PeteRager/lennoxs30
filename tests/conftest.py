@@ -6,6 +6,10 @@ import pytest
 
 from homeassistant import loader
 from homeassistant.setup import async_setup_component
+from lennoxs30api.lennox_equipment import (
+    lennox_equipment_parameter,
+    lennox_equipment,
+)
 
 from pytest_homeassistant_custom_component.common import (
     assert_setup_component,
@@ -356,3 +360,14 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
     api.processMessage(data)
 
     return manager
+
+
+def conftest_parameter_extra_attributes(
+    extra_state_attributes: dict,
+    equipment: lennox_equipment,
+    parameter: lennox_equipment_parameter,
+):
+    assert len(extra_state_attributes) == 3
+    assert extra_state_attributes["equipment_id"] == equipment.equipment_id
+    assert extra_state_attributes["equipment_type_id"] == equipment.equipType
+    assert extra_state_attributes["parameter_id"] == parameter.pid

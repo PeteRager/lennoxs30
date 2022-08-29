@@ -1,9 +1,11 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+from typing import Any
 from lennoxs30api.s30exception import S30Exception
 
 from .helpers import (
     helper_create_equipment_entity_name,
     helper_get_equipment_device_info,
+    helper_get_parameter_extra_attributes,
     lennox_uom_to_ha_uom,
 )
 
@@ -555,5 +557,6 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
     def mode(self):
         return "box"
 
-
-# TODO extra attributes with PID and EQTYPE
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return helper_get_parameter_extra_attributes(self.equipment, self.parameter)

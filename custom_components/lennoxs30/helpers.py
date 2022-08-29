@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -11,9 +12,7 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 
-from lennoxs30api.lennox_equipment import (
-    lennox_equipment,
-)
+from lennoxs30api.lennox_equipment import lennox_equipment, lennox_equipment_parameter
 
 
 from . import DOMAIN, Manager
@@ -95,3 +94,13 @@ def helper_create_equipment_entity_name(
     )
 
     return result
+
+
+def helper_get_parameter_extra_attributes(
+    equipment: lennox_equipment, parameter: lennox_equipment_parameter
+):
+    attrs: dict[str, Any] = {}
+    attrs["equipment_id"] = equipment.equipment_id
+    attrs["equipment_type_id"] = equipment.equipType
+    attrs["parameter_id"] = parameter.pid
+    return attrs

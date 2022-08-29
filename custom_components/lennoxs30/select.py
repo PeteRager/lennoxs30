@@ -1,9 +1,11 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+from typing import Any
 from lennoxs30api.s30exception import S30Exception
 
 from custom_components.lennoxs30.helpers import (
     helper_create_equipment_entity_name,
     helper_get_equipment_device_info,
+    helper_get_parameter_extra_attributes,
 )
 
 from .base_entity import S30BaseEntity
@@ -370,3 +372,7 @@ class EquipmentParameterSelect(S30BaseEntity, SelectEntity):
     @property
     def entity_category(self):
         return EntityCategory.CONFIG
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return helper_get_parameter_extra_attributes(self.equipment, self.parameter)
