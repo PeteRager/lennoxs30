@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.components.switch import SwitchEntity, PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import EntityCategory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -526,3 +527,7 @@ class S30ParameterSafetySwitch(S30BaseEntity, SwitchEntity):
         await asyncio.sleep(self._rearm_duration_sec)
         self._manager.parameter_safety_turn_on(self._system.sysId)
         self.schedule_update_ha_state()
+
+    @property
+    def entity_category(self):
+        return EntityCategory.CONFIG

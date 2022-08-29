@@ -19,6 +19,7 @@ from custom_components.lennoxs30.switch import (
 )
 
 from unittest.mock import patch
+from homeassistant.helpers.entity import EntityCategory
 
 
 @pytest.mark.asyncio
@@ -58,6 +59,7 @@ async def test_parameter_safety_switch(hass, manager: Manager, caplog):
     assert len(c.extra_state_attributes) == 0
     assert c.update() == True
     assert c.should_poll == False
+    assert c.entity_category == EntityCategory.CONFIG
 
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
