@@ -147,7 +147,7 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
         return 1
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         return self._system.diagLevel
 
     async def async_set_native_value(self, value: float) -> None:
@@ -254,7 +254,7 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
         return self._system.enhancedDehumidificationOvercoolingF_inc
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         if self._manager._is_metric:
             return self._system.enhancedDehumidificationOvercoolingC
         return self._system.enhancedDehumidificationOvercoolingF
@@ -337,7 +337,7 @@ class CirculateTime(S30BaseEntity, NumberEntity):
         return 1.0
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         return self._system.circulateTime
 
     async def async_set_native_value(self, value: float) -> None:
@@ -412,7 +412,7 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
         return 1
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         return int(self._system.ventilationRemainingTime / 60)
 
     async def async_set_native_value(self, value: float) -> None:
@@ -483,7 +483,7 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
 
     def update_callback(self, id: str):
         _LOGGER.debug(
-            f"update_callback EquipmentParameterNumber myname [{self._myname}] [{id}]"
+            f"update_callback EquipmentParameterNumber myname [{self._myname}] [{id}] [{self.parameter.value}]"
         )
         self.schedule_update_ha_state()
 
@@ -511,13 +511,13 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
         return float(self.parameter.range_inc)
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         return self.parameter.value
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         _LOGGER.info(
-            f"EquipmentParameterNumber [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
+            f"EquipmentParameterNumber::async_set_native_value [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
         )
 
         if self._manager.parameter_safety_on(self._system.sysId):

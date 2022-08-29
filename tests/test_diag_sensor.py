@@ -55,6 +55,7 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
 
     diagnostic.value = "waiting..."
     assert s.state == None
+    assert s.available == False
 
     equipment = system.equipment[2]
     diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[0]

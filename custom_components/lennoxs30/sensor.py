@@ -173,6 +173,8 @@ class S30DiagSensor(S30BaseEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
+        if self._diagnostic.value == "waiting...":
+            return False
         if self._system.diagLevel not in (1, 2):
             return False
         return super().available
