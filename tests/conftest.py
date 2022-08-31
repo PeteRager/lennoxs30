@@ -1,9 +1,12 @@
 """template conftest."""
 import json
 import os
+from unittest.mock import patch
 
 import pytest
-
+from lennoxs30api.s30api_async import (
+    lennox_system,
+)
 from homeassistant import loader
 from homeassistant.setup import async_setup_component
 from lennoxs30api.lennox_equipment import (
@@ -20,6 +23,8 @@ from homeassistant import config_entries
 
 from custom_components.lennoxs30 import (
     DOMAIN,
+    DS_CONNECTED,
+    DS_RETRY_WAIT,
     Manager,
 )
 
@@ -371,3 +376,23 @@ def conftest_parameter_extra_attributes(
     assert extra_state_attributes["equipment_id"] == equipment.equipment_id
     assert extra_state_attributes["equipment_type_id"] == equipment.equipType
     assert extra_state_attributes["parameter_id"] == parameter.pid
+
+
+def conftest_base_entity_availability(manager: Manager, system: lennox_system, c):
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_CONNECTED)
+        assert update_callback.call_count == 1
+        assert c.available == True
+        system.attr_updater({"status": "online"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 2
+        assert c.available == True
+        system.attr_updater({"status": "offline"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 3
+        assert c.available == False

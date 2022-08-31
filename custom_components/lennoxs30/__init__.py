@@ -48,21 +48,27 @@ from .device import (
     S30VentilationUnit,
     S30ZoneThermostat,
 )
-from .util import dict_redact_fields, redact_email
+from .util import dict_redact_fields
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from typing import Any
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
-PLATFORMS = ["sensor", "climate", "switch", "number", "binary_sensor", "select"]
+PLATFORMS = [
+    "sensor",
+    "climate",
+    "switch",
+    "number",
+    "binary_sensor",
+    "select",
+    "button",
+]
 
 DS_CONNECTING = "Connecting"
 DS_DISCONNECTED = "Disconnected"
