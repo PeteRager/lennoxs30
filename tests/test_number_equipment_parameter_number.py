@@ -233,3 +233,62 @@ def test_equipment_parameter_select_extra_attributes(hass, manager: Manager, cap
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
     conftest_parameter_extra_attributes(c.extra_state_attributes, equipment, parameter)
+
+
+@pytest.mark.asyncio
+async def test_equipment_parameter_number_set_zonetest_parameter(
+    hass, manager_system_04_furn_ac_zoning: Manager, caplog
+):
+    manager = manager_system_04_furn_ac_zoning
+    system: lennox_system = manager._api._systemList[0]
+    equipment = system.equipment[0]
+    parameter = equipment.parameters[256]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+
+    with patch.object(
+        system, "set_zone_test_parameter_value"
+    ) as set_zone_test_parameter_value:
+        await c.async_set_zonetest_parameter(60.0, True)
+        assert set_zone_test_parameter_value.call_count == 1
+        set_zone_test_parameter_value.await_args[0][0] == parameter.pid
+        set_zone_test_parameter_value.await_args[0][1] == "60.0"
+        set_zone_test_parameter_value.await_args[0][2] == True
+
+    with patch.object(
+        system, "set_zone_test_parameter_value"
+    ) as set_zone_test_parameter_value:
+        await c.async_set_zonetest_parameter(70.0, False)
+        assert set_zone_test_parameter_value.call_count == 1
+        set_zone_test_parameter_value.await_args[0][0] == parameter.pid
+        set_zone_test_parameter_value.await_args[0][1] == "70.0"
+        set_zone_test_parameter_value.await_args[0][2] == False
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            system, "set_zone_test_parameter_value"
+        ) as set_zone_test_parameter_value:
+            caplog.clear()
+            set_zone_test_parameter_value.side_effect = S30Exception(
+                "This is the error", 100, 200
+            )
+            await c.async_set_zonetest_parameter(70.0, False)
+            assert len(caplog.records) == 1
+            assert (
+                "EquipmentParameterNumber::async_set_zonetest_parameter"
+                in caplog.messages[0]
+            )
+            assert "This is the error" in caplog.messages[0]
+            assert "70.0" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(
+            system, "set_zone_test_parameter_value"
+        ) as set_zone_test_parameter_value:
+            caplog.clear()
+            set_zone_test_parameter_value.side_effect = Exception("This is the error")
+            await c.async_set_zonetest_parameter(70.0, False)
+            assert len(caplog.records) == 1
+            assert (
+                "EquipmentParameterNumber::async_set_zonetest_parameter unexpected exception - please raise an issue"
+                in caplog.messages[0]
+            )

@@ -17,8 +17,11 @@ from custom_components.lennoxs30.number import (
     async_setup_entry,
 )
 
+from homeassistant.helpers import entity_platform
 
-from unittest.mock import Mock
+from unittest.mock import patch
+
+from unittest.mock import Mock, patch
 
 
 @pytest.mark.asyncio
@@ -35,6 +38,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     manager._create_diagnostic_sensors = False
     manager._create_inverter_power = False
     async_add_entities = Mock()
+
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
@@ -166,14 +170,29 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     manager._create_inverter_power = False
     manager._create_equipment_parameters = True
     async_add_entities = Mock()
-    await async_setup_entry(hass, entry, async_add_entities)
-    assert async_add_entities.called == 1
-    sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 41
-    assert isinstance(sensor_list[0], CirculateTime)
-    for i in range(1, 40):
-        assert isinstance(sensor_list[i], EquipmentParameterNumber)
+    mock_async_get_current_platform = Mock()
 
-    ep: EquipmentParameterNumber = sensor_list[1]
-    assert ep.equipment.equipment_id == 0
-    assert ep.parameter.pid == 72
+    with patch(
+        "homeassistant.helpers.entity_platform.async_get_current_platform",
+        mock_async_get_current_platform,
+    ):
+        await async_setup_entry(hass, entry, async_add_entities)
+        assert async_add_entities.called == 1
+        sensor_list = async_add_entities.call_args[0][0]
+        assert len(sensor_list) == 41
+        assert isinstance(sensor_list[0], CirculateTime)
+        for i in range(1, 40):
+            assert isinstance(sensor_list[i], EquipmentParameterNumber)
+
+        ep: EquipmentParameterNumber = sensor_list[1]
+        assert ep.equipment.equipment_id == 0
+        assert ep.parameter.pid == 72
+
+        assert mock_async_get_current_platform.call_count == 1
+        assert mock_async_get_current_platform.call_count == 1
+        service = mock_async_get_current_platform.mock_calls[1]
+        assert service[0] == "().async_register_entity_service"
+        service_spec = service[1]
+        assert service_spec[0] == "set_zonetest_parameter"
+        vol = service_spec[1]
+        assert service_spec[2] == "async_set_zonetest_parameter"

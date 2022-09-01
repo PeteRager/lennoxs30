@@ -1,7 +1,7 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from typing import Any
 from lennoxs30api.s30exception import S30Exception
-
+import voluptuous as vol
 from .helpers import (
     helper_create_equipment_entity_name,
     helper_get_equipment_device_info,
@@ -23,9 +23,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_MINUTES,
 )
-
+from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import HomeAssistantError
-
+from homeassistant.helpers import entity_platform as ep
 from . import DOMAIN, Manager
 from homeassistant.core import HomeAssistant
 import logging
@@ -88,6 +88,15 @@ async def async_setup_entry(
             number_list.append(number)
 
         if manager._create_equipment_parameters == True:
+            platform = ep.async_get_current_platform()
+            platform.async_register_entity_service(
+                "set_zonetest_parameter",
+                {
+                    vol.Required("value"): cv.positive_float,
+                    vol.Required("enabled"): cv.boolean,
+                },
+                "async_set_zonetest_parameter",
+            )
             for equipment in system.equipment.values():
                 for parameter in equipment.parameters.values():
                     if (
@@ -560,3 +569,27 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return helper_get_parameter_extra_attributes(self.equipment, self.parameter)
+
+    async def async_set_zonetest_parameter(self, value: float, enabled: bool):
+        _LOGGER.info(
+            f"EquipmentParameterNumber::async_set_zonetest_parameter [{self._myname}] set value to [{value}] enabled [{enabled}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
+        )
+
+        if self.equipment.equipment_id != 0:
+            _LOGGER.error(
+                f"EquipmentParameterNumber::async_set_zonetest_parameter invalid equipment for zoneTest [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}]"
+            )
+            return
+        try:
+            await self._system.set_zone_test_parameter_value(
+                self.parameter.pid, value, enabled
+            )
+        except S30Exception as e:
+            _LOGGER.error(
+                f"EquipmentParameterNumber::async_set_zonetest_parameter [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] error [{e.as_string()}] "
+            )
+            return
+        except Exception as e:
+            _LOGGER.exception(
+                f"EquipmentParameterNumber::async_set_zonetest_parameter unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
+            )
