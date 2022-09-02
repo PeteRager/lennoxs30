@@ -59,6 +59,17 @@ async def async_setup_entry(
     number_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
 
+    if manager._create_equipment_parameters == True:
+        platform = ep.async_get_current_platform()
+        platform.async_register_entity_service(
+            "set_zonetest_parameter",
+            {
+                vol.Required("value"): cv.positive_float,
+                vol.Required("enabled"): cv.boolean,
+            },
+            "async_set_zonetest_parameter",
+        )
+
     for system in manager._api.getSystems():
         # We do not support setting diag level from a cloud connection
         if manager._api._isLANConnection == False or (
@@ -88,15 +99,6 @@ async def async_setup_entry(
             number_list.append(number)
 
         if manager._create_equipment_parameters == True:
-            platform = ep.async_get_current_platform()
-            platform.async_register_entity_service(
-                "set_zonetest_parameter",
-                {
-                    vol.Required("value"): cv.positive_float,
-                    vol.Required("enabled"): cv.boolean,
-                },
-                "async_set_zonetest_parameter",
-            )
             for equipment in system.equipment.values():
                 for parameter in equipment.parameters.values():
                     if (
