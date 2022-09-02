@@ -475,7 +475,7 @@ class S30ParameterSafetySwitch(S30BaseEntity, SwitchEntity):
         hass: HomeAssistant,
         manager: Manager,
         system: lennox_system,
-        rearm_duration_sec=15.0,
+        rearm_duration_sec=60.0,
     ):
         super().__init__(manager, system)
         self._hass = hass
