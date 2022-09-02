@@ -28,28 +28,18 @@ from lennoxs30api.s30api_async import (
 from .base_entity import S30BaseEntity
 from .const import MANAGER
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -72,7 +62,7 @@ PRESET_CANCEL_HOLD = "cancel hold"
 PRESET_CANCEL_AWAY_MODE = "cancel away mode"
 PRESET_SCHEDULE_OVERRIDE = "Schedule Hold"
 # Basic set of support flags for every HVAC setup
-SUPPORT_FLAGS = SUPPORT_PRESET_MODE | SUPPORT_FAN_MODE
+SUPPORT_FLAGS = ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.FAN_MODE
 # Standard set of fan modes
 FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
@@ -102,10 +92,9 @@ async def async_setup_entry(
         _LOGGER.debug(
             f"climate:async_setup_platform exit - created [{len(climate_list)}] entitites"
         )
-        return True
     else:
         _LOGGER.error(f"climate:async_setup_platform exit - no climate entities found")
-        return False
+    return True
 
 
 class S30Climate(S30BaseEntity, ClimateEntity):
@@ -220,9 +209,9 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         # Target temperature.
         # If its a cooling or heating only system, then there is only one setpoint
         if self.is_single_setpoint_active() == True:
-            mask |= SUPPORT_TARGET_TEMPERATURE
+            mask |= ClimateEntityFeature.TARGET_TEMPERATURE
         else:
-            mask |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            mask |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if (
             self._zone.humidificationOption == True
@@ -231,13 +220,13 @@ class S30Climate(S30BaseEntity, ClimateEntity):
             self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
             or self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY
         ):
-            mask |= SUPPORT_TARGET_HUMIDITY
+            mask |= ClimateEntityFeature.TARGET_HUMIDITY
 
         if (
             self._zone.heatingOption == True
             and self._system.has_emergency_heat() == True
         ):
-            mask |= SUPPORT_AUX_HEAT
+            mask |= ClimateEntityFeature.AUX_HEAT
 
         _LOGGER.debug(
             "climate:supported_features name["
@@ -416,9 +405,9 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         """Return the current hvac operation mode."""
         r = self._zone.getSystemMode()
         if r == LENNOX_HVAC_HEAT_COOL:
-            r = HVAC_MODE_HEAT_COOL
+            r = HVACMode.HEAT_COOL
         elif r == LENNOX_HVAC_EMERGENCY_HEAT:
-            r = HVAC_MODE_HEAT
+            r = HVACMode.HEAT
         _LOGGER.debug(f"climate:hvac_mode name [{self._myname}] mode [{r}]")
         return r
 
@@ -491,13 +480,13 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         modes = []
         if self.is_zone_disabled:
             return modes
-        modes.append(HVAC_MODE_OFF)
+        modes.append(HVACMode.OFF)
         if self._zone.coolingOption == True:
-            modes.append(HVAC_MODE_COOL)
+            modes.append(HVACMode.COOL)
         if self._zone.heatingOption == True:
-            modes.append(HVAC_MODE_HEAT)
+            modes.append(HVACMode.HEAT)
         if self._zone.coolingOption == True and self._zone.heatingOption == True:
-            modes.append(HVAC_MODE_HEAT_COOL)
+            modes.append(HVACMode.HEAT_COOL)
         return modes
 
     async def async_trigger_fast_poll(self) -> None:
@@ -514,7 +503,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
                 )
             t_hvac_mode = hvac_mode
             # Only this mode needs to be mapped
-            if t_hvac_mode == HVAC_MODE_HEAT_COOL:
+            if t_hvac_mode == HVACMode.HEAT_COOL:
                 t_hvac_mode = LENNOX_HVAC_HEAT_COOL
             _LOGGER.debug(
                 "climate:async_set_hvac_mode zone ["
@@ -543,12 +532,12 @@ class S30Climate(S30BaseEntity, ClimateEntity):
             return to
         if ho != LENNOX_TEMP_OPERATION_OFF:
             if ho == LENNOX_HUMID_OPERATION_DEHUMID:
-                return CURRENT_HVAC_DRY
+                return HVACAction.DRYING
             if ho == LENNOX_HUMID_OPERATION_WAITING:
-                return CURRENT_HVAC_IDLE
+                return HVACAction.IDLE
             return ho
         if to == LENNOX_TEMP_OPERATION_OFF and self._zone.systemMode != LENNOX_HVAC_OFF:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
         return to
 
     @property
@@ -784,7 +773,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
                         await self._zone.perform_setpoint(r_sp=r_temperature)
                     else:
                         await self._zone.perform_setpoint(r_spC=r_temperature)
-                elif self.hvac_mode == HVAC_MODE_COOL:
+                elif self.hvac_mode == HVACMode.COOL:
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in cool mode - zone [{self._myname}] temperature [{r_temperature}]"
                     )
@@ -792,7 +781,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
                         await self._zone.perform_setpoint(r_csp=r_temperature)
                     else:
                         await self._zone.perform_setpoint(r_cspC=r_temperature)
-                elif self.hvac_mode == HVAC_MODE_HEAT:
+                elif self.hvac_mode == HVACMode.HEAT:
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in heat mode - zone [{self._myname}] sp [{r_temperature}]"
                     )
