@@ -16,6 +16,7 @@ from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
 from custom_components.lennoxs30.helpers import (
+    equipment_parameters_to_json,
     helper_create_equipment_entity_name,
     helper_get_equipment_device_info,
     lennox_uom_to_ha_uom,
@@ -122,3 +123,12 @@ async def test_helpers_create_equipment_entity_name(manager: Manager, caplog):
     assert helper_create_equipment_entity_name(
         system, equipment, "test - h"
     ) == f"{system.name}_iu_test_h".replace(" ", "_")
+
+
+@pytest.mark.asyncio
+async def test_helpers_equipment_parameters_to_json(manager: Manager, caplog):
+    await manager.create_devices()
+    system = manager._api._systemList[0]
+
+    #    str = equipment_parameters_to_json(system)
+    pass
