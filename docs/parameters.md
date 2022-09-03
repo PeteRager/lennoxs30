@@ -2,7 +2,7 @@
 
 **WARNING** improperly setting equipment parameters could render your HVAC system inoperable - please use caution and write down old values before changing and review this document.
 
-This feature is in Beta, as we learn how to better use it, the methods and entities may change. If you use this beta, please provide feedback - even if everything works fine as all Lennox Equipment is different.
+This feature is in Beta, as we learn how to better use it, the methods and entities may change. If you use this beta, please provide feedback and your use cases.
 
 Please raise issues and post in this discussion topic:
 
@@ -14,25 +14,27 @@ Equipment Parameters are the tuning parameters for your HVAC system. They are al
 
 ## How does it work and not work?
 
+There is some varying behavior that we are trying to understand, as not all equipment parameters seems to function the same.
+
 When some equipment parameters are set via the S30 Dealer Control Panel, the systems goes through a Test cycle - which pauses the current HVAC cycle and then resumes the HVAC cycle. This process typically takes 1 minute 3 seconds. You may want to experiment using the panel first.
 
-When some equipment parameters are set via the Integration, the system goes through a Test cycle - which pauses the current HVAC Cycle AND places the Panel into an interoperable Test State. This process takes **4 minutes** before the panel become operable. Please do not panic (I did :-), when this happens. If for some reason the panel remains inoperable, you may need to remove power from the S30, wait a few seconds and re-apply.
+Like when parameters are set via the Integration, the system goes through a Test cycle. Sometimes, this process takes **4 minutes** before the panel become operable! Please do not panic when this happens (like I did). You can always reset the panel by power cycling the S30 (using the breaker.) We did find a special command, that seems to accelerate this and created a Button entity.
 
-There is a special button entity, that can be pressed to accelerate the Test State and brings it back to 1 minute
-
-Part of what we need to figure out is how the different parameters behave and when to use the button
+Part of what we need to figure out is how the different parameters behave and when to use the button.
 
 ## How to Enable
 
 Go into the integration configuration and check the "BETA - Equipment Parameters" option and reload the integration
 
-You may want to enable message logging so that information is captured on the system behavior to help improve this capability.
+You may want to enable message logging so that message are captured if problems are encountered.
 
 https://github.com/PeteRager/lennoxs30#reporting-bugs
 
 ## Entities Created
 
-There are two type of entities that get created. Number Entities are created for numeric parameters like CFM, Temp Offset, etc. Select Entities are created for parameters that have different options (on/off, timed/continous, etc.) The entities are create under the device and are categorized as Configuration.
+There are two type of entities created; Number Entities for numeric parameters like CFM, Temp Offset, etc; Select Entities for parameters that have different options (on/off, timed/continous, etc.) The entities are created under the devices and are categorized as Configuration.
+
+Here's an example of the entities created under the main S30 device. Not all devices have parameters.
 
 ![plot](../doc_images/eq_parameters_device.png)
 
@@ -46,7 +48,9 @@ Parameters in Lovelace
 
 switch.\<systemname\>\_parameter_safety
 
-In order to prevent accidental setting of parameters, a parameters safety switch is created. When the switch is on, attempts to set parameters will be rejected. When the switch is off, attempts to set the parameters will be accepted. The safety will automatically turn back on after 60 seconds.
+In order to prevent accidental setting of parameters, a parameters safety switch is created.
+
+When the switch is on (its default), attempts to set parameters will be rejected. When the switch is off parameters can be set. The safety will automatically turn back on after 60 seconds.
 
 ### Button Parameter Update
 
