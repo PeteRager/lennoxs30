@@ -16,6 +16,7 @@ from unittest.mock import Mock
 from custom_components.lennoxs30.switch import (
     S30AllergenDefenderSwitch,
     S30ManualAwayModeSwitch,
+    S30ParameterSafetySwitch,
     S30SmartAwayEnableSwitch,
     S30VentilationSwitch,
     S30ZoningSwitch,
@@ -41,6 +42,17 @@ async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 2
     assert isinstance(sensor_list[0], S30ManualAwayModeSwitch)
     assert isinstance(sensor_list[1], S30SmartAwayEnableSwitch)
+
+    async_add_entities = Mock()
+    manager._create_equipment_parameters = True
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 3
+    assert isinstance(sensor_list[0], S30ManualAwayModeSwitch)
+    assert isinstance(sensor_list[1], S30SmartAwayEnableSwitch)
+    assert isinstance(sensor_list[2], S30ParameterSafetySwitch)
+    manager._create_equipment_parameters = False
 
     system.ventilationUnitType = LENNOX_VENTILATION_DAMPER
     async_add_entities = Mock()

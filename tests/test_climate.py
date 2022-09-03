@@ -70,6 +70,16 @@ from tests.conftest import manager
 
 
 @pytest.mark.asyncio
+async def test_climate_unique_id(hass, manager_mz: Manager, caplog):
+    manager: Manager = manager_mz
+    system: lennox_system = manager._api._systemList[0]
+    zone: lennox_zone = system._zoneList[0]
+    c = S30Climate(hass, manager, system, zone)
+    assert c.unique_id == zone.unique_id
+    assert c.name == system.name + "_" + zone.name
+
+
+@pytest.mark.asyncio
 async def test_climate_min_max_c(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     system: lennox_system = manager._api._systemList[0]
@@ -403,6 +413,11 @@ async def test_climate_system_subscription(hass, manager_mz: Manager, caplog):
         assert update_callback.call_count == 3
         assert c.available == False
 
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        zone._dirty = True
+        zone.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+
 
 @pytest.mark.asyncio
 async def test_climate_preset_mode(hass, manager_mz: Manager, caplog):
@@ -560,7 +575,26 @@ async def test_climate_extra_state_attributes(hass, manager_mz: Manager, caplog)
     assert attrs["allergenDefender"] == zone.allergenDefender
     assert attrs["damper"] == zone.damper
     assert attrs["demand"] == zone.demand
-    assert attrs["fan"] == "on" if zone.fan else "off"
+    assert attrs["fan"] == "off"
+    assert attrs["humidityMode"] == zone.humidityMode
+    assert attrs["humOperation"] == zone.humOperation
+    assert attrs["tempOperation"] == zone.tempOperation
+    assert attrs["ventilation"] == zone.ventilation
+    assert attrs["heatCoast"] == zone.heatCoast
+    assert attrs["defrost"] == zone.defrost
+    assert attrs["balancePoint"] == zone.balancePoint
+    assert attrs["aux"] == zone.aux
+    assert attrs["coolCoast"] == zone.coolCoast
+    assert attrs["ssr"] == zone.ssr
+    assert attrs["zoneEnabled"] == True
+    assert attrs["zoningMode"] == system.zoningMode
+
+    zone.fan = True
+    attrs = c.extra_state_attributes
+    assert attrs["allergenDefender"] == zone.allergenDefender
+    assert attrs["damper"] == zone.damper
+    assert attrs["demand"] == zone.demand
+    assert attrs["fan"] == "on"
     assert attrs["humidityMode"] == zone.humidityMode
     assert attrs["humOperation"] == zone.humOperation
     assert attrs["tempOperation"] == zone.tempOperation
@@ -633,7 +667,7 @@ async def test_climate_extra_state_attributes(hass, manager_mz: Manager, caplog)
 
 
 @pytest.mark.asyncio
-async def test_supported_features(hass, manager_mz: Manager, caplog):
+async def test_climate_supported_features(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager._api._systemList[0]
     manager._is_metric = False
@@ -678,6 +712,12 @@ async def test_supported_features(hass, manager_mz: Manager, caplog):
     assert feat & SUPPORT_AUX_HEAT == 0
     assert feat & SUPPORT_PRESET_MODE != 0
     assert feat & SUPPORT_FAN_MODE != 0
+
+    c._zone.heatingOption = True
+    with patch.object(system, "has_emergency_heat") as has_emergency_heat:
+        has_emergency_heat.return_value = True
+        feat = c.supported_features
+        assert feat & SUPPORT_AUX_HEAT != 0
 
     zone1: lennox_zone = system._zoneList[1]
     c1 = S30Climate(hass, manager, system, zone1)

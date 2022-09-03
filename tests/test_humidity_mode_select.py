@@ -19,6 +19,8 @@ from custom_components.lennoxs30.select import (
 )
 
 from unittest.mock import patch
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
+from lennoxs30api.s30exception import S30Exception
 
 
 @pytest.mark.asyncio
@@ -197,6 +199,30 @@ async def test_humidity_mode_select_async_select_options(
         arg0 = set_humidity_mode.await_args[0][0]
         assert arg0 == LENNOX_HUMIDITY_MODE_HUMIDIFY
 
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        with patch.object(zone, "setHumidityMode") as set_humidity_mode:
+            set_humidity_mode.side_effect = S30Exception("This is the error", 100, 200)
+            await c.async_select_option(LENNOX_HUMIDITY_MODE_HUMIDIFY)
+            assert set_humidity_mode.call_count == 1
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert "HumidityModeSelect async_select_option" in msg
+            assert "This is the error" in msg
+
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        with patch.object(zone, "setHumidityMode") as set_humidity_mode:
+            set_humidity_mode.side_effect = ValueError("This is the error")
+            await c.async_select_option(LENNOX_HUMIDITY_MODE_HUMIDIFY)
+            assert set_humidity_mode.call_count == 1
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert (
+                "HumidityModeSelect async_select_option - unexpected exception please raise an issue"
+                in msg
+            )
+
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -205,3 +231,19 @@ async def test_humidity_mode_select_async_select_options(
             assert set_humidity_mode.call_count == 0
             assert len(caplog.records) == 1
             assert "disabled" in caplog.messages[0]
+
+
+@pytest.mark.asyncio
+async def test_dehumidifier_mode_mode_select_device_info(
+    hass, manager_mz: Manager, caplog
+):
+    manager = manager_mz
+    await manager.create_devices()
+    system: lennox_system = manager._api._systemList[0]
+    zone: lennox_zone = system._zoneList[0]
+    c = HumidityModeSelect(hass, manager, system, zone)
+
+    identifiers = c.device_info["identifiers"]
+    for x in identifiers:
+        assert x[0] == LENNOX_DOMAIN
+        assert x[1] == zone.unique_id

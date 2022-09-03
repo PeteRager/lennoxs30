@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 
 from unittest.mock import patch
+from lennoxs30api.s30exception import S30Exception
 
 
 @pytest.mark.asyncio
@@ -95,7 +96,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     c = DiagnosticLevelNumber(hass, manager, system)
 
     with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
-        await c.async_set_value(2)
+        await c.async_set_native_value(2)
         assert set_diagnostic_level.call_count == 1
         assert set_diagnostic_level.call_args[0][0] == 2
 
@@ -104,17 +105,17 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     with caplog.at_level(logging.WARNING):
         with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
             caplog.clear()
-            await c.async_set_value(1)
+            await c.async_set_native_value(1)
             assert len(caplog.records) == 1
             assert (
                 "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 in caplog.messages[0]
             )
             caplog.clear()
-            await c.async_set_value(2)
+            await c.async_set_native_value(2)
             assert len(caplog.records) == 0
             caplog.clear()
-            await c.async_set_value(0)
+            await c.async_set_native_value(0)
             assert len(caplog.records) == 0
 
     system.internetStatus = True
@@ -122,7 +123,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     with caplog.at_level(logging.WARNING):
         with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
             caplog.clear()
-            await c.async_set_value(1)
+            await c.async_set_native_value(1)
             assert len(caplog.records) == 2
             assert (
                 "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
@@ -133,14 +134,14 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
                 in caplog.messages[1]
             )
             caplog.clear()
-            await c.async_set_value(2)
+            await c.async_set_native_value(2)
             assert len(caplog.records) == 1
             assert (
                 "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 in caplog.messages[0]
             )
             caplog.clear()
-            await c.async_set_value(0)
+            await c.async_set_native_value(0)
             assert len(caplog.records) == 0
 
     system.internetStatus = False
@@ -148,7 +149,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     with caplog.at_level(logging.WARNING):
         with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
             caplog.clear()
-            await c.async_set_value(1)
+            await c.async_set_native_value(1)
             assert len(caplog.records) == 2
             assert (
                 "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
@@ -159,14 +160,14 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
                 in caplog.messages[1]
             )
             caplog.clear()
-            await c.async_set_value(2)
+            await c.async_set_native_value(2)
             assert len(caplog.records) == 1
             assert (
                 "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 in caplog.messages[0]
             )
             caplog.clear()
-            await c.async_set_value(0)
+            await c.async_set_native_value(0)
             assert len(caplog.records) == 0
 
     system.internetStatus = True
@@ -174,7 +175,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     with caplog.at_level(logging.WARNING):
         with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
             caplog.clear()
-            await c.async_set_value(1)
+            await c.async_set_native_value(1)
             assert len(caplog.records) == 2
             assert (
                 "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
@@ -185,15 +186,39 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
                 in caplog.messages[1]
             )
             caplog.clear()
-            await c.async_set_value(2)
+            await c.async_set_native_value(2)
             assert len(caplog.records) == 1
             assert (
                 "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 in caplog.messages[0]
             )
             caplog.clear()
-            await c.async_set_value(0)
+            await c.async_set_native_value(0)
             assert len(caplog.records) == 0
+
+    system.internetStatus = False
+    system.relayServerConnected = False
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            set_diagnostic_level.side_effect = S30Exception(
+                "This is the error", 100, 200
+            )
+            await c.async_set_native_value(1)
+            assert len(caplog.records) == 1
+            assert "DiagnosticLevelNumber::async_set_native_value" in caplog.messages[0]
+            assert "This is the error" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR):
+        with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
+            caplog.clear()
+            set_diagnostic_level.side_effect = ValueError("This is the error")
+            await c.async_set_native_value(1)
+            assert len(caplog.records) == 1
+            assert (
+                "DiagnosticLevelNumber::async_set_native_value - unexpected exception - please raise an issue"
+                in caplog.messages[0]
+            )
 
 
 @pytest.mark.asyncio

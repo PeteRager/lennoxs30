@@ -1,8 +1,13 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
+import asyncio
 from typing import Any
 
 from .base_entity import S30BaseEntity
-from .const import MANAGER, VENTILATION_EQUIPMENT_ID
+from .const import (
+    MANAGER,
+    UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH,
+    VENTILATION_EQUIPMENT_ID,
+)
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT, CONF_NAME
 from . import Manager
 from homeassistant.core import HomeAssistant
@@ -13,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.components.switch import SwitchEntity, PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import EntityCategory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +55,10 @@ async def async_setup_entry(
         sa_switch = S30SmartAwayEnableSwitch(hass, manager, system)
         switch_list.append(sa_switch)
         _LOGGER.info(f"Create S30SmartAwayEnableSwitch system [{system.sysId}]")
+
+        if manager._create_equipment_parameters == True:
+            par_safety_switch = S30ParameterSafetySwitch(hass, manager, system)
+            switch_list.append(par_safety_switch)
 
     if len(switch_list) != 0:
         async_add_entities(switch_list, True)
@@ -457,3 +467,67 @@ class S30ZoningSwitch(S30BaseEntity, SwitchEntity):
                 _LOGGER.error("S30ZoningSwitch:async_turn_off - error:" + e.message)
             else:
                 _LOGGER.error("S30ZoningSwitch:async_turn_off - error:" + str(e))
+
+
+class S30ParameterSafetySwitch(S30BaseEntity, SwitchEntity):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+        rearm_duration_sec=60.0,
+    ):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._myname = self._system.name + "_parameter_safety"
+        self._rearm_duration_sec = rearm_duration_sec
+        manager.parameter_safety_turn_on(self._system.sysId)
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (
+            f"{self._system.unique_id()}{UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH}"
+        ).replace("-", "")
+
+    @property
+    def extra_state_attributes(self):
+        return {}
+
+    def update(self):
+        return True
+
+    @property
+    def should_poll(self):
+        return False
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def is_on(self):
+        res = self._manager.parameter_safety_on(self._system.sysId)
+        return res
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+
+    async def async_turn_on(self, **kwargs):
+        self._manager.parameter_safety_turn_on(self._system.sysId)
+        self.schedule_update_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        self._manager.parameter_safety_turn_off(self._system.sysId)
+        asyncio.create_task(self.async_rearm_task())
+        self.schedule_update_ha_state()
+
+    async def async_rearm_task(self):
+        await asyncio.sleep(self._rearm_duration_sec)
+        self._manager.parameter_safety_turn_on(self._system.sysId)
+        self.schedule_update_ha_state()
+
+    @property
+    def entity_category(self):
+        return EntityCategory.CONFIG

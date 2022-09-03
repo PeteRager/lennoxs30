@@ -21,6 +21,7 @@ from .const import (
     CONF_APP_ID,
     CONF_CREATE_INVERTER_POWER,
     CONF_CREATE_DIAGNOSTICS_SENSORS,
+    CONF_CREATE_PARAMETERS,
     CONF_CREATE_SENSORS,
     CONF_FAST_POLL_INTERVAL,
     CONF_FAST_POLL_COUNT,
@@ -47,21 +48,27 @@ from .device import (
     S30VentilationUnit,
     S30ZoneThermostat,
 )
-from .util import dict_redact_fields, redact_email
+from .util import dict_redact_fields
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from typing import Any
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
-PLATFORMS = ["sensor", "climate", "switch", "number", "binary_sensor", "select"]
+PLATFORMS = [
+    "sensor",
+    "climate",
+    "switch",
+    "number",
+    "binary_sensor",
+    "select",
+    "button",
+]
 
 DS_CONNECTING = "Connecting"
 DS_DISCONNECTED = "Disconnected"
@@ -210,6 +217,10 @@ def _upgrade_config(config: dict, current_version: int) -> int:
     if current_version == 2:
         config[CONF_CREATE_DIAGNOSTICS_SENSORS] = False
         current_version = 3
+    if current_version == 3:
+        if config[CONF_CLOUD_CONNECTION] == False:
+            config[CONF_CREATE_PARAMETERS] = False
+        current_version = 4
     return current_version
 
 
@@ -251,6 +262,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     create_inverter_power: bool = False
     conf_protocol: str = None
     create_diagnostic_sensors: bool = False
+    create_parameters: bool = False
 
     if is_cloud == True:
         host_name: str = None
@@ -262,6 +274,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password: str = None
         create_inverter_power: bool = entry.data[CONF_CREATE_INVERTER_POWER]
         create_diagnostic_sensors = entry.data[CONF_CREATE_DIAGNOSTICS_SENSORS]
+        create_parameters = entry.data[CONF_CREATE_PARAMETERS]
         conf_protocol: str = entry.data[CONF_PROTOCOL]
 
     if CONF_APP_ID in entry.data:
@@ -310,6 +323,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         message_debug_logging=conf_message_debug_logging,
         message_logging_file=conf_message_debug_file,
         create_diagnostic_sensors=create_diagnostic_sensors,
+        create_equipment_parameters=create_parameters,
     )
     try:
         listener = hass.bus.async_listen_once(
@@ -381,7 +395,9 @@ class Manager(object):
         message_debug_logging: bool = True,
         message_logging_file: str = None,
         create_diagnostic_sensors: bool = False,
+        create_equipment_parameters: bool = False,
     ):
+        self.system_parameter_safety_on = {}
         self._config_entry: ConfigEntry = config
         self._reinitialize: bool = False
         self._err_cnt: int = 0
@@ -414,6 +430,7 @@ class Manager(object):
         self._createSensors: bool = create_sensors
         self._create_inverter_power: bool = create_inverter_power
         self._create_diagnostic_sensors: bool = create_diagnostic_sensors
+        self._create_equipment_parameters: bool = create_equipment_parameters
         self._conf_init_wait_time = conf_init_wait_time
         self._is_metric: bool = hass.config.units.is_metric
         self.connected = False
@@ -839,3 +856,12 @@ class Manager(object):
         if bErr is False:
             self._err_cnt = 0
         return received
+
+    def parameter_safety_on(self, sysId: str) -> bool:
+        return self.system_parameter_safety_on.get(sysId, False)
+
+    def parameter_safety_turn_on(self, sysId: str) -> None:
+        self.system_parameter_safety_on[sysId] = True
+
+    def parameter_safety_turn_off(self, sysId: str) -> None:
+        self.system_parameter_safety_on[sysId] = False

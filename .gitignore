@@ -1,3 +1,4 @@
 __pycache__/
 *.py[cod]
 test_cases/~$Test Cases.xlsx
+.coverage

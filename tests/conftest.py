@@ -1,11 +1,18 @@
 """template conftest."""
 import json
 import os
+from unittest.mock import patch
 
 import pytest
-
+from lennoxs30api.s30api_async import (
+    lennox_system,
+)
 from homeassistant import loader
 from homeassistant.setup import async_setup_component
+from lennoxs30api.lennox_equipment import (
+    lennox_equipment_parameter,
+    lennox_equipment,
+)
 
 from pytest_homeassistant_custom_component.common import (
     assert_setup_component,
@@ -16,7 +23,41 @@ from homeassistant import config_entries
 
 from custom_components.lennoxs30 import (
     DOMAIN,
+    DS_CONNECTED,
+    DS_RETRY_WAIT,
     Manager,
+)
+
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_PROTOCOL,
+    CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
+)
+
+
+from custom_components.lennoxs30.const import (
+    CONF_ALLERGEN_DEFENDER_SWITCH,
+    CONF_APP_ID,
+    CONF_CLOUD_CONNECTION,
+    CONF_CREATE_INVERTER_POWER,
+    CONF_CREATE_DIAGNOSTICS_SENSORS,
+    CONF_CREATE_SENSORS,
+    CONF_FAST_POLL_INTERVAL,
+    CONF_FAST_POLL_COUNT,
+    CONF_INIT_WAIT_TIME,
+    CONF_LOG_MESSAGES_TO_FILE,
+    CONF_MESSAGE_DEBUG_FILE,
+    CONF_MESSAGE_DEBUG_LOGGING,
+    CONF_PII_IN_MESSAGE_LOGS,
+    DEFAULT_CLOUD_TIMEOUT,
+    DEFAULT_LOCAL_TIMEOUT,
+    LENNOX_DEFAULT_CLOUD_APP_ID,
+    LENNOX_DEFAULT_LOCAL_APP_ID,
+    CONF_LOCAL_CONNECTION,
+    CONF_CREATE_PARAMETERS,
 )
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -65,12 +106,63 @@ def loadfile(name: str, sysId: str = None) -> json:
 
 
 @pytest.fixture
-def manager(hass) -> Manager:
-
+def config_entry_local() -> config_entries.ConfigEntry:
     config = config_entries.ConfigEntry(
         version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
     )
     config.unique_id = "12345"
+    config.data = {}
+    config.data[CONF_CLOUD_CONNECTION] = False
+    config.data[CONF_HOST] = "10.0.0.1"
+    config.data[CONF_APP_ID] = "ha_prod"
+    config.data[CONF_CREATE_SENSORS] = True
+    config.data[CONF_ALLERGEN_DEFENDER_SWITCH] = True
+    config.data[CONF_CREATE_INVERTER_POWER] = True
+    config.data[CONF_CREATE_DIAGNOSTICS_SENSORS] = True
+    config.data[CONF_CREATE_PARAMETERS] = True
+    config.data[CONF_SCAN_INTERVAL] = 10
+    config.data[CONF_INIT_WAIT_TIME] = 30
+    config.data[CONF_FAST_POLL_INTERVAL] = 1.0
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_TIMEOUT] = 30
+    config.data[CONF_PROTOCOL] = "https"
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_PII_IN_MESSAGE_LOGS] = False
+    config.data[CONF_MESSAGE_DEBUG_LOGGING] = False
+    config.data[CONF_LOG_MESSAGES_TO_FILE] = False
+    config.data[CONF_MESSAGE_DEBUG_FILE] = ""
+    return config
+
+
+@pytest.fixture
+def config_entry_cloud() -> config_entries.ConfigEntry:
+    config = config_entries.ConfigEntry(
+        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
+    )
+    config.unique_id = "12345"
+    config.data = {}
+    config.data[CONF_CLOUD_CONNECTION] = True
+    config.data[CONF_EMAIL] = "pete.rage@rage.com"
+    config.data[CONF_PASSWORD] = "secret"
+    config.data[CONF_APP_ID] = "ha_prod"
+    config.data[CONF_CREATE_SENSORS] = True
+    config.data[CONF_ALLERGEN_DEFENDER_SWITCH] = True
+    config.data[CONF_SCAN_INTERVAL] = 10
+    config.data[CONF_INIT_WAIT_TIME] = 30
+    config.data[CONF_FAST_POLL_INTERVAL] = 1.0
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_TIMEOUT] = 30
+    config.data[CONF_FAST_POLL_COUNT] = 5
+    config.data[CONF_PII_IN_MESSAGE_LOGS] = False
+    config.data[CONF_MESSAGE_DEBUG_LOGGING] = False
+    config.data[CONF_LOG_MESSAGES_TO_FILE] = False
+    config.data[CONF_MESSAGE_DEBUG_FILE] = ""
+    return config
+
+
+@pytest.fixture
+def manager(hass, config_entry_local) -> Manager:
+    config = config_entry_local
 
     manager = Manager(
         hass=hass,
@@ -273,3 +365,34 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
     api.processMessage(data)
 
     return manager
+
+
+def conftest_parameter_extra_attributes(
+    extra_state_attributes: dict,
+    equipment: lennox_equipment,
+    parameter: lennox_equipment_parameter,
+):
+    assert len(extra_state_attributes) == 3
+    assert extra_state_attributes["equipment_id"] == equipment.equipment_id
+    assert extra_state_attributes["equipment_type_id"] == equipment.equipType
+    assert extra_state_attributes["parameter_id"] == parameter.pid
+
+
+def conftest_base_entity_availability(manager: Manager, system: lennox_system, c):
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_RETRY_WAIT)
+        assert update_callback.call_count == 1
+        assert c.available == False
+
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.updateState(DS_CONNECTED)
+        assert update_callback.call_count == 1
+        assert c.available == True
+        system.attr_updater({"status": "online"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 2
+        assert c.available == True
+        system.attr_updater({"status": "offline"}, "status", "cloud_status")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 3
+        assert c.available == False
