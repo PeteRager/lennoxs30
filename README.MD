@@ -23,6 +23,11 @@ Cloud Connections depending on the device model. We believe these configurations
 - Equipment Parameters - if participating in the Beta, documentation is here [docs/parameters.md](./docs/parameters.md)
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
+# Planning your install
+There are several items to consider before starting the install.
+- Set the Name for the system.  This name will be appended as the prefix for all the entities that get created, so you want something descriptive using only alphanumeric character; but not too long as it'll be in all the entity names.  To set this, go into the panel, select settings and look for the **Name** field.
+
+
 # Overview
 
 This image shows the main entities and controls available for the Lennox S30 integration. Specific entity documentation appears later in this document.
