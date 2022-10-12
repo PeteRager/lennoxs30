@@ -22,7 +22,7 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_away_mode_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     c = S30HomeStateBinarySensor(hass, manager, system)
     await c.async_added_to_hass()
@@ -73,7 +73,7 @@ async def test_away_mode_subscription(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_away_mode_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     c = S30HomeStateBinarySensor(hass, manager, system)
 

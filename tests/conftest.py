@@ -107,9 +107,7 @@ def loadfile(name: str, sysId: str = None) -> json:
 
 @pytest.fixture
 def config_entry_local() -> config_entries.ConfigEntry:
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
     config.data = {}
     config.data[CONF_CLOUD_CONNECTION] = False
@@ -136,9 +134,7 @@ def config_entry_local() -> config_entries.ConfigEntry:
 
 @pytest.fixture
 def config_entry_cloud() -> config_entries.ConfigEntry:
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
     config.data = {}
     config.data[CONF_CLOUD_CONNECTION] = True
@@ -186,7 +182,7 @@ def manager(hass, config_entry_local) -> Manager:
         fast_poll_count=10,
     )
     manager.connected = True
-    api = manager._api
+    api = manager.api
     data = loadfile("login_response.json")
     api.process_login_response(data)
 
@@ -207,9 +203,7 @@ def manager(hass, config_entry_local) -> Manager:
 @pytest.fixture
 def manager_2_systems(hass) -> Manager:
 
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
     manager = Manager(
@@ -234,7 +228,7 @@ def manager_2_systems(hass) -> Manager:
         fast_poll_count=10,
     )
     manager.connected = True
-    api = manager._api
+    api = manager.api
     data = loadfile("login_response_2_systems.json")
     api.process_login_response(data)
 
@@ -266,9 +260,7 @@ def manager_2_systems(hass) -> Manager:
 @pytest.fixture
 def manager_mz(hass) -> Manager:
 
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
     manager = Manager(
@@ -293,7 +285,7 @@ def manager_mz(hass) -> Manager:
         fast_poll_count=10,
     )
     manager.connected = True
-    api = manager._api
+    api = manager.api
     data = loadfile("login_response_mz.json")
     api.process_login_response(data)
 
@@ -314,9 +306,7 @@ def manager_mz(hass) -> Manager:
 @pytest.fixture
 def manager_system_04_furn_ac_zoning(hass) -> Manager:
 
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
     manager = Manager(
@@ -341,18 +331,14 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
         fast_poll_count=10,
     )
     manager.connected = True
-    api = manager._api
+    api = manager.api
     data = loadfile("login_response_mz.json")
     api.process_login_response(data)
 
-    data = loadfile(
-        "system_04_furn_ac_zoning_config.json", "0000000-0000-0000-0000-000000000001"
-    )
+    data = loadfile("system_04_furn_ac_zoning_config.json", "0000000-0000-0000-0000-000000000001")
     api.processMessage(data)
 
-    data = loadfile(
-        "system_04_furn_ac_zoning_zones.json", "0000000-0000-0000-0000-000000000001"
-    )
+    data = loadfile("system_04_furn_ac_zoning_zones.json", "0000000-0000-0000-0000-000000000001")
     api.processMessage(data)
 
     data = loadfile(

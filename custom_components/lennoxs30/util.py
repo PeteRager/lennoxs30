@@ -1,6 +1,3 @@
-import copy
-
-
 REDACTED = "**redacted**"
 
 redacted_fields = ["email", "password"]

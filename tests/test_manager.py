@@ -26,10 +26,8 @@ from unittest.mock import patch, Mock
 
 
 @pytest.mark.asyncio
-async def test_manager_configuration_initialization_cloud_offline(
-    hass, manager: Manager, caplog
-):
-    system: lennox_system = manager._api._systemList[0]
+async def test_manager_configuration_initialization_cloud_offline(hass, manager: Manager, caplog):
+    system: lennox_system = manager.api._systemList[0]
     system.cloud_status = "offline"
     with caplog.at_level(logging.WARNING):
         with patch.object(manager, "messagePump") as messagePump:
@@ -42,10 +40,8 @@ async def test_manager_configuration_initialization_cloud_offline(
 
 
 @pytest.mark.asyncio
-async def test_manager_configuration_initialization_cloud_online(
-    hass, manager: Manager, caplog
-):
-    system: lennox_system = manager._api._systemList[0]
+async def test_manager_configuration_initialization_cloud_online(hass, manager: Manager, caplog):
+    system: lennox_system = manager.api._systemList[0]
     system.cloud_status = "online"
     with caplog.at_level(logging.WARNING):
         with patch.object(manager, "messagePump") as messagePump:
@@ -68,7 +64,7 @@ class CloudPresence:
 
 @pytest.mark.asyncio
 async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     system.cloud_status = "online"
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.WARNING):
@@ -82,7 +78,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.ERROR):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 mock.side_effect = S30Exception("simulated error", 100, 1)
                 caplog.clear()
                 await manager.update_cloud_presence()
@@ -96,7 +92,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.ERROR):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 mock.side_effect = ValueError()
                 caplog.clear()
                 await manager.update_cloud_presence()
@@ -110,7 +106,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.ERROR):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 caplog.clear()
                 system.cloud_status = "online"
                 cp = CloudPresence(system)
@@ -127,7 +123,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.INFO):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 caplog.clear()
                 system.cloud_status = "offline"
                 cp = CloudPresence(system)
@@ -144,7 +140,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.INFO):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 manager._reinitialize = False
                 caplog.clear()
                 system.cloud_status = "offline"
@@ -167,7 +163,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.INFO):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 manager._reinitialize = False
                 caplog.clear()
                 system.cloud_status = "offline"
@@ -182,10 +178,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
                 assert len(caplog.records) == 2
                 assert "cloud status changed to online for sysId" in caplog.messages[0]
                 assert system.sysId in caplog.messages[0]
-                assert (
-                    "update_cloud_presence resubscribe error unexpected exception"
-                    in caplog.messages[1]
-                )
+                assert "update_cloud_presence resubscribe error unexpected exception" in caplog.messages[1]
                 assert system.sysId in caplog.messages[1]
                 assert manager._reinitialize == True
 
@@ -193,7 +186,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = None
     with caplog.at_level(logging.INFO):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 manager._reinitialize = False
                 caplog.clear()
                 await manager.update_cloud_presence()
@@ -211,7 +204,7 @@ async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
     manager.last_cloud_presence_poll = time.time() - 610
     with caplog.at_level(logging.INFO):
         with patch.object(system, "update_system_online_cloud") as mock:
-            with patch.object(manager._api, "subscribe") as mock_subscribe:
+            with patch.object(manager.api, "subscribe") as mock_subscribe:
                 manager._reinitialize = False
                 caplog.clear()
                 await manager.update_cloud_presence()

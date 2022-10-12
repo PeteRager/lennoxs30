@@ -25,7 +25,7 @@ from lennoxs30api.s30api_async import (
     LENNOX_HVAC_OFF,
 )
 
-from .base_entity import S30BaseEntity
+from .base_entity import S30BaseEntityMixin
 from .const import MANAGER
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
@@ -47,7 +47,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from . import Manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -69,40 +68,32 @@ FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     _LOGGER.debug("climate:async_setup_platform enter")
     climate_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager._api.getSystems():
+    for system in manager.api.getSystems():
         for zone in system.getZones():
-            if zone.is_zone_active() == True:
+            if zone.is_zone_active():
                 _LOGGER.debug(
                     f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]  metric [{manager._is_metric}]"
                 )
                 climate = S30Climate(hass, manager, system, zone)
                 climate_list.append(climate)
             else:
-                _LOGGER.debug(
-                    f"Skipping inactive zone - system [{system.sysId}] zone [{zone.name}]"
-                )
+                _LOGGER.debug(f"Skipping inactive zone - system [{system.sysId}] zone [{zone.name}]")
     if len(climate_list) != 0:
         async_add_entities(climate_list, True)
-        _LOGGER.debug(
-            f"climate:async_setup_platform exit - created [{len(climate_list)}] entitites"
-        )
+        _LOGGER.debug(f"climate:async_setup_platform exit - created [{len(climate_list)}] entitites")
     else:
-        _LOGGER.error(f"climate:async_setup_platform exit - no climate entities found")
+        _LOGGER.error("climate:async_setup_platform exit - no climate entities found")
     return True
 
 
-class S30Climate(S30BaseEntity, ClimateEntity):
+class S30Climate(S30BaseEntityMixin, ClimateEntity):
     """Class for Lennox S30 thermostat."""
 
-    def __init__(
-        self, hass, manager: Manager, system: lennox_system, zone: lennox_zone
-    ):
+    def __init__(self, hass, manager: Manager, system: lennox_system, zone: lennox_zone):
         """Initialize the climate device."""
         super().__init__(manager, system)
         self.hass: HomeAssistant = hass
@@ -142,33 +133,23 @@ class S30Climate(S30BaseEntity, ClimateEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] = {}
-        attrs["allergenDefender"] = (
-            self._zone.allergenDefender if self.is_zone_enabled else None
-        )
+        attrs["allergenDefender"] = self._zone.allergenDefender if self.is_zone_enabled else None
         attrs["damper"] = self._zone.damper if self.is_zone_enabled else None
         attrs["demand"] = self._zone.demand if self.is_zone_enabled else None
         if self.is_zone_enabled:
-            if self._zone.fan == True:
+            if self._zone.fan:
                 attrs["fan"] = FAN_ON
             else:
                 attrs["fan"] = FAN_OFF
         else:
             attrs["fan"] = None
-        attrs["humidityMode"] = (
-            self._zone.humidityMode if self.is_zone_enabled else None
-        )
-        attrs["humOperation"] = (
-            self._zone.humOperation if self.is_zone_enabled else None
-        )
-        attrs["tempOperation"] = (
-            self._zone.tempOperation if self.is_zone_enabled else None
-        )
+        attrs["humidityMode"] = self._zone.humidityMode if self.is_zone_enabled else None
+        attrs["humOperation"] = self._zone.humOperation if self.is_zone_enabled else None
+        attrs["tempOperation"] = self._zone.tempOperation if self.is_zone_enabled else None
         attrs["ventilation"] = self._zone.ventilation if self.is_zone_enabled else None
         attrs["heatCoast"] = self._zone.heatCoast if self.is_zone_enabled else None
         attrs["defrost"] = self._zone.defrost if self.is_zone_enabled else None
-        attrs["balancePoint"] = (
-            self._zone.balancePoint if self.is_zone_enabled else None
-        )
+        attrs["balancePoint"] = self._zone.balancePoint if self.is_zone_enabled else None
         attrs["aux"] = self._zone.aux if self.is_zone_enabled else None
         attrs["coolCoast"] = self._zone.coolCoast if self.is_zone_enabled else None
         attrs["ssr"] = self._zone.ssr if self.is_zone_enabled else None
@@ -191,7 +172,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
 
     def is_single_setpoint_active(self) -> bool:
         # If the system is configured to use a single setpoint for both heat and cool
-        if self._zone._system.single_setpoint_mode == True:
+        if self._zone._system.single_setpoint_mode:
             return True
         # If it's in heat and cool then there are two setpoints
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
@@ -208,32 +189,22 @@ class S30Climate(S30BaseEntity, ClimateEntity):
 
         # Target temperature.
         # If its a cooling or heating only system, then there is only one setpoint
-        if self.is_single_setpoint_active() == True:
+        if self.is_single_setpoint_active():
             mask |= ClimateEntityFeature.TARGET_TEMPERATURE
         else:
             mask |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
-        if (
-            self._zone.humidificationOption == True
-            or self._zone.dehumidificationOption == True
-        ) and (
+        if (self._zone.humidificationOption or self._zone.dehumidificationOption) and (
             self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
             or self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY
         ):
             mask |= ClimateEntityFeature.TARGET_HUMIDITY
 
-        if (
-            self._zone.heatingOption == True
-            and self._system.has_emergency_heat() == True
-        ):
+        if self._zone.heatingOption and self._system.has_emergency_heat():
             mask |= ClimateEntityFeature.AUX_HEAT
 
         _LOGGER.debug(
-            "climate:supported_features name["
-            + self._myname
-            + "] support_flags ["
-            + str(SUPPORT_FLAGS)
-            + "]"
+            "climate:supported_features name[" + self._myname + "] support_flags [" + str(SUPPORT_FLAGS) + "]"
         )
         """Return the list of supported features."""
         return mask
@@ -248,11 +219,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        if (
-            self._zone.systemMode == LENNOX_HVAC_OFF
-            or self._zone.systemMode == None
-            or self.is_zone_disabled
-        ):
+        if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
             return None
         if self._zone.systemMode == LENNOX_HVAC_COOL:
             if self._manager._is_metric is False:
@@ -262,10 +229,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
             if self._manager._is_metric is False:
                 return self._zone.minHsp
             return self._zone.minHspC
-        if (
-            self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
-            and self._system.single_setpoint_mode == True
-        ):
+        if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL and self._system.single_setpoint_mode:
             if self._manager._is_metric is False:
                 return self._zone.minCsp
             return self._zone.minCspC
@@ -282,11 +246,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if (
-            self._zone.systemMode == LENNOX_HVAC_OFF
-            or self._zone.systemMode == None
-            or self.is_zone_disabled
-        ):
+        if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
             return None
         if self._zone.systemMode == LENNOX_HVAC_COOL:
             if self._manager._is_metric is False:
@@ -296,10 +256,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
             if self._manager._is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC
-        if (
-            self._zone.systemMode == LENNOX_HVAC_HEAT_COOL
-            and self._system.single_setpoint_mode == True
-        ):
+        if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL and self._system.single_setpoint_mode:
             if self._manager._is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC
@@ -337,50 +294,38 @@ class S30Climate(S30BaseEntity, ClimateEntity):
             return None
         if self._manager._is_metric is False:
             t = self._zone.getTemperature()
-            _LOGGER.debug(
-                f"climate:current_temperature name [{self._myname}] temperature [{t}] F"
-            )
+            _LOGGER.debug(f"climate:current_temperature name [{self._myname}] temperature [{t}] F")
         else:
             t = self._zone.getTemperatureC()
-            _LOGGER.debug(
-                f"climate:current_temperature name [{self._myname}] temperature [{t}] C"
-            )
+            _LOGGER.debug(f"climate:current_temperature name [{self._myname}] temperature [{t}] C")
         return t
 
     @property
     def target_temperature_high(self):
         if self.is_zone_disabled:
             return None
-        if self.is_single_setpoint_active() == True:
+        if self.is_single_setpoint_active():
             return None
         """Return the highbound target temperature we try to reach."""
         if self._manager._is_metric is False:
-            _LOGGER.debug(
-                f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.csp}] F"
-            )
+            _LOGGER.debug(f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.csp}] F")
             return self._zone.csp
         else:
-            _LOGGER.debug(
-                f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.cspC}] C"
-            )
+            _LOGGER.debug(f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.cspC}] C")
             return self._zone.cspC
 
     @property
     def target_temperature_low(self):
         if self.is_zone_disabled:
             return None
-        if self.is_single_setpoint_active() == True:
+        if self.is_single_setpoint_active():
             return None
         """Return the lowbound target temperature we try to reach."""
         if self._manager._is_metric is False:
-            _LOGGER.debug(
-                f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hsp}] F"
-            )
+            _LOGGER.debug(f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hsp}] F")
             return self._zone.hsp
         else:
-            _LOGGER.debug(
-                f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hspC}] C"
-            )
+            _LOGGER.debug(f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hspC}] C")
             return self._zone.hspC
 
     @property
@@ -449,9 +394,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
 
     async def async_set_humidity(self, humidity):
         """Set new target humidity."""
-        _LOGGER.info(
-            f"climate:async_set_humidity zone [{self._myname}] humidity [{humidity}]"
-        )
+        _LOGGER.info(f"climate:async_set_humidity zone [{self._myname}] humidity [{humidity}]")
         try:
             if self.is_zone_disabled:
                 raise S30Exception(
@@ -471,7 +414,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
                 )
         except S30Exception as e:
             _LOGGER.error(e.message)
-        except Exception as e:
+        except Exception:
             _LOGGER.exception("Unexpected exception in async_set_humidity")
 
     @property
@@ -481,11 +424,11 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         if self.is_zone_disabled:
             return modes
         modes.append(HVACMode.OFF)
-        if self._zone.coolingOption == True:
+        if self._zone.coolingOption:
             modes.append(HVACMode.COOL)
-        if self._zone.heatingOption == True:
+        if self._zone.heatingOption:
             modes.append(HVACMode.HEAT)
-        if self._zone.coolingOption == True and self._zone.heatingOption == True:
+        if self._zone.coolingOption and self._zone.heatingOption:
             modes.append(HVACMode.HEAT_COOL)
         return modes
 
@@ -545,11 +488,11 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         if self.is_zone_disabled:
             return None
 
-        if self._system.get_away_mode() == True:
+        if self._system.get_away_mode():
             return PRESET_AWAY
-        if self._zone.overrideActive == True:
+        if self._zone.overrideActive:
             return PRESET_SCHEDULE_OVERRIDE
-        if self._zone.isZoneManualMode() == True:
+        if self._zone.isZoneManualMode():
             return PRESET_NONE
         scheduleId = self._zone.scheduleId
         if scheduleId is None:
@@ -573,24 +516,12 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         presets.append(PRESET_CANCEL_HOLD)
         presets.append(PRESET_CANCEL_AWAY_MODE)
         presets.append(PRESET_NONE)
-        _LOGGER.debug(
-            "climate:preset_modes name["
-            + self._myname
-            + "] presets["
-            + str(presets)
-            + "]"
-        )
+        _LOGGER.debug("climate:preset_modes name[" + self._myname + "] presets[" + str(presets) + "]")
         return presets
 
     async def async_set_preset_mode(self, preset_mode):
         try:
-            _LOGGER.debug(
-                "climate:async_set_preset_mode name["
-                + self._myname
-                + "] preset_mode ["
-                + preset_mode
-                + "]"
-            )
+            _LOGGER.debug("climate:async_set_preset_mode name[" + self._myname + "] preset_mode [" + preset_mode + "]")
             if self.is_zone_disabled:
                 raise S30Exception(
                     f"Unable to set preset mode [{preset_mode}] as zone [{self._myname}] is disabled",
@@ -599,16 +530,14 @@ class S30Climate(S30BaseEntity, ClimateEntity):
                 )
             if preset_mode == PRESET_CANCEL_AWAY_MODE:
                 processed = False
-                if self._system.get_manual_away_mode() == True:
+                if self._system.get_manual_away_mode():
                     await self._system.set_manual_away_mode(False)
                     processed = True
-                if self._system.get_smart_away_mode() == True:
+                if self._system.get_smart_away_mode():
                     await self._system.cancel_smart_away()
                     processed = True
-                if processed == False:
-                    _LOGGER.warning(
-                        "Ignoring request to cancel away mode because system is not in away mode"
-                    )
+                if processed is False:
+                    _LOGGER.warning("Ignoring request to cancel away mode because system is not in away mode")
                     return
                 await self.async_trigger_fast_poll()
                 return
@@ -617,9 +546,9 @@ class S30Climate(S30BaseEntity, ClimateEntity):
                 await self.async_trigger_fast_poll()
                 return
             # Need to cancel away modes before requesting a new preset
-            if self._system.get_manual_away_mode() == True:
+            if self._system.get_manual_away_mode():
                 await self._system.set_manual_away_mode(False)
-            if self._system.get_smart_away_mode() == True:
+            if self._system.get_smart_away_mode():
                 await self._system.cancel_smart_away()
 
             if preset_mode == PRESET_CANCEL_HOLD:
@@ -695,9 +624,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature"""
         if self.is_zone_disabled:
-            _LOGGER.error(
-                f"Unable to set_temperature as zone [{self._myname}] is disabled"
-            )
+            _LOGGER.error(f"Unable to set_temperature as zone [{self._myname}] is disabled")
             return
 
         r_hvacMode = None
@@ -724,24 +651,24 @@ class S30Climate(S30BaseEntity, ClimateEntity):
             return
 
         # Either provide temperature or high/low but not both
-        if r_temperature != None and (r_csp != None or r_hsp != None):
+        if r_temperature is not None and (r_csp is not None or r_hsp is not None):
             msg = f"climate:async_set_temperature - pass either temperature or temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
             _LOGGER.error(msg)
             return
 
         # If no temperature, must specify both high and low
-        if r_temperature == None and (r_csp == None or r_hsp == None):
+        if r_temperature is None and (r_csp is None or r_hsp is None):
             msg = f"climate:async_set_temperature - must provide both temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
             _LOGGER.error(msg)
             return
 
         # If single setpoint mode, then must specify r_temperature and not high and low
-        if self._zone._system.single_setpoint_mode == True:
-            if r_temperature == None:
+        if self._zone._system.single_setpoint_mode:
+            if r_temperature is None:
                 msg = f"climate:async_set_temperature - zone in single setpoint mode must provide [{ATTR_TEMPERATURE}] - zone [{self._myname}]"
                 _LOGGER.error(msg)
                 return
-            if r_hsp != None or r_csp != None:
+            if r_hsp is not None or r_csp is not None:
                 msg = f"climate:async_set_temperature - zone in single setpoint mode - do not set HIGH and LOW - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
                 _LOGGER.error(msg)
                 return
@@ -749,23 +676,19 @@ class S30Climate(S30BaseEntity, ClimateEntity):
         try:
             # If an HVAC mode is requested; and we are not in that mode, then the first step
             # is to switch the zone into that mode before setting the temperature
-            if r_hvacMode != None and r_hvacMode != self.hvac_mode:
-                _LOGGER.debug(
-                    f"climate:async_set_temperature zone [{self._myname}] setting hvacMode [{r_hvacMode}]"
-                )
+            if r_hvacMode is not None and r_hvacMode != self.hvac_mode:
+                _LOGGER.debug(f"climate:async_set_temperature zone [{self._myname}] setting hvacMode [{r_hvacMode}]")
                 await self.async_set_hvac_mode(r_hvacMode)
 
-            if r_hvacMode == None:
+            if r_hvacMode is None:
                 r_hvacMode = self.hvac_mode
 
-            if r_hvacMode == None:
-                _LOGGER.error(
-                    f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature"
-                )
+            if r_hvacMode is None:
+                _LOGGER.error(f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature")
                 return
 
             if r_temperature is not None:
-                if self._zone._system.single_setpoint_mode == True:
+                if self._zone._system.single_setpoint_mode:
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature in single_setpoint_modesystem - zone [{self._myname}] temperature [{r_temperature}]"
                     )
@@ -790,9 +713,7 @@ class S30Climate(S30BaseEntity, ClimateEntity):
                     else:
                         await self._zone.perform_setpoint(r_hspC=r_temperature)
                 else:
-                    _LOGGER.error(
-                        f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature"
-                    )
+                    _LOGGER.error(f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature")
                     return
             else:
                 _LOGGER.debug(
@@ -819,13 +740,9 @@ class S30Climate(S30BaseEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        _LOGGER.debug(
-            f"climate:async_set_fan_mode name[{self._myname}] fanMode [{fan_mode}]"
-        )
+        _LOGGER.debug(f"climate:async_set_fan_mode name[{self._myname}] fanMode [{fan_mode}]")
         if self.is_zone_disabled:
-            _LOGGER.error(
-                f"Unable to set_fan_mode as zone [{self._myname}] is disabled"
-            )
+            _LOGGER.error(f"Unable to set_fan_mode as zone [{self._myname}] is disabled")
             return
         try:
             await self._zone.setFanMode(fan_mode)

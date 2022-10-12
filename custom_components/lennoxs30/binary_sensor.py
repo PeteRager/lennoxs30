@@ -1,9 +1,8 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 from typing import Any
 
-from .base_entity import S30BaseEntity
+from .base_entity import S30BaseEntityMixin
 from .const import (
-    CONF_CLOUD_CONNECTION,
     MANAGER,
     UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR,
     UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR,
@@ -28,21 +27,17 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "lennoxs30"
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
 
     sensor_list = []
 
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager._api.getSystems():
-        _LOGGER.info(
-            f"Create S30HomeStateBinarySensor binary_sensor system [{system.sysId}]"
-        )
+    for system in manager.api.getSystems():
+        _LOGGER.info(f"Create S30HomeStateBinarySensor binary_sensor system [{system.sysId}]")
         sensor = S30HomeStateBinarySensor(hass, manager, system)
         sensor_list.append(sensor)
 
-        if manager._api._isLANConnection == True:
+        if manager.api._isLANConnection:
             sensor = S30InternetStatus(hass, manager, system)
             sensor_list.append(sensor)
             sensor = S30RelayServerStatus(hass, manager, system)
@@ -53,18 +48,16 @@ async def async_setup_entry(
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
-        _LOGGER.debug(
-            f"binary_sensor:async_setup_platform exit - created [{len(sensor_list)}] entitites"
-        )
+        _LOGGER.debug(f"binary_sensor:async_setup_platform exit - created [{len(sensor_list)}] entitites")
         return True
     else:
         _LOGGER.warning(
-            f"binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen"
+            "binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen"
         )
         return False
 
 
-class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
+class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         super().__init__(manager, system)
         self._hass = hass
@@ -72,9 +65,7 @@ class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(
-            f"async_added_to_hass S30HomeStateBinarySensor myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"async_added_to_hass S30HomeStateBinarySensor myname [{self._myname}]")
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -89,9 +80,7 @@ class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
-        _LOGGER.debug(
-            f"update_callback S30HomeStateBinarySensor myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"update_callback S30HomeStateBinarySensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
@@ -118,7 +107,7 @@ class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
 
     @property
     def is_on(self):
-        return self._system.get_away_mode() == False
+        return self._system.get_away_mode() is False
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -132,7 +121,7 @@ class S30HomeStateBinarySensor(S30BaseEntity, BinarySensorEntity):
         return DEVICE_CLASS_PRESENCE
 
 
-class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
+class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         super().__init__(manager, system)
         self._hass = hass
@@ -156,9 +145,7 @@ class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            self._system.unique_id() + UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR
-        ).replace("-", "")
+        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR).replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -166,7 +153,7 @@ class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
 
     @property
     def available(self):
-        if self._system.internetStatus == None:
+        if self._system.internetStatus is None:
             return False
         return super().available
 
@@ -176,7 +163,7 @@ class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
 
     @property
     def is_on(self):
-        return self._system.internetStatus == True
+        return self._system.internetStatus
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -194,7 +181,7 @@ class S30InternetStatus(S30BaseEntity, BinarySensorEntity):
         return EntityCategory.DIAGNOSTIC
 
 
-class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
+class S30RelayServerStatus(S30BaseEntityMixin, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         super().__init__(manager, system)
         self._hass = hass
@@ -202,9 +189,7 @@ class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(
-            f"async_added_to_hass S30RelayServerStatus myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"async_added_to_hass S30RelayServerStatus myname [{self._myname}]")
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -220,9 +205,7 @@ class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            self._system.unique_id() + UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR
-        ).replace("-", "")
+        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR).replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -234,13 +217,13 @@ class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
 
     @property
     def available(self):
-        if self._system.relayServerConnected == None:
+        if self._system.relayServerConnected is None:
             return False
         return super().available
 
     @property
     def is_on(self):
-        return self._system.relayServerConnected == True
+        return self._system.relayServerConnected
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -258,7 +241,7 @@ class S30RelayServerStatus(S30BaseEntity, BinarySensorEntity):
         return EntityCategory.DIAGNOSTIC
 
 
-class S30CloudConnectedStatus(S30BaseEntity, BinarySensorEntity):
+class S30CloudConnectedStatus(S30BaseEntityMixin, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         super().__init__(manager, system)
         self._hass = hass
@@ -266,9 +249,7 @@ class S30CloudConnectedStatus(S30BaseEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(
-            f"async_added_to_hass S30CloudConnectedStatus myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"async_added_to_hass S30CloudConnectedStatus myname [{self._myname}]")
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -282,17 +263,13 @@ class S30CloudConnectedStatus(S30BaseEntity, BinarySensorEntity):
         return True
 
     def update_callback(self):
-        _LOGGER.debug(
-            f"update_callback S30CloudConnectedStatus myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"update_callback S30CloudConnectedStatus myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            self._system.unique_id() + UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR
-        ).replace("-", "")
+        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR).replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -304,7 +281,7 @@ class S30CloudConnectedStatus(S30BaseEntity, BinarySensorEntity):
 
     @property
     def available(self):
-        if self._system.cloud_status == None:
+        if self._system.cloud_status is None:
             return False
         return super().available
 

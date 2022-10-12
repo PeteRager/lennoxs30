@@ -33,7 +33,7 @@ from tests.conftest import loadfile
 
 @pytest.mark.asyncio
 async def test_diag_sensor_state(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -47,9 +47,7 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
     assert s.extra_state_attributes == {}
     assert s.update() == True
     assert s.should_poll == False
-    assert s.name == f"{system.name}_ou_Comp._Short_Cycle_Delay_Active".replace(
-        " ", "_"
-    )
+    assert s.name == f"{system.name}_ou_Comp._Short_Cycle_Delay_Active".replace(" ", "_")
     assert s.state_class == STATE_CLASS_MEASUREMENT
     assert s.entity_category == EntityCategory.DIAGNOSTIC
 
@@ -65,7 +63,7 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -81,7 +79,7 @@ async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     system.diagLevel = 2
@@ -97,7 +95,7 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
     assert s1.available == True
     assert s1.state == "0.0"
 
-    api = manager._api
+    api = manager.api
     data = loadfile("equipments_diag_update.json", system.sysId)
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
@@ -149,7 +147,7 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -159,7 +157,7 @@ async def test_diag_sensor_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -215,12 +213,10 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, 
 
 
 @pytest.mark.asyncio
-async def test_diag_sensor_device_info(
-    hass, manager_system_04_furn_ac_zoning: Manager, caplog
-):
+async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -251,12 +247,10 @@ async def test_diag_sensor_device_info(
 
 
 @pytest.mark.asyncio
-async def test_diag_sensor_device_info_no_device_errors(
-    hass, manager_system_04_furn_ac_zoning: Manager, caplog
-):
+async def test_diag_sensor_device_info_no_device_errors(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -274,12 +268,10 @@ async def test_diag_sensor_device_info_no_device_errors(
 
 
 @pytest.mark.asyncio
-async def test_diag_sensor_device_info_no_device_errors_1(
-    hass, manager_system_04_furn_ac_zoning: Manager, caplog
-):
+async def test_diag_sensor_device_info_no_device_errors_1(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)

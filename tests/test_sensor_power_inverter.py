@@ -32,7 +32,7 @@ from unittest.mock import patch
 @pytest.mark.asyncio
 async def test_power_inverter_sensor(hass, manager: Manager, caplog):
     manager._is_metric = False
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
 
@@ -79,7 +79,7 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
     await s.async_added_to_hass()

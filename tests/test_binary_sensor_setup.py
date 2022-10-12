@@ -24,12 +24,12 @@ from custom_components.lennoxs30.binary_sensor import (
 
 @pytest.mark.asyncio
 async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
-    manager._api._isLANConnection = True
+    manager.api._isLANConnection = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -39,7 +39,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[1], S30InternetStatus)
     assert isinstance(sensor_list[2], S30RelayServerStatus)
 
-    manager._api._isLANConnection = False
+    manager.api._isLANConnection = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1

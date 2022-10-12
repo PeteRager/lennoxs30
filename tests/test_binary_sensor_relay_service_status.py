@@ -22,7 +22,7 @@ from homeassistant.components.binary_sensor import (
 
 @pytest.mark.asyncio
 async def test_relay_service_status_init(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = S30RelayServerStatus(hass, manager, system)
     assert c.unique_id == (system.unique_id() + "_REL_STAT").replace("-", "")
     assert c.extra_state_attributes == {}
@@ -42,7 +42,7 @@ async def test_relay_service_status_init(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_relay_service_status_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = S30RelayServerStatus(hass, manager, system)
     await c.async_added_to_hass()
 

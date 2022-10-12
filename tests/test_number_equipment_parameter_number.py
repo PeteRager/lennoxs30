@@ -29,18 +29,16 @@ from tests.conftest import conftest_parameter_extra_attributes
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
-    assert c.unique_id == (
-        f"{system.unique_id()}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_0_72"
-    ).replace("-", "")
+    assert c.unique_id == (f"{system.unique_id()}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_0_72").replace("-", "")
 
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -48,10 +46,8 @@ async def test_equipment_parameter_number_name(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_number_unit_of_measure(
-    hass, manager: Manager, caplog
-):
-    system: lennox_system = manager._api._systemList[0]
+async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager, caplog):
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -60,7 +56,7 @@ async def test_equipment_parameter_number_unit_of_measure(
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -69,7 +65,7 @@ async def test_equipment_parameter_number_max_value(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -78,7 +74,7 @@ async def test_equipment_parameter_number_min_value(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -87,7 +83,7 @@ async def test_equipment_parameter_number_step(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -96,14 +92,12 @@ async def test_equipment_parameter_number_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
 
-    with patch.object(
-        system, "set_equipment_parameter_value"
-    ) as set_equipment_parameter_value:
+    with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
         await c.async_set_native_value(60.0)
         assert set_equipment_parameter_value.call_count == 1
         set_equipment_parameter_value.await_args[0][0] == equipment.equipment_id
@@ -111,9 +105,7 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager, capl
         set_equipment_parameter_value.await_args[0][2] == "60.0"
 
     manager.parameter_safety_turn_on(system.sysId)
-    with patch.object(
-        system, "set_equipment_parameter_value"
-    ) as set_equipment_parameter_value:
+    with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
         ex: HomeAssistantError = None
         try:
             await c.async_set_native_value(60.0)
@@ -127,9 +119,7 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager, capl
         assert "safety switch is on" in s
 
     manager.parameter_safety_turn_off(system.sysId)
-    with patch.object(
-        system, "set_equipment_parameter_value"
-    ) as set_equipment_parameter_value:
+    with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
         await c.async_set_native_value(60.0)
         assert set_equipment_parameter_value.call_count == 1
         set_equipment_parameter_value.await_args[0][0] == equipment.equipment_id
@@ -137,25 +127,17 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager, capl
         set_equipment_parameter_value.await_args[0][2] == "60.0"
 
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            system, "set_equipment_parameter_value"
-        ) as set_equipment_parameter_value:
+        with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
             caplog.clear()
-            set_equipment_parameter_value.side_effect = S30Exception(
-                "This is the error", 100, 200
-            )
+            set_equipment_parameter_value.side_effect = S30Exception("This is the error", 100, 200)
             await c.async_set_native_value(101)
             assert len(caplog.records) == 1
-            assert (
-                "EquipmentParameterNumber::async_set_native_value" in caplog.messages[0]
-            )
+            assert "EquipmentParameterNumber::async_set_native_value" in caplog.messages[0]
             assert "This is the error" in caplog.messages[0]
             assert "101" in caplog.messages[0]
 
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            system, "set_equipment_parameter_value"
-        ) as set_equipment_parameter_value:
+        with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
             caplog.clear()
             set_equipment_parameter_value.side_effect = Exception("This is the error")
             await c.async_set_native_value(1)
@@ -168,7 +150,7 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     await manager.create_devices()
@@ -181,7 +163,7 @@ async def test_equipment_parameter_number_device_info(hass, manager: Manager, ca
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -212,7 +194,7 @@ async def test_equipment_parameter_number_subscription(hass, manager: Manager, c
 
 
 def test_equipment_parameter_number_entity_category(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -220,7 +202,7 @@ def test_equipment_parameter_number_entity_category(hass, manager: Manager, capl
 
 
 def test_equipment_parameter_number_mode(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -228,7 +210,7 @@ def test_equipment_parameter_number_mode(hass, manager: Manager, caplog):
 
 
 def test_equipment_parameter_select_extra_attributes(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -240,23 +222,19 @@ async def test_equipment_parameter_number_set_zonetest_parameter(
     hass, manager_system_04_furn_ac_zoning: Manager, caplog
 ):
     manager = manager_system_04_furn_ac_zoning
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[256]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
 
-    with patch.object(
-        system, "set_zone_test_parameter_value"
-    ) as set_zone_test_parameter_value:
+    with patch.object(system, "set_zone_test_parameter_value") as set_zone_test_parameter_value:
         await c.async_set_zonetest_parameter(60.0, True)
         assert set_zone_test_parameter_value.call_count == 1
         set_zone_test_parameter_value.await_args[0][0] == parameter.pid
         set_zone_test_parameter_value.await_args[0][1] == "60.0"
         set_zone_test_parameter_value.await_args[0][2] == True
 
-    with patch.object(
-        system, "set_zone_test_parameter_value"
-    ) as set_zone_test_parameter_value:
+    with patch.object(system, "set_zone_test_parameter_value") as set_zone_test_parameter_value:
         await c.async_set_zonetest_parameter(70.0, False)
         assert set_zone_test_parameter_value.call_count == 1
         set_zone_test_parameter_value.await_args[0][0] == parameter.pid
@@ -264,26 +242,17 @@ async def test_equipment_parameter_number_set_zonetest_parameter(
         set_zone_test_parameter_value.await_args[0][2] == False
 
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            system, "set_zone_test_parameter_value"
-        ) as set_zone_test_parameter_value:
+        with patch.object(system, "set_zone_test_parameter_value") as set_zone_test_parameter_value:
             caplog.clear()
-            set_zone_test_parameter_value.side_effect = S30Exception(
-                "This is the error", 100, 200
-            )
+            set_zone_test_parameter_value.side_effect = S30Exception("This is the error", 100, 200)
             await c.async_set_zonetest_parameter(70.0, False)
             assert len(caplog.records) == 1
-            assert (
-                "EquipmentParameterNumber::async_set_zonetest_parameter"
-                in caplog.messages[0]
-            )
+            assert "EquipmentParameterNumber::async_set_zonetest_parameter" in caplog.messages[0]
             assert "This is the error" in caplog.messages[0]
             assert "70.0" in caplog.messages[0]
 
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            system, "set_zone_test_parameter_value"
-        ) as set_zone_test_parameter_value:
+        with patch.object(system, "set_zone_test_parameter_value") as set_zone_test_parameter_value:
             caplog.clear()
             set_zone_test_parameter_value.side_effect = Exception("This is the error")
             await c.async_set_zonetest_parameter(70.0, False)

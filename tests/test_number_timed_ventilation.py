@@ -32,51 +32,49 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = TimedVentilationNumber(hass, manager, system)
-    assert c.unique_id == (
-        system.unique_id() + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER
-    ).replace("-", "")
+    assert c.unique_id == (system.unique_id() + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER).replace("-", "")
 
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = TimedVentilationNumber(hass, manager, system)
     assert c.name == system.name + "_timed_ventilation"
 
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_unit_of_measure(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = TimedVentilationNumber(hass, manager, system)
     assert c.unit_of_measurement == TIME_MINUTES
 
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = TimedVentilationNumber(hass, manager, system)
     assert c.max_value == 1440
 
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = TimedVentilationNumber(hass, manager, system)
     assert c.min_value == 0
 
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = TimedVentilationNumber(hass, manager, system)
     assert c.step == 1.0
 
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = TimedVentilationNumber(hass, manager, system)
     assert c.value == int(system.ventilationRemainingTime / 60)
     system.ventilationRemainingTime = 60
@@ -91,7 +89,7 @@ async def test_timed_ventilation_time_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = TimedVentilationNumber(hass, manager, system)
 
@@ -116,10 +114,7 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
         caplog.clear()
         await c.async_set_native_value("abc")
         assert len(caplog.records) == 1
-        assert (
-            "TimedVentilationNumber::async_set_native_value invalid value"
-            in caplog.messages[0]
-        )
+        assert "TimedVentilationNumber::async_set_native_value invalid value" in caplog.messages[0]
         assert "abc" in caplog.messages[0]
 
     with caplog.at_level(logging.ERROR):
@@ -128,9 +123,7 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
             ventilation_timed.side_effect = S30Exception("This is the error", 100, 200)
             await c.async_set_native_value(101)
             assert len(caplog.records) == 1
-            assert (
-                "TimedVentilationNumber::async_set_native_value" in caplog.messages[0]
-            )
+            assert "TimedVentilationNumber::async_set_native_value" in caplog.messages[0]
             assert "This is the error" in caplog.messages[0]
             assert "101" in caplog.messages[0]
 
@@ -148,7 +141,7 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     system.ventilationUnitType = "ventilation"
     await manager.create_devices()
     manager._is_metric = True
@@ -156,12 +149,7 @@ async def test_timed_ventilation_time_device_info(hass, manager: Manager, caplog
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert (
-            x[1]
-            == manager.system_equip_device_map[system.sysId][
-                VENTILATION_EQUIPMENT_ID
-            ].unique_name
-        )
+        assert x[1] == manager.system_equip_device_map[system.sysId][VENTILATION_EQUIPMENT_ID].unique_name
 
     system.ventilationUnitType = None
     manager.system_equip_device_map = {}
@@ -196,7 +184,7 @@ async def test_timed_ventilation_time_device_info(hass, manager: Manager, caplog
 
 @pytest.mark.asyncio
 async def test_timed_ventilation_time_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = TimedVentilationNumber(hass, manager, system)
     await c.async_added_to_hass()

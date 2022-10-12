@@ -26,7 +26,7 @@ from lennoxs30api.s30exception import S30Exception
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_misc(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.should_poll == False
     assert c.update() == True
@@ -34,7 +34,7 @@ async def test_diagnostic_level_misc(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_DL").replace("-", "")
@@ -42,45 +42,43 @@ async def test_diagnostic_level_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
 
     assert c.name == system.name + "_diagnostic_level"
 
 
 @pytest.mark.asyncio
-async def test_diagnostic_level_unique_id_unit_of_measure(
-    hass, manager: Manager, caplog
-):
-    system: lennox_system = manager._api._systemList[0]
+async def test_diagnostic_level_unique_id_unit_of_measure(hass, manager: Manager, caplog):
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.unit_of_measurement == None
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.max_value == 2
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.min_value == 0
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.step == 1
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.value == system.diagLevel
     assert c.available == True
@@ -92,7 +90,7 @@ async def test_diagnostic_level_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DiagnosticLevelNumber(hass, manager, system)
 
     with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
@@ -107,10 +105,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
             caplog.clear()
             await c.async_set_native_value(1)
             assert len(caplog.records) == 1
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[0]
-            )
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[0]
             caplog.clear()
             await c.async_set_native_value(2)
             assert len(caplog.records) == 0
@@ -125,21 +120,12 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
             caplog.clear()
             await c.async_set_native_value(1)
             assert len(caplog.records) == 2
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[0]
-            )
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[1]
-            )
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[0]
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[1]
             caplog.clear()
             await c.async_set_native_value(2)
             assert len(caplog.records) == 1
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[0]
-            )
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[0]
             caplog.clear()
             await c.async_set_native_value(0)
             assert len(caplog.records) == 0
@@ -151,21 +137,12 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
             caplog.clear()
             await c.async_set_native_value(1)
             assert len(caplog.records) == 2
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[0]
-            )
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[1]
-            )
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[0]
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[1]
             caplog.clear()
             await c.async_set_native_value(2)
             assert len(caplog.records) == 1
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[0]
-            )
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[0]
             caplog.clear()
             await c.async_set_native_value(0)
             assert len(caplog.records) == 0
@@ -177,21 +154,12 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
             caplog.clear()
             await c.async_set_native_value(1)
             assert len(caplog.records) == 2
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[0]
-            )
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[1]
-            )
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[0]
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[1]
             caplog.clear()
             await c.async_set_native_value(2)
             assert len(caplog.records) == 1
-            assert (
-                "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
-                in caplog.messages[0]
-            )
+            assert "https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md" in caplog.messages[0]
             caplog.clear()
             await c.async_set_native_value(0)
             assert len(caplog.records) == 0
@@ -201,9 +169,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     with caplog.at_level(logging.ERROR):
         with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
             caplog.clear()
-            set_diagnostic_level.side_effect = S30Exception(
-                "This is the error", 100, 200
-            )
+            set_diagnostic_level.side_effect = S30Exception("This is the error", 100, 200)
             await c.async_set_native_value(1)
             assert len(caplog.records) == 1
             assert "DiagnosticLevelNumber::async_set_native_value" in caplog.messages[0]
@@ -223,7 +189,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DiagnosticLevelNumber(hass, manager, system)
     identifiers = c.device_info["identifiers"]
@@ -234,7 +200,7 @@ async def test_diagnostic_level_device_info(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DiagnosticLevelNumber(hass, manager, system)
     await c.async_added_to_hass()

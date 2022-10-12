@@ -4,7 +4,7 @@ from lennoxs30api.s30exception import S30Exception
 
 from custom_components.lennoxs30.helpers import helper_get_equipment_device_info
 
-from .base_entity import S30BaseEntity
+from .base_entity import S30BaseEntityMixin
 from .const import MANAGER, UNIQUE_ID_SUFFIX_PARAMETER_UPDATE_BUTTON
 from homeassistant.components.button import ButtonEntity
 from . import DOMAIN, Manager
@@ -30,8 +30,8 @@ async def async_setup_entry(
 
     button_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager._api.getSystems():
-        if manager._create_equipment_parameters == True:
+    for system in manager.api.getSystems():
+        if manager._create_equipment_parameters:
             button = EquipmentParameterUpdateButton(hass, manager, system)
             button_list.append(button)
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
         async_add_entities(button_list, True)
 
 
-class EquipmentParameterUpdateButton(S30BaseEntity, ButtonEntity):
+class EquipmentParameterUpdateButton(S30BaseEntityMixin, ButtonEntity):
     """Set the humidity mode"""
 
     def __init__(
@@ -56,9 +56,7 @@ class EquipmentParameterUpdateButton(S30BaseEntity, ButtonEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            self._system.unique_id() + UNIQUE_ID_SUFFIX_PARAMETER_UPDATE_BUTTON
-        ).replace("-", "")
+        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_PARAMETER_UPDATE_BUTTON).replace("-", "")
 
     @property
     def name(self):
@@ -69,9 +67,7 @@ class EquipmentParameterUpdateButton(S30BaseEntity, ButtonEntity):
         _LOGGER.info(f"EquipmentParameterUpdateButton::async_press [{self._myname}]")
 
         if self._manager.parameter_safety_on(self._system.sysId):
-            raise HomeAssistantError(
-                f"Unable to parameter update [{self._myname}] parameter safety switch is on"
-            )
+            raise HomeAssistantError(f"Unable to parameter update [{self._myname}] parameter safety switch is on")
 
         try:
             await self._system._internal_set_equipment_parameter_value(0, 0, "")

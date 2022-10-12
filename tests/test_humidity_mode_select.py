@@ -25,7 +25,7 @@ from lennoxs30api.s30exception import S30Exception
 
 @pytest.mark.asyncio
 async def test_humidity_mode_select_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = HumidityModeSelect(hass, manager, system, zone)
 
@@ -34,7 +34,7 @@ async def test_humidity_mode_select_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_humidity_mode_select_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = HumidityModeSelect(hass, manager, system, zone)
 
@@ -44,7 +44,7 @@ async def test_humidity_mode_select_name(hass, manager: Manager, caplog):
 @pytest.mark.asyncio
 async def test_humidity_mode_select_current_option(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
 
     c = HumidityModeSelect(hass, manager, system, zone)
@@ -64,11 +64,9 @@ async def test_humidity_mode_select_current_option(hass, manager_mz: Manager, ca
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_current_option_z1(
-    hass, manager_mz: Manager, caplog
-):
+async def test_humidity_mode_select_current_option_z1(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[1]
 
     c = HumidityModeSelect(hass, manager, system, zone)
@@ -131,7 +129,7 @@ async def test_humidity_mode_select_current_option_z1(
 @pytest.mark.asyncio
 async def test_humidity_mode_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = HumidityModeSelect(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -170,11 +168,9 @@ async def test_humidity_mode_select_options(hass, manager_mz: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_async_select_options(
-    hass, manager_mz: Manager, caplog
-):
+async def test_humidity_mode_select_async_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = HumidityModeSelect(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -218,10 +214,7 @@ async def test_humidity_mode_select_async_select_options(
             assert set_humidity_mode.call_count == 1
             assert len(caplog.records) == 1
             msg = caplog.messages[0]
-            assert (
-                "HumidityModeSelect async_select_option - unexpected exception please raise an issue"
-                in msg
-            )
+            assert "HumidityModeSelect async_select_option - unexpected exception please raise an issue" in msg
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
@@ -234,12 +227,10 @@ async def test_humidity_mode_select_async_select_options(
 
 
 @pytest.mark.asyncio
-async def test_dehumidifier_mode_mode_select_device_info(
-    hass, manager_mz: Manager, caplog
-):
+async def test_dehumidifier_mode_mode_select_device_info(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = HumidityModeSelect(hass, manager, system, zone)
 

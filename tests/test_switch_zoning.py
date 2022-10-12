@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_zoning_switch_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = S30ZoningSwitch(hass, manager, system)
     await c.async_added_to_hass()
 
@@ -50,7 +50,7 @@ async def test_zoning_switch_subscription(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_zoning_switch(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = S30ZoningSwitch(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_SW_ZE").replace("-", "")

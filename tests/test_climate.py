@@ -72,7 +72,7 @@ from tests.conftest import manager
 @pytest.mark.asyncio
 async def test_climate_unique_id(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     assert c.unique_id == zone.unique_id
@@ -82,7 +82,7 @@ async def test_climate_unique_id(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_min_max_c(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -128,7 +128,7 @@ async def test_climate_min_max_c(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -184,7 +184,7 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
 async def test_climate_target_temperature_f(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     manager._is_metric = False
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -203,7 +203,7 @@ async def test_climate_target_temperature_f(hass, manager_mz: Manager, caplog):
 async def test_climate_target_temperature_c(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     manager._is_metric = True
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -222,7 +222,7 @@ async def test_climate_target_temperature_c(hass, manager_mz: Manager, caplog):
 async def test_climate_target_temperature_high_f(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     manager._is_metric = False
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -257,7 +257,7 @@ async def test_climate_target_temperature_high_f(hass, manager_mz: Manager, capl
 async def test_climate_target_temperature_high_c(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     manager._is_metric = True
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -292,7 +292,7 @@ async def test_climate_target_temperature_high_c(hass, manager_mz: Manager, capl
 async def test_climate_target_temperature_low_f(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     manager._is_metric = False
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -327,7 +327,7 @@ async def test_climate_target_temperature_low_f(hass, manager_mz: Manager, caplo
 async def test_climate_target_temperature_low_c(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     manager._is_metric = True
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -361,7 +361,7 @@ async def test_climate_target_temperature_low_c(hass, manager_mz: Manager, caplo
 @pytest.mark.asyncio
 async def test_climate_system_subscription(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -422,7 +422,7 @@ async def test_climate_system_subscription(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_preset_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -457,7 +457,7 @@ async def test_climate_preset_mode(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -567,7 +567,7 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_extra_state_attributes(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -669,7 +669,7 @@ async def test_climate_extra_state_attributes(hass, manager_mz: Manager, caplog)
 @pytest.mark.asyncio
 async def test_climate_supported_features(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -733,7 +733,7 @@ async def test_climate_supported_features(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_target_max_min_humidity(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -771,16 +771,14 @@ async def test_target_max_min_humidity(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
 
     assert zone.humidityMode == LENNOX_HUMIDITY_MODE_OFF
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            zone, "perform_humidify_setpoint"
-        ) as perform_humidify_setpoint:
+        with patch.object(zone, "perform_humidify_setpoint") as perform_humidify_setpoint:
             caplog.clear()
             await c.async_set_humidity(60)
             assert len(caplog.records) == 1
@@ -789,9 +787,7 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
     caplog.clear()
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            zone, "perform_humidify_setpoint"
-        ) as perform_humidify_setpoint:
+        with patch.object(zone, "perform_humidify_setpoint") as perform_humidify_setpoint:
             caplog.clear()
             await c.async_set_humidity(60)
             assert len(caplog.records) == 0
@@ -804,9 +800,7 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     zone.humidityMode = LENNOX_HUMIDITY_MODE_HUMIDIFY
     caplog.clear()
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            zone, "perform_humidify_setpoint"
-        ) as perform_humidify_setpoint:
+        with patch.object(zone, "perform_humidify_setpoint") as perform_humidify_setpoint:
             caplog.clear()
             await c.async_set_humidity(60)
             assert len(caplog.records) == 0
@@ -821,9 +815,7 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     c1 = S30Climate(hass, manager, system, zone1)
     caplog.clear()
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            zone1, "perform_humidify_setpoint"
-        ) as perform_humidify_setpoint:
+        with patch.object(zone1, "perform_humidify_setpoint") as perform_humidify_setpoint:
             caplog.clear()
             await c1.async_set_humidity(60)
             assert len(caplog.records) == 0
@@ -835,9 +827,7 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     caplog.clear()
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            zone1, "perform_humidify_setpoint"
-        ) as perform_humidify_setpoint:
+        with patch.object(zone1, "perform_humidify_setpoint") as perform_humidify_setpoint:
             caplog.clear()
             await c1.async_set_humidity(60)
             assert len(caplog.records) == 1
@@ -847,7 +837,7 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_current_humidity(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -890,7 +880,7 @@ async def test_climate_current_humidity(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_current_temperature_f(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -931,7 +921,7 @@ async def test_climate_current_temperature_f(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_current_temperature_c(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -973,7 +963,7 @@ async def test_climate_current_temperature_c(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_hvac_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
     zone1: lennox_zone = system._zoneList[1]
@@ -996,7 +986,7 @@ async def test_climate_hvac_mode(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_target_temperature_step(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     zone: lennox_zone = system._zoneList[0]
     c = S30Climate(hass, manager, system, zone)
@@ -1009,7 +999,7 @@ async def test_climate_target_temperature_step(hass, manager_mz: Manager, caplog
 @pytest.mark.asyncio
 async def test_climate_hvac_modes(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1040,7 +1030,7 @@ async def test_climate_hvac_modes(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_set_hvac_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1086,7 +1076,7 @@ async def test_climate_set_hvac_mode(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_hvac_action(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1123,7 +1113,7 @@ async def test_climate_hvac_action(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_preset_modes(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1148,7 +1138,7 @@ async def test_climate_preset_modes(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_fan_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1160,7 +1150,7 @@ async def test_climate_fan_mode(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_fan_modes(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1178,7 +1168,7 @@ async def test_climate_fan_modes(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_is_aux_heat(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1192,7 +1182,7 @@ async def test_climate_is_aux_heat(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_turn_aux_heat_on(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1218,7 +1208,7 @@ async def test_climate_turn_aux_heat_on(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_turn_aux_heat_off(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1244,7 +1234,7 @@ async def test_climate_turn_aux_heat_off(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_set_fan_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1269,7 +1259,7 @@ async def test_climate_set_fan_mode(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_device_info(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)
@@ -1279,7 +1269,7 @@ async def test_climate_device_info(hass, manager_mz: Manager, caplog):
 @pytest.mark.asyncio
 async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = False
     zone: lennox_zone = system._zoneList[1]
     c = S30Climate(hass, manager, system, zone)

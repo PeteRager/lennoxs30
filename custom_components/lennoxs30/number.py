@@ -9,7 +9,7 @@ from .helpers import (
     lennox_uom_to_ha_uom,
 )
 
-from .base_entity import S30BaseEntity
+from .base_entity import S30BaseEntityMixin
 from .const import (
     MANAGER,
     UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
@@ -59,7 +59,7 @@ async def async_setup_entry(
     number_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
 
-    if manager._create_equipment_parameters == True:
+    if manager._create_equipment_parameters:
         platform = ep.async_get_current_platform()
         platform.async_register_entity_service(
             "set_zonetest_parameter",
@@ -70,52 +70,37 @@ async def async_setup_entry(
             "async_set_zonetest_parameter",
         )
 
-    for system in manager._api.getSystems():
+    for system in manager.api.getSystems():
         # We do not support setting diag level from a cloud connection
-        if manager._api._isLANConnection == False or (
-            manager._create_inverter_power == False
-            and manager._create_diagnostic_sensors == False
+        if manager.api._isLANConnection is False or (
+            manager._create_inverter_power is False and manager._create_diagnostic_sensors is False
         ):
-            _LOGGER.debug(
-                "async_setup_entry - not creating diagnostic level number because inverter power not enabled"
-            )
+            _LOGGER.debug("async_setup_entry - not creating diagnostic level number because inverter power not enabled")
         else:
             number = DiagnosticLevelNumber(hass, manager, system)
             number_list.append(number)
-        if (
-            system.enhancedDehumidificationOvercoolingF_enable == True
-            and system.is_none(system.dehumidifierType) == False
-        ):
+        if system.enhancedDehumidificationOvercoolingF_enable and system.is_none(system.dehumidifierType) is False:
             number = DehumidificationOverCooling(hass, manager, system)
             number_list.append(number)
         number = CirculateTime(hass, manager, system)
         number_list.append(number)
 
-        if (
-            system.supports_ventilation()
-            and system.ventilationControlMode == LENNOX_VENTILATION_CONTROL_MODE_TIMED
-        ):
+        if system.supports_ventilation() and system.ventilationControlMode == LENNOX_VENTILATION_CONTROL_MODE_TIMED:
             number = TimedVentilationNumber(hass, manager, system)
             number_list.append(number)
 
-        if manager._create_equipment_parameters == True:
+        if manager._create_equipment_parameters:
             for equipment in system.equipment.values():
                 for parameter in equipment.parameters.values():
-                    if (
-                        parameter.enabled == True
-                        and parameter.descriptor
-                        == LENNOX_EQUIPMENT_PARAMETER_FORMAT_RANGE
-                    ):
-                        number = EquipmentParameterNumber(
-                            hass, manager, system, equipment, parameter
-                        )
+                    if parameter.enabled and parameter.descriptor == LENNOX_EQUIPMENT_PARAMETER_FORMAT_RANGE:
+                        number = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
                         number_list.append(number)
 
     if len(number_list) != 0:
         async_add_entities(number_list, True)
 
 
-class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
+class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
@@ -126,9 +111,7 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(
-            f"async_added_to_hass DiagnosticLevelNumber myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"async_added_to_hass DiagnosticLevelNumber myname [{self._myname}]")
         self._system.registerOnUpdateCallback(self.update_callback, ["diagLevel"])
         await super().async_added_to_hass()
 
@@ -168,19 +151,14 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
                 _LOGGER.warning(
                     "Diagnostic Level Number - setting to a value of 1 is not recommeded. See https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 )
-            if value != 0 and (
-                self._system.internetStatus == True
-                or self._system.relayServerConnected == True
-            ):
+            if value != 0 and (self._system.internetStatus or self._system.relayServerConnected):
                 _LOGGER.warning(
                     f"Diagnostic Level Number - setting to a non-zero value is not recommended for systems connected to the lennox cloud internetStatus [{self._system.internetStatus}] relayServerConnected [{self._system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 )
             await self._system.set_diagnostic_level(value)
         except S30Exception as e:
-            _LOGGER.error(
-                f"DiagnosticLevelNumber::async_set_native_value [{e.as_string()}]"
-            )
-        except Exception as e:
+            _LOGGER.error(f"DiagnosticLevelNumber::async_set_native_value [{e.as_string()}]")
+        except Exception:
             _LOGGER.exception(
                 "DiagnosticLevelNumber::async_set_native_value - unexpected exception - please raise an issue"
             )
@@ -194,7 +172,7 @@ class DiagnosticLevelNumber(S30BaseEntity, NumberEntity):
         return result
 
 
-class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
+class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
@@ -205,9 +183,7 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(
-            f"async_added_to_hass DehumidificationOverCooling myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"async_added_to_hass DehumidificationOverCooling myname [{self._myname}]")
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -226,9 +202,7 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
-        _LOGGER.debug(
-            f"update_callback DehumidificationOverCooling myname [{self._myname}]"
-        )
+        _LOGGER.debug(f"update_callback DehumidificationOverCooling myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
@@ -272,9 +246,7 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        _LOGGER.info(
-            f"DehumidificationOverCooling::async_set_native_value [{self._myname}] value [{value}]"
-        )
+        _LOGGER.info(f"DehumidificationOverCooling::async_set_native_value [{self._myname}] value [{value}]")
         try:
             if self._manager._is_metric:
                 await self._system.set_enhancedDehumidificationOvercooling(r_c=value)
@@ -284,9 +256,9 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
             _LOGGER.error(
                 f"DehumidificationOverCooling::async_set_native_value value [{value}] error [{e.as_string()}]"
             )
-        except Exception as e:
+        except Exception:
             _LOGGER.exception(
-                f"DehumidificationOverCooling::async_set_native_value unexpected exception - please raise an issue"
+                "DehumidificationOverCooling::async_set_native_value unexpected exception - please raise an issue"
             )
 
     @property
@@ -298,7 +270,7 @@ class DehumidificationOverCooling(S30BaseEntity, NumberEntity):
         return result
 
 
-class CirculateTime(S30BaseEntity, NumberEntity):
+class CirculateTime(S30BaseEntityMixin, NumberEntity):
     """Set the diagnostic level in the S30."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
@@ -353,9 +325,7 @@ class CirculateTime(S30BaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        _LOGGER.info(
-            f"CirculateTime::async_set_native_value myname [{self._myname}] value [{value}]"
-        )
+        _LOGGER.info(f"CirculateTime::async_set_native_value myname [{self._myname}] value [{value}]")
         try:
             await self._system.set_circulateTime(value)
         except S30Exception as e:
@@ -376,7 +346,7 @@ class CirculateTime(S30BaseEntity, NumberEntity):
         return result
 
 
-class TimedVentilationNumber(S30BaseEntity, NumberEntity):
+class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
     """Set timed ventilation."""
 
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
@@ -387,12 +357,8 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(
-            f"async_added_to_hass TimedVentilationNumber myname [{self._myname}]"
-        )
-        self._system.registerOnUpdateCallback(
-            self.update_callback, ["ventilationRemainingTime"]
-        )
+        _LOGGER.debug(f"async_added_to_hass TimedVentilationNumber myname [{self._myname}]")
+        self._system.registerOnUpdateCallback(self.update_callback, ["ventilationRemainingTime"])
         await super().async_added_to_hass()
 
     def update_callback(self):
@@ -402,9 +368,7 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            self._system.unique_id() + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER
-        ).replace("-", "")
+        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER).replace("-", "")
 
     @property
     def name(self):
@@ -434,13 +398,9 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
             value_seconds = value_i * 60
             await self._system.ventilation_timed(value_seconds)
         except S30Exception as e:
-            _LOGGER.error(
-                f"TimedVentilationNumber::async_set_native_value value [{value}] - error [{e.as_string()}]"
-            )
+            _LOGGER.error(f"TimedVentilationNumber::async_set_native_value value [{value}] - error [{e.as_string()}]")
         except ValueError as v:
-            _LOGGER.error(
-                f"TimedVentilationNumber::async_set_native_value invalid value [{value}] ValueError [{v}]"
-            )
+            _LOGGER.error(f"TimedVentilationNumber::async_set_native_value invalid value [{value}] ValueError [{v}]")
         except Exception as e:
             _LOGGER.exception(
                 f"TimedVentilationNumber::async_set_native_value unexpected exception - please raise an issue [{value}] error [{e}]"
@@ -453,12 +413,10 @@ class TimedVentilationNumber(S30BaseEntity, NumberEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return helper_get_equipment_device_info(
-            self._manager, self._system, VENTILATION_EQUIPMENT_ID
-        )
+        return helper_get_equipment_device_info(self._manager, self._system, VENTILATION_EQUIPMENT_ID)
 
 
-class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
+class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     """Set timed ventilation."""
 
     def __init__(
@@ -474,9 +432,7 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
         self.equipment = equipment
         self.parameter = parameter
 
-        self._myname = helper_create_equipment_entity_name(
-            system, equipment, parameter.name, prefix="par"
-        )
+        self._myname = helper_create_equipment_entity_name(system, equipment, parameter.name, prefix="par")
         _LOGGER.debug(
             f"Create EquipmentParameterNumber eq [{equipment.equipment_id}] pid [{parameter.pid}] myname [{self._myname}]"
         )
@@ -532,19 +488,15 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
         )
 
         if self._manager.parameter_safety_on(self._system.sysId):
-            raise HomeAssistantError(
-                f"Unable to set parameter [{self._myname}] parameter safety switch is on"
-            )
+            raise HomeAssistantError(f"Unable to set parameter [{self._myname}] parameter safety switch is on")
 
         try:
-            await self._system.set_equipment_parameter_value(
-                self.equipment.equipment_id, self.parameter.pid, value
-            )
+            await self._system.set_equipment_parameter_value(self.equipment.equipment_id, self.parameter.pid, value)
         except S30Exception as e:
             _LOGGER.error(
                 f"EquipmentParameterNumber::async_set_native_value [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}] error [{e.as_string()}]"
             )
-        except Exception as e:
+        except Exception:
             _LOGGER.exception(
                 f"EquipmentParameterNumber::async_set_native_value unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
             )
@@ -556,9 +508,7 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return helper_get_equipment_device_info(
-            self._manager, self._system, self.equipment.equipment_id
-        )
+        return helper_get_equipment_device_info(self._manager, self._system, self.equipment.equipment_id)
 
     @property
     def entity_category(self):
@@ -583,15 +533,13 @@ class EquipmentParameterNumber(S30BaseEntity, NumberEntity):
             )
             return
         try:
-            await self._system.set_zone_test_parameter_value(
-                self.parameter.pid, value, enabled
-            )
+            await self._system.set_zone_test_parameter_value(self.parameter.pid, value, enabled)
         except S30Exception as e:
             _LOGGER.error(
                 f"EquipmentParameterNumber::async_set_zonetest_parameter [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] error [{e.as_string()}] "
             )
             return
-        except Exception as e:
+        except Exception:
             _LOGGER.exception(
                 f"EquipmentParameterNumber::async_set_zonetest_parameter unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
             )

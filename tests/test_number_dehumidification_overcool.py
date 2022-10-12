@@ -26,7 +26,7 @@ from lennoxs30api.s30exception import S30Exception
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationOverCooling(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_DOC").replace("-", "")
@@ -34,17 +34,15 @@ async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationOverCooling(hass, manager, system)
 
     assert c.name == system.name + "_dehumidification_overcooling"
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_unique_id_unit_of_measure(
-    hass, manager: Manager, caplog
-):
-    system: lennox_system = manager._api._systemList[0]
+async def test_dehumd_overcool_unique_id_unit_of_measure(hass, manager: Manager, caplog):
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.unit_of_measurement == TEMP_CELSIUS
@@ -54,7 +52,7 @@ async def test_dehumd_overcool_unique_id_unit_of_measure(
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.max_value == system.enhancedDehumidificationOvercoolingC_max
@@ -64,7 +62,7 @@ async def test_dehumd_overcool_max_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.min_value == system.enhancedDehumidificationOvercoolingC_min
@@ -74,7 +72,7 @@ async def test_dehumd_overcool_min_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.step == system.enhancedDehumidificationOvercoolingC_inc
@@ -84,7 +82,7 @@ async def test_dehumd_overcool_step(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.value == system.enhancedDehumidificationOvercoolingC
@@ -94,51 +92,36 @@ async def test_dehumd_overcool_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
 
     manager._is_metric = True
-    with patch.object(
-        system, "set_enhancedDehumidificationOvercooling"
-    ) as set_enhancedDehumidificationOvercooling:
+    with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
         await c.async_set_native_value(2.0)
         assert set_enhancedDehumidificationOvercooling.call_count == 1
         assert set_enhancedDehumidificationOvercooling.call_args.kwargs["r_c"] == 2.0
 
     manager._is_metric = False
-    with patch.object(
-        system, "set_enhancedDehumidificationOvercooling"
-    ) as set_enhancedDehumidificationOvercooling:
+    with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
         await c.async_set_native_value(2.0)
         assert set_enhancedDehumidificationOvercooling.call_count == 1
         assert set_enhancedDehumidificationOvercooling.call_args.kwargs["r_f"] == 2.0
 
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            system, "set_enhancedDehumidificationOvercooling"
-        ) as set_enhancedDehumidificationOvercooling:
+        with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
             caplog.clear()
-            set_enhancedDehumidificationOvercooling.side_effect = S30Exception(
-                "This is the error", 100, 200
-            )
+            set_enhancedDehumidificationOvercooling.side_effect = S30Exception("This is the error", 100, 200)
             await c.async_set_native_value(101)
             assert len(caplog.records) == 1
-            assert (
-                "DehumidificationOverCooling::async_set_native_value"
-                in caplog.messages[0]
-            )
+            assert "DehumidificationOverCooling::async_set_native_value" in caplog.messages[0]
             assert "This is the error" in caplog.messages[0]
             assert "101" in caplog.messages[0]
 
     with caplog.at_level(logging.ERROR):
-        with patch.object(
-            system, "set_enhancedDehumidificationOvercooling"
-        ) as set_enhancedDehumidificationOvercooling:
+        with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
             caplog.clear()
-            set_enhancedDehumidificationOvercooling.side_effect = Exception(
-                "This is the error"
-            )
+            set_enhancedDehumidificationOvercooling.side_effect = Exception("This is the error")
             await c.async_set_native_value(1)
             assert len(caplog.records) == 1
             assert (
@@ -149,7 +132,7 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     identifiers = c.device_info["identifiers"]
@@ -160,7 +143,7 @@ async def test_dehumd_device_info(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     await c.async_added_to_hass()
@@ -169,19 +152,13 @@ async def test_dehumd_subscription(hass, manager: Manager, caplog):
         set = {
             "enhancedDehumidificationOvercoolingC_enable": not system.enhancedDehumidificationOvercoolingC_enable,
             "enhancedDehumidificationOvercoolingF_enable": not system.enhancedDehumidificationOvercoolingF_enable,
-            "enhancedDehumidificationOvercoolingC": system.enhancedDehumidificationOvercoolingC
-            + 1,
-            "enhancedDehumidificationOvercoolingF": system.enhancedDehumidificationOvercoolingF
-            + 1,
-            "enhancedDehumidificationOvercoolingF_min": system.enhancedDehumidificationOvercoolingF_min
-            + 1,
-            "enhancedDehumidificationOvercoolingF_max": system.enhancedDehumidificationOvercoolingF_max
-            + 1,
+            "enhancedDehumidificationOvercoolingC": system.enhancedDehumidificationOvercoolingC + 1,
+            "enhancedDehumidificationOvercoolingF": system.enhancedDehumidificationOvercoolingF + 1,
+            "enhancedDehumidificationOvercoolingF_min": system.enhancedDehumidificationOvercoolingF_min + 1,
+            "enhancedDehumidificationOvercoolingF_max": system.enhancedDehumidificationOvercoolingF_max + 1,
             "enhancedDehumidificationOvercoolingF_inc": 0.5,
-            "enhancedDehumidificationOvercoolingC_min": system.enhancedDehumidificationOvercoolingC_min
-            + 1,
-            "enhancedDehumidificationOvercoolingC_max": system.enhancedDehumidificationOvercoolingC_max
-            + 1,
+            "enhancedDehumidificationOvercoolingC_min": system.enhancedDehumidificationOvercoolingC_min + 1,
+            "enhancedDehumidificationOvercoolingC_max": system.enhancedDehumidificationOvercoolingC_max + 1,
             "enhancedDehumidificationOvercoolingC_inc": 1.0,
         }
         system.attr_updater(set, "enhancedDehumidificationOvercoolingC_enable")

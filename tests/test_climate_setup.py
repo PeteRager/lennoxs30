@@ -20,7 +20,7 @@ from unittest.mock import Mock
 @pytest.mark.asyncio
 async def test_async_setup_entry_mz(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
@@ -38,7 +38,7 @@ async def test_async_setup_entry_mz(hass, manager_mz: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_async_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
@@ -55,7 +55,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_no_zones(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     system._zoneList = []
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}

@@ -1,6 +1,6 @@
 import ipaddress
 import re
-from lennoxs30api.s30exception import EC_AUTHENTICATE, EC_LOGIN, S30Exception
+from lennoxs30api.s30exception import EC_LOGIN, S30Exception
 
 import voluptuous as vol
 from . import Manager
@@ -97,9 +97,7 @@ def host_valid(hostport: str):
 @callback
 def lennox30_entries(hass: HomeAssistant):
     """Return the hosts already configured."""
-    return set(
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    return set(entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN))
 
 
 class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -115,7 +113,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     def get_advanced_schema(self, is_cloud: bool):
-        if is_cloud == True:
+        if is_cloud:
             scan_interval = 15
             conf_wait_time = 60
             timeout = DEFAULT_CLOUD_TIMEOUT
@@ -128,18 +126,16 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=300)
                 ),
-                vol.Optional(
-                    CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL
-                ): vol.All(vol.Coerce(float), vol.Range(min=0.25, max=300.0)),
-                vol.Optional(
-                    CONF_FAST_POLL_COUNT, default=DEFAULT_FAST_POLL_COUNT
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                vol.Optional(CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL): vol.All(
+                    vol.Coerce(float), vol.Range(min=0.25, max=300.0)
+                ),
+                vol.Optional(CONF_FAST_POLL_COUNT, default=DEFAULT_FAST_POLL_COUNT): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=100)
+                ),
                 vol.Optional(CONF_INIT_WAIT_TIME, default=conf_wait_time): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=300)
                 ),
-                vol.Optional(CONF_TIMEOUT, default=timeout): vol.All(
-                    vol.Coerce(int), vol.Range(min=15, max=300)
-                ),
+                vol.Optional(CONF_TIMEOUT, default=timeout): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
                 vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
                 vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
                 vol.Optional(CONF_LOG_MESSAGES_TO_FILE, default=False): cv.boolean,
@@ -184,9 +180,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unable_to_connect_login"
                 else:
                     errors["base"] = "unable_to_connect_cloud"
-        return self.async_show_form(
-            step_id="cloud", data_schema=STEP_CLOUD, errors=errors
-        )
+        return self.async_show_form(step_id="cloud", data_schema=STEP_CLOUD, errors=errors)
 
     async def async_step_local(self, user_input=None):
         """Handle the initial step."""
@@ -209,43 +203,35 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except S30Exception as e:
                     _LOGGER.error(f"async_step_local error [{e.as_string()}]")
                     errors[CONF_HOST] = "unable_to_connect_local"
-        return self.async_show_form(
-            step_id="local", data_schema=STEP_LOCAL, errors=errors
-        )
+        return self.async_show_form(step_id="local", data_schema=STEP_LOCAL, errors=errors)
 
     async def async_step_advanced(self, user_input=None):
         errors = {}
-        _LOGGER.debug(
-            f"async_step_advanced user_input [{dict_redact_fields(user_input)}]"
-        )
+        _LOGGER.debug(f"async_step_advanced user_input [{dict_redact_fields(user_input)}]")
 
         if user_input is not None:
             self.config_input.update(user_input)
             return await self.create_entry()
         return self.async_show_form(
             step_id="advanced",
-            data_schema=self.get_advanced_schema(
-                self.config_input[CONF_CLOUD_CONNECTION]
-            ),
+            data_schema=self.get_advanced_schema(self.config_input[CONF_CLOUD_CONNECTION]),
             errors=errors,
         )
 
     async def create_entry(self):
-        if self.config_input[CONF_CLOUD_CONNECTION] == True:
+        if self.config_input[CONF_CLOUD_CONNECTION]:
             title = redact_email(self.config_input[CONF_EMAIL])
         else:
             title = self.config_input[CONF_HOST]
         await self.async_set_unique_id(DOMAIN + "_" + title)
         self._abort_if_unique_id_configured()
-        if self.config_input[CONF_LOG_MESSAGES_TO_FILE] == False:
+        if self.config_input[CONF_LOG_MESSAGES_TO_FILE] is False:
             self.config_input[CONF_MESSAGE_DEBUG_FILE] = ""
-        _LOGGER.debug(
-            f"async_step_advanced config_input [{dict_redact_fields(self.config_input)}]"
-        )
+        _LOGGER.debug(f"async_step_advanced config_input [{dict_redact_fields(self.config_input)}]")
         return self.async_create_entry(title=title, data=self.config_input)
 
     async def try_to_connect(self, user_input):
-        if self.config_input[CONF_CLOUD_CONNECTION] == True:
+        if self.config_input[CONF_CLOUD_CONNECTION]:
             email = user_input[CONF_EMAIL]
             password = user_input[CONF_PASSWORD]
             ip_address = None
@@ -284,9 +270,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input) -> FlowResult:
         """Handle the import step."""
         self.config_input = {}
-        _LOGGER.debug(
-            f"async_step_import user_input [{dict_redact_fields(user_input)}]"
-        )
+        _LOGGER.debug(f"async_step_import user_input [{dict_redact_fields(user_input)}]")
         self.config_input.update(user_input)
         return await self.create_entry()
 
@@ -312,10 +296,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if CONF_EMAIL in self.config_entry.data:
                 user_input[CONF_EMAIL] = self.config_entry.data[CONF_EMAIL]
             if CONF_CLOUD_CONNECTION in self.config_entry.data:
-                user_input[CONF_CLOUD_CONNECTION] = self.config_entry.data[
-                    CONF_CLOUD_CONNECTION
-                ]
-            if user_input[CONF_LOG_MESSAGES_TO_FILE] == False:
+                user_input[CONF_CLOUD_CONNECTION] = self.config_entry.data[CONF_CLOUD_CONNECTION]
+            if user_input[CONF_LOG_MESSAGES_TO_FILE] is False:
                 user_input[CONF_MESSAGE_DEBUG_FILE] = ""
 
             self.hass.config_entries.async_update_entry(
@@ -323,24 +305,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
             return self.async_create_entry(title="", data={})
 
-        if self.config_entry.data[CONF_CLOUD_CONNECTION] == False:
+        if self.config_entry.data[CONF_CLOUD_CONNECTION] is False:
             # Local Connection
             return self.async_show_form(
                 step_id="init",
                 data_schema=vol.Schema(
                     {
-                        vol.Optional(
-                            CONF_APP_ID, default=self.config_entry.data[CONF_APP_ID]
-                        ): cv.string,
+                        vol.Optional(CONF_APP_ID, default=self.config_entry.data[CONF_APP_ID]): cv.string,
                         vol.Optional(
                             CONF_CREATE_SENSORS,
                             default=self.config_entry.data[CONF_CREATE_SENSORS],
                         ): cv.boolean,
                         vol.Optional(
                             CONF_ALLERGEN_DEFENDER_SWITCH,
-                            default=self.config_entry.data[
-                                CONF_ALLERGEN_DEFENDER_SWITCH
-                            ],
+                            default=self.config_entry.data[CONF_ALLERGEN_DEFENDER_SWITCH],
                         ): cv.boolean,
                         vol.Optional(
                             CONF_CREATE_INVERTER_POWER,
@@ -348,9 +326,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ): cv.boolean,
                         vol.Optional(
                             CONF_CREATE_DIAGNOSTICS_SENSORS,
-                            default=self.config_entry.data[
-                                CONF_CREATE_DIAGNOSTICS_SENSORS
-                            ],
+                            default=self.config_entry.data[CONF_CREATE_DIAGNOSTICS_SENSORS],
                         ): cv.boolean,
                         vol.Optional(
                             CONF_CREATE_PARAMETERS,
@@ -372,12 +348,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_FAST_POLL_COUNT,
                             default=self.config_entry.data[CONF_FAST_POLL_COUNT],
                         ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-                        vol.Optional(
-                            CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]
-                        ): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
-                        vol.Optional(
-                            CONF_PROTOCOL, default=self.config_entry.data[CONF_PROTOCOL]
-                        ): cv.string,
+                        vol.Optional(CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]): vol.All(
+                            vol.Coerce(int), vol.Range(min=15, max=300)
+                        ),
+                        vol.Optional(CONF_PROTOCOL, default=self.config_entry.data[CONF_PROTOCOL]): cv.string,
                         vol.Optional(
                             CONF_PII_IN_MESSAGE_LOGS,
                             default=self.config_entry.data[CONF_PII_IN_MESSAGE_LOGS],
@@ -407,18 +381,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_PASSWORD,
                             default=self.config_entry.data[CONF_PASSWORD],
                         ): cv.string,
-                        vol.Optional(
-                            CONF_APP_ID, default=self.config_entry.data[CONF_APP_ID]
-                        ): cv.string,
+                        vol.Optional(CONF_APP_ID, default=self.config_entry.data[CONF_APP_ID]): cv.string,
                         vol.Optional(
                             CONF_CREATE_SENSORS,
                             default=self.config_entry.data[CONF_CREATE_SENSORS],
                         ): cv.boolean,
                         vol.Optional(
                             CONF_ALLERGEN_DEFENDER_SWITCH,
-                            default=self.config_entry.data[
-                                CONF_ALLERGEN_DEFENDER_SWITCH
-                            ],
+                            default=self.config_entry.data[CONF_ALLERGEN_DEFENDER_SWITCH],
                         ): cv.boolean,
                         vol.Optional(
                             CONF_SCAN_INTERVAL,
@@ -436,9 +406,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_FAST_POLL_COUNT,
                             default=self.config_entry.data[CONF_FAST_POLL_COUNT],
                         ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-                        vol.Optional(
-                            CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]
-                        ): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
+                        vol.Optional(CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]): vol.All(
+                            vol.Coerce(int), vol.Range(min=15, max=300)
+                        ),
                         vol.Optional(
                             CONF_PII_IN_MESSAGE_LOGS,
                             default=self.config_entry.data[CONF_PII_IN_MESSAGE_LOGS],

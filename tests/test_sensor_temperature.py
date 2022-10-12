@@ -31,13 +31,11 @@ from unittest.mock import patch
 @pytest.mark.asyncio
 async def test_temperature_sensor(hass, manager: Manager, caplog):
     manager._is_metric = False
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system.getZone(0)
     s = S30TempSensor(hass, manager, system, zone)
 
-    assert s.unique_id == (system.unique_id() + "_" + str(zone.id) + "_T").replace(
-        "-", ""
-    )
+    assert s.unique_id == (system.unique_id() + "_" + str(zone.id) + "_T").replace("-", "")
     assert s.name == system.name + "_" + zone.name + "_temperature"
     assert s.available == True
     assert s.should_poll == False
@@ -63,7 +61,7 @@ async def test_temperature_sensor(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_temperature_sensor_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     zone: lennox_zone = system.getZone(0)
     s = S30TempSensor(hass, manager, system, zone)
     await s.async_added_to_hass()

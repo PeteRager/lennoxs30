@@ -26,7 +26,7 @@ import logging
 
 @pytest.mark.asyncio
 async def test_circulate_time_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = CirculateTime(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_CIRC_TIME").replace("-", "")
@@ -34,7 +34,7 @@ async def test_circulate_time_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_circulate_time_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = CirculateTime(hass, manager, system)
 
     assert c.name == system.name + "_circulate_time"
@@ -42,35 +42,35 @@ async def test_circulate_time_name(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_circulate_time_unit_of_measure(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = CirculateTime(hass, manager, system)
     assert c.unit_of_measurement == PERCENTAGE
 
 
 @pytest.mark.asyncio
 async def test_circulate_time_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = CirculateTime(hass, manager, system)
     assert c.max_value == LENNOX_CIRCULATE_TIME_MAX
 
 
 @pytest.mark.asyncio
 async def test_circulate_time_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = CirculateTime(hass, manager, system)
     assert c.min_value == LENNOX_CIRCULATE_TIME_MIN
 
 
 @pytest.mark.asyncio
 async def test_circulate_time_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = CirculateTime(hass, manager, system)
     assert c.step == 1.0
 
 
 @pytest.mark.asyncio
 async def test_circulate_time_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = CirculateTime(hass, manager, system)
     assert c.value == system.circulateTime
@@ -78,7 +78,7 @@ async def test_circulate_time_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_circulate_time_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = CirculateTime(hass, manager, system)
 
@@ -113,7 +113,7 @@ async def test_circulate_time_set_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_circulate_time_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = CirculateTime(hass, manager, system)
     identifiers = c.device_info["identifiers"]
@@ -124,7 +124,7 @@ async def test_circulate_time_device_info(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_circulate_time_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     manager._is_metric = True
     c = CirculateTime(hass, manager, system)
     await c.async_added_to_hass()

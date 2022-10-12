@@ -23,24 +23,22 @@ from lennoxs30api.s30exception import S30Exception
 
 @pytest.mark.asyncio
 async def test_dehumidifier_mode_mode_select_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationModeSelect(hass, manager, system)
     assert c.unique_id == system.unique_id() + "_DHMS"
 
 
 @pytest.mark.asyncio
 async def test_dehumidifier_mode_mode_select_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationModeSelect(hass, manager, system)
     assert c.name == system.name + "_dehumidification_mode"
 
 
 @pytest.mark.asyncio
-async def test_dehumidifier_mode_mode_select_current_option(
-    hass, manager_mz: Manager, caplog
-):
+async def test_dehumidifier_mode_mode_select_current_option(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationModeSelect(hass, manager, system)
 
     assert system.dehumidificationMode == LENNOX_DEHUMIDIFICATION_MODE_AUTO
@@ -61,11 +59,9 @@ async def test_dehumidifier_mode_mode_select_current_option(
 
 
 @pytest.mark.asyncio
-async def test_dehumidifier_mode_mode_select_subscription(
-    hass, manager_mz: Manager, caplog
-):
+async def test_dehumidifier_mode_mode_select_subscription(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     system.dehumidificationMode = None
     c = DehumidificationModeSelect(hass, manager, system)
     await c.async_added_to_hass()
@@ -116,7 +112,7 @@ async def test_dehumidifier_mode_mode_select_subscription(
 @pytest.mark.asyncio
 async def test_dehumidifier_mode_mode_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationModeSelect(hass, manager, system)
 
     opt = c.options
@@ -127,11 +123,9 @@ async def test_dehumidifier_mode_mode_select_options(hass, manager_mz: Manager, 
 
 
 @pytest.mark.asyncio
-async def test_dehumidifier_mode_mode_select_async_select_options(
-    hass, manager_mz: Manager, caplog
-):
+async def test_dehumidifier_mode_mode_select_async_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationModeSelect(hass, manager, system)
 
     with patch.object(system, "set_dehumidificationMode") as set_dehumidificationMode:
@@ -154,9 +148,7 @@ async def test_dehumidifier_mode_mode_select_async_select_options(
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        with patch.object(
-            system, "set_dehumidificationMode"
-        ) as set_dehumidificationMode:
+        with patch.object(system, "set_dehumidificationMode") as set_dehumidificationMode:
             await c.async_select_option("bad_value")
             assert set_dehumidificationMode.call_count == 0
             assert len(caplog.records) == 1
@@ -168,12 +160,8 @@ async def test_dehumidifier_mode_mode_select_async_select_options(
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        with patch.object(
-            system, "set_dehumidificationMode"
-        ) as set_dehumidificationMode:
-            set_dehumidificationMode.side_effect = S30Exception(
-                "This is the error", 100, 200
-            )
+        with patch.object(system, "set_dehumidificationMode") as set_dehumidificationMode:
+            set_dehumidificationMode.side_effect = S30Exception("This is the error", 100, 200)
             await c.async_select_option("normal")
             assert set_dehumidificationMode.call_count == 1
             assert len(caplog.records) == 1
@@ -183,9 +171,7 @@ async def test_dehumidifier_mode_mode_select_async_select_options(
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        with patch.object(
-            system, "set_dehumidificationMode"
-        ) as set_dehumidificationMode:
+        with patch.object(system, "set_dehumidificationMode") as set_dehumidificationMode:
             set_dehumidificationMode.side_effect = ValueError("This is the error")
             await c.async_select_option("normal")
             assert set_dehumidificationMode.call_count == 1
@@ -195,12 +181,10 @@ async def test_dehumidifier_mode_mode_select_async_select_options(
 
 
 @pytest.mark.asyncio
-async def test_dehumidifier_mode_mode_select_device_info(
-    hass, manager_mz: Manager, caplog
-):
+async def test_dehumidifier_mode_mode_select_device_info(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api._systemList[0]
     c = DehumidificationModeSelect(hass, manager, system)
 
     identifiers = c.device_info["identifiers"]
