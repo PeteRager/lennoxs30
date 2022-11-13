@@ -27,7 +27,7 @@ from unittest.mock import patch, Mock
 
 @pytest.mark.asyncio
 async def test_manager_configuration_initialization_cloud_offline(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     system.cloud_status = "offline"
     with caplog.at_level(logging.WARNING):
         with patch.object(manager, "messagePump") as messagePump:
@@ -41,7 +41,7 @@ async def test_manager_configuration_initialization_cloud_offline(hass, manager:
 
 @pytest.mark.asyncio
 async def test_manager_configuration_initialization_cloud_online(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     system.cloud_status = "online"
     with caplog.at_level(logging.WARNING):
         with patch.object(manager, "messagePump") as messagePump:
@@ -64,7 +64,7 @@ class CloudPresence:
 
 @pytest.mark.asyncio
 async def test_manager_update_cloud_presence(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     system.cloud_status = "online"
     manager.last_cloud_presence_poll = 1
     with caplog.at_level(logging.WARNING):

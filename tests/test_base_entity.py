@@ -23,7 +23,7 @@ class TestEntity(S30BaseEntityMixin, Entity):
 
 @pytest.mark.asyncio
 async def test_s30_base_entity_init(hass, manager: Manager, caplog):
-    system = manager.api._systemList[0]
+    system = manager.api.system_list[0]
     c = TestEntity(manager, system)
     assert c._manager == manager
     assert c._system == system
@@ -34,7 +34,7 @@ async def test_s30_base_entity_init(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_s30_base_entity_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     assert manager.connected == True
     c = TestEntity(manager, system)
     await c.async_added_to_hass()

@@ -26,13 +26,13 @@ from custom_components.lennoxs30.switch import (
 
 @pytest.mark.asyncio
 async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
     system.ventilationUnitType = LENNOX_NONE_STR
-    manager._allergenDefenderSwitch = False
+    manager.allergenDefenderSwitch = False
     system.numberOfZones = 1
 
     async_add_entities = Mock()
@@ -44,7 +44,7 @@ async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[1], S30SmartAwayEnableSwitch)
 
     async_add_entities = Mock()
-    manager._create_equipment_parameters = True
+    manager.create_equipment_parameters = True
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
@@ -52,7 +52,7 @@ async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[0], S30ManualAwayModeSwitch)
     assert isinstance(sensor_list[1], S30SmartAwayEnableSwitch)
     assert isinstance(sensor_list[2], S30ParameterSafetySwitch)
-    manager._create_equipment_parameters = False
+    manager.create_equipment_parameters = False
 
     system.ventilationUnitType = LENNOX_VENTILATION_DAMPER
     async_add_entities = Mock()
@@ -64,7 +64,7 @@ async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[1], S30ManualAwayModeSwitch)
     assert isinstance(sensor_list[2], S30SmartAwayEnableSwitch)
 
-    manager._allergenDefenderSwitch = True
+    manager.allergenDefenderSwitch = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1

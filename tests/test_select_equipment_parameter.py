@@ -23,7 +23,7 @@ from tests.conftest import conftest_parameter_extra_attributes
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_select_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
@@ -32,7 +32,7 @@ async def test_equipment_parameter_select_unique_id(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_select_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
@@ -41,7 +41,7 @@ async def test_equipment_parameter_select_name(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_select_current_option(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
@@ -69,7 +69,7 @@ async def test_equipment_parameter_select_current_option(hass, manager: Manager,
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_select_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
@@ -102,7 +102,7 @@ async def test_equipment_parameter_select_subscription(hass, manager: Manager, c
 @pytest.mark.asyncio
 async def test_equipment_parameter_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
@@ -116,7 +116,7 @@ async def test_equipment_parameter_select_options(hass, manager_mz: Manager, cap
 @pytest.mark.asyncio
 async def test_equipment_parameter_select_async_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
@@ -192,7 +192,7 @@ async def test_equipment_parameter_select_async_select_options(hass, manager_mz:
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_select_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     await manager.create_devices()
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
@@ -214,7 +214,7 @@ async def test_equipment_parameter_select_device_info(hass, manager: Manager, ca
 
 
 def test_equipment_parameter_select_entity_category(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
@@ -222,7 +222,7 @@ def test_equipment_parameter_select_entity_category(hass, manager: Manager, capl
 
 
 def test_equipment_parameter_select_extra_attributes(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)

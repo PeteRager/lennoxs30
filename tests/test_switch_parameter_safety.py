@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import EntityCategory
 
 @pytest.mark.asyncio
 async def test_parameter_safety_switch_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = S30ParameterSafetySwitch(hass, manager, system)
     await c.async_added_to_hass()
 
@@ -49,7 +49,7 @@ async def test_parameter_safety_switch_subscription(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_parameter_safety_switch(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = S30ParameterSafetySwitch(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH).replace("-", "")
@@ -73,7 +73,7 @@ async def test_parameter_safety_switch(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_parameter_safety_switch_turn_on_off(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = S30ParameterSafetySwitch(hass, manager, system, 1.0)
 
     manager.parameter_safety_turn_on(system.sysId)

@@ -28,13 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     switch_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager.api.getSystems():
+    for system in manager.api.system_list:
         _LOGGER.info(f"async_setup_platform ventilation [{system.supports_ventilation()}]")
         if system.supports_ventilation():
             _LOGGER.info(f"Create S30 ventilation switch system [{system.sysId}]")
             switch = S30VentilationSwitch(hass, manager, system)
             switch_list.append(switch)
-        if manager._allergenDefenderSwitch:
+        if manager.allergenDefenderSwitch:
             _LOGGER.info(f"Create S30 allergenDefender switch system [{system.sysId}]")
             switch = S30AllergenDefenderSwitch(hass, manager, system)
             switch_list.append(switch)
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         switch_list.append(sa_switch)
         _LOGGER.info(f"Create S30SmartAwayEnableSwitch system [{system.sysId}]")
 
-        if manager._create_equipment_parameters:
+        if manager.create_equipment_parameters:
             par_safety_switch = S30ParameterSafetySwitch(hass, manager, system)
             switch_list.append(par_safety_switch)
 

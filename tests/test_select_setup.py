@@ -22,27 +22,27 @@ from unittest.mock import Mock
 
 @pytest.mark.asyncio
 async def test_async_number_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
     # Nothing should be created
     system.dehumidifierType = None
-    for zone in system.getZones():
+    for zone in system.zone_list:
         zone.dehumidificationOption = False
         zone.humidificationOption = False
-    manager._create_equipment_parameters = False
+    manager.create_equipment_parameters = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.call_count == 0
 
     # DehumidificationModeSelect should be created
     system.dehumidifierType = "Dehumidifier"
-    for zone in system.getZones():
+    for zone in system.zone_list:
         zone.dehumidificationOption = False
         zone.humidificationOption = False
-    manager._create_equipment_parameters = False
+    manager.create_equipment_parameters = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.call_count == 1
@@ -52,10 +52,10 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
 
     # HumiditySelect should be created
     system.dehumidifierType = None
-    for zone in system.getZones():
+    for zone in system.zone_list:
         zone.dehumidificationOption = True
         zone.humidificationOption = False
-    manager._create_equipment_parameters = False
+    manager.create_equipment_parameters = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.call_count == 1
@@ -63,14 +63,14 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 1
     assert isinstance(sensor_list[0], HumidityModeSelect)
     humselect: HumidityModeSelect = sensor_list[0]
-    assert humselect._zone.id == system._zoneList[0].id
+    assert humselect._zone.id == system.zone_list[0].id
 
     # HumiditySelect should be created
     system.dehumidifierType = None
-    for zone in system.getZones():
+    for zone in system.zone_list:
         zone.dehumidificationOption = False
         zone.humidificationOption = True
-    manager._create_equipment_parameters = False
+    manager.create_equipment_parameters = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.call_count == 1
@@ -78,14 +78,14 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 1
     assert isinstance(sensor_list[0], HumidityModeSelect)
     humselect: HumidityModeSelect = sensor_list[0]
-    assert humselect._zone.id == system._zoneList[0].id
+    assert humselect._zone.id == system.zone_list[0].id
 
     # EquipmentParameterSelect(s) should be created
     system.dehumidifierType = None
-    for zone in system.getZones():
+    for zone in system.zone_list:
         zone.dehumidificationOption = False
         zone.humidificationOption = False
-    manager._create_equipment_parameters = True
+    manager.create_equipment_parameters = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.call_count == 1

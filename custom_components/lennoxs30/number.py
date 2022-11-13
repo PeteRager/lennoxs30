@@ -59,7 +59,7 @@ async def async_setup_entry(
     number_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
 
-    if manager._create_equipment_parameters:
+    if manager.create_equipment_parameters:
         platform = ep.async_get_current_platform()
         platform.async_register_entity_service(
             "set_zonetest_parameter",
@@ -70,10 +70,10 @@ async def async_setup_entry(
             "async_set_zonetest_parameter",
         )
 
-    for system in manager.api.getSystems():
+    for system in manager.api.system_list:
         # We do not support setting diag level from a cloud connection
         if manager.api._isLANConnection is False or (
-            manager._create_inverter_power is False and manager._create_diagnostic_sensors is False
+            manager.create_inverter_power is False and manager.create_diagnostic_sensors is False
         ):
             _LOGGER.debug("async_setup_entry - not creating diagnostic level number because inverter power not enabled")
         else:
@@ -89,7 +89,7 @@ async def async_setup_entry(
             number = TimedVentilationNumber(hass, manager, system)
             number_list.append(number)
 
-        if manager._create_equipment_parameters:
+        if manager.create_equipment_parameters:
             for equipment in system.equipment.values():
                 for parameter in equipment.parameters.values():
                     if parameter.enabled and parameter.descriptor == LENNOX_EQUIPMENT_PARAMETER_FORMAT_RANGE:
@@ -216,31 +216,31 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
 
     @property
     def native_unit_of_measurement(self):
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
     @property
     def native_max_value(self) -> float:
-        if self._manager._is_metric:
+        if self._manager.is_metric:
             return self._system.enhancedDehumidificationOvercoolingC_max
         return self._system.enhancedDehumidificationOvercoolingF_max
 
     @property
     def native_min_value(self) -> float:
-        if self._manager._is_metric:
+        if self._manager.is_metric:
             return self._system.enhancedDehumidificationOvercoolingC_min
         return self._system.enhancedDehumidificationOvercoolingF_min
 
     @property
     def native_step(self) -> float:
-        if self._manager._is_metric:
+        if self._manager.is_metric:
             return self._system.enhancedDehumidificationOvercoolingC_inc
         return self._system.enhancedDehumidificationOvercoolingF_inc
 
     @property
     def native_value(self) -> float:
-        if self._manager._is_metric:
+        if self._manager.is_metric:
             return self._system.enhancedDehumidificationOvercoolingC
         return self._system.enhancedDehumidificationOvercoolingF
 
@@ -248,7 +248,7 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
         """Update the current value."""
         _LOGGER.info(f"DehumidificationOverCooling::async_set_native_value [{self._myname}] value [{value}]")
         try:
-            if self._manager._is_metric:
+            if self._manager.is_metric:
                 await self._system.set_enhancedDehumidificationOvercooling(r_c=value)
             else:
                 await self._system.set_enhancedDehumidificationOvercooling(r_f=value)

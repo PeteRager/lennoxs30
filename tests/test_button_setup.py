@@ -19,17 +19,17 @@ from custom_components.lennoxs30.button import (
 
 @pytest.mark.asyncio
 async def test_async_button_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
-    manager._create_equipment_parameters = False
+    manager.create_equipment_parameters = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 0
 
-    manager._create_equipment_parameters = True
+    manager.create_equipment_parameters = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1

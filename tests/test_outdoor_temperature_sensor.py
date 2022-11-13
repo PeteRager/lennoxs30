@@ -30,8 +30,8 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
-    manager._is_metric = False
-    system: lennox_system = manager.api._systemList[0]
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
     s = S30OutdoorTempSensor(hass, manager, system)
 
     assert system.outdoorTemperatureStatus == LENNOX_STATUS_GOOD
@@ -41,10 +41,10 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     assert s.update() == True
     assert s.name == system.name + "_outdoor_temperature"
     assert len(s.extra_state_attributes) == 0
-    manager._is_metric = False
+    manager.is_metric = False
     assert s.native_value == system.outdoorTemperature
     assert s.native_unit_of_measurement == TEMP_FAHRENHEIT
-    manager._is_metric = True
+    manager.is_metric = True
     assert s.native_value == system.outdoorTemperatureC
     assert s.native_unit_of_measurement == TEMP_CELSIUS
 
@@ -75,8 +75,8 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_outdoor_temperature_sensor_subscription(hass, manager: Manager, caplog):
-    manager._is_metric = False
-    system: lennox_system = manager.api._systemList[0]
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
     s = S30OutdoorTempSensor(hass, manager, system)
     await s.async_added_to_hass()
 

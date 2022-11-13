@@ -31,8 +31,8 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_power_inverter_sensor(hass, manager: Manager, caplog):
-    manager._is_metric = False
-    system: lennox_system = manager.api._systemList[0]
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
     system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
 
@@ -79,20 +79,20 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
     await s.async_added_to_hass()
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager._is_metric = False
+        manager.is_metric = False
         set = {"diagInverterInputVoltage": 240.5}
         system.attr_updater(set, "diagInverterInputVoltage")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager._is_metric = False
+        manager.is_metric = False
         set = {"diagInverterInputCurrent": 13.4}
         system.attr_updater(set, "diagInverterInputCurrent")
         system.executeOnUpdateCallbacks()

@@ -30,8 +30,8 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_temperature_sensor(hass, manager: Manager, caplog):
-    manager._is_metric = False
-    system: lennox_system = manager.api._systemList[0]
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.getZone(0)
     s = S30TempSensor(hass, manager, system, zone)
 
@@ -43,10 +43,10 @@ async def test_temperature_sensor(hass, manager: Manager, caplog):
     assert s.update() == True
     assert len(s.extra_state_attributes) == 0
 
-    manager._is_metric = False
+    manager.is_metric = False
     assert s.native_value == zone.temperature
     assert s.native_unit_of_measurement == TEMP_FAHRENHEIT
-    manager._is_metric = True
+    manager.is_metric = True
     assert s.native_value == zone.temperatureC
     assert s.native_unit_of_measurement == TEMP_CELSIUS
 
@@ -61,13 +61,13 @@ async def test_temperature_sensor(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_temperature_sensor_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.getZone(0)
     s = S30TempSensor(hass, manager, system, zone)
     await s.async_added_to_hass()
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager._is_metric = False
+        manager.is_metric = False
         set = {"temperature": zone.temperature + 1}
         zone.attr_updater(set, "temperature")
         zone.executeOnUpdateCallbacks()
@@ -75,7 +75,7 @@ async def test_temperature_sensor_subscription(hass, manager: Manager, caplog):
         assert s.native_value == zone.temperature
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager._is_metric = True
+        manager.is_metric = True
         set = {"temperatureC": zone.temperatureC + 1}
         zone.attr_updater(set, "temperatureC")
         zone.executeOnUpdateCallbacks()

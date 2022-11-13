@@ -1,7 +1,12 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-from .base_entity import S30BaseEntityMixin
-from .const import MANAGER, UNIQUE_ID_SUFFIX_DIAG_SENSOR
-from .helpers import lennox_uom_to_ha_uom
+# pylint: disable=logging-not-lazy
+# pylint: disable=logging-fstring-interpolation
+# pylint: disable=global-statement
+# pylint: disable=broad-except
+# pylint: disable=unused-argument
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
+import logging
 
 from homeassistant.const import (
     PERCENTAGE,
@@ -12,9 +17,16 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
 )
-from . import Manager
 from homeassistant.core import HomeAssistant
-import logging
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.components.sensor import (
+    SensorStateClass,
+    SensorEntity,
+    SensorDeviceClass,
+)
+
 from lennoxs30api import (
     lennox_system,
     lennox_zone,
@@ -23,15 +35,13 @@ from lennoxs30api import (
     LENNOX_STATUS_NOT_AVAILABLE,
     LENNOX_STATUS_NOT_EXIST,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
-from homeassistant.components.sensor import (
-    SensorStateClass,
-    SensorEntity,
-    SensorDeviceClass,
-)
+
+from .base_entity import S30BaseEntityMixin
+from .const import MANAGER, UNIQUE_ID_SUFFIX_DIAG_SENSOR
+from .helpers import lennox_uom_to_ha_uom
+
+from . import Manager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,10 +49,10 @@ DOMAIN = "lennoxs30"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
-
+    """Setup the home assistant entities"""
     sensor_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager.api.getSystems():
+    for system in manager.api.system_list:
         if system.outdoorTemperatureStatus != LENNOX_STATUS_NOT_EXIST:
             _LOGGER.info(f"Create S30OutdoorTempSensor system [{system.sysId}]")
             sensor = S30OutdoorTempSensor(hass, manager, system)
@@ -50,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         else:
             _LOGGER.info(f"Not creating S30OutdoorTempSensor system [{system.sysId}] - sensor does not exist")
 
-        if manager._create_inverter_power:
+        if manager.create_inverter_power:
             _LOGGER.info(f"Create S30InverterPowerSensor system [{system.sysId}]")
             if system.diagLevel != 2:
                 _LOGGER.warning(
@@ -63,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             power_sensor = S30InverterPowerSensor(hass, manager, system)
             sensor_list.append(power_sensor)
 
-        if manager._create_diagnostic_sensors:
+        if manager.create_diagnostic_sensors:
             _LOGGER.info(f"Create Diagnostic Sensors system [{system.sysId}]")
             if system.diagLevel != 2:
                 _LOGGER.warning(f"Diagnostics requires S30 to be in diagLevel 2, currently in [{system.diagLevel}]")
@@ -71,10 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 _LOGGER.warning(
                     f"To prevent S30 instability - diagnostics requires S30 to be isolated from internet - internetStatus [{system.internetStatus}] relayServerConnected [{system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 )
-            for e_id, eq in system.equipment.items():
+            for _, eq in system.equipment.items():
                 equip: lennox_equipment = eq
                 if equip.equipment_id != 0:
-                    for did, diagnostic in equip.diagnostics.items():
+                    for _, diagnostic in equip.diagnostics.items():
                         if diagnostic.valid:
                             _LOGGER.info(
                                 f"Create Diagsensor system [{system.sysId}] eid [{equip.equipment_id}] did [{diagnostic.diagnostic_id}] name [{diagnostic.name}]"
@@ -82,15 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                             diagsensor = S30DiagSensor(hass, manager, system, equip, diagnostic)
                             sensor_list.append(diagsensor)
 
-        if manager._createSensors:
-            for zone in system.getZoneList():
+        if manager.createSensors:
+            for zone in system.zone_list:
                 if zone.is_zone_active():
                     _LOGGER.info(f"Create S30TempSensor sensor system [{system.sysId}] zone [{zone.id}]")
-                    tempSensor = S30TempSensor(hass, manager, system, zone)
-                    sensor_list.append(tempSensor)
+                    sensor_list.append(S30TempSensor(hass, manager, system, zone))
                     _LOGGER.info(f"Create S30HumSensor sensor system [{system.sysId}] zone [{zone.id}]")
-                    humSensor = S30HumiditySensor(hass, manager, system, zone)
-                    sensor_list.append(humSensor)
+                    sensor_list.append(S30HumiditySensor(hass, manager, system, zone))
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
@@ -102,6 +110,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
 class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
+    """Diagnostic Data Sensor"""
+
     def __init__(
         self,
         hass,
@@ -134,10 +144,12 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
         await super().async_added_to_hass()
 
     def update_callback(self, eid_did, newval):
+        """Callback to execute on data change"""
         _LOGGER.debug(f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}")
         self.schedule_update_ha_state()
 
     def system_update_callback(self):
+        """Callback to execute on system data change"""
         _LOGGER.debug(f"system_update_callback S30DiagSSensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -239,6 +251,7 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Callback to execute on data change"""
         _LOGGER.debug(f"update_callback S30OutdoorTempSensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -266,13 +279,13 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
                 f"S30OutdoorTempSensor [{self._myname}] has bad data quality [{self._system.outdoorTemperatureStatus}] returning None "
             )
             return None
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return self._system.outdoorTemperature
         return self._system.outdoorTemperatureC
 
     @property
     def native_unit_of_measurement(self):
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
@@ -305,7 +318,7 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
         super().__init__(manager, system)
         self._hass = hass
         self._zone = zone
-        self._myname = self._zone._system.name + "_" + self._zone.name + "_temperature"
+        self._myname = self._zone.system.name + "_" + self._zone.name + "_temperature"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -314,13 +327,14 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Callback to execute on data change"""
         _LOGGER.debug(f"update_callback S30TempSensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._zone._system.unique_id() + "_" + str(self._zone.id)).replace("-", "") + "_T"
+        return (self._zone.system.unique_id() + "_" + str(self._zone.id)).replace("-", "") + "_T"
 
     @property
     def extra_state_attributes(self):
@@ -333,13 +347,13 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
 
     @property
     def native_value(self):
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return self._zone.getTemperature()
         return self._zone.getTemperatureC()
 
     @property
     def native_unit_of_measurement(self):
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
@@ -372,7 +386,7 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
         super().__init__(manager, system)
         self._hass = hass
         self._zone = zone
-        self._myname = self._zone._system.name + "_" + self._zone.name + "_humidity"
+        self._myname = self._zone.system.name + "_" + self._zone.name + "_humidity"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -381,13 +395,14 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Callback to execute on data change"""
         _LOGGER.debug(f"update_callback S30HumiditySensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._zone._system.unique_id() + "_" + str(self._zone.id)).replace("-", "") + "_H"
+        return (self._zone.system.unique_id() + "_" + str(self._zone.id)).replace("-", "") + "_H"
 
     @property
     def extra_state_attributes(self):
@@ -441,10 +456,12 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
         await super().async_added_to_hass()
 
     def system_update_callback(self):
+        """Callback to execute on data change"""
         _LOGGER.debug(f"system_update_callback S30InverterPowerSensor myname [{self._myname}]")
         self.schedule_update_ha_state()
 
     def update_callback(self):
+        """Callback to execute on data change"""
         _LOGGER.debug(f"update_callback S30InverterPowerSensor [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -485,7 +502,6 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
             _LOGGER.warning(
                 f"state myname [{self._myname}] diagInverterInputVoltage [{self._system.diagInverterInputVoltage}] diagInverterInputCurrent [{self._system.diagInverterInputCurrent}] failed: {e}"
             )
-            pass
         return None
 
     @property

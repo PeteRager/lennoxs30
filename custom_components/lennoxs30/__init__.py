@@ -406,13 +406,13 @@ class Manager(object):
         )
         self._shutdown = False
         self._retrieve_task = None
-        self._allergenDefenderSwitch = allergenDefenderSwitch
-        self._createSensors: bool = create_sensors
-        self._create_inverter_power: bool = create_inverter_power
-        self._create_diagnostic_sensors: bool = create_diagnostic_sensors
-        self._create_equipment_parameters: bool = create_equipment_parameters
+        self.allergenDefenderSwitch = allergenDefenderSwitch
+        self.createSensors: bool = create_sensors
+        self.create_inverter_power: bool = create_inverter_power
+        self.create_diagnostic_sensors: bool = create_diagnostic_sensors
+        self.create_equipment_parameters: bool = create_equipment_parameters
         self._conf_init_wait_time = conf_init_wait_time
-        self._is_metric: bool = hass.config.units.is_metric
+        self.is_metric: bool = hass.config.units.is_metric
         self.connected = False
         self.last_cloud_presence_poll: float = None
 
@@ -468,9 +468,9 @@ class Manager(object):
     def getMetricsList(self):
         metrics = self.api.metrics.getMetricList()
         # TODO these are at the individual S30 level, when we have a device object we should move this there
-        systems = self.api.getSystems()
+        systems = self.api.system_list
         if len(systems) > 0:
-            system: lennox_system = self.api.getSystems()[0]
+            system: lennox_system = self.api.system_list[0]
             if system is not None:
                 metrics["sysUpTime"] = system.sysUpTime
                 metrics["diagLevel"] = system.diagLevel
@@ -499,7 +499,7 @@ class Manager(object):
         self.updateState(DS_CONNECTED)
 
     async def create_devices(self):
-        for system in self.api._systemList:
+        for system in self.api.system_list:
             equip_device_map: dict[int, Device] = self.system_equip_device_map.get(system.sysId)
             if equip_device_map is None:
                 equip_device_map = {}
@@ -531,7 +531,7 @@ class Manager(object):
                 d.register_device()
                 equip_device_map[VENTILATION_EQUIPMENT_ID] = d
 
-            for zone in system._zoneList:
+            for zone in system.zone_list:
                 if zone.is_zone_active():
                     z: S30ZoneThermostat = S30ZoneThermostat(self._hass, self._config_entry, system, zone, s30)
                     z.register_device()
@@ -563,7 +563,7 @@ class Manager(object):
         # Wait for zones to appear on each system
         systemsWithZones = 0
         loops: int = 0
-        numOfSystems = len(self.api.getSystems())
+        numOfSystems = len(self.api.system_list)
         # To speed startup, we only want to sleep when a message was not received.
         got_message: bool = True
         offline_error_logged = {}
@@ -580,7 +580,7 @@ class Manager(object):
                 await asyncio.sleep(1.0)
             systemsWithZones = 0
             got_message = await self.messagePump()
-            for lsystem in self.api.getSystems():
+            for lsystem in self.api.system_list:
                 if lsystem.cloud_status == "offline":
                     if offline_error_logged.get(lsystem.sysId) is None:
                         _LOGGER.error(
@@ -590,7 +590,7 @@ class Manager(object):
                 # Issue #33 - system configuration isn't complete until we've received the name from Lennox.
                 if lsystem.config_complete() is False:
                     continue
-                numZones = len(lsystem.getZoneList())
+                numZones = len(lsystem.zone_list)
                 _LOGGER.debug(
                     f"__init__:async_setup host [{self._ip_address}] wait for zones system ["
                     + lsystem.sysId
@@ -615,7 +615,7 @@ class Manager(object):
     async def connect_subscribe(self):
         await self.api.serverConnect()
 
-        for lsystem in self.api.getSystems():
+        for lsystem in self.api.system_list:
             await self.api.subscribe(lsystem)
 
     async def reinitialize_task(self) -> None:
@@ -655,7 +655,7 @@ class Manager(object):
 
         self.last_cloud_presence_poll = time.time()
 
-        for system in self.api._systemList:
+        for system in self.api.system_list:
             _LOGGER.debug(f"update_cloud_presence sysId [{system.sysId}]")
             old_status = system.cloud_status
             try:

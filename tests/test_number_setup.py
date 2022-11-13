@@ -26,7 +26,7 @@ from unittest.mock import Mock, patch
 
 @pytest.mark.asyncio
 async def test_async_number_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
@@ -35,8 +35,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = False
     system.dehumidifierType = None
     system.enhancedDehumidificationOvercoolingF_enable = False
-    manager._create_diagnostic_sensors = False
-    manager._create_inverter_power = False
+    manager.create_diagnostic_sensors = False
+    manager.create_inverter_power = False
     async_add_entities = Mock()
 
     await async_setup_entry(hass, entry, async_add_entities)
@@ -49,8 +49,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = False
-    manager._create_diagnostic_sensors = False
-    manager._create_inverter_power = False
+    manager.create_diagnostic_sensors = False
+    manager.create_inverter_power = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -62,8 +62,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = False
     system.dehumidifierType = None
     system.enhancedDehumidificationOvercoolingF_enable = True
-    manager._create_diagnostic_sensors = False
-    manager._create_inverter_power = False
+    manager.create_diagnostic_sensors = False
+    manager.create_inverter_power = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -75,8 +75,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
-    manager._create_diagnostic_sensors = True
-    manager._create_inverter_power = True
+    manager.create_diagnostic_sensors = True
+    manager.create_inverter_power = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -89,8 +89,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
-    manager._create_diagnostic_sensors = False
-    manager._create_inverter_power = False
+    manager.create_diagnostic_sensors = False
+    manager.create_inverter_power = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -103,8 +103,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = True
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
-    manager._create_diagnostic_sensors = True
-    manager._create_inverter_power = False
+    manager.create_diagnostic_sensors = True
+    manager.create_inverter_power = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -118,8 +118,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = True
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
-    manager._create_diagnostic_sensors = False
-    manager._create_inverter_power = True
+    manager.create_diagnostic_sensors = False
+    manager.create_inverter_power = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -133,8 +133,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.api._isLANConnection = True
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
-    manager._create_diagnostic_sensors = True
-    manager._create_inverter_power = True
+    manager.create_diagnostic_sensors = True
+    manager.create_inverter_power = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -149,8 +149,8 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
     system.ventilationUnitType = LENNOX_VENTILATION_DAMPER
-    manager._create_diagnostic_sensors = True
-    manager._create_inverter_power = True
+    manager.create_diagnostic_sensors = True
+    manager.create_inverter_power = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -166,9 +166,9 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = False
     system.ventilationUnitType = None
-    manager._create_diagnostic_sensors = False
-    manager._create_inverter_power = False
-    manager._create_equipment_parameters = True
+    manager.create_diagnostic_sensors = False
+    manager.create_inverter_power = False
+    manager.create_equipment_parameters = True
     async_add_entities = Mock()
     mock_async_get_current_platform = Mock()
 

@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     sensor_list = []
 
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager.api.getSystems():
+    for system in manager.api.system_list:
         _LOGGER.info(f"Create S30HomeStateBinarySensor binary_sensor system [{system.sysId}]")
         sensor = S30HomeStateBinarySensor(hass, manager, system)
         sensor_list.append(sensor)

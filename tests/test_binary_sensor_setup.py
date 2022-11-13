@@ -24,7 +24,7 @@ from custom_components.lennoxs30.binary_sensor import (
 
 @pytest.mark.asyncio
 async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     entry = manager._config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}

@@ -17,21 +17,21 @@ from tests.conftest import conftest_base_entity_availability
 
 @pytest.mark.asyncio
 async def test_button_parameter_update_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = EquipmentParameterUpdateButton(hass, manager, system)
     assert c.unique_id == f"{system.unique_id()}_BUT_PU".replace("-", "")
 
 
 @pytest.mark.asyncio
 async def test_button_parameter_update_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = EquipmentParameterUpdateButton(hass, manager, system)
     assert c.name == "South Moetown_parameter_update"
 
 
 @pytest.mark.asyncio
 async def test_button_parameter_update_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = EquipmentParameterUpdateButton(hass, manager, system)
     await c.async_added_to_hass()
     conftest_base_entity_availability(manager, system, c)
@@ -40,7 +40,7 @@ async def test_button_parameter_update_subscription(hass, manager: Manager, capl
 @pytest.mark.asyncio
 async def test_button_parameter_update_async_press(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = EquipmentParameterUpdateButton(hass, manager, system)
 
     with patch.object(system, "_internal_set_equipment_parameter_value") as _internal_set_equipment_parameter_value:
@@ -107,7 +107,7 @@ async def test_button_parameter_update_async_press(hass, manager_mz: Manager, ca
 
 @pytest.mark.asyncio
 async def test_button_parameter_update_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     await manager.create_devices()
     c = EquipmentParameterUpdateButton(hass, manager, system)
 
@@ -118,6 +118,6 @@ async def test_button_parameter_update_device_info(hass, manager: Manager, caplo
 
 
 def test_button_parameter_update_entity_category(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = EquipmentParameterUpdateButton(hass, manager, system)
     assert c.entity_category == "config"

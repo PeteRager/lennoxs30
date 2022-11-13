@@ -50,19 +50,19 @@ async def async_setup_entry(
 
     select_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager.api.getSystems():
+    for system in manager.api.system_list:
         if system.is_none(system.dehumidifierType) is False:
             _LOGGER.debug(f"Create DehumidificationModeSelect [{system.sysId}] system [{system.sysId}]")
             sel = DehumidificationModeSelect(hass, manager, system)
             select_list.append(sel)
-        for zone in system.getZones():
+        for zone in system.zone_list:
             if zone.is_zone_active():
                 if zone.dehumidificationOption or zone.humidificationOption:
                     _LOGGER.debug(f"Create HumiditySelect [{system.sysId}] zone [{zone.name}]")
                     climate = HumidityModeSelect(hass, manager, system, zone)
                     select_list.append(climate)
 
-        if manager._create_equipment_parameters:
+        if manager.create_equipment_parameters:
             for equipment in system.equipment.values():
                 for parameter in equipment.parameters.values():
                     if parameter.enabled and parameter.descriptor == LENNOX_EQUIPMENT_PARAMETER_FORMAT_RADIO:

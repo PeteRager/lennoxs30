@@ -33,7 +33,7 @@ from tests.conftest import loadfile
 
 @pytest.mark.asyncio
 async def test_diag_sensor_state(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -63,7 +63,7 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -79,7 +79,7 @@ async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     system.diagLevel = 2
@@ -147,7 +147,7 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -157,7 +157,7 @@ async def test_diag_sensor_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -216,7 +216,7 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, 
 async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -250,7 +250,7 @@ async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: M
 async def test_diag_sensor_device_info_no_device_errors(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -271,7 +271,7 @@ async def test_diag_sensor_device_info_no_device_errors(hass, manager_system_04_
 async def test_diag_sensor_device_info_no_device_errors_1(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)

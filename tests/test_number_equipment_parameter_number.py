@@ -29,7 +29,7 @@ from tests.conftest import conftest_parameter_extra_attributes
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -38,7 +38,7 @@ async def test_equipment_parameter_number_unique_id(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -47,7 +47,7 @@ async def test_equipment_parameter_number_name(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -56,7 +56,7 @@ async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -65,7 +65,7 @@ async def test_equipment_parameter_number_max_value(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -74,7 +74,7 @@ async def test_equipment_parameter_number_min_value(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -83,7 +83,7 @@ async def test_equipment_parameter_number_step(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -92,7 +92,7 @@ async def test_equipment_parameter_number_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -150,7 +150,7 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     await manager.create_devices()
@@ -163,7 +163,7 @@ async def test_equipment_parameter_number_device_info(hass, manager: Manager, ca
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -194,7 +194,7 @@ async def test_equipment_parameter_number_subscription(hass, manager: Manager, c
 
 
 def test_equipment_parameter_number_entity_category(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -202,7 +202,7 @@ def test_equipment_parameter_number_entity_category(hass, manager: Manager, capl
 
 
 def test_equipment_parameter_number_mode(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -210,7 +210,7 @@ def test_equipment_parameter_number_mode(hass, manager: Manager, caplog):
 
 
 def test_equipment_parameter_select_extra_attributes(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -222,7 +222,7 @@ async def test_equipment_parameter_number_set_zonetest_parameter(
     hass, manager_system_04_furn_ac_zoning: Manager, caplog
 ):
     manager = manager_system_04_furn_ac_zoning
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[256]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)

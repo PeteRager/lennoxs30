@@ -72,11 +72,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     _LOGGER.debug("climate:async_setup_platform enter")
     climate_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager.api.getSystems():
-        for zone in system.getZones():
+    for system in manager.api.system_list:
+        for zone in system.zone_list:
             if zone.is_zone_active():
                 _LOGGER.debug(
-                    f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]  metric [{manager._is_metric}]"
+                    f"Create S30 Climate system [{system.sysId}] zone [{zone.name}]  metric [{manager.is_metric}]"
                 )
                 climate = S30Climate(hass, manager, system, zone)
                 climate_list.append(climate)
@@ -172,7 +172,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
     def is_single_setpoint_active(self) -> bool:
         # If the system is configured to use a single setpoint for both heat and cool
-        if self._zone._system.single_setpoint_mode:
+        if self._zone.system.single_setpoint_mode:
             return True
         # If it's in heat and cool then there are two setpoints
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
@@ -212,7 +212,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
@@ -222,20 +222,20 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
             return None
         if self._zone.systemMode == LENNOX_HVAC_COOL:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.minCsp
             return self._zone.minCspC
         if self._zone.systemMode == LENNOX_HVAC_HEAT:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.minHsp
             return self._zone.minHspC
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL and self._system.single_setpoint_mode:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.minCsp
             return self._zone.minCspC
         # Single Setpoint Mode Not Enabled
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.minHsp
             return self._zone.minHspC
         _LOGGER.warning(
@@ -249,20 +249,20 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
             return None
         if self._zone.systemMode == LENNOX_HVAC_COOL:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.maxCsp
             return self._zone.maxCspC
         if self._zone.systemMode == LENNOX_HVAC_HEAT:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL and self._system.single_setpoint_mode:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC
         # Single Setpoint Mode Not Enabled
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
-            if self._manager._is_metric is False:
+            if self._manager.is_metric is False:
                 return self._zone.maxCsp
             return self._zone.maxCspC
         _LOGGER.warning(
@@ -276,7 +276,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return None
 
         """Return the temperature we try to reach."""
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return self._zone.getTargetTemperatureF()
         else:
             return self._zone.getTargetTemperatureC()
@@ -292,7 +292,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                 f"climate:current_temperature name [{self._myname}] has bad data quality - temperatureStatus [{self._zone.temperatureStatus}] returning None"
             )
             return None
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             t = self._zone.getTemperature()
             _LOGGER.debug(f"climate:current_temperature name [{self._myname}] temperature [{t}] F")
         else:
@@ -307,7 +307,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         if self.is_single_setpoint_active():
             return None
         """Return the highbound target temperature we try to reach."""
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             _LOGGER.debug(f"climate:target_temperature_high name [{self._myname}] temperature [{self._zone.csp}] F")
             return self._zone.csp
         else:
@@ -321,7 +321,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         if self.is_single_setpoint_active():
             return None
         """Return the lowbound target temperature we try to reach."""
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             _LOGGER.debug(f"climate:target_temperature_low name [{self._myname}] temperature [{self._zone.hsp}] F")
             return self._zone.hsp
         else:
@@ -358,7 +358,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
     @property
     def target_temperature_step(self) -> float:
-        if self._manager._is_metric is False:
+        if self._manager.is_metric is False:
             return 1.0
         return 0.5
 
@@ -663,7 +663,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return
 
         # If single setpoint mode, then must specify r_temperature and not high and low
-        if self._zone._system.single_setpoint_mode:
+        if self._zone.system.single_setpoint_mode:
             if r_temperature is None:
                 msg = f"climate:async_set_temperature - zone in single setpoint mode must provide [{ATTR_TEMPERATURE}] - zone [{self._myname}]"
                 _LOGGER.error(msg)
@@ -688,11 +688,11 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                 return
 
             if r_temperature is not None:
-                if self._zone._system.single_setpoint_mode:
+                if self._zone.system.single_setpoint_mode:
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature in single_setpoint_modesystem - zone [{self._myname}] temperature [{r_temperature}]"
                     )
-                    if self._manager._is_metric is False:
+                    if self._manager.is_metric is False:
                         await self._zone.perform_setpoint(r_sp=r_temperature)
                     else:
                         await self._zone.perform_setpoint(r_spC=r_temperature)
@@ -700,7 +700,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in cool mode - zone [{self._myname}] temperature [{r_temperature}]"
                     )
-                    if self._manager._is_metric is False:
+                    if self._manager.is_metric is False:
                         await self._zone.perform_setpoint(r_csp=r_temperature)
                     else:
                         await self._zone.perform_setpoint(r_cspC=r_temperature)
@@ -708,7 +708,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                     _LOGGER.debug(
                         f"climate:async_set_temperature set_temperature system in heat mode - zone [{self._myname}] sp [{r_temperature}]"
                     )
-                    if self._manager._is_metric is False:
+                    if self._manager.is_metric is False:
                         await self._zone.perform_setpoint(r_hsp=r_temperature)
                     else:
                         await self._zone.perform_setpoint(r_hspC=r_temperature)
@@ -725,7 +725,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                     + str(r_hsp)
                     + "]"
                 )
-                if self._manager._is_metric is False:
+                if self._manager.is_metric is False:
                     await self._zone.perform_setpoint(r_hsp=r_hsp, r_csp=r_csp)
                 else:
                     await self._zone.perform_setpoint(r_hspC=r_hsp, r_cspC=r_csp)

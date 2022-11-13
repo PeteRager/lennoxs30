@@ -19,8 +19,8 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_manual_away_mode_switch_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = False
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = False
     c = S30ManualAwayModeSwitch(hass, manager, system)
     await c.async_added_to_hass()
 
@@ -38,8 +38,8 @@ async def test_manual_away_mode_switch_subscription(hass, manager: Manager, capl
 
 @pytest.mark.asyncio
 async def test_manual_away_mode_switch(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = False
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = False
     c = S30ManualAwayModeSwitch(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_SW_MA").replace("-", "")
@@ -75,8 +75,8 @@ async def test_manual_away_mode_switch(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_smart_away_enabled_switch_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = False
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = False
     c = S30SmartAwayEnableSwitch(hass, manager, system)
     await c.async_added_to_hass()
 
@@ -94,8 +94,8 @@ async def test_smart_away_enabled_switch_subscription(hass, manager: Manager, ca
 
 @pytest.mark.asyncio
 async def test_smart_away_enabled_switch(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = False
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = False
     c = S30SmartAwayEnableSwitch(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_SW_SAE").replace("-", "")

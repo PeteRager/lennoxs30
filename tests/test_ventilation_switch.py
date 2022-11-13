@@ -17,7 +17,7 @@ from unittest.mock import patch
 
 @pytest.mark.asyncio
 async def test_ventilation_switch(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     system.ventilationUnitType = LENNOX_VENTILATION_DAMPER
     c = S30VentilationSwitch(hass, manager, system)
 
@@ -112,7 +112,7 @@ async def test_ventilation_switch(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_ventilation_switch_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = S30VentilationSwitch(hass, manager, system)
     await c.async_added_to_hass()
 

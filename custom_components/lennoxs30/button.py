@@ -30,8 +30,8 @@ async def async_setup_entry(
 
     button_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
-    for system in manager.api.getSystems():
-        if manager._create_equipment_parameters:
+    for system in manager.api.system_list:
+        if manager.create_equipment_parameters:
             button = EquipmentParameterUpdateButton(hass, manager, system)
             button_list.append(button)
 

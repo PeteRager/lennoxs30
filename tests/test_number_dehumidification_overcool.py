@@ -26,7 +26,7 @@ from lennoxs30api.s30exception import S30Exception
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DehumidificationOverCooling(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_DOC").replace("-", "")
@@ -34,7 +34,7 @@ async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DehumidificationOverCooling(hass, manager, system)
 
     assert c.name == system.name + "_dehumidification_overcooling"
@@ -42,67 +42,67 @@ async def test_dehumd_overcool_name(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_unique_id_unit_of_measure(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.unit_of_measurement == TEMP_CELSIUS
-    manager._is_metric = False
+    manager.is_metric = False
     assert c.unit_of_measurement == TEMP_FAHRENHEIT
 
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.max_value == system.enhancedDehumidificationOvercoolingC_max
-    manager._is_metric = False
+    manager.is_metric = False
     assert c.max_value == system.enhancedDehumidificationOvercoolingF_max
 
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.min_value == system.enhancedDehumidificationOvercoolingC_min
-    manager._is_metric = False
+    manager.is_metric = False
     assert c.min_value == system.enhancedDehumidificationOvercoolingF_min
 
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.step == system.enhancedDehumidificationOvercoolingC_inc
-    manager._is_metric = False
+    manager.is_metric = False
     assert c.step == system.enhancedDehumidificationOvercoolingF_inc
 
 
 @pytest.mark.asyncio
 async def test_dehumd_overcool_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     assert c.value == system.enhancedDehumidificationOvercoolingC
-    manager._is_metric = False
+    manager.is_metric = False
     assert c.value == system.enhancedDehumidificationOvercoolingF
 
 
 @pytest.mark.asyncio
 async def test_dehumd_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
 
-    manager._is_metric = True
+    manager.is_metric = True
     with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
         await c.async_set_native_value(2.0)
         assert set_enhancedDehumidificationOvercooling.call_count == 1
         assert set_enhancedDehumidificationOvercooling.call_args.kwargs["r_c"] == 2.0
 
-    manager._is_metric = False
+    manager.is_metric = False
     with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
         await c.async_set_native_value(2.0)
         assert set_enhancedDehumidificationOvercooling.call_count == 1
@@ -132,8 +132,8 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
@@ -143,8 +143,8 @@ async def test_dehumd_device_info(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_dehumd_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     await c.async_added_to_hass()
 

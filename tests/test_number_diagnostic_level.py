@@ -26,7 +26,7 @@ from lennoxs30api.s30exception import S30Exception
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_misc(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.should_poll == False
     assert c.update() == True
@@ -34,7 +34,7 @@ async def test_diagnostic_level_misc(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
 
     assert c.unique_id == (system.unique_id() + "_DL").replace("-", "")
@@ -42,7 +42,7 @@ async def test_diagnostic_level_unique_id(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_name(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
 
     assert c.name == system.name + "_diagnostic_level"
@@ -50,35 +50,35 @@ async def test_diagnostic_level_name(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_unique_id_unit_of_measure(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.unit_of_measurement == None
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_max_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.max_value == 2
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_min_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.min_value == 0
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_step(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.step == 1
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
     assert c.value == system.diagLevel
     assert c.available == True
@@ -90,7 +90,7 @@ async def test_diagnostic_level_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
 
     with patch.object(system, "set_diagnostic_level") as set_diagnostic_level:
@@ -189,8 +189,8 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_device_info(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DiagnosticLevelNumber(hass, manager, system)
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
@@ -200,8 +200,8 @@ async def test_diagnostic_level_device_info(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diagnostic_level_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager.api._systemList[0]
-    manager._is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    manager.is_metric = True
     c = DiagnosticLevelNumber(hass, manager, system)
     await c.async_added_to_hass()
 
