@@ -16,7 +16,6 @@ from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
 from custom_components.lennoxs30.helpers import (
-    equipment_parameters_to_json,
     helper_create_equipment_entity_name,
     helper_get_equipment_device_info,
     lennox_uom_to_ha_uom,
@@ -47,7 +46,7 @@ async def test_helpers_helper_get_equipment_device_info(manager: Manager):
     identifiers = device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_ou"
+        assert x[1] == system.unique_id + "_ou"
 
 
 @pytest.mark.asyncio
@@ -59,7 +58,7 @@ async def test_helpers_helper_get_equipment_device_info_no_system(manager: Manag
         identifiers = device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert system.sysId in caplog.messages[0]
         assert "1" in caplog.messages[0]
@@ -77,7 +76,7 @@ async def test_helpers_helper_get_equipment_device_info_no_device(manager: Manag
         identifiers = device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert system.sysId in caplog.messages[0]
         assert "1" in caplog.messages[0]
@@ -107,12 +106,3 @@ async def test_helpers_create_equipment_entity_name(manager: Manager, caplog):
     assert helper_create_equipment_entity_name(system, equipment, "test - h") == f"{system.name}_iu_test_h".replace(
         " ", "_"
     )
-
-
-@pytest.mark.asyncio
-async def test_helpers_equipment_parameters_to_json(manager: Manager, caplog):
-    await manager.create_devices()
-    system = manager.api.system_list[0]
-
-    #    str = equipment_parameters_to_json(system)
-    pass

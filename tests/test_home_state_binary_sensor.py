@@ -77,7 +77,7 @@ async def test_away_mode_value(hass, manager: Manager, caplog):
     manager.is_metric = False
     c = S30HomeStateBinarySensor(hass, manager, system)
 
-    assert c.unique_id == (system.unique_id() + "_HS").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_HS").replace("-", "")
     assert c.name == system.name + "_home_state"
     assert c.device_class == "presence"
     assert c.available == True
@@ -87,7 +87,7 @@ async def test_away_mode_value(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
     assert c.is_on == False
     attrs = c.extra_state_attributes

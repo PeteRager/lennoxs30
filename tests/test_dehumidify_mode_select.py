@@ -25,7 +25,7 @@ from lennoxs30api.s30exception import S30Exception
 async def test_dehumidifier_mode_mode_select_unique_id(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = DehumidificationModeSelect(hass, manager, system)
-    assert c.unique_id == system.unique_id() + "_DHMS"
+    assert c.unique_id == system.unique_id + "_DHMS"
 
 
 @pytest.mark.asyncio
@@ -190,4 +190,4 @@ async def test_dehumidifier_mode_mode_select_device_info(hass, manager_mz: Manag
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id

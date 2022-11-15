@@ -56,7 +56,7 @@ class EquipmentParameterUpdateButton(S30BaseEntityMixin, ButtonEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_PARAMETER_UPDATE_BUTTON).replace("-", "")
+        return (self._system.unique_id + UNIQUE_ID_SUFFIX_PARAMETER_UPDATE_BUTTON).replace("-", "")
 
     @property
     def name(self):

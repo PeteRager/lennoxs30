@@ -86,7 +86,7 @@ class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_HS").replace("-", "")
+        return (self._system.unique_id + "_HS").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -113,7 +113,7 @@ class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
 
     @property
@@ -145,7 +145,7 @@ class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR).replace("-", "")
+        return (self._system.unique_id + UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR).replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -169,7 +169,7 @@ class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
 
     @property
@@ -205,7 +205,7 @@ class S30RelayServerStatus(S30BaseEntityMixin, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR).replace("-", "")
+        return (self._system.unique_id + UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR).replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -229,7 +229,7 @@ class S30RelayServerStatus(S30BaseEntityMixin, BinarySensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
 
     @property
@@ -269,7 +269,7 @@ class S30CloudConnectedStatus(S30BaseEntityMixin, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR).replace("-", "")
+        return (self._system.unique_id + UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR).replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -299,7 +299,7 @@ class S30CloudConnectedStatus(S30BaseEntityMixin, BinarySensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
 
     @property

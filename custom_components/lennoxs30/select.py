@@ -202,7 +202,7 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return self._system.unique_id() + "_DHMS"
+        return self._system.unique_id + "_DHMS"
 
     @property
     def name(self):
@@ -247,7 +247,7 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         result = {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
         return result
 
@@ -287,7 +287,7 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
         return (
-            f"{self._system.unique_id()}_{UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT}_{self.equipment.equipment_id}_{self.parameter.pid}"
+            f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT}_{self.equipment.equipment_id}_{self.parameter.pid}"
         ).replace("-", "")
 
     @property

@@ -24,7 +24,7 @@ from homeassistant.components.binary_sensor import (
 async def test_internet_status_init(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = S30InternetStatus(hass, manager, system)
-    assert c.unique_id == (system.unique_id() + "_INT_STAT").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_INT_STAT").replace("-", "")
     assert c.extra_state_attributes == {}
     assert c.update() == True
     assert c.should_poll == False
@@ -37,7 +37,7 @@ async def test_internet_status_init(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
 
 @pytest.mark.asyncio

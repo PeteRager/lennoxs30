@@ -29,7 +29,7 @@ class S30ControllerDevice(Device):
 
     @property
     def unique_name(self) -> str:
-        return self._system.unique_id()
+        return self._system.unique_id
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)
@@ -62,7 +62,7 @@ class S30OutdoorUnit(Device):
 
     @property
     def unique_name(self) -> str:
-        return self._system.unique_id() + "_ou"
+        return self._system.unique_id + "_ou"
 
     @property
     def device_model(self):
@@ -107,7 +107,7 @@ class S30IndoorUnit(Device):
 
     @property
     def unique_name(self) -> str:
-        return self._system.unique_id() + "_iu"
+        return self._system.unique_id + "_iu"
 
     @property
     def device_model(self):
@@ -158,7 +158,7 @@ class S30AuxiliaryUnit(Device):
             suffix = self.eq.equipment_id
         else:
             suffix = self.eq.unit_serial_number
-        return f"{self._system.unique_id()}_{suffix}"
+        return f"{self._system.unique_id}_{suffix}"
 
     @property
     def device_model(self):
@@ -200,7 +200,7 @@ class S30VentilationUnit(Device):
     def unique_name(self) -> str:
         # Not sure if every device has a serial number.
         suffix = "ventilation"
-        return f"{self._system.unique_id()}_{suffix}"
+        return f"{self._system.unique_id}_{suffix}"
 
     @property
     def device_model(self):

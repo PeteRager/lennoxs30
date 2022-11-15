@@ -79,10 +79,10 @@ async def test_create_devices(hass, manager_2_systems: Manager, caplog):
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id()
+        assert elem[1] == manager.api.system_list[0].unique_id
         device = manager.system_equip_device_map[system.sysId][0]
         assert isinstance(device, S30ControllerDevice)
-        assert device.unique_name == system.unique_id()
+        assert device.unique_name == system.unique_id
 
         call = mock_create_device.mock_calls[1]
         identifiers = call.kwargs["identifiers"]
@@ -93,14 +93,14 @@ async def test_create_devices(hass, manager_2_systems: Manager, caplog):
         assert call.kwargs["hw_version"] == "5821D09999"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_ou"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_ou"
         device = manager.system_equip_device_map[system.sysId][1]
         assert isinstance(device, S30OutdoorUnit)
-        assert device.unique_name == system.unique_id() + "_ou"
+        assert device.unique_name == system.unique_id + "_ou"
 
         call = mock_create_device.mock_calls[2]
         identifiers = call.kwargs["identifiers"]
@@ -111,14 +111,14 @@ async def test_create_devices(hass, manager_2_systems: Manager, caplog):
         assert call.kwargs["hw_version"] == "1621B25999"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_iu"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_iu"
         device = manager.system_equip_device_map[system.sysId][2]
         assert isinstance(device, S30IndoorUnit)
-        assert device.unique_name == system.unique_id() + "_iu"
+        assert device.unique_name == system.unique_id + "_iu"
 
         call = mock_create_device.mock_calls[3]
         zone: lennox_zone = manager.api.system_list[0].zone_list[0]
@@ -128,7 +128,7 @@ async def test_create_devices(hass, manager_2_systems: Manager, caplog):
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
@@ -157,10 +157,10 @@ async def test_create_devices_no_outdoor(hass, manager: Manager, caplog):
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id()
+        assert elem[1] == manager.api.system_list[0].unique_id
         device = manager.system_equip_device_map[system.sysId][0]
         assert isinstance(device, S30ControllerDevice)
-        assert device.unique_name == system.unique_id()
+        assert device.unique_name == system.unique_id
 
         call = mock_create_device.mock_calls[1]
         identifiers = call.kwargs["identifiers"]
@@ -171,15 +171,15 @@ async def test_create_devices_no_outdoor(hass, manager: Manager, caplog):
         assert call.kwargs["hw_version"] == "1621B25999"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_iu"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_iu"
         device = manager.system_equip_device_map[system.sysId][2]
         assert isinstance(device, S30IndoorUnit)
-        assert device.unique_name == system.unique_id() + "_iu"
+        assert device.unique_name == system.unique_id + "_iu"
 
         call = mock_create_device.mock_calls[2]
         zone: lennox_zone = manager.api.system_list[0].zone_list[0]
@@ -189,7 +189,7 @@ async def test_create_devices_no_outdoor(hass, manager: Manager, caplog):
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
@@ -219,10 +219,10 @@ async def test_create_devices_no_indoor(hass, manager: Manager, caplog):
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id()
+        assert elem[1] == manager.api.system_list[0].unique_id
         device = manager.system_equip_device_map[system.sysId][0]
         assert isinstance(device, S30ControllerDevice)
-        assert device.unique_name == system.unique_id()
+        assert device.unique_name == system.unique_id
 
         call = mock_create_device.mock_calls[1]
         identifiers = call.kwargs["identifiers"]
@@ -233,14 +233,14 @@ async def test_create_devices_no_indoor(hass, manager: Manager, caplog):
         assert call.kwargs["hw_version"] == "5821D09999"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_ou"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_ou"
         device = manager.system_equip_device_map[system.sysId][1]
         assert isinstance(device, S30OutdoorUnit)
-        assert device.unique_name == system.unique_id() + "_ou"
+        assert device.unique_name == system.unique_id + "_ou"
 
         call = mock_create_device.mock_calls[2]
         zone: lennox_zone = manager.api.system_list[0].zone_list[0]
@@ -250,7 +250,7 @@ async def test_create_devices_no_indoor(hass, manager: Manager, caplog):
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
@@ -278,7 +278,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id()
+        assert elem[1] == manager.api.system_list[0].unique_id
 
         call = mock_create_device.mock_calls[1]
         identifiers = call.kwargs["identifiers"]
@@ -289,15 +289,15 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["hw_version"] == "5821E06000"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_ou"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_ou"
         device = manager.system_equip_device_map[system.sysId][1]
         assert isinstance(device, S30OutdoorUnit)
-        assert device.unique_name == system.unique_id() + "_ou"
+        assert device.unique_name == system.unique_id + "_ou"
 
         call = mock_create_device.mock_calls[2]
         identifiers = call.kwargs["identifiers"]
@@ -308,15 +308,15 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["hw_version"] == "5920H11000"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_iu"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_iu"
         device = manager.system_equip_device_map[system.sysId][2]
         assert isinstance(device, S30IndoorUnit)
-        assert device.unique_name == system.unique_id() + "_iu"
+        assert device.unique_name == system.unique_id + "_iu"
 
         call = mock_create_device.mock_calls[3]
         identifiers = call.kwargs["identifiers"]
@@ -327,15 +327,15 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["hw_version"] == "BT21B13000"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_BT21B13000"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_BT21B13000"
         device = manager.system_equip_device_map[system.sysId][3]
         assert isinstance(device, S30AuxiliaryUnit)
-        assert device.unique_name == system.unique_id() + "_BT21B13000"
+        assert device.unique_name == system.unique_id + "_BT21B13000"
 
         call = mock_create_device.mock_calls[4]
         identifiers = call.kwargs["identifiers"]
@@ -344,7 +344,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["model"] == "2_stage_hrv"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
         device = manager.system_equip_device_map[system.sysId][VENTILATION_EQUIPMENT_ID]
         assert isinstance(device, S30VentilationUnit)
 
@@ -356,7 +356,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
@@ -371,7 +371,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
@@ -386,7 +386,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
 
         for elem in identifiers:
             break
@@ -422,7 +422,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id()
+        assert elem[1] == manager.api.system_list[0].unique_id
 
         call = mock_create_device.mock_calls[1]
         identifiers = call.kwargs["identifiers"]
@@ -433,11 +433,11 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert call.kwargs["hw_version"] == None
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_ou"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_ou"
 
         call = mock_create_device.mock_calls[2]
         identifiers = call.kwargs["identifiers"]
@@ -448,11 +448,11 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert call.kwargs["hw_version"] == None
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id()
+        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
-        assert elem[1] == manager.api.system_list[0].unique_id() + "_iu"
+        assert elem[1] == manager.api.system_list[0].unique_id + "_iu"
 
 
 @pytest.mark.asyncio

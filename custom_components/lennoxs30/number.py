@@ -122,7 +122,7 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_DL").replace("-", "")
+        return (self._system.unique_id + "_DL").replace("-", "")
 
     @property
     def name(self):
@@ -167,7 +167,7 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         result = {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
         return result
 
@@ -208,7 +208,7 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_DOC").replace("-", "")
+        return (self._system.unique_id + "_DOC").replace("-", "")
 
     @property
     def name(self):
@@ -265,7 +265,7 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         result = {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
         return result
 
@@ -297,7 +297,7 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_CIRC_TIME").replace("-", "")
+        return (self._system.unique_id + "_CIRC_TIME").replace("-", "")
 
     @property
     def name(self):
@@ -341,7 +341,7 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         result = {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
         return result
 
@@ -368,7 +368,7 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER).replace("-", "")
+        return (self._system.unique_id + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER).replace("-", "")
 
     @property
     def name(self):
@@ -458,7 +458,7 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
         return (
-            f"{self._system.unique_id()}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_{self.equipment.equipment_id}_{self.parameter.pid}"
+            f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_{self.equipment.equipment_id}_{self.parameter.pid}"
         ).replace("-", "")
 
     @property

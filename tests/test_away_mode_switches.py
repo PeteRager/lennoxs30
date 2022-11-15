@@ -42,7 +42,7 @@ async def test_manual_away_mode_switch(hass, manager: Manager, caplog):
     manager.is_metric = False
     c = S30ManualAwayModeSwitch(hass, manager, system)
 
-    assert c.unique_id == (system.unique_id() + "_SW_MA").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_SW_MA").replace("-", "")
     assert c.name == system.name + "_manual_away_mode"
     assert c.available == True
     assert len(c.extra_state_attributes) == 0
@@ -52,7 +52,7 @@ async def test_manual_away_mode_switch(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
     system.manualAwayMode = False
     assert c.is_on == False
@@ -98,7 +98,7 @@ async def test_smart_away_enabled_switch(hass, manager: Manager, caplog):
     manager.is_metric = False
     c = S30SmartAwayEnableSwitch(hass, manager, system)
 
-    assert c.unique_id == (system.unique_id() + "_SW_SAE").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_SW_SAE").replace("-", "")
     assert c.name == system.name + "_smart_away_enable"
     assert len(c.extra_state_attributes) == 0
     assert c.update() == True
@@ -107,7 +107,7 @@ async def test_smart_away_enabled_switch(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
     system.sa_enabled = False
     assert c.is_on == False

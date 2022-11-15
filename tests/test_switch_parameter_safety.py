@@ -52,7 +52,7 @@ async def test_parameter_safety_switch(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = S30ParameterSafetySwitch(hass, manager, system)
 
-    assert c.unique_id == (system.unique_id() + UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH).replace("-", "")
+    assert c.unique_id == (system.unique_id + UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH).replace("-", "")
     assert c.name == system.name + "_parameter_safety"
     assert len(c.extra_state_attributes) == 0
     assert c.update() == True
@@ -62,7 +62,7 @@ async def test_parameter_safety_switch(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
     assert c.is_on == True
     manager.parameter_safety_turn_off(system.sysId)

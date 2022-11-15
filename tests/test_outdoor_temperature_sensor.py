@@ -35,7 +35,7 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     s = S30OutdoorTempSensor(hass, manager, system)
 
     assert system.outdoorTemperatureStatus == LENNOX_STATUS_GOOD
-    assert s.unique_id == (system.unique_id() + "_OT").replace("-", "")
+    assert s.unique_id == (system.unique_id + "_OT").replace("-", "")
     assert s.available == True
     assert s.should_poll == False
     assert s.update() == True
@@ -54,7 +54,7 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_ou"
+        assert x[1] == system.unique_id + "_ou"
 
     caplog.clear()
     with caplog.at_level(logging.WARNING):

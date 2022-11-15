@@ -35,7 +35,7 @@ async def test_humidity_sensor(hass, manager: Manager, caplog):
     zone: lennox_zone = system.getZone(0)
     s = S30HumiditySensor(hass, manager, system, zone)
 
-    assert s.unique_id == (system.unique_id() + "_" + str(zone.id) + "_H").replace("-", "")
+    assert s.unique_id == (system.unique_id + "_" + str(zone.id) + "_H").replace("-", "")
     assert s.name == system.name + "_" + zone.name + "_humidity"
     assert s.available == True
     assert s.should_poll == False

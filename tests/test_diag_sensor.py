@@ -151,7 +151,7 @@ async def test_diag_sensor_unique_id(hass, manager: Manager, caplog):
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    st = f"{system.unique_id()}_DS_1_Comp. Short Cycle Delay Active".replace("-", "")
+    st = f"{system.unique_id}_DS_1_Comp. Short Cycle Delay Active".replace("-", "")
     assert s.unique_id == st
 
 
@@ -224,7 +224,7 @@ async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: M
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_ou"
+        assert x[1] == system.unique_id + "_ou"
 
     equipment = system.equipment[2]
     diagnostic = equipment.diagnostics[1]
@@ -235,7 +235,7 @@ async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: M
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_iu"
+        assert x[1] == system.unique_id + "_iu"
 
     equipment = system.equipment[3]
     diagnostic = equipment.diagnostics[1]
@@ -243,7 +243,7 @@ async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: M
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_BT21B13000"
+        assert x[1] == system.unique_id + "_BT21B13000"
 
 
 @pytest.mark.asyncio
@@ -261,7 +261,7 @@ async def test_diag_sensor_device_info_no_device_errors(hass, manager_system_04_
         identifiers = s.device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert "[1]" in caplog.messages[0]
         assert "No equipment device map found" in caplog.messages[0]
@@ -282,7 +282,7 @@ async def test_diag_sensor_device_info_no_device_errors_1(hass, manager_system_0
         identifiers = s.device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert "[1]" in caplog.messages[0]
         assert "Unable to find" in caplog.messages[0]

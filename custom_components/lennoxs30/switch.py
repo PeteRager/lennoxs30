@@ -91,7 +91,7 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_VST").replace("-", "")
+        return (self._system.unique_id + "_VST").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -128,7 +128,7 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
                 f"No equipment device map found for sysId [{self._system.sysId}] equipment VENTILATION_EQUIPMENT_ID, please raise an issue"
             )
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
 
     async def async_turn_on(self, **kwargs):
@@ -182,7 +182,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_ADST").replace("-", "")
+        return (self._system.unique_id + "_ADST").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -209,7 +209,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+        return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
         try:
@@ -257,7 +257,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_SW_MA").replace("-", "")
+        return (self._system.unique_id + "_SW_MA").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -273,7 +273,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+        return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
         try:
@@ -321,7 +321,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_SW_SAE").replace("-", "")
+        return (self._system.unique_id + "_SW_SAE").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -344,7 +344,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+        return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
         try:
@@ -392,7 +392,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_SW_ZE").replace("-", "")
+        return (self._system.unique_id + "_SW_ZE").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -415,7 +415,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+        return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
         try:
@@ -455,7 +455,7 @@ class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (f"{self._system.unique_id()}{UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH}").replace("-", "")
+        return (f"{self._system.unique_id}{UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH}").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -479,7 +479,7 @@ class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        return {"identifiers": {(DOMAIN, self._system.unique_id())}}
+        return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
         self._manager.parameter_safety_turn_on(self._system.sysId)

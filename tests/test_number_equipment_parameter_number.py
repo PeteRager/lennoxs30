@@ -33,7 +33,7 @@ async def test_equipment_parameter_number_unique_id(hass, manager: Manager, capl
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
-    assert c.unique_id == (f"{system.unique_id()}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_0_72").replace("-", "")
+    assert c.unique_id == (f"{system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_0_72").replace("-", "")
 
 
 @pytest.mark.asyncio

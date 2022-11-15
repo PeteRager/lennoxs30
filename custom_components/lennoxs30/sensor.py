@@ -7,6 +7,7 @@
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name
 import logging
+from typing import Any
 
 from homeassistant.const import (
     PERCENTAGE,
@@ -38,8 +39,13 @@ from lennoxs30api import (
 
 
 from .base_entity import S30BaseEntityMixin
-from .const import MANAGER, UNIQUE_ID_SUFFIX_DIAG_SENSOR
-from .helpers import lennox_uom_to_ha_uom
+from .const import (
+    MANAGER,
+    UNIQUE_ID_SUFFIX_ACTIVE_ALERTS_SENSOR,
+    UNIQUE_ID_SUFFIX_ALERT_SENSOR,
+    UNIQUE_ID_SUFFIX_DIAG_SENSOR,
+)
+from .helpers import helper_create_system_unique_id, lennox_uom_to_ha_uom
 
 from . import Manager
 
@@ -100,12 +106,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     _LOGGER.info(f"Create S30HumSensor sensor system [{system.sysId}] zone [{zone.id}]")
                     sensor_list.append(S30HumiditySensor(hass, manager, system, zone))
 
+        if manager.create_alert_sensors:
+            sensor_list.append(S30AlertSensor(hass, manager, system))
+            sensor_list.append(S30ActiveAlertsList(hass, manager, system))
+
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
         _LOGGER.debug(f"sensor:async_setup_platform exit - created [{len(sensor_list)}] entitites")
         return True
     else:
-        _LOGGER.info("sensor:async_setup_platform exit - no system outdoor temperatures found")
+        _LOGGER.info("sensor:async_setup_platform exit - no sensors found")
         return False
 
 
@@ -177,7 +187,7 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
         return (
-            f"{self._system.unique_id()}_{UNIQUE_ID_SUFFIX_DIAG_SENSOR}_{self._equipment.equipment_id}_{self._diagnostic.name}"
+            f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_DIAG_SENSOR}_{self._equipment.equipment_id}_{self._diagnostic.name}"
         ).replace("-", "")
 
     @property
@@ -225,7 +235,7 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
                 f"No equipment device map found for sysId [{self._system.sysId}] equipment [{self._equipment.equipment_id}] [{self._equipment.equipment_name}] [{self._equipment.equipment_type_name}] [{self._equipment.equipType}], please raise an issue and post a message log"
             )
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id())},
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }
 
     @property
@@ -258,7 +268,7 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_OT").replace("-", "")
+        return (self._system.unique_id + "_OT").replace("-", "")
 
     @property
     def extra_state_attributes(self):
@@ -301,7 +311,7 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
+            "identifiers": {(DOMAIN, self._system.unique_id + "_ou")},
         }
 
 
@@ -334,7 +344,7 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._zone.system.unique_id() + "_" + str(self._zone.id)).replace("-", "") + "_T"
+        return (self._zone.system.unique_id + "_" + str(self._zone.id)).replace("-", "") + "_T"
 
     @property
     def extra_state_attributes(self):
@@ -402,7 +412,7 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._zone.system.unique_id() + "_" + str(self._zone.id)).replace("-", "") + "_H"
+        return (self._zone.system.unique_id + "_" + str(self._zone.id)).replace("-", "") + "_H"
 
     @property
     def extra_state_attributes(self):
@@ -474,7 +484,7 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (self._system.unique_id() + "_IE").replace("-", "")
+        return (self._system.unique_id + "_IE").replace("-", "")
 
     @property
     def name(self):
@@ -519,5 +529,125 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         return {
-            "identifiers": {(DOMAIN, self._system.unique_id() + "_ou")},
+            "identifiers": {(DOMAIN, self._system.unique_id + "_ou")},
+        }
+
+
+class S30AlertSensor(S30BaseEntityMixin, SensorEntity):
+    """Class for Lennox S30 thermostat temperature."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+    ):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._myname = self._system.name + "_alert"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30AlertSensor myname [{self._myname}]")
+        self._system.registerOnUpdateCallback(self.update_callback, ["alert"])
+        await super().async_added_to_hass()
+
+    def update_callback(self):
+        """Callback to execute on data change"""
+        _LOGGER.debug(f"update_callback S30AlertSensor myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        return helper_create_system_unique_id(self._system, UNIQUE_ID_SUFFIX_ALERT_SENSOR)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {}
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def native_value(self):
+        return self._system.alert
+
+    @property
+    def state_class(self):
+        return SensorStateClass.MEASUREMENT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id)},
+        }
+
+
+class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
+    """Class for Lennox S30 thermostat temperature."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+    ):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._myname = self._system.name + "_active_alerts"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug(f"async_added_to_hass S30ActiveAlertList myname [{self._myname}]")
+        self._system.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "active_alerts",
+                "alerts_num_cleared",
+                "alerts_num_active",
+                "alerts_last_cleared_id",
+                "alerts_num_in_active_array",
+            ],
+        )
+        await super().async_added_to_hass()
+
+    def update_callback(self):
+        """Callback to execute on data change"""
+        _LOGGER.debug(f"update_callback S30ActiveAlertList myname [{self._myname}]")
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        return helper_create_system_unique_id(self._system, UNIQUE_ID_SUFFIX_ACTIVE_ALERTS_SENSOR)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attrs: dict[str, Any] = {}
+        attrs["alert_list"] = self._system.active_alerts
+        attrs["alerts_num_cleared"] = self._system.alerts_num_cleared
+        attrs["alerts_last_cleared_id"] = self._system.alerts_last_cleared_id
+        attrs["alerts_num_in_active_array"] = self._system.alerts_num_in_active_array
+        return attrs
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def native_value(self):
+        return self._system.alerts_num_active
+
+    @property
+    def state_class(self):
+        return SensorStateClass.MEASUREMENT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._system.unique_id)},
         }

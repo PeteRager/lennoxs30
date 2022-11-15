@@ -35,7 +35,7 @@ async def test_temperature_sensor(hass, manager: Manager, caplog):
     zone: lennox_zone = system.getZone(0)
     s = S30TempSensor(hass, manager, system, zone)
 
-    assert s.unique_id == (system.unique_id() + "_" + str(zone.id) + "_T").replace("-", "")
+    assert s.unique_id == (system.unique_id + "_" + str(zone.id) + "_T").replace("-", "")
     assert s.name == system.name + "_" + zone.name + "_temperature"
     assert s.available == True
     assert s.should_poll == False

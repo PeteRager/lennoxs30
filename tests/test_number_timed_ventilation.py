@@ -34,7 +34,7 @@ from unittest.mock import patch
 async def test_timed_ventilation_time_unique_id(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = TimedVentilationNumber(hass, manager, system)
-    assert c.unique_id == (system.unique_id() + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER).replace("-", "")
+    assert c.unique_id == (system.unique_id + UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER).replace("-", "")
 
 
 @pytest.mark.asyncio
@@ -161,7 +161,7 @@ async def test_timed_ventilation_time_device_info(hass, manager: Manager, caplog
         identifiers = c.device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert "Unable to find" in caplog.messages[0]
         assert str(VENTILATION_EQUIPMENT_ID) in caplog.messages[0]
@@ -176,7 +176,7 @@ async def test_timed_ventilation_time_device_info(hass, manager: Manager, caplog
         identifiers = c.device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert "No equipment device map found for sysId" in caplog.messages[0]
         assert caplog.records[0].levelname == "ERROR"

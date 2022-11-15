@@ -408,6 +408,7 @@ class Manager(object):
         self._retrieve_task = None
         self.allergenDefenderSwitch = allergenDefenderSwitch
         self.createSensors: bool = create_sensors
+        self.create_alert_sensors: bool = True
         self.create_inverter_power: bool = create_inverter_power
         self.create_diagnostic_sensors: bool = create_diagnostic_sensors
         self.create_equipment_parameters: bool = create_equipment_parameters

@@ -21,7 +21,7 @@ async def test_allergen_defender_switch(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = S30AllergenDefenderSwitch(hass, manager, system)
 
-    assert c.unique_id == (system.unique_id() + "_ADST").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_ADST").replace("-", "")
     assert c.name == system.name + "_allergen_defender"
 
     attrs = c.extra_state_attributes
@@ -34,7 +34,7 @@ async def test_allergen_defender_switch(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
     system.allergenDefender = True
     assert c.is_on == True

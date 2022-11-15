@@ -27,7 +27,7 @@ async def test_equipment_parameter_select_unique_id(hass, manager: Manager, capl
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
     c = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
-    assert c.unique_id == f"{system.unique_id()}_EPS_{equipment.equipment_id}_{parameter.pid}".replace("-", "")
+    assert c.unique_id == f"{system.unique_id}_EPS_{equipment.equipment_id}_{parameter.pid}".replace("-", "")
 
 
 @pytest.mark.asyncio
@@ -201,7 +201,7 @@ async def test_equipment_parameter_select_device_info(hass, manager: Manager, ca
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
     equipment = system.equipment[2]
     parameter = equipment.parameters[34]
@@ -210,7 +210,7 @@ async def test_equipment_parameter_select_device_info(hass, manager: Manager, ca
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_iu"
+        assert x[1] == system.unique_id + "_iu"
 
 
 def test_equipment_parameter_select_entity_category(hass, manager: Manager, caplog):

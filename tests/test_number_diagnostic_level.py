@@ -37,7 +37,7 @@ async def test_diagnostic_level_unique_id(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = DiagnosticLevelNumber(hass, manager, system)
 
-    assert c.unique_id == (system.unique_id() + "_DL").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_DL").replace("-", "")
 
 
 @pytest.mark.asyncio
@@ -195,7 +195,7 @@ async def test_diagnostic_level_device_info(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
 
 @pytest.mark.asyncio

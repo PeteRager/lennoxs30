@@ -36,7 +36,7 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
     system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
 
-    assert s.unique_id == (system.unique_id() + "_IE").replace("-", "")
+    assert s.unique_id == (system.unique_id + "_IE").replace("-", "")
     assert s.name == system.name + "_inverter_energy"
     assert s.available == True
     assert s.should_poll == False
@@ -74,7 +74,7 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_ou"
+        assert x[1] == system.unique_id + "_ou"
 
 
 @pytest.mark.asyncio

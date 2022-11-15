@@ -19,7 +19,7 @@ from tests.conftest import conftest_base_entity_availability
 async def test_button_parameter_update_unique_id(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = EquipmentParameterUpdateButton(hass, manager, system)
-    assert c.unique_id == f"{system.unique_id()}_BUT_PU".replace("-", "")
+    assert c.unique_id == f"{system.unique_id}_BUT_PU".replace("-", "")
 
 
 @pytest.mark.asyncio
@@ -114,7 +114,7 @@ async def test_button_parameter_update_device_info(hass, manager: Manager, caplo
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
 
 def test_button_parameter_update_entity_category(hass, manager: Manager, caplog):

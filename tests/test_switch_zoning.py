@@ -53,7 +53,7 @@ async def test_zoning_switch(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = S30ZoningSwitch(hass, manager, system)
 
-    assert c.unique_id == (system.unique_id() + "_SW_ZE").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_SW_ZE").replace("-", "")
     assert c.name == system.name + "_zoning_enable"
     assert len(c.extra_state_attributes) == 0
     assert c.update() == True
@@ -62,7 +62,7 @@ async def test_zoning_switch(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
     system.centralMode = False
     assert c.is_on == True
