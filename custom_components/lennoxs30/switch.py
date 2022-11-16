@@ -134,7 +134,7 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         try:
             await self._system.ventilation_on()
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("ventilation_on:async_turn_on - error:" + e.message)
@@ -154,7 +154,7 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
                 _LOGGER.debug("ventilation:async_turn_off calling ventilation_timed(0)")
                 called = True
             if called:
-                self._manager._mp_wakeup_event.set()
+                self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("ventilation_off:async_turn_off - error:" + e.message)
@@ -214,7 +214,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         try:
             await self._system.allergenDefender_on()
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("allergenDefender_on:async_turn_on - error:" + e.message)
@@ -224,7 +224,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.allergenDefender_off()
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("allergenDefender_off:async_turn_off - error:" + e.message)
@@ -278,7 +278,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         try:
             await self._system.set_manual_away_mode(True)
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("S30ManualAwayModeSwitch:async_turn_on - error:" + e.message)
@@ -288,7 +288,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.set_manual_away_mode(False)
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("S30ManualAwayModeSwitch:async_turn_off - error:" + e.message)
@@ -349,7 +349,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         try:
             await self._system.enable_smart_away(True)
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("S30SmartAwayEnableSwitch:async_turn_on - error:" + e.message)
@@ -359,7 +359,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.enable_smart_away(False)
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("S30SmartAwayEnableSwitch:async_turn_off - error:" + e.message)
@@ -420,7 +420,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         try:
             await self._system.centralMode_off()
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("S30ZoningSwitch:async_turn_on - error:" + e.message)
@@ -430,7 +430,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.centralMode_on()
-            self._manager._mp_wakeup_event.set()
+            self._manager.mp_wakeup_event.set()
         except Exception as e:
             if hasattr(e, "message"):
                 _LOGGER.error("S30ZoningSwitch:async_turn_off - error:" + e.message)

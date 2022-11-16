@@ -381,7 +381,7 @@ class Manager(object):
         self._config_entry: ConfigEntry = config
         self._reinitialize: bool = False
         self._err_cnt: int = 0
-        self._mp_wakeup_event: Event = Event()
+        self.mp_wakeup_event: Event = Event()
         self._climate_entities_initialized: bool = False
         self._hass: HomeAssistant = hass
         self._config: ConfigEntry = config
@@ -433,7 +433,7 @@ class Manager(object):
         _LOGGER.debug(f"async_shutdown started host [{self._ip_address}]")
         self._shutdown = True
         if self._retrieve_task is not None:
-            self._mp_wakeup_event.set()
+            self.mp_wakeup_event.set()
             await self._retrieve_task
         await self.api.shutdown()
         _LOGGER.debug(f"async_shutdown complete [{self._ip_address}]")
@@ -642,10 +642,10 @@ class Manager(object):
     async def event_wait_mp_wakeup(self, timeout: float) -> bool:
         # suppress TimeoutError because we'll return False in case of timeout
         try:
-            await asyncio.wait_for(self._mp_wakeup_event.wait(), timeout)
+            await asyncio.wait_for(self.mp_wakeup_event.wait(), timeout)
         except asyncio.TimeoutError:
             return False
-        return self._mp_wakeup_event.is_set()
+        return self.mp_wakeup_event.is_set()
 
     async def update_cloud_presence(self):
         if self.last_cloud_presence_poll is None:
@@ -716,7 +716,7 @@ class Manager(object):
                 else:
                     res = await self.event_wait_mp_wakeup(self._poll_interval)
                     if res:
-                        self._mp_wakeup_event.clear()
+                        self.mp_wakeup_event.clear()
                         fast_polling = True
                         fast_polling_cd = self._fast_poll_count
 
