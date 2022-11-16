@@ -628,9 +628,12 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
         """Return the state attributes."""
         attrs: dict[str, Any] = {}
         attrs["alert_list"] = self._system.active_alerts
-        attrs["alerts_num_cleared"] = self._system.alerts_num_cleared
-        attrs["alerts_last_cleared_id"] = self._system.alerts_last_cleared_id
-        attrs["alerts_num_in_active_array"] = self._system.alerts_num_in_active_array
+        val = self._system.alerts_num_cleared
+        attrs["alerts_num_cleared"] = 0 if val is None else val
+        val = self._system.alerts_last_cleared_id
+        attrs["alerts_last_cleared_id"] = 0 if val is None else val
+        val = self._system.alerts_num_in_active_array
+        attrs["alerts_num_in_active_array"] = 0 if val is None else val
         return attrs
 
     @property
@@ -639,7 +642,9 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
 
     @property
     def native_value(self):
-        return self._system.alerts_num_active
+        if (val := self._system.alerts_num_active) is None:
+            return 0
+        return val
 
     @property
     def state_class(self):

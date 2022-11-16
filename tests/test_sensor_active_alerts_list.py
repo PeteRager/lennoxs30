@@ -34,6 +34,7 @@ async def test_active_alerts_sensor(hass, manager: Manager):
     assert sensor.available is True
     assert sensor.update() is True
     assert sensor.state_class == "measurement"
+    assert sensor.state == 2
     attrs = sensor.extra_state_attributes
     assert len(attrs) == 4
 
@@ -50,6 +51,21 @@ async def test_active_alerts_sensor(hass, manager: Manager):
     assert alert["priority"] == "info"
 
     assert sensor.state == system.alerts_num_active
+    assert attrs["alerts_num_cleared"] == 46
+    assert attrs["alerts_last_cleared_id"] == 45
+    assert attrs["alerts_num_in_active_array"] == 2
+
+    system.alerts_num_active = None
+    assert sensor.state == 0
+
+    system.alerts_num_cleared = None
+    assert sensor.extra_state_attributes["alerts_num_cleared"] == 0
+    system.alerts_num_cleared = 46
+    system.alerts_last_cleared_id = None
+    assert sensor.extra_state_attributes["alerts_last_cleared_id"] == 0
+    system.alerts_last_cleared_id = 45
+    system.alerts_num_in_active_array = None
+    assert sensor.extra_state_attributes["alerts_num_in_active_array"] == 0
 
     identifiers = sensor.device_info["identifiers"]
     for ids in identifiers:
