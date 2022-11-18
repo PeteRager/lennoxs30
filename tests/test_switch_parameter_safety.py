@@ -3,8 +3,6 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from custom_components.lennoxs30 import (
-    DS_CONNECTED,
-    DS_RETRY_WAIT,
     Manager,
 )
 
@@ -21,6 +19,8 @@ from custom_components.lennoxs30.switch import (
 from unittest.mock import patch
 from homeassistant.helpers.entity import EntityCategory
 
+from tests.conftest import conftest_base_entity_availability
+
 
 @pytest.mark.asyncio
 async def test_parameter_safety_switch_subscription(hass, manager: Manager, caplog):
@@ -28,23 +28,7 @@ async def test_parameter_safety_switch_subscription(hass, manager: Manager, capl
     c = S30ParameterSafetySwitch(hass, manager, system)
     await c.async_added_to_hass()
 
-    with patch.object(c, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_RETRY_WAIT)
-        assert update_callback.call_count == 1
-        assert c.available == False
-
-    with patch.object(c, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_CONNECTED)
-        assert update_callback.call_count == 1
-        assert c.available == True
-        system.attr_updater({"status": "online"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 2
-        assert c.available == True
-        system.attr_updater({"status": "offline"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 3
-        assert c.available == False
+    conftest_base_entity_availability(manager, system, c)
 
 
 @pytest.mark.asyncio

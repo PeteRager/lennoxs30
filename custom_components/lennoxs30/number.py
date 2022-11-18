@@ -72,7 +72,7 @@ async def async_setup_entry(
 
     for system in manager.api.system_list:
         # We do not support setting diag level from a cloud connection
-        if manager.api._isLANConnection is False or (
+        if manager.api.isLANConnection is False or (
             manager.create_inverter_power is False and manager.create_diagnostic_sensors is False
         ):
             _LOGGER.debug("async_setup_entry - not creating diagnostic level number because inverter power not enabled")

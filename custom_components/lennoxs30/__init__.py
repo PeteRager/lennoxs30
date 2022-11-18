@@ -699,7 +699,7 @@ class Manager(object):
             except Exception as e:
                 _LOGGER.error(f"messagePump_task host [{self._ip_address}] unexpected exception:" + str(e))
 
-            if self.api._isLANConnection is False:
+            if self.api.isLANConnection is False:
                 await self.update_cloud_presence()
 
             if fast_polling:

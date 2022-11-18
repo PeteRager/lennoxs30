@@ -1192,7 +1192,7 @@ async def test_lennoxS30ConfigFlow_try_to_connect_cloud(manager: Manager, hass, 
             assert cf.manager.api._username == user_input[CONF_EMAIL]
             assert cf.manager.api._password == user_input[CONF_PASSWORD]
             assert cf.manager.api._applicationid == user_input[CONF_APP_ID]
-            assert cf.manager.api._isLANConnection == False
+            assert cf.manager.api.isLANConnection == False
 
 
 @pytest.mark.asyncio
@@ -1213,6 +1213,6 @@ async def test_lennoxS30ConfigFlow_try_to_connect_local(manager: Manager, hass, 
             assert async_shutdown.call_count == 1
 
             assert cf.manager.api._applicationid == user_input[CONF_APP_ID]
-            assert cf.manager.api._isLANConnection == True
+            assert cf.manager.api.isLANConnection == True
             assert cf.manager.api.ip == user_input[CONF_HOST]
             assert cf.manager.api._protocol == user_input[CONF_PROTOCOL]

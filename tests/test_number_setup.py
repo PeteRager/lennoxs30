@@ -32,7 +32,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
     # Only circulate time should be created
-    system.api._isLANConnection = False
+    system.api.isLANConnection = False
     system.dehumidifierType = None
     system.enhancedDehumidificationOvercoolingF_enable = False
     manager.create_diagnostic_sensors = False
@@ -46,7 +46,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[0], CirculateTime)
 
     # Only circulate time should be created
-    system.api._isLANConnection = False
+    system.api.isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = False
     manager.create_diagnostic_sensors = False
@@ -59,7 +59,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[0], CirculateTime)
 
     # Only circulate time should be created
-    system.api._isLANConnection = False
+    system.api.isLANConnection = False
     system.dehumidifierType = None
     system.enhancedDehumidificationOvercoolingF_enable = True
     manager.create_diagnostic_sensors = False
@@ -72,7 +72,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[0], CirculateTime)
 
     # DehumidificationOverCooling and circulate time should be created
-    system.api._isLANConnection = False
+    system.api.isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
     manager.create_diagnostic_sensors = True
@@ -86,7 +86,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[1], CirculateTime)
 
     # DehumidificationOverCooling and circulate time should be created
-    system.api._isLANConnection = False
+    system.api.isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
     manager.create_diagnostic_sensors = False
@@ -100,7 +100,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[1], CirculateTime)
 
     # DiagnosticLevelNumber, DehumidificationOverCooling and circulate time should be created
-    system.api._isLANConnection = True
+    system.api.isLANConnection = True
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
     manager.create_diagnostic_sensors = True
@@ -115,7 +115,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[2], CirculateTime)
 
     # DiagnosticLevelNumber, DehumidificationOverCooling and circulate time should be created
-    system.api._isLANConnection = True
+    system.api.isLANConnection = True
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
     manager.create_diagnostic_sensors = False
@@ -130,7 +130,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[2], CirculateTime)
 
     # DiagnosticLevelNumber, DehumidificationOverCooling and circulate time should be created
-    system.api._isLANConnection = True
+    system.api.isLANConnection = True
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
     manager.create_diagnostic_sensors = True
@@ -145,7 +145,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[2], CirculateTime)
 
     # DiagnosticLevelNumber, DehumidificationOverCooling and circulate time should be created
-    system.api._isLANConnection = True
+    system.api.isLANConnection = True
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True
     system.ventilationUnitType = LENNOX_VENTILATION_DAMPER
@@ -162,7 +162,7 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[3], TimedVentilationNumber)
 
     # Only circulate time and equipment parameters should be created
-    system.api._isLANConnection = False
+    system.api.isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = False
     system.ventilationUnitType = None

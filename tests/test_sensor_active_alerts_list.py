@@ -6,8 +6,6 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from custom_components.lennoxs30 import (
-    DS_CONNECTED,
-    DS_RETRY_WAIT,
     Manager,
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
@@ -15,7 +13,7 @@ from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.sensor import (
     S30ActiveAlertsList,
 )
-from tests.conftest import loadfile
+from tests.conftest import conftest_base_entity_availability, loadfile
 
 
 @pytest.mark.asyncio
@@ -111,20 +109,4 @@ async def test_active_alerts_subscription(hass, manager: Manager):
         assert update_callback.call_count == 1
         assert len(sensor.extra_state_attributes["alert_list"]) == 2
 
-    with patch.object(sensor, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_RETRY_WAIT)
-        assert update_callback.call_count == 1
-        assert sensor.available is False
-
-    with patch.object(sensor, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_CONNECTED)
-        assert update_callback.call_count == 1
-        assert sensor.available
-        system.attr_updater({"status": "online"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 2
-        assert sensor.available
-        system.attr_updater({"status": "offline"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 3
-        assert sensor.available is False
+    conftest_base_entity_availability(manager, system, sensor)

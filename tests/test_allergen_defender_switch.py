@@ -2,7 +2,6 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from custom_components.lennoxs30 import (
-    DS_RETRY_WAIT,
     Manager,
 )
 
@@ -14,6 +13,8 @@ from custom_components.lennoxs30.switch import (
 )
 
 from unittest.mock import patch
+
+from tests.conftest import conftest_base_entity_availability
 
 
 @pytest.mark.asyncio
@@ -64,7 +65,4 @@ async def test_allergen_defender_switch_subscription(hass, manager: Manager, cap
         assert update_callback.call_count == 1
         assert c.is_on == system.allergenDefender
 
-    with patch.object(c, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_RETRY_WAIT)
-        assert update_callback.call_count == 1
-        assert c.available == False
+    conftest_base_entity_availability(manager, system, c)

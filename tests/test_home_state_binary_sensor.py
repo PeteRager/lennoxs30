@@ -6,9 +6,6 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from custom_components.lennoxs30 import (
-    DOMAIN,
-    DS_CONNECTED,
-    DS_RETRY_WAIT,
     Manager,
 )
 
@@ -18,6 +15,8 @@ import pytest
 from custom_components.lennoxs30.binary_sensor import S30HomeStateBinarySensor
 
 from unittest.mock import patch
+
+from tests.conftest import conftest_base_entity_availability
 
 
 @pytest.mark.asyncio
@@ -52,23 +51,7 @@ async def test_away_mode_subscription(hass, manager: Manager, caplog):
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 5
 
-    with patch.object(c, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_RETRY_WAIT)
-        assert update_callback.call_count == 1
-        assert c.available == False
-
-    with patch.object(c, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_CONNECTED)
-        assert update_callback.call_count == 1
-        assert c.available == True
-        system.attr_updater({"status": "online"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 2
-        assert c.available == True
-        system.attr_updater({"status": "offline"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 3
-        assert c.available == False
+    conftest_base_entity_availability(manager, system, c)
 
 
 @pytest.mark.asyncio
