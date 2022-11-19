@@ -378,7 +378,7 @@ class Manager(object):
         create_equipment_parameters: bool = False,
     ):
         self.system_parameter_safety_on = {}
-        self._config_entry: ConfigEntry = config
+        self.config_entry: ConfigEntry = config
         self._reinitialize: bool = False
         self._err_cnt: int = 0
         self.mp_wakeup_event: Event = Event()
@@ -505,36 +505,36 @@ class Manager(object):
             if equip_device_map is None:
                 equip_device_map = {}
                 self.system_equip_device_map[system.sysId] = equip_device_map
-            s30: S30ControllerDevice = S30ControllerDevice(self._hass, self._config_entry, system)
+            s30: S30ControllerDevice = S30ControllerDevice(self._hass, self.config_entry, system)
             s30.register_device()
             if s30.eq is not None:
                 equip_device_map[s30.eq.equipment_id] = s30
 
             if system.has_outdoor_unit:
-                s30_outdoor_unit = S30OutdoorUnit(self._hass, self._config_entry, system, s30)
+                s30_outdoor_unit = S30OutdoorUnit(self._hass, self.config_entry, system, s30)
                 s30_outdoor_unit.register_device()
                 if s30_outdoor_unit.eq is not None:
                     equip_device_map[s30_outdoor_unit.eq.equipment_id] = s30_outdoor_unit
             if system.has_indoor_unit:
-                s30_indoor_unit = S30IndoorUnit(self._hass, self._config_entry, system, s30)
+                s30_indoor_unit = S30IndoorUnit(self._hass, self.config_entry, system, s30)
                 s30_indoor_unit.register_device()
                 if s30_indoor_unit.eq is not None:
                     equip_device_map[s30_indoor_unit.eq.equipment_id] = s30_indoor_unit
 
             for eq in system.equipment.values():
                 if eq.equipment_id != 0 and equip_device_map.get(eq.equipment_id) is None:
-                    aux_unit = S30AuxiliaryUnit(self._hass, self._config_entry, system, s30, eq)
+                    aux_unit = S30AuxiliaryUnit(self._hass, self.config_entry, system, s30, eq)
                     aux_unit.register_device()
                     equip_device_map[aux_unit.eq.equipment_id] = aux_unit
 
             if system.supports_ventilation():
-                d: S30VentilationUnit = S30VentilationUnit(self._hass, self._config_entry, system, s30)
+                d: S30VentilationUnit = S30VentilationUnit(self._hass, self.config_entry, system, s30)
                 d.register_device()
                 equip_device_map[VENTILATION_EQUIPMENT_ID] = d
 
             for zone in system.zone_list:
                 if zone.is_zone_active():
-                    z: S30ZoneThermostat = S30ZoneThermostat(self._hass, self._config_entry, system, zone, s30)
+                    z: S30ZoneThermostat = S30ZoneThermostat(self._hass, self.config_entry, system, zone, s30)
                     z.register_device()
 
     async def initialize_retry_task(self):

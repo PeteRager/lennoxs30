@@ -28,7 +28,7 @@ from custom_components.lennoxs30.binary_sensor import (
 async def test_async_binary_sensor_setup_entry(hass, manager: Manager):
     """test the binary sensor setup"""
     system: lennox_system = manager.api.system_list[0]
-    entry = manager._config_entry
+    entry = manager.config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 

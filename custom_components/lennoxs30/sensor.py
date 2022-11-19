@@ -45,7 +45,7 @@ from .const import (
     UNIQUE_ID_SUFFIX_ALERT_SENSOR,
     UNIQUE_ID_SUFFIX_DIAG_SENSOR,
 )
-from .helpers import helper_create_system_unique_id, lennox_uom_to_ha_uom
+from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
 
 from . import Manager
 
@@ -581,9 +581,7 @@ class S30AlertSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._system.unique_id)},
-        }
+        return helper_get_equipment_device_info(self._manager, self._system, 0)
 
 
 class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
@@ -653,6 +651,4 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._system.unique_id)},
-        }
+        return helper_get_equipment_device_info(self._manager, self._system, 0)

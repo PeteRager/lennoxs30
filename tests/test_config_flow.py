@@ -1065,7 +1065,7 @@ async def test_lennoxS30ConfigFlow_async_step_advanced(manager: Manager, hass, c
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_async_get_options_flow(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow().async_get_options_flow(manager._config_entry)
+    cf = lennoxs30ConfigFlow().async_get_options_flow(manager.config_entry)
     cf.hass = hass
     assert isinstance(cf, OptionsFlowHandler)
 

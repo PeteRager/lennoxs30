@@ -459,11 +459,11 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
 async def test_S30VentilationUnit_device_model(hass, manager_2_systems: Manager, caplog):
     manager = manager_2_systems
     system = manager.api.system_list[1]
-    s30 = S30ControllerDevice(hass, manager._config_entry, system)
+    s30 = S30ControllerDevice(hass, manager.config_entry, system)
     system.ventilationUnitType = "ventilation"
-    vent = S30VentilationUnit(hass, manager._config_entry, system, s30)
+    vent = S30VentilationUnit(hass, manager.config_entry, system, s30)
     assert vent.device_model == "Fresh Air Damper"
 
     system.ventilationUnitType = "1_stage_hrv"
-    vent = S30VentilationUnit(hass, manager._config_entry, system, s30)
+    vent = S30VentilationUnit(hass, manager.config_entry, system, s30)
     assert vent.device_model == "1_stage_hrv"
