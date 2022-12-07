@@ -32,7 +32,7 @@ async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
     system.ventilationUnitType = LENNOX_NONE_STR
-    manager.allergenDefenderSwitch = False
+    manager.allergen_defender_switch = False
     system.numberOfZones = 1
 
     async_add_entities = Mock()
@@ -64,7 +64,7 @@ async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[1], S30ManualAwayModeSwitch)
     assert isinstance(sensor_list[2], S30SmartAwayEnableSwitch)
 
-    manager.allergenDefenderSwitch = True
+    manager.allergen_defender_switch = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1

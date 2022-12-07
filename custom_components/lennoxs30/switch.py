@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             _LOGGER.info(f"Create S30 ventilation switch system [{system.sysId}]")
             switch = S30VentilationSwitch(hass, manager, system)
             switch_list.append(switch)
-        if manager.allergenDefenderSwitch:
+        if manager.allergen_defender_switch:
             _LOGGER.info(f"Create S30 allergenDefender switch system [{system.sysId}]")
             switch = S30AllergenDefenderSwitch(hass, manager, system)
             switch_list.append(switch)

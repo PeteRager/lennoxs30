@@ -33,6 +33,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, METRIC_SYSTEM
 
 from pytest_homeassistant_custom_component.common import (
     assert_setup_component,
@@ -162,9 +164,9 @@ def config_entry_cloud() -> config_entries.ConfigEntry:
 
 
 @pytest.fixture
-def manager(hass, config_entry_local) -> Manager:
+def manager(hass: HomeAssistant, config_entry_local) -> Manager:
     config = config_entry_local
-
+    hass.config.units = METRIC_SYSTEM
     manager_to_return = Manager(
         hass=hass,
         config=config,
@@ -172,7 +174,51 @@ def manager(hass, config_entry_local) -> Manager:
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
+        app_id="HA",
+        conf_init_wait_time=30,
+        ip_address="10.0.0.1",
+        create_sensors=False,
+        create_inverter_power=False,
+        protocol="https",
+        index=0,
+        pii_message_logs=False,
+        message_debug_logging=True,
+        message_logging_file=None,
+        timeout=30,
+        fast_poll_count=10,
+    )
+    manager_to_return.connected = True
+    api = manager_to_return.api
+    data = loadfile("login_response.json")
+    api.process_login_response(data)
+
+    data = loadfile("config_response_system_02.json")
+    api.processMessage(data)
+
+    data = loadfile("equipments_lcc_singlesetpoint.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
+    api.processMessage(data)
+
+    data = loadfile("device_response_lcc.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
+    api.processMessage(data)
+
+    return manager_to_return
+
+
+@pytest.fixture
+def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manager:
+    config = config_entry_local
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    manager_to_return = Manager(
+        hass=hass,
+        config=config,
+        email=None,
+        password=None,
+        poll_interval=1,
+        fast_poll_interval=2,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",
@@ -218,7 +264,7 @@ def manager_2_systems(hass) -> Manager:
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",
@@ -275,7 +321,7 @@ def manager_mz(hass) -> Manager:
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",
@@ -321,7 +367,7 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",

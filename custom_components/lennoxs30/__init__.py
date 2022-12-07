@@ -5,14 +5,32 @@
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
 # pylint: disable=line-too-long
+# pylint: disable=invalid-name
 
 import asyncio
 from asyncio.locks import Event
 import logging
 import time
+import voluptuous as vol
+
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_EMAIL,
+    CONF_HOSTS,
+    CONF_PASSWORD,
+    CONF_PROTOCOL,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
+    CONF_TIMEOUT,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 
 from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
-
 from lennoxs30api import (
     EC_HTTP_ERR,
     EC_LOGIN,
@@ -21,7 +39,6 @@ from lennoxs30api import (
     s30api_async,
     lennox_system,
 )
-import voluptuous as vol
 from .const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
@@ -56,21 +73,6 @@ from .device import (
 )
 from .util import dict_redact_fields
 
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_EMAIL,
-    CONF_HOSTS,
-    CONF_PASSWORD,
-    CONF_PROTOCOL,
-    CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_TIMEOUT,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
@@ -191,6 +193,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 
 def create_migration_task(hass, migration_data):
+    """Migrates configuration from YAML to a config_entry"""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -216,6 +219,7 @@ def _upgrade_config(config: dict, current_version: int) -> int:
 
 
 async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Upgrades configuration from old to new version"""
     _LOGGER.info(f"Upgrading configuration for [{config_entry.title}] from version [{config_entry.version}]")
     new = {**config_entry.data}
     old_version = config_entry.version
@@ -230,18 +234,19 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 
 
 # Track the title of the first entry, it gets the S30.State object
-_first_entry_title: str = None
+_FIRST_ENTRY_TITLE: str = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Setup a config entry"""
     _LOGGER.debug(f"async_setup_entry UniqueID [{entry.unique_id}] Data [{dict_redact_fields(entry.data)}]")
 
     # Determine if this is the first entry that gets S30.State.
-    global _first_entry_title
+    global _FIRST_ENTRY_TITLE
     index: int = 1
-    if _first_entry_title is None:
-        _first_entry_title = entry.title
-    if _first_entry_title == entry.title:
+    if _FIRST_ENTRY_TITLE is None:
+        _FIRST_ENTRY_TITLE = entry.title
+    if _FIRST_ENTRY_TITLE == entry.title:
         index = 0
 
     is_cloud = entry.data[CONF_CLOUD_CONNECTION]
@@ -274,7 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     fast_poll_count = entry.data[CONF_FAST_POLL_COUNT]
     timeout = entry.data[CONF_TIMEOUT]
 
-    allergenDefenderSwitch = entry.data[CONF_ALLERGEN_DEFENDER_SWITCH]
+    allergen_defender_switch = entry.data[CONF_ALLERGEN_DEFENDER_SWITCH]
 
     conf_init_wait_time = entry.data[CONF_INIT_WAIT_TIME]
     create_sensors = entry.data[CONF_CREATE_SENSORS]
@@ -298,7 +303,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         fast_poll_interval=fast_poll_interval,
         fast_poll_count=fast_poll_count,
         timeout=timeout,
-        allergenDefenderSwitch=allergenDefenderSwitch,
+        allergen_defender_switch=allergen_defender_switch,
         app_id=app_id,
         conf_init_wait_time=conf_init_wait_time,
         ip_address=host_name,
@@ -315,18 +320,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_shutdown)
         await manager.s30_initialize()
-    except S30Exception as e:
-        if e.error_code == EC_LOGIN:
+    except S30Exception as err:
+        if err.error_code == EC_LOGIN:
             manager.updateState(DS_LOGIN_FAILED)
             raise HomeAssistantError(
                 f"Lennox30 unable to login host [{host_name}] - please check credentials and restart Home Assistant"
-            ) from e
-        elif e.error_code == EC_CONFIG_TIMEOUT:
-            _LOGGER.warning("async_setup: " + e.message)
+            ) from err
+        elif err.error_code == EC_CONFIG_TIMEOUT:
+            _LOGGER.warning("async_setup: " + err.message)
             _LOGGER.info("connection will be retried in 1 minute")
             asyncio.create_task(manager.initialize_retry_task())
         else:
-            _LOGGER.error("async_setup unexpected error " + e.message)
+            _LOGGER.error("async_setup unexpected error " + err.message)
             _LOGGER.info("connection will be retried in 1 minute")
             asyncio.create_task(manager.initialize_retry_task())
     _LOGGER.debug(f"async_setup complete host [{host_name}]")
@@ -342,8 +347,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manager: Manager = entry_data[MANAGER]
         try:
             await manager.async_shutdown(None)
-        except S30Exception as e:
-            _LOGGER.error(f"async_unload_entry entry [{entry.unique_id}] error [{e.as_string()}]")
+        except S30Exception as err:
+            _LOGGER.error(f"async_unload_entry entry [{entry.unique_id}] error [{err.as_string()}]")
         except Exception:
             _LOGGER.exception(f"async_unload_entry entry [{entry.unique_id}]")
         return True
@@ -353,6 +358,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class Manager(object):
+    """Manages the connection to cloud or local via API"""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -363,7 +370,7 @@ class Manager(object):
         fast_poll_interval: float,
         fast_poll_count: int,
         timeout: int,
-        allergenDefenderSwitch: bool,
+        allergen_defender_switch: bool,
         app_id: str,
         conf_init_wait_time: int,
         ip_address: str,
@@ -406,14 +413,21 @@ class Manager(object):
         )
         self._shutdown = False
         self._retrieve_task = None
-        self.allergenDefenderSwitch = allergenDefenderSwitch
-        self.createSensors: bool = create_sensors
+        self.allergen_defender_switch = allergen_defender_switch
+        self.create_sensors: bool = create_sensors
         self.create_alert_sensors: bool = True
         self.create_inverter_power: bool = create_inverter_power
         self.create_diagnostic_sensors: bool = create_diagnostic_sensors
         self.create_equipment_parameters: bool = create_equipment_parameters
         self._conf_init_wait_time = conf_init_wait_time
-        self.is_metric: bool = hass.config.units.is_metric
+
+        self.is_metric: bool = None
+        if self._hass.config.units is US_CUSTOMARY_SYSTEM:
+            _LOGGER.info(f"Manager::init setting units to english - HASS Units [{self._hass.config.units}]")
+            self.is_metric = False
+        else:
+            _LOGGER.info(f"Manager::init setting units to metric - HASS Units [{self._hass.config.units}]")
+            self.is_metric = True
         self.connected = False
         self.last_cloud_presence_poll: float = None
 
@@ -430,6 +444,7 @@ class Manager(object):
                 self.connection_state = "lennoxs30.conn_" + self._ip_address.replace(".", "_").replace(":", "_")
 
     async def async_shutdown(self, event: Event) -> None:
+        """Called when hass shutsdown"""
         _LOGGER.debug(f"async_shutdown started host [{self._ip_address}]")
         self._shutdown = True
         if self._retrieve_task is not None:
@@ -439,6 +454,7 @@ class Manager(object):
         _LOGGER.debug(f"async_shutdown complete [{self._ip_address}]")
 
     def updateState(self, state: int) -> None:
+        """Updates the connection state"""
         if state == DS_CONNECTED and self.connected is False:
             self.connected = True
             self.executeConnectionStateCallbacks()
@@ -455,9 +471,11 @@ class Manager(object):
         self._hass.states.async_set(self.connection_state, state, self.getMetricsList(), force_update=True)
 
     def registerConnectionStateCallback(self, callbackfunc):
+        """Register a callback when the connection state changes"""
         self._cs_callbacks.append({"func": callbackfunc})
 
     def executeConnectionStateCallbacks(self):
+        """Executes callbacks when connection state has changed"""
         for callback in self._cs_callbacks:
             callbackfunc = callback["func"]
             try:
@@ -467,6 +485,7 @@ class Manager(object):
                 _LOGGER.exception("executeConnectionStateCallbacks - failed ")
 
     def getMetricsList(self):
+        """Get the list of connection state metrics"""
         metrics = self.api.metrics.getMetricList()
         # TODO these are at the individual S30 level, when we have a device object we should move this there
         systems = self.api.system_list
@@ -482,6 +501,7 @@ class Manager(object):
         return metrics
 
     async def s30_initialize(self):
+        """Initialized the connection to the S30"""
         self.updateState(DS_CONNECTING)
         await self.connect_subscribe()
         await self.configuration_initialization()
@@ -500,6 +520,7 @@ class Manager(object):
         self.updateState(DS_CONNECTED)
 
     async def create_devices(self):
+        """Creates devices for the discoved lennox equipment"""
         for system in self.api.system_list:
             equip_device_map: dict[int, Device] = self.system_equip_device_map.get(system.sysId)
             if equip_device_map is None:
@@ -538,6 +559,7 @@ class Manager(object):
                     z.register_device()
 
     async def initialize_retry_task(self):
+        """Retries the connection on failure"""
         while True:
             self.updateState(DS_RETRY_WAIT)
             await asyncio.sleep(RETRY_INTERVAL_SECONDS)
@@ -561,6 +583,7 @@ class Manager(object):
                     _LOGGER.info(f"async setup host [{self._ip_address}] will be retried in 1 minute")
 
     async def configuration_initialization(self) -> None:
+        """Waits for the configuration to arrive"""
         # Wait for zones to appear on each system
         systemsWithZones = 0
         loops: int = 0
@@ -611,15 +634,18 @@ class Manager(object):
             )
 
     async def connect(self):
+        """Connect to the cloud or local"""
         await self.api.serverConnect()
 
     async def connect_subscribe(self):
+        """Establishes the subscription"""
         await self.api.serverConnect()
 
         for lsystem in self.api.system_list:
             await self.api.subscribe(lsystem)
 
     async def reinitialize_task(self) -> None:
+        """Reinitializes the connection"""
         while True:
             try:
                 self.updateState(DS_CONNECTING)
@@ -640,6 +666,7 @@ class Manager(object):
         asyncio.create_task(self.messagePump_task())
 
     async def event_wait_mp_wakeup(self, timeout: float) -> bool:
+        """Wakes up the message pump"""
         # suppress TimeoutError because we'll return False in case of timeout
         try:
             await asyncio.wait_for(self.mp_wakeup_event.wait(), timeout)
@@ -648,6 +675,7 @@ class Manager(object):
         return self.mp_wakeup_event.is_set()
 
     async def update_cloud_presence(self):
+        """Updates the cloud presense"""
         if self.last_cloud_presence_poll is None:
             self.last_cloud_presence_poll = time.time()
             return
@@ -687,6 +715,7 @@ class Manager(object):
                 _LOGGER.exception(f"update_cloud_presence unexpected exception sysid [{system.sysId}] error {e}")
 
     async def messagePump_task(self) -> None:
+        """Read and process incoming messages"""
         await asyncio.sleep(self._poll_interval)
         self._reinitialize = False
         self._err_cnt = 0
@@ -731,6 +760,7 @@ class Manager(object):
             _LOGGER.debug(f"messagePump_task host [{self._ip_address}] is exiting - and this should not happen")
 
     async def messagePump(self) -> bool:
+        """Read and process a message"""
         bErr = False
         received = False
         try:
@@ -769,10 +799,13 @@ class Manager(object):
         return received
 
     def parameter_safety_on(self, sysId: str) -> bool:
+        """Turn parameter safety on"""
         return self.system_parameter_safety_on.get(sysId, False)
 
     def parameter_safety_turn_on(self, sysId: str) -> None:
+        """Turn parameter safety on"""
         self.system_parameter_safety_on[sysId] = True
 
     def parameter_safety_turn_off(self, sysId: str) -> None:
+        """Turns parameter safety off"""
         self.system_parameter_safety_on[sysId] = False
