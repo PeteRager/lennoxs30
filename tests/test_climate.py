@@ -3,6 +3,7 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=invalid-name
 # pylint: disable=protected-access
+# pylint: disable=line-too-long
 
 import logging
 from unittest.mock import patch
@@ -12,7 +13,7 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_NONE,
 )
-
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_DRY,
     CURRENT_HVAC_IDLE,
@@ -57,7 +58,6 @@ from lennoxs30api.s30api_async import (
     LENNOX_ZONING_MODE_ZONED,
     lennox_system,
     lennox_zone,
-    S30Exception,
 )
 
 from custom_components.lennoxs30 import (
@@ -71,7 +71,7 @@ from custom_components.lennoxs30.climate import (
     S30Climate,
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-from tests.conftest import conftest_base_entity_availability
+from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
 
 
 @pytest.mark.asyncio
@@ -430,6 +430,7 @@ async def test_climate_preset_mode(hass, manager_mz: Manager):
     assert c.preset_mode == PRESET_AWAY
     system.sa_setpointState = LENNOX_SA_SETPOINT_STATE_HOME
     assert c.preset_mode == PRESET_NONE
+
     zone.scheduleId = 2
     assert c.preset_mode == "winter"
     zone.overrideActive = True
@@ -441,6 +442,14 @@ async def test_climate_preset_mode(hass, manager_mz: Manager):
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     assert c.preset_mode == PRESET_SCHEDULE_OVERRIDE
     assert c1.preset_mode is None
+
+    zone.overrideActive = False
+    with patch.object(system, "getSchedule") as get_schedule:
+        get_schedule.return_value = None
+        assert c.preset_mode == PRESET_NONE
+
+    zone.scheduleId = None
+    assert c.preset_mode == PRESET_NONE
 
 
 @pytest.mark.asyncio
@@ -477,7 +486,6 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
 
     system.manualAwayMode = False
     system.sa_enabled = True
-    system.sa_setpoint_state = LENNOX_SA_SETPOINT_STATE_AWAY
     assert system.get_manual_away_mode() is False
     assert system.get_smart_away_mode() is True
     with patch.object(system, "set_manual_away_mode") as set_manual_away:
@@ -485,6 +493,21 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
             await c.async_set_preset_mode(PRESET_CANCEL_AWAY_MODE)
             assert set_manual_away.call_count == 0
             assert cancel_smart_away.call_count == 1
+
+    system.manualAwayMode = False
+    system.sa_enabled = False
+    assert system.get_manual_away_mode() is False
+    assert system.get_smart_away_mode() is False
+    with caplog.at_level(logging.WARNING):
+        with patch.object(system, "set_manual_away_mode") as set_manual_away:
+            with patch.object(system, "cancel_smart_away") as cancel_smart_away:
+                caplog.clear()
+                await c.async_set_preset_mode(PRESET_CANCEL_AWAY_MODE)
+                assert set_manual_away.call_count == 0
+                assert cancel_smart_away.call_count == 0
+                assert len(caplog.records) == 1
+                msg = caplog.messages[0]
+                assert "Ignoring request to cancel away mode because system is not in away mode" in msg
 
     system.manualAwayMode = False
     system.sa_enabled = False
@@ -515,6 +538,19 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
             assert arg0 == "winter"
 
     system.manualAwayMode = False
+    system.sa_enabled = True
+    system.sa_state = LENNOX_SA_STATE_DISABLED
+    assert system.get_manual_away_mode() is False
+    assert system.get_smart_away_mode() is True
+    with patch.object(system, "cancel_smart_away") as cancel_smart_away:
+        with patch.object(zone, "setSchedule") as zone_set_schedule:
+            await c.async_set_preset_mode("winter")
+            assert cancel_smart_away.call_count == 1
+            assert zone_set_schedule.call_count == 1
+            arg0 = zone_set_schedule.await_args[0][0]
+            assert arg0 == "winter"
+
+    system.manualAwayMode = False
     system.sa_enabled = False
     system.sa_state = LENNOX_SA_STATE_DISABLED
     assert system.get_manual_away_mode() is False
@@ -536,21 +572,34 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
         await c.async_set_preset_mode(PRESET_NONE)
         assert zone_set_manual_mode.call_count == 1
 
+    system.manualAwayMode = False
+    system.sa_enabled = False
+    system.sa_state = LENNOX_SA_STATE_DISABLED
+    await conf_test_exception_handling(zone, "setManualMode", c, c.async_set_preset_mode, preset_mode=PRESET_NONE)
+
     # Should not be able to set preset when zone is disabled.
     with caplog.at_level(logging.ERROR):
         with patch.object(zone1, "setSchedule") as zone_set_scheduele:
             caplog.clear()
-            await c1.async_set_preset_mode("winter")
+            ex: HomeAssistantError = None
+            try:
+                await c1.async_set_preset_mode("winter")
+            except HomeAssistantError as err:
+                ex = err
             assert zone_set_scheduele.call_count == 0
-            assert len(caplog.records) == 1
+            assert ex is not None
+            assert "disabled" in str(ex)
 
     with caplog.at_level(logging.ERROR):
         with patch.object(zone1, "setSchedule") as zone_set_scheduele:
             caplog.clear()
-            await c.async_set_preset_mode("invaiid_preset")
-            assert zone_set_scheduele.call_count == 0
-            assert len(caplog.records) == 1
-            assert "invaiid_preset" in caplog.messages[0]
+            ex: HomeAssistantError = None
+            try:
+                await c.async_set_preset_mode("invalid_preset")
+            except HomeAssistantError as err:
+                ex = err
+            assert ex is not None
+            assert "invalid_preset" in str(ex)
 
 
 @pytest.mark.asyncio
@@ -769,8 +818,14 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "perform_humidify_setpoint") as perform_humidify_setpoint:
             caplog.clear()
-            await c.async_set_humidity(60)
-            assert len(caplog.records) == 1
+            ex: HomeAssistantError = None
+            try:
+                await c.async_set_humidity(60)
+            except HomeAssistantError as err:
+                ex = err
+            assert ex is not None
+            assert "off" in str(ex)
+            assert "Unable to set humidity" in str(ex)
             assert perform_humidify_setpoint.call_count == 0
 
     zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
@@ -818,9 +873,17 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     with caplog.at_level(logging.ERROR):
         with patch.object(zone1, "perform_humidify_setpoint") as perform_humidify_setpoint:
             caplog.clear()
-            await c1.async_set_humidity(60)
-            assert len(caplog.records) == 1
+            ex: HomeAssistantError = None
+            try:
+                await c1.async_set_humidity(60)
+            except HomeAssistantError as err:
+                ex = err
+            assert ex is not None
+            assert "Unable to set" in str(ex)
+            assert "is disabled" in str(ex)
             assert perform_humidify_setpoint.call_count == 0
+
+    await conf_test_exception_handling(zone, "perform_humidify_setpoint", c, c.async_set_humidity, humidity=60)
 
 
 @pytest.mark.asyncio
@@ -1052,14 +1115,20 @@ async def test_climate_set_hvac_mode(hass, manager_mz: Manager, caplog):
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_OFF
 
+    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_set_hvac_mode, hvac_mode=HVAC_MODE_HEAT_COOL)
+
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
-            await c.async_set_hvac_mode(HVAC_MODE_OFF)
+            ex: HomeAssistantError = None
+            try:
+                await c.async_set_hvac_mode(HVAC_MODE_OFF)
+            except HomeAssistantError as err:
+                ex = err
             assert setHVACMode.call_count == 0
-            assert len(caplog.records) == 1
-            assert "disabled" in caplog.messages[0]
+            assert ex is not None
+            assert "disabled" in str(ex)
 
 
 @pytest.mark.asyncio
@@ -1094,6 +1163,10 @@ async def test_climate_hvac_action(hass, manager_mz: Manager):
     zone.tempOperation = LENNOX_TEMP_OPERATION_OFF
     zone.humOperation = LENNOX_HUMID_OPERATION_WAITING
     assert c.hvac_action == CURRENT_HVAC_IDLE
+
+    zone.tempOperation = LENNOX_TEMP_OPERATION_OFF
+    zone.humOperation = "unexpected_humdity_operation"
+    assert c.hvac_action == "unexpected_humdity_operation"
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     assert c.hvac_action is None
@@ -1184,14 +1257,20 @@ async def test_climate_turn_aux_heat_on(hass, manager_mz: Manager, caplog):
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_EMERGENCY_HEAT
 
+    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_on)
+
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
-            await c.async_turn_aux_heat_on()
+            ex: HomeAssistantError = None
+            try:
+                await c.async_turn_aux_heat_on()
+            except HomeAssistantError as err:
+                ex = err
             assert setHVACMode.call_count == 0
-            assert len(caplog.records) == 1
-            assert "disabled" in caplog.messages[0]
+            assert ex is not None
+            assert "disabled" in str(ex)
 
 
 @pytest.mark.asyncio
@@ -1210,14 +1289,19 @@ async def test_climate_turn_aux_heat_off(hass, manager_mz: Manager, caplog):
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_HEAT
 
+    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_off)
+
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
-            await c.async_turn_aux_heat_on()
-            assert setHVACMode.call_count == 0
-            assert len(caplog.records) == 1
-            assert "disabled" in caplog.messages[0]
+            ex: HomeAssistantError = None
+            try:
+                await c.async_turn_aux_heat_off()
+            except HomeAssistantError as err:
+                ex = err
+            assert ex is not None
+            assert "disabled" in str(ex)
 
 
 @pytest.mark.asyncio
@@ -1236,13 +1320,19 @@ async def test_climate_set_fan_mode(hass, manager_mz: Manager, caplog):
             assert setFanMode.call_count == 1
             assert setFanMode.await_args[0][0] == "circulate"
 
+    await conf_test_exception_handling(zone, "setFanMode", c, c.async_set_fan_mode, fan_mode="auto")
+
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setFanMode") as setFanMode:
             caplog.clear()
-            await c.async_set_fan_mode("circulate")
-            assert len(caplog.records) == 1
-            assert "disabled" in caplog.messages[0]
+            ex: HomeAssistantError = None
+            try:
+                await c.async_set_fan_mode("circulate")
+            except HomeAssistantError as err:
+                ex = err
+            assert ex is not None
+            assert "disabled" in str(ex)
 
 
 @pytest.mark.asyncio
@@ -1270,52 +1360,80 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
         with caplog.at_level(logging.ERROR):
             caplog.clear()
             is_zone_disabled.return_value = True
+            ex: HomeAssistantError = None
+            try:
+                await c.async_set_temperature()
+            except HomeAssistantError as err:
+                ex = err
+            assert ex is not None
+            assert "is disabled" in str(ex)
+
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        ex: HomeAssistantError = None
+        try:
             await c.async_set_temperature()
-            assert len(caplog.records) == 1
-            assert "is disabled" in caplog.messages[0]
+        except HomeAssistantError as err:
+            ex = err
+        assert ex is not None
+        assert "no temperature" in str(ex)
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        await c.async_set_temperature()
-        assert len(caplog.records) == 1
-        assert "no temperature" in caplog.messages[0]
+        ex: HomeAssistantError = None
+        try:
+            await c.async_set_temperature(temperature=70, target_temp_high=71)
+        except HomeAssistantError as err:
+            ex = err
+        assert ex is not None
+        assert "provide either temperature or temp_high" in str(ex)
+        assert "70" in str(ex)
+        assert "71" in str(ex)
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        await c.async_set_temperature(temperature=70, target_temp_high=71)
-        assert len(caplog.records) == 1
-        assert "provide either temperature or temp_high" in caplog.messages[0]
-        assert "70" in caplog.messages[0]
-        assert "71" in caplog.messages[0]
+        ex: HomeAssistantError = None
+        try:
+            await c.async_set_temperature(temperature=70, target_temp_low=68)
+        except HomeAssistantError as err:
+            ex = err
+        assert ex is not None
+        assert "provide either temperature or temp_high" in str(ex)
+        assert "70" in str(ex)
+        assert "68" in str(ex)
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        await c.async_set_temperature(temperature=70, target_temp_low=68)
-        assert len(caplog.records) == 1
-        assert "provide either temperature or temp_high" in caplog.messages[0]
-        assert "70" in caplog.messages[0]
-        assert "68" in caplog.messages[0]
+        ex: HomeAssistantError = None
+        try:
+            await c.async_set_temperature(target_temp_low=68)
+        except HomeAssistantError as err:
+            ex = err
+        assert ex is not None
+        assert "must provide both temp_high / low" in str(ex)
+        assert "68" in str(ex)
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        await c.async_set_temperature(target_temp_low=68)
-        assert len(caplog.records) == 1
-        assert "must provide both temp_high / low" in caplog.messages[0]
-        assert "68" in caplog.messages[0]
-
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
-        await c.async_set_temperature(target_temp_high=72)
-        assert len(caplog.records) == 1
-        assert "must provide both temp_high / low" in caplog.messages[0]
-        assert "72" in caplog.messages[0]
+        ex: HomeAssistantError = None
+        try:
+            await c.async_set_temperature(target_temp_high=72)
+        except HomeAssistantError as err:
+            ex = err
+        assert ex is not None
+        assert "must provide both temp_high / low" in str(ex)
+        assert "72" in str(ex)
 
     system.single_setpoint_mode = True
     with caplog.at_level(logging.ERROR):
         caplog.clear()
-        await c.async_set_temperature(target_temp_high=72, target_temp_low=60)
-        assert len(caplog.records) == 1
-        assert "zone in single setpoint mode must provide [temperature]" in caplog.messages[0]
+        ex: HomeAssistantError = None
+        try:
+            await c.async_set_temperature(target_temp_high=72, target_temp_low=60)
+        except HomeAssistantError as err:
+            ex = err
+        assert ex is not None
+        assert "zone in single setpoint mode must provide [temperature]" in str(ex)
 
     assert manager.is_metric is False
     assert zone.systemMode == "cool"
@@ -1369,9 +1487,13 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
         with patch.object(zone, "perform_setpoint") as perform_setpoint:
             with caplog.at_level(logging.ERROR):
                 caplog.clear()
-                await c.async_set_temperature(temperature=73)
-                assert len(caplog.records) == 1
-                assert "System Mode is [None]" in caplog.messages[0]
+                ex: HomeAssistantError = None
+                try:
+                    await c.async_set_temperature(temperature=73)
+                except HomeAssistantError as err:
+                    ex = err
+                assert ex is not None
+                assert "System Mode is [None]" in str(ex)
 
     zone.systemMode = "cool"
     with patch.object(c, "async_set_hvac_mode") as async_set_hvac_mode:
@@ -1388,9 +1510,13 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
         with patch.object(zone, "perform_setpoint") as perform_setpoint:
             with caplog.at_level(logging.ERROR):
                 caplog.clear()
-                await c.async_set_temperature(temperature=73)
-                assert len(caplog.records) == 1
-                assert "System Mode is [off]" in caplog.messages[0]
+                ex: HomeAssistantError = None
+                try:
+                    await c.async_set_temperature(temperature=73)
+                except HomeAssistantError as err:
+                    ex = err
+                assert ex is not None
+                assert "System Mode is [off]" in str(ex)
 
     zone.systemMode = "cool"
     with patch.object(c, "async_set_hvac_mode") as async_set_hvac_mode:
@@ -1444,20 +1570,4 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
                 assert async_set_hvac_mode.call_count == 0
                 assert perform_setpoint.call_args_list[0].kwargs["r_spC"] == 20
 
-    with patch.object(c, "async_set_hvac_mode") as async_set_hvac_mode:
-        with patch.object(zone, "perform_setpoint") as perform_setpoint:
-            perform_setpoint.side_effect = S30Exception("this is the error", 20, 10)
-            with caplog.at_level(logging.ERROR):
-                caplog.clear()
-                await c.async_set_temperature(temperature=20)
-                assert len(caplog.records) == 1
-                assert "this is the error" in caplog.messages[0]
-
-    with patch.object(c, "async_set_hvac_mode") as async_set_hvac_mode:
-        with patch.object(zone, "perform_setpoint") as perform_setpoint:
-            perform_setpoint.side_effect = ValueError()
-            with caplog.at_level(logging.ERROR):
-                caplog.clear()
-                await c.async_set_temperature(temperature=20)
-                assert len(caplog.records) == 1
-                assert "unexpected exception" in caplog.messages[0]
+    await conf_test_exception_handling(zone, "perform_setpoint", c, c.async_set_temperature, temperature=20)

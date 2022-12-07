@@ -79,14 +79,12 @@ class EquipmentParameterUpdateButton(S30BaseEntityMixin, ButtonEntity):
 
         try:
             await self._system.set_parameter_value(0, 0, "")
-        except S30Exception as e:
-            _LOGGER.error(
-                f"EquipmentParameterUpdateButton::async_press S30Exception [{self._myname}] [{e.as_string()}]"
-            )
-        except Exception as e:
-            _LOGGER.exception(
-                f"EquipmentParameterUpdateButton::async_press unexpected exception, please log issue, [{self._myname}] exception [{e}]"
-            )
+        except S30Exception as ex:
+            raise HomeAssistantError(f"Unable to parameter update [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"EquipmentParameterUpdateButton::async_press unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -128,11 +126,11 @@ class ResetSmartHubButton(S30BaseEntityMixin, ButtonEntity):
         try:
             await self._system.reset_smart_controller(0, 0, "")
         except S30Exception as ex:
-            _LOGGER.error("ResetSmartHubButton::async_press S30Exception [%s] [%s]", self._myname, ex.as_string())
+            raise HomeAssistantError(f"Unable ResetSmartHub [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            _LOGGER.exception(
-                "ResetSmartHubButton::async_press unexpected exception, please log issue, [%s] [%s]", self._myname, ex
-            )
+            raise HomeAssistantError(
+                f"ResetSmartHubButton::async_press unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:

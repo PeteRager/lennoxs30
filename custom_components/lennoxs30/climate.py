@@ -6,6 +6,7 @@
 # pylint: disable=unused-argument
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name
+
 from __future__ import annotations
 
 import logging
@@ -33,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
-
+from homeassistant.exceptions import HomeAssistantError
 
 from lennoxs30api import (
     LENNOX_HUMID_OPERATION_DEHUMID,
@@ -411,27 +412,23 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     async def async_set_humidity(self, humidity):
         """Set new target humidity."""
         _LOGGER.info(f"climate:async_set_humidity zone [{self._myname}] humidity [{humidity}]")
+        if self.is_zone_disabled:
+            raise HomeAssistantError(f"Unable to set humidity as zone [{self._myname}] is disabled")
+        if self._zone.humidityMode not in (LENNOX_HUMIDITY_MODE_DEHUMIDIFY, LENNOX_HUMIDITY_MODE_HUMIDIFY):
+            raise HomeAssistantError(
+                f"Unable to set humidity as humidity mode is [{self._zone.humidityMode}] on zone [{self._myname}]"
+            )
         try:
-            if self.is_zone_disabled:
-                raise S30Exception(
-                    f"Unable to set humidity as zone [{self._myname}] is disabled",
-                    EC_BAD_PARAMETERS,
-                    2,
-                )
             if self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY:
                 await self._zone.perform_humidify_setpoint(r_desp=humidity)
             elif self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY:
                 await self._zone.perform_humidify_setpoint(r_husp=humidity)
-            else:
-                raise S30Exception(
-                    f"Unable to set humidity as humidity mode is [{self._zone.humidityMode}] on zone [{self._myname}]",
-                    EC_BAD_PARAMETERS,
-                    1,
-                )
-        except S30Exception as e:
-            _LOGGER.error(e.message)
-        except Exception:
-            _LOGGER.exception("Unexpected exception in async_set_humidity")
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_humidity [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_humidity unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def hvac_modes(self):
@@ -454,32 +451,24 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new hvac operation mode."""
+        if self.is_zone_disabled:
+            raise HomeAssistantError(f"Unable to set hvac_mode as zone [{self._myname}] is disabled")
         try:
-            if self.is_zone_disabled:
-                raise S30Exception(
-                    f"Unable to set hvac_mode as zone [{self._myname}] is disabled",
-                    EC_BAD_PARAMETERS,
-                    2,
-                )
             t_hvac_mode = hvac_mode
             # Only this mode needs to be mapped
             if t_hvac_mode == HVACMode.HEAT_COOL:
                 t_hvac_mode = LENNOX_HVAC_HEAT_COOL
-            _LOGGER.debug(
-                "climate:async_set_hvac_mode zone ["
-                + self._myname
-                + "] ha_mode ["
-                + str(hvac_mode)
-                + "] lennox_mode ["
-                + t_hvac_mode
-                + "]"
+            _LOGGER.info(
+                f"climate:async_set_hvac_mode zone [{self._myname}] ha_mode [{hvac_mode}] lennox_mode [{t_hvac_mode}]"
             )
             await self._zone.setHVACMode(t_hvac_mode)
             await self.async_trigger_fast_poll()
-        except S30Exception as e:
-            _LOGGER.error(e.message)
-        except Exception as e:
-            _LOGGER.error(str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_hvac_mode [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_hvac_mode unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def hvac_action(self):
@@ -537,14 +526,10 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return presets
 
     async def async_set_preset_mode(self, preset_mode):
+        _LOGGER.info(f"climate:async_set_preset_mode name[{self._myname}] preset_mode [{preset_mode}]")
+        if self.is_zone_disabled:
+            raise HomeAssistantError(f"Unable to set preset mode [{preset_mode}] as zone [{self._myname}] is disabled")
         try:
-            _LOGGER.debug("climate:async_set_preset_mode name[" + self._myname + "] preset_mode [" + preset_mode + "]")
-            if self.is_zone_disabled:
-                raise S30Exception(
-                    f"Unable to set preset mode [{preset_mode}] as zone [{self._myname}] is disabled",
-                    EC_BAD_PARAMETERS,
-                    2,
-                )
             if preset_mode == PRESET_CANCEL_AWAY_MODE:
                 processed = False
                 if self._system.get_manual_away_mode():
@@ -577,10 +562,12 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
             await self.async_trigger_fast_poll()
 
-        except S30Exception as e:
-            _LOGGER.error("async_set_preset_mode error:" + e.message)
-        except Exception as e:
-            _LOGGER.error("async_set_preset_mode error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_preset_mode [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_preset_mode unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def fan_mode(self):
@@ -605,44 +592,38 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
     async def async_turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
+        _LOGGER.info(f"climate:async_turn_aux_heat_on zone [{self._myname}]")
+        if self.is_zone_disabled:
+            raise HomeAssistantError(f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled")
         try:
-            _LOGGER.debug(f"climate:async_turn_aux_heat_on zone [{self._myname}]")
-            if self.is_zone_disabled:
-                raise S30Exception(
-                    f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled",
-                    EC_BAD_PARAMETERS,
-                    2,
-                )
             await self._zone.setHVACMode(LENNOX_HVAC_EMERGENCY_HEAT)
             await self.async_trigger_fast_poll()
-        except S30Exception as e:
-            _LOGGER.error(e.message)
-        except Exception as e:
-            _LOGGER.error(str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"turn_aux_heat_on [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"turn_aux_heat_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_turn_aux_heat_off(self):
+        _LOGGER.info(f"climate:async_turn_aux_heat_off zone [{self._myname}]")
+        # When Aux is turned off, we will revert the zone to Heat Mode.
+        if self.is_zone_disabled:
+            raise HomeAssistantError(f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled")
         try:
-            _LOGGER.debug(f"climate:async_turn_aux_heat_off zone [{self._myname}]")
-            # When Aux is turned off, we will revert the zone to Heat Mode.
-            if self.is_zone_disabled:
-                raise S30Exception(
-                    f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled",
-                    EC_BAD_PARAMETERS,
-                    2,
-                )
-
             await self._zone.setHVACMode(LENNOX_HVAC_HEAT)
             await self.async_trigger_fast_poll()
-        except S30Exception as e:
-            _LOGGER.error(e.message)
-        except Exception as e:
-            _LOGGER.error(str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"turn_aux_heat_off [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"turn_aux_heat_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature"""
         if self.is_zone_disabled:
-            _LOGGER.error(f"Unable to set_temperature as zone [{self._myname}] is disabled")
-            return
+            raise HomeAssistantError(f"Unable to set_temperature as zone [{self._myname}] is disabled")
 
         r_hvacMode = None
         if kwargs.get(ATTR_HVAC_MODE) is not None:
@@ -657,34 +638,34 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         if kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             r_hsp = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        _LOGGER.debug(
+        _LOGGER.info(
             f"climate:async_set_temperature zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
         )
 
         # A temperature must be specified
         if r_temperature is None and r_csp is None and r_hsp is None:
-            msg = f"climate:async_set_temperature - no temperature given zone [{self._myname}]] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
-            _LOGGER.error(msg)
-            return
+            raise HomeAssistantError(
+                f"climate:async_set_temperature - no temperature given zone [{self._myname}]] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
+            )
 
         # Either provide temperature or high/low but not both
         if r_temperature is not None and (r_csp is not None or r_hsp is not None):
-            msg = f"climate:async_set_temperature - provide either temperature or temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
-            _LOGGER.error(msg)
-            return
+            raise HomeAssistantError(
+                f"climate:async_set_temperature - provide either temperature or temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
+            )
 
         # If no temperature, must specify both high and low
         if r_temperature is None and (r_csp is None or r_hsp is None):
-            msg = f"climate:async_set_temperature - must provide both temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
-            _LOGGER.error(msg)
-            return
+            raise HomeAssistantError(
+                f"climate:async_set_temperature - must provide both temp_high / low - zone [{self._myname}] hvacMode [{r_hvacMode}] temperature [{r_temperature}] temp_high [{r_csp}] temp_low [{r_hsp}]"
+            )
 
         # If single setpoint mode, then must specify r_temperature and not high and low
         if self._zone.system.single_setpoint_mode:
             if r_temperature is None:
-                msg = f"climate:async_set_temperature - zone in single setpoint mode must provide [{ATTR_TEMPERATURE}] - zone [{self._myname}]"
-                _LOGGER.error(msg)
-                return
+                raise HomeAssistantError(
+                    f"climate:async_set_temperature - zone in single setpoint mode must provide [{ATTR_TEMPERATURE}] - zone [{self._myname}]"
+                )
 
         try:
             # If an HVAC mode is requested; and we are not in that mode, then the first step
@@ -697,8 +678,9 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                 r_hvacMode = self.hvac_mode
 
             if r_hvacMode is None:
-                _LOGGER.error(f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature")
-                return
+                raise S30Exception(
+                    f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature", EC_BAD_PARAMETERS, 10
+                )
 
             if r_temperature is not None:
                 if self._zone.system.single_setpoint_mode:
@@ -726,8 +708,11 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                     else:
                         await self._zone.perform_setpoint(r_hspC=r_temperature)
                 else:
-                    _LOGGER.error(f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature")
-                    return
+                    raise S30Exception(
+                        f"set_temperature System Mode is [{r_hvacMode}] unable to set temperature",
+                        EC_BAD_PARAMETERS,
+                        11,
+                    )
             else:
                 _LOGGER.debug(
                     "climate:async_set_temperature zone ["
@@ -745,27 +730,28 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
             await self.async_trigger_fast_poll()
 
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("climate:async_set_temperature - error:" + e.message)
-            else:
-                _LOGGER.exception("climate:async_set_temperature - unexpected exception")
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_temperature [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_temperature unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        _LOGGER.debug(f"climate:async_set_fan_mode name[{self._myname}] fanMode [{fan_mode}]")
+        _LOGGER.info(f"climate:async_set_fan_mode name[{self._myname}] fanMode [{fan_mode}]")
         if self.is_zone_disabled:
-            _LOGGER.error(f"Unable to set_fan_mode as zone [{self._myname}] is disabled")
-            return
+            raise HomeAssistantError(f"Unable to set_fan_mode as zone [{self._myname}] is disabled")
         try:
             await self._zone.setFanMode(fan_mode)
             await self.async_trigger_fast_poll()
 
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("climate:async_set_fan_mode - error:" + e.message)
-            else:
-                _LOGGER.error("climate:async_set_fan_mode - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_fan_mode [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_fan_mode unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -1,21 +1,16 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-from typing import Any
-from lennoxs30api.s30exception import S30Exception
-import voluptuous as vol
-from .helpers import (
-    helper_create_equipment_entity_name,
-    helper_get_equipment_device_info,
-    helper_get_parameter_extra_attributes,
-    lennox_uom_to_ha_uom,
-)
+# pylint: disable=logging-not-lazy
+# pylint: disable=logging-fstring-interpolation
+# pylint: disable=global-statement
+# pylint: disable=broad-except
+# pylint: disable=unused-argument
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
 
-from .base_entity import S30BaseEntityMixin
-from .const import (
-    MANAGER,
-    UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
-    UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
-    VENTILATION_EQUIPMENT_ID,
-)
+import logging
+from typing import Any
+import voluptuous as vol
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (
     PERCENTAGE,
@@ -26,9 +21,12 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform as ep
-from . import DOMAIN, Manager
 from homeassistant.core import HomeAssistant
-import logging
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+
+from lennoxs30api.s30exception import S30Exception
 from lennoxs30api import (
     lennox_system,
     LENNOX_CIRCULATE_TIME_MAX,
@@ -43,9 +41,22 @@ from lennoxs30api.lennox_equipment import (
 )
 
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from .helpers import (
+    helper_create_equipment_entity_name,
+    helper_get_equipment_device_info,
+    helper_get_parameter_extra_attributes,
+    lennox_uom_to_ha_uom,
+)
+
+from .base_entity import S30BaseEntityMixin
+from .const import (
+    MANAGER,
+    UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
+    UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
+    VENTILATION_EQUIPMENT_ID,
+)
+from . import DOMAIN, Manager
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +66,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the number entities"""
     _LOGGER.debug("number:async_setup_platform enter")
     number_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
@@ -116,6 +128,7 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Called when state has changed"""
         _LOGGER.debug(f"update_callback DiagnosticLevelNumber myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -156,12 +169,12 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
                     f"Diagnostic Level Number - setting to a non-zero value is not recommended for systems connected to the lennox cloud internetStatus [{self._system.internetStatus}] relayServerConnected [{self._system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
                 )
             await self._system.set_diagnostic_level(value)
-        except S30Exception as e:
-            _LOGGER.error(f"DiagnosticLevelNumber::async_set_native_value [{e.as_string()}]")
-        except Exception:
-            _LOGGER.exception(
-                "DiagnosticLevelNumber::async_set_native_value - unexpected exception - please raise an issue"
-            )
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -202,6 +215,7 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Called when state has changed"""
         _LOGGER.debug(f"update_callback DehumidificationOverCooling myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -252,14 +266,12 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
                 await self._system.set_enhancedDehumidificationOvercooling(r_c=value)
             else:
                 await self._system.set_enhancedDehumidificationOvercooling(r_f=value)
-        except S30Exception as e:
-            _LOGGER.error(
-                f"DehumidificationOverCooling::async_set_native_value value [{value}] error [{e.as_string()}]"
-            )
-        except Exception:
-            _LOGGER.exception(
-                "DehumidificationOverCooling::async_set_native_value unexpected exception - please raise an issue"
-            )
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -291,6 +303,7 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Called when state has changed"""
         _LOGGER.debug(f"update_callback CirculateTime myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -328,14 +341,12 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
         _LOGGER.info(f"CirculateTime::async_set_native_value myname [{self._myname}] value [{value}]")
         try:
             await self._system.set_circulateTime(value)
-        except S30Exception as e:
-            _LOGGER.error(
-                f"CirculateTime::async_set_native_value value myname [{self._myname}] value [{value}] error [{e.as_string()}]"
-            )
-        except Exception as e:
-            _LOGGER.exception(
-                f"CirculateTime::async_set_native_value unexpected exception - please raise an issue - myname [{self._myname}] value [{value}] error [{e}]"
-            )
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -362,6 +373,7 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Called when state has changed"""
         _LOGGER.debug(f"update_callback TimedVentilationNumber myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -397,14 +409,16 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
             value_i = int(value)
             value_seconds = value_i * 60
             await self._system.ventilation_timed(value_seconds)
-        except S30Exception as e:
-            _LOGGER.error(f"TimedVentilationNumber::async_set_native_value value [{value}] - error [{e.as_string()}]")
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except ValueError as v:
-            _LOGGER.error(f"TimedVentilationNumber::async_set_native_value invalid value [{value}] ValueError [{v}]")
-        except Exception as e:
-            _LOGGER.exception(
-                f"TimedVentilationNumber::async_set_native_value unexpected exception - please raise an issue [{value}] error [{e}]"
-            )
+            raise HomeAssistantError(
+                f"TimedVentilationNumber::async_set_native_value invalid value [{value}] ValueError [{v}]"
+            ) from v
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def native_unit_of_measurement(self):
@@ -448,9 +462,10 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
         )
         await super().async_added_to_hass()
 
-    def update_callback(self, id: str):
+    def update_callback(self, pid: str):
+        """Called when state has changed"""
         _LOGGER.debug(
-            f"update_callback EquipmentParameterNumber myname [{self._myname}] [{id}] [{self.parameter.value}]"
+            f"update_callback EquipmentParameterNumber myname [{self._myname}] [{pid}] [{self.parameter.value}]"
         )
         self.schedule_update_ha_state()
 
@@ -492,14 +507,12 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
 
         try:
             await self._system.set_equipment_parameter_value(self.equipment.equipment_id, self.parameter.pid, value)
-        except S30Exception as e:
-            _LOGGER.error(
-                f"EquipmentParameterNumber::async_set_native_value [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}] error [{e.as_string()}]"
-            )
-        except Exception:
-            _LOGGER.exception(
-                f"EquipmentParameterNumber::async_set_native_value unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
-            )
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def native_unit_of_measurement(self):
@@ -523,23 +536,20 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
         return helper_get_parameter_extra_attributes(self.equipment, self.parameter)
 
     async def async_set_zonetest_parameter(self, value: float, enabled: bool):
+        """Async function for setting zone test parameters"""
         _LOGGER.info(
             f"EquipmentParameterNumber::async_set_zonetest_parameter [{self._myname}] set value to [{value}] enabled [{enabled}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
         )
 
         if self.equipment.equipment_id != 0:
-            _LOGGER.error(
+            raise HomeAssistantError(
                 f"EquipmentParameterNumber::async_set_zonetest_parameter invalid equipment for zoneTest [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}]"
             )
-            return
         try:
             await self._system.set_zone_test_parameter_value(self.parameter.pid, value, enabled)
-        except S30Exception as e:
-            _LOGGER.error(
-                f"EquipmentParameterNumber::async_set_zonetest_parameter [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] error [{e.as_string()}] "
-            )
-            return
-        except Exception:
-            _LOGGER.exception(
-                f"EquipmentParameterNumber::async_set_zonetest_parameter unexpected exception - please raise an issue [{self._myname}] set value to [{value}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
-            )
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_set_zonetest_parameter [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_set_zonetest_parameter unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex

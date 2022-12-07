@@ -1,24 +1,23 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+# pylint: disable=logging-not-lazy
+# pylint: disable=logging-fstring-interpolation
+# pylint: disable=global-statement
+# pylint: disable=broad-except
+# pylint: disable=unused-argument
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
 from typing import Any
-from lennoxs30api.s30exception import S30Exception
-
-from custom_components.lennoxs30.helpers import (
-    helper_create_equipment_entity_name,
-    helper_get_equipment_device_info,
-    helper_get_parameter_extra_attributes,
-)
-
-from .base_entity import S30BaseEntityMixin
-from .const import MANAGER, UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT
-from homeassistant.components.select import SelectEntity
-from . import DOMAIN, Manager
-from homeassistant.core import HomeAssistant
 import logging
+
+
+from homeassistant.components.select import SelectEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.exceptions import HomeAssistantError
 
+from lennoxs30api.s30exception import S30Exception
 from lennoxs30api.s30api_async import (
     LENNOX_HUMIDITY_MODE_OFF,
     LENNOX_HUMIDITY_MODE_HUMIDIFY,
@@ -28,14 +27,22 @@ from lennoxs30api.s30api_async import (
     LENNOX_DEHUMIDIFICATION_MODE_AUTO,
     lennox_system,
     lennox_zone,
-    EC_BAD_PARAMETERS,
 )
-
 from lennoxs30api.lennox_equipment import (
     LENNOX_EQUIPMENT_PARAMETER_FORMAT_RADIO,
     lennox_equipment_parameter,
     lennox_equipment,
 )
+
+from .helpers import (
+    helper_create_equipment_entity_name,
+    helper_get_equipment_device_info,
+    helper_get_parameter_extra_attributes,
+)
+
+from .base_entity import S30BaseEntityMixin
+from .const import MANAGER, UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT
+from . import DOMAIN, Manager
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +53,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Setup the select entities"""
     _LOGGER.debug("number:async_setup_platform enter")
 
     select_list = []
@@ -107,12 +115,14 @@ class HumidityModeSelect(S30BaseEntityMixin, SelectEntity):
         await super().async_added_to_hass()
 
     def zone_update_callback(self):
+        """Callback for zone updates"""
         _LOGGER.debug(
             f"zone_update_callback HumidityModeSelect myname [{self._myname}] humidityMode [{self._zone.humidityMode}]"
         )
         self.schedule_update_ha_state()
 
     def system_update_callback(self):
+        """Callback for system updates"""
         _LOGGER.debug(
             f"system_update_callback HumidityModeSelect myname [{self._myname}] system zoning mode [{self._system.zoningMode}]"
         )
@@ -135,29 +145,27 @@ class HumidityModeSelect(S30BaseEntityMixin, SelectEntity):
 
     @property
     def options(self) -> list:
-        list = []
+        opt_list = []
         if self._zone.is_zone_disabled:
-            return list
+            return opt_list
         if self._zone.dehumidificationOption:
-            list.append(LENNOX_HUMIDITY_MODE_DEHUMIDIFY)
+            opt_list.append(LENNOX_HUMIDITY_MODE_DEHUMIDIFY)
         if self._zone.humidificationOption:
-            list.append(LENNOX_HUMIDITY_MODE_HUMIDIFY)
-        list.append(LENNOX_HUMIDITY_MODE_OFF)
-        return list
+            opt_list.append(LENNOX_HUMIDITY_MODE_HUMIDIFY)
+        opt_list.append(LENNOX_HUMIDITY_MODE_OFF)
+        return opt_list
 
     async def async_select_option(self, option: str) -> None:
+        if self._zone.is_zone_disabled:
+            raise HomeAssistantError(f"Unable to control humidity mode as zone [{self._myname}] is disabled")
         try:
-            if self._zone.is_zone_disabled:
-                raise S30Exception(
-                    f"Unable to control humidity mode as zone [{self._myname}] is disabled",
-                    EC_BAD_PARAMETERS,
-                    2,
-                )
             await self._zone.setHumidityMode(option)
-        except S30Exception as e:
-            _LOGGER.error("HumidityModeSelect async_select_option " + e.as_string())
-        except Exception:
-            _LOGGER.exception("HumidityModeSelect async_select_option - unexpected exception please raise an issue")
+        except S30Exception as ex:
+            raise HomeAssistantError(f"select_option [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"select_option unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -194,6 +202,7 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
         await super().async_added_to_hass()
 
     def system_update_callback(self):
+        """Callback for system updates"""
         _LOGGER.debug(
             f"system_update_callback DehumidificationModeSelect myname [{self._myname}] dehumidification_mode [{self._system.dehumidificationMode}]"
         )
@@ -220,28 +229,28 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
 
     @property
     def options(self) -> list:
-        list = ["normal", "max", "climate IQ"]
-        return list
+        return ["normal", "max", "climate IQ"]
 
     async def async_select_option(self, option: str) -> None:
+        mode = None
+        if option == "max":
+            mode = LENNOX_DEHUMIDIFICATION_MODE_HIGH
+        elif option == "normal":
+            mode = LENNOX_DEHUMIDIFICATION_MODE_MEDIUM
+        elif option == "climate IQ":
+            mode = LENNOX_DEHUMIDIFICATION_MODE_AUTO
+        else:
+            raise HomeAssistantError(
+                f"DehumidificationModeSelect select option - invalid mode [{option}] requested must be in [normal, climate IQ, max]"
+            )
         try:
-            mode = None
-            if option == "max":
-                mode = LENNOX_DEHUMIDIFICATION_MODE_HIGH
-            elif option == "normal":
-                mode = LENNOX_DEHUMIDIFICATION_MODE_MEDIUM
-            elif option == "climate IQ":
-                mode = LENNOX_DEHUMIDIFICATION_MODE_AUTO
-            else:
-                _LOGGER.error(
-                    f"DehumidificationModeSelect select option - invalid mode [{option}] requested must be in [normal, climate IQ, max]"
-                )
-                return
             await self._system.set_dehumidificationMode(mode)
-        except S30Exception as e:
-            _LOGGER.error("DehumidificationModeSelect async_select_option " + e.as_string())
-        except Exception:
-            _LOGGER.exception("DehumidificationModeSelect async_select_option unexpected exception please log an issue")
+        except S30Exception as ex:
+            raise HomeAssistantError(f"select_option [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"select_option unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -279,8 +288,9 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
         )
         await super().async_added_to_hass()
 
-    def eq_par_update_callback(self, id: str):
-        _LOGGER.debug(f"system_update_callback EquipmentParameterSelect myname [{self._myname}]  [{id}]")
+    def eq_par_update_callback(self, pid: str):
+        """Callback for equipment parameter updates"""
+        _LOGGER.debug(f"system_update_callback EquipmentParameterSelect myname [{self._myname}]  [{pid}]")
         self.schedule_update_ha_state()
 
     @property
@@ -322,14 +332,12 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
 
         try:
             await self._system.set_equipment_parameter_value(self.equipment.equipment_id, self.parameter.pid, option)
-        except S30Exception as e:
-            _LOGGER.error(
-                f"EquipmentParameterSelect::async_select_option S30Exception [{self._myname}] set value to [{option}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}] [{e.as_string()}]"
-            )
-        except Exception as e:
-            _LOGGER.exception(
-                f"EquipmentParameterSelect::async_select_option unexpected exception, please log issue, [{self._myname}] set value to [{option}] equipment_id[{self.equipment.equipment_id}] pid [{self.parameter.pid}] exception [{e}]"
-            )
+        except S30Exception as ex:
+            raise HomeAssistantError(f"select_option [{self._myname}] [{option}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"select_option unexpected exception, please log issue, [{self._myname}] [{option}] exception [{ex}]"
+            ) from ex
 
     @property
     def device_info(self) -> DeviceInfo:

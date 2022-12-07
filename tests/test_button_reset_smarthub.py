@@ -3,17 +3,15 @@
 # pylint: disable=missing-function-docstring
 
 from unittest.mock import patch
-import logging
 import pytest
 
 from lennoxs30api.s30api_async import lennox_system
-from lennoxs30api.s30exception import S30Exception
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.button import ResetSmartHubButton
 
-from tests.conftest import conftest_base_entity_availability
+from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
 
 
 @pytest.mark.asyncio
@@ -39,7 +37,7 @@ async def test_button_reset_smarthub_subscription(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager, caplog):
+async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     button = ResetSmartHubButton(hass, manager, system)
@@ -48,26 +46,7 @@ async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager, capl
         await button.async_press()
         assert reset_smart_controller.call_count == 1
 
-    with caplog.at_level(logging.ERROR):
-        with patch.object(system, "reset_smart_controller") as reset_smart_controller:
-            caplog.clear()
-            reset_smart_controller.side_effect = S30Exception("This is the error", 100, 200)
-            await button.async_press()
-            assert len(caplog.records) == 1
-            assert "ResetSmartHubButton::async_press" in caplog.messages[0]
-            assert "This is the error" in caplog.messages[0]
-
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
-        with patch.object(system, "reset_smart_controller") as reset_smart_controller:
-            reset_smart_controller.side_effect = ValueError("This is the error")
-            await button.async_press()
-            assert reset_smart_controller.call_count == 1
-            assert len(caplog.records) == 1
-            msg = caplog.messages[0]
-            assert "This is the error" in msg
-            assert "unexpected" in msg
-            assert button.name in msg
+    await conf_test_exception_handling(system, "reset_smart_controller", button, button.async_press)
 
 
 @pytest.mark.asyncio

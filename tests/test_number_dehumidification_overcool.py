@@ -1,31 +1,35 @@
-import logging
-from lennoxs30api.s30api_async import (
-    lennox_system,
-)
-from custom_components.lennoxs30 import (
-    Manager,
-)
-import pytest
-from custom_components.lennoxs30.const import LENNOX_DOMAIN
+# pylint: disable=too-many-lines
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=invalid-name
+# pylint: disable=protected-access
+# pylint: disable=line-too-long
 
-from custom_components.lennoxs30.number import (
-    DehumidificationOverCooling,
-)
+from unittest.mock import patch
+import pytest
 
 from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 
-from unittest.mock import patch
+from lennoxs30api.s30api_async import (
+    lennox_system,
+)
+from custom_components.lennoxs30 import (
+    Manager,
+)
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
+from custom_components.lennoxs30.number import (
+    DehumidificationOverCooling,
+)
 
-from lennoxs30api.s30exception import S30Exception
 
-from tests.conftest import conftest_base_entity_availability
+from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
+async def test_dehumd_overcool_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = DehumidificationOverCooling(hass, manager, system)
 
@@ -33,7 +37,7 @@ async def test_dehumd_overcool_unique_id(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_name(hass, manager: Manager, caplog):
+async def test_dehumd_overcool_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = DehumidificationOverCooling(hass, manager, system)
 
@@ -41,7 +45,7 @@ async def test_dehumd_overcool_name(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_unique_id_unit_of_measure(hass, manager: Manager, caplog):
+async def test_dehumd_overcool_unique_id_unit_of_measure(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
@@ -51,7 +55,7 @@ async def test_dehumd_overcool_unique_id_unit_of_measure(hass, manager: Manager,
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_max_value(hass, manager: Manager, caplog):
+async def test_dehumd_overcool_max_value(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
@@ -61,7 +65,7 @@ async def test_dehumd_overcool_max_value(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_min_value(hass, manager: Manager, caplog):
+async def test_dehumd_overcool_min_value(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
@@ -71,7 +75,7 @@ async def test_dehumd_overcool_min_value(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_step(hass, manager: Manager, caplog):
+async def test_dehumd_overcool_step(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
@@ -81,7 +85,7 @@ async def test_dehumd_overcool_step(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_dehumd_overcool_value(hass, manager: Manager, caplog):
+async def test_dehumd_overcool_value(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
@@ -91,7 +95,7 @@ async def test_dehumd_overcool_value(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_dehumd_set_value(hass, manager: Manager, caplog):
+async def test_dehumd_set_value(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
@@ -108,30 +112,13 @@ async def test_dehumd_set_value(hass, manager: Manager, caplog):
         assert set_enhancedDehumidificationOvercooling.call_count == 1
         assert set_enhancedDehumidificationOvercooling.call_args.kwargs["r_f"] == 2.0
 
-    with caplog.at_level(logging.ERROR):
-        with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
-            caplog.clear()
-            set_enhancedDehumidificationOvercooling.side_effect = S30Exception("This is the error", 100, 200)
-            await c.async_set_native_value(101)
-            assert len(caplog.records) == 1
-            assert "DehumidificationOverCooling::async_set_native_value" in caplog.messages[0]
-            assert "This is the error" in caplog.messages[0]
-            assert "101" in caplog.messages[0]
-
-    with caplog.at_level(logging.ERROR):
-        with patch.object(system, "set_enhancedDehumidificationOvercooling") as set_enhancedDehumidificationOvercooling:
-            caplog.clear()
-            set_enhancedDehumidificationOvercooling.side_effect = Exception("This is the error")
-            await c.async_set_native_value(1)
-            assert len(caplog.records) == 1
-            assert (
-                "DehumidificationOverCooling::async_set_native_value unexpected exception - please raise an issue"
-                in caplog.messages[0]
-            )
+    await conf_test_exception_handling(
+        system, "set_enhancedDehumidificationOvercooling", c, c.async_set_native_value, value=101
+    )
 
 
 @pytest.mark.asyncio
-async def test_dehumd_device_info(hass, manager: Manager, caplog):
+async def test_dehumd_device_info(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
@@ -142,14 +129,14 @@ async def test_dehumd_device_info(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_dehumd_subscription(hass, manager: Manager, caplog):
+async def test_dehumd_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
     await c.async_added_to_hass()
 
     with patch.object(c, "schedule_update_ha_state") as update_callback:
-        set = {
+        update_set = {
             "enhancedDehumidificationOvercoolingC_enable": not system.enhancedDehumidificationOvercoolingC_enable,
             "enhancedDehumidificationOvercoolingF_enable": not system.enhancedDehumidificationOvercoolingF_enable,
             "enhancedDehumidificationOvercoolingC": system.enhancedDehumidificationOvercoolingC + 1,
@@ -161,34 +148,34 @@ async def test_dehumd_subscription(hass, manager: Manager, caplog):
             "enhancedDehumidificationOvercoolingC_max": system.enhancedDehumidificationOvercoolingC_max + 1,
             "enhancedDehumidificationOvercoolingC_inc": 1.0,
         }
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingC_enable")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingC_enable")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingF_enable")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingF_enable")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 2
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingC")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingC")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 3
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingF")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingF")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 4
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingF_min")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingF_min")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 5
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingF_max")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingF_max")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 6
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingF_inc")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingF_inc")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 7
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingC_min")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingC_min")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 8
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingC_max")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingC_max")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 9
-        system.attr_updater(set, "enhancedDehumidificationOvercoolingC_inc")
+        system.attr_updater(update_set, "enhancedDehumidificationOvercoolingC_inc")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 10
 

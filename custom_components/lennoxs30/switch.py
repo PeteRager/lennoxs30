@@ -1,6 +1,26 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
+# pylint: disable=logging-not-lazy
+# pylint: disable=logging-fstring-interpolation
+# pylint: disable=global-statement
+# pylint: disable=broad-except
+# pylint: disable=unused-argument
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
+
+import logging
 import asyncio
 from typing import Any
+
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.exceptions import HomeAssistantError
+
+from lennoxs30api import lennox_system
+from lennoxs30api.s30exception import S30Exception
 
 from .base_entity import S30BaseEntityMixin
 from .const import (
@@ -9,14 +29,6 @@ from .const import (
     VENTILATION_EQUIPMENT_ID,
 )
 from . import Manager
-from homeassistant.core import HomeAssistant
-import logging
-from lennoxs30api import lennox_system
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import EntityCategory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +36,7 @@ DOMAIN = "lennoxs30"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
+    """Setup the switch entities"""
     _LOGGER.debug("switch:async_setup_platform enter")
 
     switch_list = []
@@ -58,9 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         async_add_entities(switch_list, True)
         _LOGGER.debug(f"switch:async_setup_platform exit - created [{len(switch_list)}] switch entitites")
         return True
-    else:
-        _LOGGER.info("switch:async_setup_platform exit - no ventilators founds")
-        return False
 
 
 class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -85,6 +95,7 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Update callback when data changes"""
         _LOGGER.info(f"update_callback myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -135,11 +146,12 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
         try:
             await self._system.ventilation_on()
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("ventilation_on:async_turn_on - error:" + e.message)
-            else:
-                _LOGGER.error("ventilation_on:async_turn_on - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_turn_off(self, **kwargs):
         try:
@@ -155,11 +167,12 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
                 called = True
             if called:
                 self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("ventilation_off:async_turn_off - error:" + e.message)
-            else:
-                _LOGGER.error("ventilation_off:async_turn_off - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
 
 class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -176,6 +189,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Update callback when data changes"""
         _LOGGER.info(f"update_callback myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -215,21 +229,23 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
         try:
             await self._system.allergenDefender_on()
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("allergenDefender_on:async_turn_on - error:" + e.message)
-            else:
-                _LOGGER.error("allergenDefender_on:async_turn_on - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.allergenDefender_off()
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("allergenDefender_off:async_turn_off - error:" + e.message)
-            else:
-                _LOGGER.error("allergenDefender_off:async_turn_off - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
 
 class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -251,6 +267,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Update callback when data changes"""
         _LOGGER.info(f"update_callback myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -279,21 +296,23 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
         try:
             await self._system.set_manual_away_mode(True)
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("S30ManualAwayModeSwitch:async_turn_on - error:" + e.message)
-            else:
-                _LOGGER.error("S30ManualAwayModeSwitch:async_turn_on - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.set_manual_away_mode(False)
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("S30ManualAwayModeSwitch:async_turn_off - error:" + e.message)
-            else:
-                _LOGGER.error("S30ManualAwayModeSwitch:async_turn_off - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
 
 class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -315,6 +334,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Update callback when data changes"""
         _LOGGER.info(f"update_callback myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -350,21 +370,23 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
         try:
             await self._system.enable_smart_away(True)
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("S30SmartAwayEnableSwitch:async_turn_on - error:" + e.message)
-            else:
-                _LOGGER.error("S30SmartAwayEnableSwitch:async_turn_on - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.enable_smart_away(False)
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("S30SmartAwayEnableSwitch:async_turn_off - error:" + e.message)
-            else:
-                _LOGGER.error("S30SmartAwayEnableSwitch:async_turn_off - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
 
 class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -386,6 +408,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
         await super().async_added_to_hass()
 
     def update_callback(self):
+        """Update callback when data changes"""
         _LOGGER.info(f"update_callback myname [{self._myname}]")
         self.schedule_update_ha_state()
 
@@ -421,24 +444,28 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
         try:
             await self._system.centralMode_off()
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("S30ZoningSwitch:async_turn_on - error:" + e.message)
-            else:
-                _LOGGER.error("S30ZoningSwitch:async_turn_on - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
     async def async_turn_off(self, **kwargs):
         try:
             await self._system.centralMode_on()
             self._manager.mp_wakeup_event.set()
-        except Exception as e:
-            if hasattr(e, "message"):
-                _LOGGER.error("S30ZoningSwitch:async_turn_off - error:" + e.message)
-            else:
-                _LOGGER.error("S30ZoningSwitch:async_turn_off - error:" + str(e))
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
 
 
 class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):
+    """S30ParameterSafetySwitch"""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -491,6 +518,7 @@ class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):
         self.schedule_update_ha_state()
 
     async def async_rearm_task(self):
+        """Rearms the safety switch"""
         await asyncio.sleep(self._rearm_duration_sec)
         self._manager.parameter_safety_turn_on(self._system.sysId)
         self.schedule_update_ha_state()

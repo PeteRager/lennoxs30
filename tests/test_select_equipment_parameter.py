@@ -1,26 +1,33 @@
+# pylint: disable=too-many-lines
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=invalid-name
+# pylint: disable=protected-access
+# pylint: disable=line-too-long
+
+
 import logging
-from lennoxs30api.s30api_async import (
-    lennox_system,
-)
-from custom_components.lennoxs30 import (
-    Manager,
-)
-import pytest
-from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
-from custom_components.lennoxs30.select import (
-    EquipmentParameterSelect,
-)
-from homeassistant.exceptions import HomeAssistantError
-from lennoxs30api.s30exception import S30Exception
-
 from unittest.mock import patch
+import pytest
 
-from tests.conftest import conftest_base_entity_availability, conftest_parameter_extra_attributes
+from homeassistant.exceptions import HomeAssistantError
+
+from lennoxs30api.s30api_async import lennox_system
+
+from custom_components.lennoxs30 import Manager
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
+from custom_components.lennoxs30.select import EquipmentParameterSelect
+
+
+from tests.conftest import (
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+    conftest_parameter_extra_attributes,
+)
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_select_unique_id(hass, manager: Manager, caplog):
+async def test_equipment_parameter_select_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
@@ -29,7 +36,7 @@ async def test_equipment_parameter_select_unique_id(hass, manager: Manager, capl
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_select_name(hass, manager: Manager, caplog):
+async def test_equipment_parameter_select_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
@@ -46,17 +53,17 @@ async def test_equipment_parameter_select_current_option(hass, manager: Manager,
 
     assert parameter.value == "1"
     assert c.current_option == "Enabled"
-    assert c.available == True
+    assert c.available is True
 
     parameter.value = "0"
     assert c.current_option == "Disabled"
-    assert c.available == True
+    assert c.available is True
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
         parameter.value = "2"
-        assert c.current_option == None
-        assert c.available == True
+        assert c.current_option is None
+        assert c.available is True
         assert len(caplog.records) == 1
         assert "EquipmentParameterSelect unable to find current radio option value" in caplog.messages[0]
         assert parameter.value in caplog.messages[0]
@@ -66,7 +73,7 @@ async def test_equipment_parameter_select_current_option(hass, manager: Manager,
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_select_subscription(hass, manager: Manager, caplog):
+async def test_equipment_parameter_select_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[130]
@@ -76,13 +83,13 @@ async def test_equipment_parameter_select_subscription(hass, manager: Manager, c
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         system.executeOnUpdateCallbacksEqParameters("0_130")
         assert update_callback.call_count == 1
-        assert c.available == True
+        assert c.available is True
 
     conftest_base_entity_availability(manager, system, c)
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_select_options(hass, manager_mz: Manager, caplog):
+async def test_equipment_parameter_select_options(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -117,7 +124,7 @@ async def test_equipment_parameter_select_async_select_options(hass, manager_mz:
             await c.async_select_option("Enabled")
         except HomeAssistantError as e:
             ex = e
-        assert ex != None
+        assert ex is not None
         assert set_equipment_parameter_value.call_count == 0
         s = str(ex)
         assert "Unable to set parameter" in s
@@ -133,47 +140,29 @@ async def test_equipment_parameter_select_async_select_options(hass, manager_mz:
         assert set_equipment_parameter_value.await_args[0][2] == "Enabled"
 
     with caplog.at_level(logging.ERROR):
-        with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
-            caplog.clear()
-            set_equipment_parameter_value.side_effect = S30Exception("This is the error", 100, 200)
-            await c.async_select_option(101)
-            assert len(caplog.records) == 1
-            assert "EquipmentParameterSelect::async_select_option" in caplog.messages[0]
-            assert "This is the error" in caplog.messages[0]
-            assert "101" in caplog.messages[0]
-
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
-        with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
-            set_equipment_parameter_value.side_effect = S30Exception("This is the error", 10, 101)
-            await c.async_select_option("bad_value")
-            assert set_equipment_parameter_value.call_count == 1
-            assert len(caplog.records) == 1
-            msg = caplog.messages[0]
-            assert "bad_value" in msg
-            assert "This is the error" in msg
-            assert str(equipment.equipment_id) in msg
-            assert str(parameter.pid) in msg
-            assert c.name in msg
-
-    with caplog.at_level(logging.ERROR):
         caplog.clear()
         with patch.object(system, "set_equipment_parameter_value") as set_equipment_parameter_value:
             set_equipment_parameter_value.side_effect = ValueError("This is the error")
-            await c.async_select_option("bad_value")
+            ex: HomeAssistantError = None
+            try:
+                await c.async_select_option("bad_value")
+            except HomeAssistantError as err:
+                ex = err
             assert set_equipment_parameter_value.call_count == 1
-            assert len(caplog.records) == 1
-            msg = caplog.messages[0]
+            assert ex is not None
+            msg = str(ex)
             assert "bad_value" in msg
             assert "This is the error" in msg
             assert "unexpected" in msg
-            assert str(equipment.equipment_id) in msg
-            assert str(parameter.pid) in msg
             assert c.name in msg
+
+    await conf_test_exception_handling(
+        system, "set_equipment_parameter_value", c, c.async_select_option, option="bad_value"
+    )
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_select_device_info(hass, manager: Manager, caplog):
+async def test_equipment_parameter_select_device_info(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     await manager.create_devices()
     equipment = system.equipment[0]
@@ -195,7 +184,7 @@ async def test_equipment_parameter_select_device_info(hass, manager: Manager, ca
         assert x[1] == system.unique_id + "_iu"
 
 
-def test_equipment_parameter_select_entity_category(hass, manager: Manager, caplog):
+def test_equipment_parameter_select_entity_category(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
@@ -203,7 +192,7 @@ def test_equipment_parameter_select_entity_category(hass, manager: Manager, capl
     assert c.entity_category == "config"
 
 
-def test_equipment_parameter_select_extra_attributes(hass, manager: Manager, caplog):
+def test_equipment_parameter_select_extra_attributes(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
