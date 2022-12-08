@@ -1,7 +1,7 @@
 {
     "domain": "lennoxs30",
     "name": "Lennox S30/E30",
-    "version": "2022.9.0",
+    "version": "2022.12.0",
     "documentation": "https://github.com/PeteRager/lennoxs30/blob/master/README.MD",
     "issue_tracker" : "https://github.com/PeteRager/lennoxs30/issues",
     "dependencies": [],
@@ -9,5 +9,5 @@
     "codeowners": ["@PeteRager"],
     "iot_class": "local_push",
     "quality_scale": "platinum",
-	  "config_flow": true
+	"config_flow": true
   }
