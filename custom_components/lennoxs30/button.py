@@ -124,7 +124,7 @@ class ResetSmartHubButton(S30BaseEntityMixin, ButtonEntity):
         _LOGGER.info("ResetSmartHubButton::async_press [%s]", self._myname)
 
         try:
-            await self._system.reset_smart_controller(0, 0, "")
+            await self._system.reset_smart_controller()
         except S30Exception as ex:
             raise HomeAssistantError(f"Unable ResetSmartHub [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:

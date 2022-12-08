@@ -45,6 +45,7 @@ async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager):
     with patch.object(system, "reset_smart_controller") as reset_smart_controller:
         await button.async_press()
         assert reset_smart_controller.call_count == 1
+        assert len(reset_smart_controller.await_args[0]) == 0
 
     await conf_test_exception_handling(system, "reset_smart_controller", button, button.async_press)
 
