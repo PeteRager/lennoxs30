@@ -11,7 +11,7 @@ Cloud Connections depending on the device model. We believe these configurations
 
 # Requirements
 
-- Home Assistant >= 2022.7.0
+- Home Assistant >= 2022.11.0
 - S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
 
 # Important Information
@@ -20,13 +20,14 @@ Cloud Connections depending on the device model. We believe these configurations
 - If you have more than one S30 in your local network, please use a different app_id for each instance (e.g. homeassistant_1, homeassistant_2)
 - If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
 - **WARNING** If using the Power Inverter or Diagnostic Sensors - S30 stability problems may arise if your system is connected to the Lennox Cloud. Please review [docs/diagnostics.md](./docs/diagnostics.md) before using.
-- Equipment Parameters - if participating in the Beta, documentation is here [docs/parameters.md](./docs/parameters.md)
+- Equipment Parameters - documentation is here [docs/parameters.md](./docs/parameters.md)
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 
 # Planning your install
-There are several items to consider before starting the install.
-- Set the Name for the system.  This name will be appended as the prefix for all the entities that get created, so you want something descriptive using only alphanumeric character; but not too long as it'll be in all the entity names.  To set this, go into the panel, select settings and look for the **Name** field.
 
+There are several items to consider before starting the install.
+
+- Set the Name for the system. This name will be appended as the prefix for all the entities that get created, so you want something descriptive using only alphanumeric character; but not too long as it'll be in all the entity names. To set this, go into the panel, select settings and look for the **Name** field.
 
 # Overview
 
@@ -283,7 +284,9 @@ The entity also has a set of attributes to provide diagnostic data:
 | sibling_id             | string   | The ID of the sibling or None if no sibling                                                                                                                                                                                                                             |
 | sibling_ip             | string   | The IP address of the sibling or None if no sibling                                                                                                                                                                                                                     |
 
-## sensor for Zone Temperature and Humidity
+## Sensors
+
+### Zone Temperature and Humidity
 
 When the **create_sensors** configuration parameter is set, humidity and temperature sensors are created for each zone. This is the default for new configurations. These sensors are attached to the Thermostat Device.
 
@@ -291,13 +294,13 @@ sensor.<system_name>\_<zone_name>\_temperature
 
 sensor.<system_name>\_<zone_name>\_humidity
 
-## sensor for Outdoor Temperature
+### Outdoor Temperature
 
 Lennox systems may have an outdoor temperature sensor. If your system has one a sensor will be automatically created and attached to the Outdoor Unit Device. It's name will be
 
 sensor.<system_name>\_outdoor_temperature
 
-## Sensor for Inverter Power
+### Inverter Power
 
 When the **create_inverter_power** configuration parameter is set, a power sensor entity will be created. Inverter Power can only be enabled for Local Connections. To get this information the S30 must be placed in Diagnostic Mode 2. To set the diagnostic mode see [diagnostic level](#diagnostic-level)
 
@@ -319,7 +322,7 @@ sensor:
     round: 2
 ```
 
-### Diagnostic Sensors
+### Diagnostic
 
 **WARNING** S30 instability may result please review [docs/diagnostics.md](./docs/diagnostics.md) for configuration recommendations.
 
@@ -328,6 +331,90 @@ When the option to create diagnostic sensors is enabled, sensors are created for
 sensor.<system_name>\*<eq>\_<diagnostic_name>
 
 Where eq is IU for your indoor unit (e.g. air handler, furnace); OU for your outdoor unit (Compressor, HeatPump)
+
+### Alert
+
+This sensor captures the current alert level of the Lennox controller; indicating the severity of the highest active alert. The list of potential values is:
+
+| Value    | Description                                                 |
+| -------- | ----------------------------------------------------------- |
+| critical | indicates a serious problem with your equipment             |
+| moderate | indicates a potentially important issue with your equipment |
+| minor    | minor issue                                                 |
+| none     | no issues are present                                       |
+
+**NOTE** - the above list is probably incomplete it may also contain other values, if you see these please raise an issue so we can update the documentation.
+
+sensor.<system_name>\_alert
+
+### Active_Alerts
+
+This sensor provides a count of the active alerts and the list of active alerts as a attribute.
+
+| Attribute                  | Type        | Description                                                         |
+| -------------------------- | ----------- | ------------------------------------------------------------------- |
+| alert_list                 | string/json | The json alert structure from the lennox controller                 |
+| alerts_num_cleared         | int         | number of alerts than have been cleared since last controller reset |
+| alerts_last_cleared_id     | int         | the id of the last cleared alert                                    |
+| alerts_num_in_active_array | int         | number of alerts in the alert list                                  |
+
+**NOTE** High and Low Heatpump Ambient lockouts are reported as alerts!
+
+Example JSON
+
+```json
+[
+  {
+    "alert": {
+      "userMessageID": 0,
+      "timestampClear": "5273299695",
+      "code": 19,
+      "notifyDealer": false,
+      "userMessage": "",
+      "isStillActive": true,
+      "update": false,
+      "clearableByDealer": false,
+      "timestampLast": "1636473073",
+      "priority": "info",
+      "notifyUser": false,
+      "clearedBy": "active",
+      "timestampFirst": "1636473073",
+      "equipmentType": 0,
+      "optionalfieldData": "4.518750e+01",
+      "action": "set",
+      "optionalfieldType": "temperature",
+      "clearableByUser": false,
+      "count": 1
+    },
+    "maxItems": 256,
+    "id": 0
+  },
+  {
+    "id": 1,
+    "alert": {
+      "userMessageID": 0,
+      "timestampClear": "1636420745",
+      "code": 18,
+      "notifyDealer": false,
+      "userMessage": "Low Ambient HP Heat Lockout",
+      "isStillActive": true,
+      "timestampLast": "1636460248",
+      "clearableByDealer": false,
+      "update": false,
+      "priority": "info",
+      "action": "clear",
+      "clearedBy": "device",
+      "timestampFirst": "1636420745",
+      "count": 1,
+      "optionalfieldType": "null",
+      "notifyUser": false,
+      "optionalfieldData": "",
+      "clearableByUser": false,
+      "equipmentType": 0
+    }
+  }
+]
+```
 
 ## Select Entities
 
@@ -395,6 +482,24 @@ When iHarmony zoning is disabled the following occurs:
 3.  The Climate Entity Attributes **zoningMode** and **zoneEnabled** show the zoning and zone enablement status
 
 ## Binary Sensor Entities
+
+### Heat Pump Low Ambient Lockout
+
+Entity is created if your system has a heatpump. Indicates if the heatpump is currently locked out.
+
+binary_sensor.<system_name>\_hp_lo_ambient_lockout
+
+### Heat Pump Low Ambient Lockout
+
+Entity is created if your system has a heatpump. Indicates if the heatpump is currently locked out.
+
+binary_sensor.<system_name>\_hp_lo_ambient_lockout
+
+### Aux Heat High Ambient Lockout
+
+Entity is created if your system has auxiliary heat. Indicates if the aux heat is locked out due to high ambient temperature
+
+binary_sensor.<system_name>\_\_auxheat_hi_ambient_lockout
 
 ### home state
 
@@ -476,6 +581,14 @@ Lennox systems with dehumidifiers may have the ability to provide overcooling to
 Lennox Systems with ventilation configured for timed mode (not ASHRAE) will have this number entity created. The entity is in units of minutes. Setting this to a non-zero number will place the system into ventilation mode for the specified number of minutes. This is equivalent to selecting a timed ventilation from the S30 panel. As the amount of remaining time decreases, the value of the number will update.
 
 For example, setting this to 10 - will start ventilation for 10 minutes. After 1 minute has elapsed; this value will be 9; after another minute it will be 8. Setting this to Zero cancels any in-progress timed ventilaion. Another way to cancel a timed ventilation is to turn the ventilation switch entity off.
+
+## Button Entities
+
+### Reset Smart Hub
+
+Pressing this button will reboot the smart hub.
+
+number.<system_name>\_reset_smarthub
 
 # Reporting Bugs
 
