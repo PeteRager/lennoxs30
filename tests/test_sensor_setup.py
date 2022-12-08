@@ -35,7 +35,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     # No sensors should be created
     system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
     manager.create_inverter_power = False
-    manager.create_sensor = False
+    manager.create_sensors = False
     manager.create_diagnostic_sensors = False
     manager.create_alert_sensors = False
     async_add_entities = Mock()
@@ -45,7 +45,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     # Outdoor Temperature Sensor
     system.outdoorTemperatureStatus = LENNOX_STATUS_GOOD
     manager.create_inverter_power = False
-    manager.create_sensor = False
+    manager.create_sensors = False
     manager.create_diagnostic_sensors = False
     manager.create_alert_sensors = False
     async_add_entities = Mock()
@@ -60,7 +60,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = True
-        manager.create_sensor = False
+        manager.create_sensors = False
         manager.create_diagnostic_sensors = False
         async_add_entities = Mock()
 
@@ -82,7 +82,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = True
-        manager.create_sensor = False
+        manager.create_sensors = False
         manager.create_diagnostic_sensors = False
         async_add_entities = Mock()
 
@@ -103,7 +103,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = True
-        manager.create_sensor = False
+        manager.create_sensors = False
         manager.create_diagnostic_sensors = False
         async_add_entities = Mock()
 
@@ -124,7 +124,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = True
-        manager.create_sensor = False
+        manager.create_sensors = False
         manager.create_diagnostic_sensors = False
         async_add_entities = Mock()
         system.relayServerConnected = False
@@ -142,7 +142,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = False
-        manager.create_sensor = True
+        manager.create_sensors = True
         manager.create_diagnostic_sensors = False
         async_add_entities = Mock()
         await async_setup_entry(hass, entry, async_add_entities)
@@ -159,7 +159,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = False
-        manager.create_sensor = False
+        manager.create_sensors = False
         manager.create_diagnostic_sensors = True
         system.diagLevel = 2
         async_add_entities = Mock()
@@ -176,7 +176,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = False
-        manager.create_sensor = False
+        manager.create_sensors = False
         manager.create_diagnostic_sensors = True
         async_add_entities = Mock()
 
@@ -198,7 +198,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         caplog.clear()
         system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
         manager.create_inverter_power = False
-        manager.create_sensor = False
+        manager.create_sensors = False
         manager.create_diagnostic_sensors = True
         async_add_entities = Mock()
 
@@ -218,7 +218,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     # Alert Sensors
     system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
     manager.create_inverter_power = False
-    manager.create_sensor = False
+    manager.create_sensors = False
     manager.create_diagnostic_sensors = False
     manager.create_alert_sensors = True
     async_add_entities = Mock()

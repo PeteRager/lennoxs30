@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                             diagsensor = S30DiagSensor(hass, manager, system, equip, diagnostic)
                             sensor_list.append(diagsensor)
 
-        if manager.create_sensor:
+        if manager.create_sensors:
             for zone in system.zone_list:
                 if zone.is_zone_active():
                     _LOGGER.info(f"Create S30TempSensor sensor system [{system.sysId}] zone [{zone.id}]")
