@@ -423,10 +423,10 @@ class Manager(object):
 
         self.is_metric: bool = None
         if self._hass.config.units is US_CUSTOMARY_SYSTEM:
-            _LOGGER.info(f"Manager::init setting units to english - HASS Units [{self._hass.config.units}]")
+            _LOGGER.info(f"Manager::init setting units to english - HASS Units [{self._hass.config.units._name}]")
             self.is_metric = False
         else:
-            _LOGGER.info(f"Manager::init setting units to metric - HASS Units [{self._hass.config.units}]")
+            _LOGGER.info(f"Manager::init setting units to metric - HASS Units [{self._hass.config.units._name}]")
             self.is_metric = True
         self.connected = False
         self.last_cloud_presence_poll: float = None
