@@ -22,9 +22,9 @@ from homeassistant.components.binary_sensor import (
 
 @pytest.mark.asyncio
 async def test_cloud_connected_status_init(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = S30CloudConnectedStatus(hass, manager, system)
-    assert c.unique_id == (system.unique_id() + "_CLOUD_STAT").replace("-", "")
+    assert c.unique_id == (system.unique_id + "_CLOUD_STAT").replace("-", "")
     assert c.extra_state_attributes == {}
     assert c.update() == True
     assert c.should_poll == False
@@ -48,12 +48,12 @@ async def test_cloud_connected_status_init(hass, manager: Manager, caplog):
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id()
+        assert x[1] == system.unique_id
 
 
 @pytest.mark.asyncio
 async def test_cloud_connected_status_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     c = S30CloudConnectedStatus(hass, manager, system)
     await c.async_added_to_hass()
 

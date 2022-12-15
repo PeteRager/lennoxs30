@@ -1,33 +1,30 @@
 """template conftest."""
+# pylint: disable=logging-not-lazy
+# pylint: disable=logging-fstring-interpolation
+# pylint: disable=global-statement
+# pylint: disable=broad-except
+# pylint: disable=unused-argument
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
+# pylint: disable=missing-function-docstring
 import json
 import os
 from unittest.mock import patch
 
 import pytest
+
 from lennoxs30api.s30api_async import (
     lennox_system,
 )
-from homeassistant import loader
-from homeassistant.setup import async_setup_component
 from lennoxs30api.lennox_equipment import (
     lennox_equipment_parameter,
     lennox_equipment,
 )
+from lennoxs30api.s30exception import S30Exception
 
-from pytest_homeassistant_custom_component.common import (
-    assert_setup_component,
-    async_mock_service,
-)
-
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 from homeassistant import config_entries
-
-from custom_components.lennoxs30 import (
-    DOMAIN,
-    DS_CONNECTED,
-    DS_RETRY_WAIT,
-    Manager,
-)
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_EMAIL,
@@ -35,6 +32,21 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, METRIC_SYSTEM
+
+from pytest_homeassistant_custom_component.common import (
+    assert_setup_component,
+    async_mock_service,
+)
+
+
+from custom_components.lennoxs30 import (
+    DOMAIN,
+    DS_CONNECTED,
+    DS_RETRY_WAIT,
+    Manager,
 )
 
 
@@ -52,11 +64,6 @@ from custom_components.lennoxs30.const import (
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
-    DEFAULT_CLOUD_TIMEOUT,
-    DEFAULT_LOCAL_TIMEOUT,
-    LENNOX_DEFAULT_CLOUD_APP_ID,
-    LENNOX_DEFAULT_LOCAL_APP_ID,
-    CONF_LOCAL_CONNECTION,
     CONF_CREATE_PARAMETERS,
 )
 
@@ -100,16 +107,14 @@ def loadfile(name: str, sysId: str = None) -> json:
     file_path = os.path.join(script_dir, name)
     with open(file_path) as f:
         data = json.load(f)
-    if sysId != None:
+    if sysId is not None:
         data["SenderID"] = sysId
     return data
 
 
 @pytest.fixture
 def config_entry_local() -> config_entries.ConfigEntry:
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
     config.data = {}
     config.data[CONF_CLOUD_CONNECTION] = False
@@ -136,9 +141,7 @@ def config_entry_local() -> config_entries.ConfigEntry:
 
 @pytest.fixture
 def config_entry_cloud() -> config_entries.ConfigEntry:
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
     config.data = {}
     config.data[CONF_CLOUD_CONNECTION] = True
@@ -161,17 +164,17 @@ def config_entry_cloud() -> config_entries.ConfigEntry:
 
 
 @pytest.fixture
-def manager(hass, config_entry_local) -> Manager:
+def manager(hass: HomeAssistant, config_entry_local) -> Manager:
     config = config_entry_local
-
-    manager = Manager(
+    hass.config.units = METRIC_SYSTEM
+    manager_to_return = Manager(
         hass=hass,
         config=config,
         email=None,
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",
@@ -185,8 +188,8 @@ def manager(hass, config_entry_local) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
-    manager.connected = True
-    api = manager._api
+    manager_to_return.connected = True
+    api = manager_to_return.api
     data = loadfile("login_response.json")
     api.process_login_response(data)
 
@@ -201,25 +204,21 @@ def manager(hass, config_entry_local) -> Manager:
     data["SenderID"] = "0000000-0000-0000-0000-000000000002"
     api.processMessage(data)
 
-    return manager
+    return manager_to_return
 
 
 @pytest.fixture
-def manager_2_systems(hass) -> Manager:
-
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
-    config.unique_id = "12345"
-
-    manager = Manager(
+def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manager:
+    config = config_entry_local
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    manager_to_return = Manager(
         hass=hass,
         config=config,
         email=None,
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",
@@ -233,8 +232,54 @@ def manager_2_systems(hass) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
-    manager.connected = True
-    api = manager._api
+    manager_to_return.connected = True
+    api = manager_to_return.api
+    data = loadfile("login_response.json")
+    api.process_login_response(data)
+
+    data = loadfile("config_response_system_02.json")
+    api.processMessage(data)
+
+    data = loadfile("equipments_lcc_singlesetpoint.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
+    api.processMessage(data)
+
+    data = loadfile("device_response_lcc.json")
+    data["SenderID"] = "0000000-0000-0000-0000-000000000002"
+    api.processMessage(data)
+
+    return manager_to_return
+
+
+@pytest.fixture
+def manager_2_systems(hass) -> Manager:
+
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
+    config.unique_id = "12345"
+
+    manager_to_return = Manager(
+        hass=hass,
+        config=config,
+        email=None,
+        password=None,
+        poll_interval=1,
+        fast_poll_interval=2,
+        allergen_defender_switch=False,
+        app_id="HA",
+        conf_init_wait_time=30,
+        ip_address="10.0.0.1",
+        create_sensors=False,
+        create_inverter_power=False,
+        protocol="https",
+        index=0,
+        pii_message_logs=False,
+        message_debug_logging=True,
+        message_logging_file=None,
+        timeout=30,
+        fast_poll_count=10,
+    )
+    manager_to_return.connected = True
+    api = manager_to_return.api
     data = loadfile("login_response_2_systems.json")
     api.process_login_response(data)
 
@@ -260,25 +305,23 @@ def manager_2_systems(hass) -> Manager:
     data["SenderID"] = "0000000-0000-0000-0000-000000000001"
     api.processMessage(data)
 
-    return manager
+    return manager_to_return
 
 
 @pytest.fixture
 def manager_mz(hass) -> Manager:
 
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
-    manager = Manager(
+    manager_to_return = Manager(
         hass=hass,
         config=config,
         email=None,
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",
@@ -292,8 +335,8 @@ def manager_mz(hass) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
-    manager.connected = True
-    api = manager._api
+    manager_to_return.connected = True
+    api = manager_to_return.api
     data = loadfile("login_response_mz.json")
     api.process_login_response(data)
 
@@ -308,25 +351,23 @@ def manager_mz(hass) -> Manager:
     data["SenderID"] = "0000000-0000-0000-0000-000000000001"
     api.processMessage(data)
 
-    return manager
+    return manager_to_return
 
 
 @pytest.fixture
 def manager_system_04_furn_ac_zoning(hass) -> Manager:
 
-    config = config_entries.ConfigEntry(
-        version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User"
-    )
+    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
-    manager = Manager(
+    manager_to_return = Manager(
         hass=hass,
         config=config,
         email=None,
         password=None,
         poll_interval=1,
         fast_poll_interval=2,
-        allergenDefenderSwitch=False,
+        allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
         ip_address="10.0.0.1",
@@ -340,19 +381,15 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
         timeout=30,
         fast_poll_count=10,
     )
-    manager.connected = True
-    api = manager._api
+    manager_to_return.connected = True
+    api = manager_to_return.api
     data = loadfile("login_response_mz.json")
     api.process_login_response(data)
 
-    data = loadfile(
-        "system_04_furn_ac_zoning_config.json", "0000000-0000-0000-0000-000000000001"
-    )
+    data = loadfile("system_04_furn_ac_zoning_config.json", "0000000-0000-0000-0000-000000000001")
     api.processMessage(data)
 
-    data = loadfile(
-        "system_04_furn_ac_zoning_zones.json", "0000000-0000-0000-0000-000000000001"
-    )
+    data = loadfile("system_04_furn_ac_zoning_zones.json", "0000000-0000-0000-0000-000000000001")
     api.processMessage(data)
 
     data = loadfile(
@@ -364,7 +401,7 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
     data = loadfile("device_response_lcc.json", "0000000-0000-0000-0000-000000000001")
     api.processMessage(data)
 
-    return manager
+    return manager_to_return
 
 
 def conftest_parameter_extra_attributes(
@@ -382,17 +419,40 @@ def conftest_base_entity_availability(manager: Manager, system: lennox_system, c
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         manager.updateState(DS_RETRY_WAIT)
         assert update_callback.call_count == 1
-        assert c.available == False
+        assert c.available is False
 
     with patch.object(c, "schedule_update_ha_state") as update_callback:
         manager.updateState(DS_CONNECTED)
         assert update_callback.call_count == 1
-        assert c.available == True
+        assert c.available is True
         system.attr_updater({"status": "online"}, "status", "cloud_status")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 2
-        assert c.available == True
+        assert c.available is True
         system.attr_updater({"status": "offline"}, "status", "cloud_status")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 3
-        assert c.available == False
+        assert c.available is False
+
+
+async def conf_test_exception_handling(target, method_name: str, entity, async_method, **kwargs):
+    with patch.object(target, method_name) as set_parameter_value:
+        set_parameter_value.side_effect = S30Exception("This is the error", 100, 200)
+        ex: HomeAssistantError = None
+        try:
+            await async_method(**kwargs)
+        except HomeAssistantError as h_e:
+            ex = h_e
+        assert "This is the error" in str(ex)
+        assert entity.name in str(ex)
+
+    with patch.object(target, method_name) as set_parameter_value:
+        set_parameter_value.side_effect = Exception("This is the error")
+        ex: HomeAssistantError = None
+        try:
+            await async_method(**kwargs)
+        except HomeAssistantError as h_e:
+            ex = h_e
+        assert "This is the error" in ex.args[0]
+        assert "unexpected" in ex.args[0]
+        assert entity.name in ex.args[0]

@@ -1,0 +1,72 @@
+{
+    "MessageId": 0,
+    "SenderID": "LCC",
+    "TargetID": "homeassistant",
+    "MessageType": "PropertyChange",
+    "Data": {
+        "alerts": {
+            "active": [
+                {
+                    "alert": {
+                        "userMessageID": 0,
+                        "timestampClear": "5273299695",
+                        "code": 19,								
+                        "notifyDealer": false,
+                        "userMessage": "",
+                        "isStillActive": true,					
+                        "update": false,
+                        "clearableByDealer": false,
+                        "timestampLast": "1636473073",
+                        "priority": "info",
+                        "notifyUser": false,
+                        "clearedBy": "active",
+                        "timestampFirst": "1636473073",
+                        "equipmentType": 0,
+                        "optionalfieldData": "4.518750e+01",
+                        "action": "set",
+                        "optionalfieldType": "temperature",
+                        "clearableByUser": false,
+                        "count": 1
+                    },
+                    "maxItems": 256,
+                    "id": 0
+                },
+                {
+                    "id": 1,
+                    "alert": {
+                        "userMessageID": 0,
+                        "timestampClear": "1636420745",
+                        "code": 18,								
+                        "notifyDealer": false,
+                        "userMessage": "Low Ambient HP Heat Lockout",
+                        "isStillActive": true,					
+                        "timestampLast": "1636460248",
+                        "clearableByDealer": false,
+                        "update": false,
+                        "priority": "info",
+                        "action": "clear",
+                        "clearedBy": "device",
+                        "timestampFirst": "1636420745",
+                        "count": 1,
+                        "optionalfieldType": "null",
+                        "notifyUser": false,
+                        "optionalfieldData": "",
+                        "clearableByUser": false,
+                        "equipmentType": 0
+                    }
+                }
+            ],
+            "meta": {
+                "numClearedAlerts": 46,
+                "numActiveAlerts": 2,
+                "lastClearedAlertId": 45,
+                "szClearedAlerts": 256,
+                "firstClearedAlertId": 0,
+                "numAlertsInActiveArray": 2
+            },
+            "publisher": {
+                "publisherName": "lcc"
+            }
+        }
+    }
+}

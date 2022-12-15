@@ -20,8 +20,8 @@ from unittest.mock import Mock
 @pytest.mark.asyncio
 async def test_async_setup_entry_mz(hass, manager_mz: Manager, caplog):
     manager = manager_mz
-    system: lennox_system = manager._api._systemList[0]
-    entry = manager._config_entry
+    system: lennox_system = manager.api.system_list[0]
+    entry = manager.config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
@@ -33,13 +33,13 @@ async def test_async_setup_entry_mz(hass, manager_mz: Manager, caplog):
     for i in range(0, 4):
         assert isinstance(sensor_list[i], S30Climate)
         c: S30Climate = sensor_list[i]
-        assert c._zone == system._zoneList[i]
+        assert c._zone == system.zone_list[i]
 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
-    entry = manager._config_entry
+    system: lennox_system = manager.api.system_list[0]
+    entry = manager.config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 
@@ -50,14 +50,14 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 1
     assert isinstance(sensor_list[0], S30Climate)
     c: S30Climate = sensor_list[0]
-    assert c._zone == system._zoneList[0]
+    assert c._zone == system.zone_list[0]
 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_no_zones(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
-    system._zoneList = []
-    entry = manager._config_entry
+    system: lennox_system = manager.api.system_list[0]
+    system.zone_list = []
+    entry = manager.config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
 

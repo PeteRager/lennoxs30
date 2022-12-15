@@ -11,19 +11,17 @@ class Device(object):
 
     @property
     def hw_version(self):
-        if self.eq != None:
+        if self.eq is not None:
             return self.eq.unit_serial_number
         return None
 
     @property
     def unique_name(self) -> str:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class S30ControllerDevice(Device):
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, system: lennox_system
-    ):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, system: lennox_system):
         super().__init__(system.equipment.get(0))
         self._hass = hass
         self._system = system
@@ -31,7 +29,7 @@ class S30ControllerDevice(Device):
 
     @property
     def unique_name(self) -> str:
-        return self._system.unique_id()
+        return self._system.unique_id
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)
@@ -64,19 +62,19 @@ class S30OutdoorUnit(Device):
 
     @property
     def unique_name(self) -> str:
-        return self._system.unique_id() + "_ou"
+        return self._system.unique_id + "_ou"
 
     @property
     def device_model(self):
-        if self.eq != None:
+        if self.eq is not None:
             return self.eq.unit_model_number
         return self._system.outdoorUnitType
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)
-        if self.eq != None and self.eq.equipment_type_name != None:
+        if self.eq is not None and self.eq.equipment_type_name is not None:
             name = f"{self._system.name} {self.eq.equipment_type_name}"
-        elif self._system.outdoorUnitType != None:
+        elif self._system.outdoorUnitType is not None:
             name = f"{self._system.name} {self._system.outdoorUnitType}"
         else:
             name = f"{self._system.name} outdoor unit"
@@ -109,19 +107,19 @@ class S30IndoorUnit(Device):
 
     @property
     def unique_name(self) -> str:
-        return self._system.unique_id() + "_iu"
+        return self._system.unique_id + "_iu"
 
     @property
     def device_model(self):
-        if self.eq != None:
+        if self.eq is not None:
             return self.eq.unit_model_number
         return self._system.indoorUnitType
 
     def register_device(self):
         device_registry = dr.async_get(self._hass)
-        if self.eq != None and self.eq.equipment_type_name != None:
+        if self.eq is not None and self.eq.equipment_type_name is not None:
             name = f"{self._system.name} {self.eq.equipment_type_name}"
-        elif self._system.indoorUnitType != None:
+        elif self._system.indoorUnitType is not None:
             name = f"{self._system.name} {self._system.indoorUnitType}"
         else:
             name = f"{self._system.name} indoor unit"
@@ -156,15 +154,15 @@ class S30AuxiliaryUnit(Device):
     @property
     def unique_name(self) -> str:
         # Not sure if every device has a serial number.
-        if self.eq.unit_serial_number == None:
+        if self.eq.unit_serial_number is None:
             suffix = self.eq.equipment_id
         else:
             suffix = self.eq.unit_serial_number
-        return f"{self._system.unique_id()}_{suffix}"
+        return f"{self._system.unique_id}_{suffix}"
 
     @property
     def device_model(self):
-        if self.eq != None:
+        if self.eq is not None:
             return self.eq.unit_model_number
         return None
 
@@ -202,7 +200,7 @@ class S30VentilationUnit(Device):
     def unique_name(self) -> str:
         # Not sure if every device has a serial number.
         suffix = "ventilation"
-        return f"{self._system.unique_id()}_{suffix}"
+        return f"{self._system.unique_id}_{suffix}"
 
     @property
     def device_model(self):

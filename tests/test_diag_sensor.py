@@ -1,8 +1,6 @@
 import logging
 from lennoxs30api.s30api_async import lennox_system, lennox_equipment_diagnostic
 from custom_components.lennoxs30 import (
-    DS_CONNECTED,
-    DS_RETRY_WAIT,
     Manager,
 )
 import pytest
@@ -28,12 +26,12 @@ from homeassistant.helpers.entity import EntityCategory
 
 from unittest.mock import patch
 
-from tests.conftest import loadfile
+from tests.conftest import conftest_base_entity_availability, loadfile
 
 
 @pytest.mark.asyncio
 async def test_diag_sensor_state(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -47,9 +45,7 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
     assert s.extra_state_attributes == {}
     assert s.update() == True
     assert s.should_poll == False
-    assert s.name == f"{system.name}_ou_Comp._Short_Cycle_Delay_Active".replace(
-        " ", "_"
-    )
+    assert s.name == f"{system.name}_ou_Comp._Short_Cycle_Delay_Active".replace(" ", "_")
     assert s.state_class == STATE_CLASS_MEASUREMENT
     assert s.entity_category == EntityCategory.DIAGNOSTIC
 
@@ -65,7 +61,7 @@ async def test_diag_sensor_state(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -81,7 +77,7 @@ async def test_diag_sensor_async_added_to_hass(hass, manager: Manager, caplog):
 
 @pytest.mark.asyncio
 async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     system.diagLevel = 2
@@ -97,7 +93,7 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
     assert s1.available == True
     assert s1.state == "0.0"
 
-    api = manager._api
+    api = manager.api
     data = loadfile("equipments_diag_update.json", system.sysId)
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
@@ -127,39 +123,22 @@ async def test_diag_sensor_update_callback(hass, manager: Manager, caplog):
             assert s1_update_callback.call_count == 1
             assert s1.available == True
 
-    with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_RETRY_WAIT)
-        assert update_callback.call_count == 1
-        assert s.available == False
-
-    c = s
-    with patch.object(c, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_CONNECTED)
-        assert update_callback.call_count == 1
-        assert c.available == True
-        system.attr_updater({"status": "online"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 2
-        assert c.available == True
-        system.attr_updater({"status": "offline"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 3
-        assert c.available == False
+    conftest_base_entity_availability(manager, system, s)
 
 
 @pytest.mark.asyncio
 async def test_diag_sensor_unique_id(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    st = f"{system.unique_id()}_DS_1_Comp. Short Cycle Delay Active".replace("-", "")
+    st = f"{system.unique_id}_DS_1_Comp. Short Cycle Delay Active".replace("-", "")
     assert s.unique_id == st
 
 
 @pytest.mark.asyncio
 async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -215,12 +194,10 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager, 
 
 
 @pytest.mark.asyncio
-async def test_diag_sensor_device_info(
-    hass, manager_system_04_furn_ac_zoning: Manager, caplog
-):
+async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -228,7 +205,7 @@ async def test_diag_sensor_device_info(
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_ou"
+        assert x[1] == system.unique_id + "_ou"
 
     equipment = system.equipment[2]
     diagnostic = equipment.diagnostics[1]
@@ -239,7 +216,7 @@ async def test_diag_sensor_device_info(
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_iu"
+        assert x[1] == system.unique_id + "_iu"
 
     equipment = system.equipment[3]
     diagnostic = equipment.diagnostics[1]
@@ -247,16 +224,14 @@ async def test_diag_sensor_device_info(
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_BT21B13000"
+        assert x[1] == system.unique_id + "_BT21B13000"
 
 
 @pytest.mark.asyncio
-async def test_diag_sensor_device_info_no_device_errors(
-    hass, manager_system_04_furn_ac_zoning: Manager, caplog
-):
+async def test_diag_sensor_device_info_no_device_errors(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -267,19 +242,17 @@ async def test_diag_sensor_device_info_no_device_errors(
         identifiers = s.device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert "[1]" in caplog.messages[0]
         assert "No equipment device map found" in caplog.messages[0]
 
 
 @pytest.mark.asyncio
-async def test_diag_sensor_device_info_no_device_errors_1(
-    hass, manager_system_04_furn_ac_zoning: Manager, caplog
-):
+async def test_diag_sensor_device_info_no_device_errors_1(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
@@ -290,7 +263,7 @@ async def test_diag_sensor_device_info_no_device_errors_1(
         identifiers = s.device_info["identifiers"]
         for x in identifiers:
             assert x[0] == LENNOX_DOMAIN
-            assert x[1] == system.unique_id()
+            assert x[1] == system.unique_id
         assert len(caplog.records) == 1
         assert "[1]" in caplog.messages[0]
         assert "Unable to find" in caplog.messages[0]

@@ -8,8 +8,6 @@ from lennoxs30api.s30api_async import (
     lennox_zone,
 )
 from custom_components.lennoxs30 import (
-    DS_CONNECTED,
-    DS_RETRY_WAIT,
     Manager,
 )
 import pytest
@@ -28,15 +26,17 @@ from homeassistant.components.sensor import (
 
 from unittest.mock import patch
 
+from tests.conftest import conftest_base_entity_availability
+
 
 @pytest.mark.asyncio
 async def test_power_inverter_sensor(hass, manager: Manager, caplog):
-    manager._is_metric = False
-    system: lennox_system = manager._api._systemList[0]
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
     system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
 
-    assert s.unique_id == (system.unique_id() + "_IE").replace("-", "")
+    assert s.unique_id == (system.unique_id + "_IE").replace("-", "")
     assert s.name == system.name + "_inverter_energy"
     assert s.available == True
     assert s.should_poll == False
@@ -74,48 +74,31 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
-        assert x[1] == system.unique_id() + "_ou"
+        assert x[1] == system.unique_id + "_ou"
 
 
 @pytest.mark.asyncio
 async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog):
-    system: lennox_system = manager._api._systemList[0]
+    system: lennox_system = manager.api.system_list[0]
     system.diagLevel = 2
     s = S30InverterPowerSensor(hass, manager, system)
     await s.async_added_to_hass()
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager._is_metric = False
+        manager.is_metric = False
         set = {"diagInverterInputVoltage": 240.5}
         system.attr_updater(set, "diagInverterInputVoltage")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager._is_metric = False
+        manager.is_metric = False
         set = {"diagInverterInputCurrent": 13.4}
         system.attr_updater(set, "diagInverterInputCurrent")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
 
-    with patch.object(s, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_RETRY_WAIT)
-        assert update_callback.call_count == 1
-        assert s.available == False
-
-    c = s
-    with patch.object(c, "schedule_update_ha_state") as update_callback:
-        manager.updateState(DS_CONNECTED)
-        assert update_callback.call_count == 1
-        assert c.available == True
-        system.attr_updater({"status": "online"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 2
-        assert c.available == True
-        system.attr_updater({"status": "offline"}, "status", "cloud_status")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 3
-        assert c.available == False
+    conftest_base_entity_availability(manager, system, s)
 
     with patch.object(s, "schedule_update_ha_state") as s_update_callback:
         set = {"diagLevel": 0}
