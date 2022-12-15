@@ -123,6 +123,9 @@ class ResetSmartHubButton(S30BaseEntityMixin, ButtonEntity):
         """Update the current value."""
         _LOGGER.info("ResetSmartHubButton::async_press [%s]", self._myname)
 
+        if self._manager.parameter_safety_on(self._system.sysId):
+            raise HomeAssistantError(f"Unable to reset controller [{self._myname}] parameter safety switch is on")
+
         try:
             await self._system.reset_smart_controller()
         except S30Exception as ex:

@@ -1,9 +1,13 @@
 """Tests the reset smart hub button"""
 # pylint: disable=line-too-long
 # pylint: disable=missing-function-docstring
+# pylint: disable=protected-access
+# pylint: disable=invalid-name
 
 from unittest.mock import patch
 import pytest
+
+from homeassistant.exceptions import HomeAssistantError
 
 from lennoxs30api.s30api_async import lennox_system
 
@@ -42,11 +46,28 @@ async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager):
     system: lennox_system = manager.api.system_list[0]
     button = ResetSmartHubButton(hass, manager, system)
 
+    manager.parameter_safety_turn_off(system.sysId)
     with patch.object(system, "reset_smart_controller") as reset_smart_controller:
         await button.async_press()
         assert reset_smart_controller.call_count == 1
         assert len(reset_smart_controller.await_args[0]) == 0
 
+    manager.parameter_safety_turn_on(system.sysId)
+
+    with patch.object(system, "reset_smart_controller") as reset_smart_controller:
+        ex: HomeAssistantError = None
+        try:
+            await button.async_press()
+        except HomeAssistantError as e:
+            ex = e
+        assert ex is not None
+        assert reset_smart_controller.call_count == 0
+        s = str(ex)
+        assert "Unable to reset controller" in s
+        assert button._myname in s
+        assert "safety switch is on" in s
+
+    manager.parameter_safety_turn_off(system.sysId)
     await conf_test_exception_handling(system, "reset_smart_controller", button, button.async_press)
 
 

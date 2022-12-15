@@ -586,7 +586,7 @@ For example, setting this to 10 - will start ventilation for 10 minutes. After 1
 
 ### Reset Smart Hub
 
-Pressing this button will reboot the smart hub.
+When equipment parameters are enabled in configuration, this entity will be created. Pressing this button will reboot the smart hub. The button execution requires that the parameter_safety switch is turned off.
 
 number.<system_name>\_reset_smarthub
 
