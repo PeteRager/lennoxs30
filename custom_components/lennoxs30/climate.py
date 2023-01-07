@@ -43,8 +43,7 @@ from lennoxs30api import (
     LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
     LENNOX_HUMIDITY_MODE_HUMIDIFY,
     LENNOX_TEMP_OPERATION_OFF,
-    LENNOX_STATUS_NOT_AVAILABLE,
-    LENNOX_STATUS_NOT_EXIST,
+    LENNOX_BAD_STATUS,
     S30Exception,
     lennox_system,
     lennox_zone,
@@ -301,10 +300,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if (
-            self._zone.temperatureStatus == LENNOX_STATUS_NOT_AVAILABLE
-            or self._zone.temperatureStatus == LENNOX_STATUS_NOT_EXIST
-        ):
+        if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
                 f"climate:current_temperature name [{self._myname}] has bad data quality - temperatureStatus [{self._zone.temperatureStatus}] returning None"
             )
@@ -348,10 +344,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if (
-            self._zone.humidityStatus == LENNOX_STATUS_NOT_AVAILABLE
-            or self._zone.humidityStatus == LENNOX_STATUS_NOT_EXIST
-        ):
+        if self._zone.humidityStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
                 f"climate:current_humidity name [{self._myname}] has bad data quality - humidityStatus [{self._zone.humidityStatus}] returning None"
             )

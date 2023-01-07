@@ -52,8 +52,7 @@ from lennoxs30api.s30api_async import (
     LENNOX_HUMIDITY_MODE_HUMIDIFY,
     LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
     LENNOX_STATUS_GOOD,
-    LENNOX_STATUS_NOT_AVAILABLE,
-    LENNOX_STATUS_NOT_EXIST,
+    LENNOX_BAD_STATUS,
     LENNOX_ZONING_MODE_CENTRAL,
     LENNOX_ZONING_MODE_ZONED,
     lennox_system,
@@ -912,21 +911,14 @@ async def test_climate_current_humidity(hass, manager_mz: Manager, caplog):
 
     system.zoningMode = LENNOX_ZONING_MODE_ZONED
 
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        zone.humidityStatus = LENNOX_STATUS_NOT_AVAILABLE
-        assert c.current_humidity is None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_AVAILABLE in msg
-
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        zone.humidityStatus = LENNOX_STATUS_NOT_EXIST
-        assert c.current_humidity is None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_EXIST in msg
+    for bad_status in LENNOX_BAD_STATUS:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING):
+            zone.humidityStatus = bad_status
+            assert c.current_humidity is None
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert bad_status in msg
 
 
 @pytest.mark.asyncio
@@ -953,21 +945,14 @@ async def test_climate_current_temperature_f(hass, manager_mz: Manager, caplog):
 
     system.zoningMode = LENNOX_ZONING_MODE_ZONED
 
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        zone.temperatureStatus = LENNOX_STATUS_NOT_AVAILABLE
-        assert c.current_temperature is None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_AVAILABLE in msg
-
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        zone.temperatureStatus = LENNOX_STATUS_NOT_EXIST
-        assert c.current_temperature is None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_EXIST in msg
+    for bad_status in LENNOX_BAD_STATUS:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING):
+            zone.temperatureStatus = bad_status
+            assert c.current_temperature is None
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert bad_status in msg
 
 
 @pytest.mark.asyncio
@@ -995,21 +980,14 @@ async def test_climate_current_temperature_c(hass, manager_mz: Manager, caplog):
 
     system.zoningMode = LENNOX_ZONING_MODE_ZONED
 
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        zone.temperatureStatus = LENNOX_STATUS_NOT_AVAILABLE
-        assert c.current_temperature is None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_AVAILABLE in msg
-
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        zone.temperatureStatus = LENNOX_STATUS_NOT_EXIST
-        assert c.current_temperature is None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_EXIST in msg
+    for bad_status in LENNOX_BAD_STATUS:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING):
+            zone.temperatureStatus = bad_status
+            assert c.current_temperature is None
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert bad_status in msg
 
 
 @pytest.mark.asyncio
