@@ -1,0 +1,13 @@
+### Automation to keep the Lennox Controller in Diagnostic Level 2
+### Substitution Parameter
+####  SYSTEM_NAME - you lennox system name
+
+input_boolean:
+  # Input boolean to control whether the automation should be enabled to control
+  # the diagnostic level.
+  SYSTEM_NAME_enable_diag_level_control:
+
+recorder:
+  include:
+    entities:
+      - input_boolean.SYSTEM_NAME_enable_diag_level_control
