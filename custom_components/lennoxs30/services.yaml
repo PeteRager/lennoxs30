@@ -12,6 +12,8 @@ set_zonetest_parameter:
       required: true
       selector:
         number:
+          min: 100
+          max: 5000
           unit_of_measurement: CFM
     enabled:
       name: Enabled

@@ -1,4 +1,6 @@
 {
-    "name": "Lennox iComfort Component",
-    "render_readme": true
+    "name": "Lennox S30,E30,M30",
+    "render_readme": true,
+    "hide_default_branch": true,
+    "homeassistant": "2022.11.0"
 }
