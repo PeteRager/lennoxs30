@@ -23,7 +23,11 @@ from custom_components.lennoxs30.number import (
 )
 
 
-from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
+from tests.conftest import (
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+    conf_test_number_info_async_set_native_value,
+)
 
 
 @pytest.mark.asyncio
@@ -169,6 +173,7 @@ async def test_diagnostic_level_set_value(hass, manager: Manager, caplog):
     system.internetStatus = False
     system.relayServerConnected = False
     await conf_test_exception_handling(system, "set_diagnostic_level", c, c.async_set_native_value, value=1)
+    await conf_test_number_info_async_set_native_value(system, "set_diagnostic_level", c, caplog)
 
 
 @pytest.mark.asyncio

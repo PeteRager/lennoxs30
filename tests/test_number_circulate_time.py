@@ -26,7 +26,11 @@ from custom_components.lennoxs30.number import (
     CirculateTime,
 )
 
-from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
+from tests.conftest import (
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+    conf_test_number_info_async_set_native_value,
+)
 
 
 @pytest.mark.asyncio
@@ -82,7 +86,7 @@ async def test_circulate_time_value(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_circulate_time_set_value(hass, manager: Manager):
+async def test_circulate_time_set_value(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = CirculateTime(hass, manager, system)
@@ -95,6 +99,7 @@ async def test_circulate_time_set_value(hass, manager: Manager):
         assert arg0 == 22.0
 
     await conf_test_exception_handling(system, "set_circulateTime", c, c.async_set_native_value, value=101)
+    await conf_test_number_info_async_set_native_value(system, "set_circulateTime", c, caplog)
 
 
 @pytest.mark.asyncio

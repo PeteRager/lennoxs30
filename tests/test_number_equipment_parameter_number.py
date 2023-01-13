@@ -26,6 +26,7 @@ from tests.conftest import (
     conf_test_exception_handling,
     conftest_base_entity_availability,
     conftest_parameter_extra_attributes,
+    conf_test_number_info_async_set_native_value,
 )
 
 
@@ -93,7 +94,7 @@ async def test_equipment_parameter_number_value(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_number_set_value(hass, manager: Manager):
+async def test_equipment_parameter_number_set_value(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
@@ -129,6 +130,7 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager):
         assert set_equipment_parameter_value.await_args[0][2] == 60.0
 
     await conf_test_exception_handling(system, "set_equipment_parameter_value", c, c.async_set_native_value, value=101)
+    await conf_test_number_info_async_set_native_value(system, "set_equipment_parameter_value", c, caplog)
 
 
 @pytest.mark.asyncio
