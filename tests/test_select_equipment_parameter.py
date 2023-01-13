@@ -23,6 +23,7 @@ from tests.conftest import (
     conf_test_exception_handling,
     conftest_base_entity_availability,
     conftest_parameter_extra_attributes,
+    conf_test_select_info_async_select_option,
 )
 
 
@@ -159,6 +160,7 @@ async def test_equipment_parameter_select_async_select_options(hass, manager_mz:
     await conf_test_exception_handling(
         system, "set_equipment_parameter_value", c, c.async_select_option, option="bad_value"
     )
+    await conf_test_select_info_async_select_option(system, "set_equipment_parameter_value", c, caplog)
 
 
 @pytest.mark.asyncio

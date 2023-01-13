@@ -23,7 +23,11 @@ from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.select import DehumidificationModeSelect
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
-from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
+from tests.conftest import (
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+    conf_test_select_info_async_select_option,
+)
 
 
 @pytest.mark.asyncio
@@ -152,6 +156,7 @@ async def test_dehumidifier_mode_mode_select_async_select_options(hass, manager_
             assert "climate IQ" in msg
 
     await conf_test_exception_handling(system, "set_dehumidificationMode", c, c.async_select_option, option="normal")
+    await conf_test_select_info_async_select_option(system, "set_dehumidificationMode", c, caplog)
 
 
 @pytest.mark.asyncio
