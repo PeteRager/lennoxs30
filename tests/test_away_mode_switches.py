@@ -14,7 +14,12 @@ from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.switch import S30ManualAwayModeSwitch, S30SmartAwayEnableSwitch
 
-from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
+from tests.conftest import (
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+    conf_test_switch_info_async_turn_off,
+    conf_test_switch_info_async_turn_on,
+)
 
 
 @pytest.mark.asyncio
@@ -34,7 +39,7 @@ async def test_manual_away_mode_switch_subscription(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_manual_away_mode_switch(hass, manager: Manager):
+async def test_manual_away_mode_switch(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False
     c = S30ManualAwayModeSwitch(hass, manager, system)
@@ -72,6 +77,8 @@ async def test_manual_away_mode_switch(hass, manager: Manager):
         assert arg0 is False
 
     await conf_test_exception_handling(system, "set_manual_away_mode", c, c.async_turn_off)
+    await conf_test_switch_info_async_turn_off(system, "set_manual_away_mode", c, caplog)
+    await conf_test_switch_info_async_turn_on(system, "set_manual_away_mode", c, caplog)
 
 
 @pytest.mark.asyncio
@@ -91,7 +98,7 @@ async def test_smart_away_enabled_switch_subscription(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_smart_away_enabled_switch(hass, manager: Manager):
+async def test_smart_away_enabled_switch(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False
     c = S30SmartAwayEnableSwitch(hass, manager, system)
@@ -128,3 +135,5 @@ async def test_smart_away_enabled_switch(hass, manager: Manager):
         assert arg0 is False
 
     await conf_test_exception_handling(system, "enable_smart_away", c, c.async_turn_off)
+    await conf_test_switch_info_async_turn_off(system, "enable_smart_away", c, caplog)
+    await conf_test_switch_info_async_turn_on(system, "enable_smart_away", c, caplog)

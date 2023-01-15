@@ -27,6 +27,7 @@ from lennoxs30api.s30exception import S30Exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.select import SelectEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.setup import async_setup_component
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -492,3 +493,33 @@ async def conf_test_select_info_async_select_option(target, method_name: str, en
             assert "option [Hello]" in msg
             assert f"name [{entity._myname}]" in msg
             assert f"{entity.__class__.__name__}::async_select_option" in msg
+
+
+async def conf_test_switch_info_async_turn_on(target, method_name: str, entity: SwitchEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_turn_on()
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_turn_on" in msg
+
+
+async def conf_test_switch_info_async_turn_off(target, method_name: str, entity: SwitchEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_turn_off()
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_turn_off" in msg
