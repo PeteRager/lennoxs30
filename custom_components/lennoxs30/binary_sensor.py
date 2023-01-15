@@ -1,6 +1,4 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-# pylint: disable=logging-not-lazy
-# pylint: disable=logging-fstring-interpolation
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -44,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager.api.system_list:
-        _LOGGER.info(f"Create S30HomeStateBinarySensor binary_sensor system [{system.sysId}]")
+        _LOGGER.debug("Create S30HomeStateBinarySensor binary_sensor system [%s]", system.sysId)
         sensor = S30HomeStateBinarySensor(hass, manager, system)
         sensor_list.append(sensor)
 
@@ -63,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
-        _LOGGER.debug(f"binary_sensor:async_setup_platform exit - created [{len(sensor_list)}] entitites")
+        _LOGGER.debug("binary_sensor:async_setup_platform exit - created [%d] entitites", len(sensor_list))
         return True
     else:
         _LOGGER.warning(
@@ -82,7 +80,7 @@ class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30HomeStateBinarySensor myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30HomeStateBinarySensor myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -98,7 +96,7 @@ class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
 
     def update_callback(self):
         """Callback for data change"""
-        _LOGGER.debug(f"update_callback S30HomeStateBinarySensor myname [{self._myname}]")
+        _LOGGER.debug("update_callback S30HomeStateBinarySensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -149,7 +147,7 @@ class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30InternetStatus myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30InternetStatus myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -160,7 +158,8 @@ class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     def update_callback(self):
         """Callback for data change"""
-        _LOGGER.debug(f"update_callback S30InternetStatus myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback S30InternetStatus myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -212,7 +211,7 @@ class S30RelayServerStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30RelayServerStatus myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30RelayServerStatus myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -223,7 +222,7 @@ class S30RelayServerStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     def update_callback(self):
         """Callback for data change"""
-        _LOGGER.debug(f"update_callback S30RelayServerStatus myname [{self._myname}]")
+        _LOGGER.debug("update_callback S30RelayServerStatus myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -275,7 +274,7 @@ class S30CloudConnectedStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30CloudConnectedStatus myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30CloudConnectedStatus myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -290,7 +289,8 @@ class S30CloudConnectedStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     def update_callback(self):
         """Callback for data change"""
-        _LOGGER.debug(f"update_callback S30CloudConnectedStatus myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback S30CloudConnectedStatus myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -318,9 +318,7 @@ class S30CloudConnectedStatus(S30BaseEntityMixin, BinarySensorEntity):
             return True
         elif self._system.cloud_status == "offline":
             return False
-        elif self._system.is_none(self._system.cloud_status):
-            return None
-        return False
+        return None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -348,7 +346,7 @@ class S30HeatpumpLowAmbientLockout(S30BaseEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30HeatpumpLowAmbientLockout myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30HeatpumpLowAmbientLockout myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -359,7 +357,7 @@ class S30HeatpumpLowAmbientLockout(S30BaseEntityMixin, BinarySensorEntity):
 
     def update_callback(self):
         """Callback for data change"""
-        _LOGGER.debug(f"update_callback S30HeatpumpLowAmbientLockout myname [{self._myname}]")
+        _LOGGER.debug("update_callback S30HeatpumpLowAmbientLockout myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -393,7 +391,7 @@ class S30AuxheatHighAmbientLockout(S30BaseEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30AuxheatHighAmbientLockout myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30AuxheatHighAmbientLockout myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -404,7 +402,8 @@ class S30AuxheatHighAmbientLockout(S30BaseEntityMixin, BinarySensorEntity):
 
     def update_callback(self):
         """Callback for data change"""
-        _LOGGER.debug(f"update_callback S30AuxheatHighAmbientLockout myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback S30AuxheatHighAmbientLockout myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
