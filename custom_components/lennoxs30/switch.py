@@ -147,7 +147,6 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
-
         try:
             await self._system.ventilation_on()
             self._manager.mp_wakeup_event.set()

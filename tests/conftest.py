@@ -523,3 +523,18 @@ async def conf_test_switch_info_async_turn_off(target, method_name: str, entity:
             msg = caplog.records[0].message
             assert f"name [{entity._myname}]" in msg
             assert f"{entity.__class__.__name__}::async_turn_off" in msg
+
+
+async def conf_test_button_info_async_press(target, method_name: str, entity: SwitchEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_press()
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_press" in msg

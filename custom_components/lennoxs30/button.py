@@ -1,6 +1,4 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-# pylint: disable=logging-not-lazy
-# pylint: disable=logging-fstring-interpolation
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -20,7 +18,12 @@ from lennoxs30api.s30api_async import lennox_system
 from lennoxs30api.s30exception import S30Exception
 
 from .base_entity import S30BaseEntityMixin
-from .const import MANAGER, UNIQUE_ID_SUFFIX_PARAMETER_UPDATE_BUTTON, UNIQUE_ID_SUFFIX_RESET_SMART_HUB
+from .const import (
+    LOG_INFO_BUTTON_PRESS,
+    MANAGER,
+    UNIQUE_ID_SUFFIX_PARAMETER_UPDATE_BUTTON,
+    UNIQUE_ID_SUFFIX_RESET_SMART_HUB,
+)
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info
 from . import DOMAIN, Manager
 
@@ -59,7 +62,7 @@ class EquipmentParameterUpdateButton(S30BaseEntityMixin, ButtonEntity):
         super().__init__(manager, system)
         self.hass: HomeAssistant = hass
         self._myname = self._system.name + "_parameter_update"
-        _LOGGER.debug(f"Create EquipmentParameterUpdateButton myname [{self._myname}]")
+        _LOGGER.debug("Create EquipmentParameterUpdateButton myname [%s]", self._myname)
 
     @property
     def unique_id(self) -> str:
@@ -72,11 +75,9 @@ class EquipmentParameterUpdateButton(S30BaseEntityMixin, ButtonEntity):
 
     async def async_press(self) -> None:
         """Update the current value."""
-        _LOGGER.info(f"EquipmentParameterUpdateButton::async_press [{self._myname}]")
-
+        _LOGGER.info(LOG_INFO_BUTTON_PRESS, self.__class__.__name__, self._myname)
         if self._manager.parameter_safety_on(self._system.sysId):
             raise HomeAssistantError(f"Unable to parameter update [{self._myname}] parameter safety switch is on")
-
         try:
             await self._system.set_parameter_value(0, 0, "")
         except S30Exception as ex:
@@ -108,7 +109,7 @@ class ResetSmartHubButton(S30BaseEntityMixin, ButtonEntity):
         super().__init__(manager, system)
         self.hass: HomeAssistant = hass
         self._myname = self._system.name + "_reset_smarthub"
-        _LOGGER.debug(f"Create ResetSmartHubButton myname [{self._myname}]")
+        _LOGGER.debug("Create ResetSmartHubButton myname [%s]", self._myname)
 
     @property
     def unique_id(self) -> str:
@@ -121,7 +122,7 @@ class ResetSmartHubButton(S30BaseEntityMixin, ButtonEntity):
 
     async def async_press(self) -> None:
         """Update the current value."""
-        _LOGGER.info("ResetSmartHubButton::async_press [%s]", self._myname)
+        _LOGGER.info(LOG_INFO_BUTTON_PRESS, self.__class__.__name__, self._myname)
 
         if self._manager.parameter_safety_on(self._system.sysId):
             raise HomeAssistantError(f"Unable to reset controller [{self._myname}] parameter safety switch is on")
