@@ -34,7 +34,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> None:
+) -> bool:
     """Setup the button entities"""
     _LOGGER.debug("buttomn:async_setup_platform enter")
 
@@ -48,6 +48,7 @@ async def async_setup_entry(
 
     if len(button_list) != 0:
         async_add_entities(button_list, True)
+    return True
 
 
 class EquipmentParameterUpdateButton(S30BaseEntityMixin, ButtonEntity):

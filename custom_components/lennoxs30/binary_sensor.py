@@ -62,12 +62,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
         _LOGGER.debug("binary_sensor:async_setup_platform exit - created [%d] entitites", len(sensor_list))
-        return True
     else:
         _LOGGER.warning(
             "binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen"
         )
-        return False
+    return True
 
 
 class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
