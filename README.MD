@@ -22,6 +22,8 @@ Cloud Connections depending on the device model. We believe these configurations
 - **WARNING** If using the Power Inverter or Diagnostic Sensors - S30 stability problems may arise if your system is connected to the Lennox Cloud. Please review [docs/diagnostics.md](./docs/diagnostics.md) before using.
 - Equipment Parameters - documentation is here [docs/parameters.md](./docs/parameters.md)
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
+- Adjusting the fan CFM in a single zone system causes some diagnostics to stop updating. Changing the diag_level to 0 and back to 2 solves the issue. A script is available [here](./samples/set_fan_cfm)
+- A power outage to the Lennox Controller causes the diag_level to be reset to 0 on reboot. An automation/package is available [here](./samples/diaglevel) to automatically reset.
 
 # Planning your install
 
@@ -157,6 +159,10 @@ If you want to change the integration configuration, do into the integrations pa
 # Temperature Units (Celsius, Fahrenheit)
 
 The integration detects the unit system configured in Home Assistant and reports the data in the correct units. Celsius is in 0.5 degree increments. Fahrenheit is in 1.0 degrees increments. The Lennox API delivers data in both units, so there is no conversion in the Integration and what you see in the Lennox UI should be what you see in HA.
+
+# HASS Scripts and automation samples
+
+Samples of useful automations and scripts can be found in the [samples/](./samples/) directory. If you have some you'd like included, open a pull request.
 
 # Devices
 
