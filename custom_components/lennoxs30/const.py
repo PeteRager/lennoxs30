@@ -45,3 +45,9 @@ UNIQUE_ID_SUFFIX_AUX_HI_AMBIENT_LOCKOUT: Final = "_AUX_HI_AMB_LO"
 UNIQUE_ID_SUFFIX_RESET_SMART_HUB: Final = "_RESET_SMART_HUB"
 
 VENTILATION_EQUIPMENT_ID = -900
+
+LOG_INFO_NUMBER_ASYNC_SET_VALUE = "%s::async_set_native_value name [%s] value [%.1f]"
+LOG_INFO_SELECT_ASYNC_SELECT_OPTION = "%s::async_select_option name [%s] option [%s]"
+LOG_INFO_SWITCH_ASYNC_TURN_ON = "%s::async_turn_on name [%s]"
+LOG_INFO_SWITCH_ASYNC_TURN_OFF = "%s::async_turn_off name [%s]"
+LOG_INFO_BUTTON_PRESS = "%s::async_press name [%s]"

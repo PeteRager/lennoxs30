@@ -1,13 +1,25 @@
 """Test config flow."""
-from optparse import Option
-from re import T
-import voluptuous as vol
-from homeassistant.helpers import config_validation as cv
-from lennoxs30api.s30exception import S30Exception, EC_LOGIN, EC_COMMS_ERROR
+# pylint: disable=global-statement
+# pylint: disable=broad-except
+# pylint: disable=unused-argument
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
+# pylint: disable=too-many-lines
+# pylint: disable=fixme
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=protected-access
 
-from ipaddress import IPv4Address
+
 import logging
-from unittest.mock import ANY, patch
+from unittest.mock import patch
+
+import pytest
+
+import voluptuous as vol
+
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_HOST,
@@ -17,10 +29,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
 )
+from homeassistant import config_entries
 
-import pytest
+from lennoxs30api.s30exception import S30Exception, EC_LOGIN, EC_COMMS_ERROR
 
-from homeassistant import config_entries, data_entry_flow
+
 from custom_components.lennoxs30.config_flow import (
     OptionsFlowHandler,
     host_valid,
@@ -49,10 +62,8 @@ from custom_components.lennoxs30.const import (
     CONF_LOG_MESSAGES_TO_FILE,
     CONF_CREATE_DIAGNOSTICS_SENSORS,
     CONF_CREATE_PARAMETERS,
+    LENNOX_DOMAIN,
 )
-
-
-# from tests.common import MockConfigEntry
 
 from custom_components.lennoxs30 import (
     DEFAULT_LOCAL_POLL_INTERVAL,
@@ -61,14 +72,8 @@ from custom_components.lennoxs30 import (
     Manager,
     async_migrate_entry,
     async_setup,
-    create_migration_task,
 )
-from homeassistant.components import sensor
-from homeassistant.helpers import entity_registry, entity_component
-
 from custom_components.lennoxs30.util import redact_email
-
-# User Flows
 
 
 @pytest.mark.asyncio
@@ -100,13 +105,13 @@ async def test_migrate_local_config_min(hass, caplog):
             assert CONF_HOSTS not in migration_data
             assert migration_data[CONF_HOST] == "10.0.0.1"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
-            assert migration_data[CONF_CREATE_SENSORS] == False
-            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
-            assert migration_data[CONF_CREATE_INVERTER_POWER] == False
+            assert migration_data[CONF_CREATE_SENSORS] is False
+            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] is False
+            assert migration_data[CONF_CREATE_INVERTER_POWER] is False
             assert migration_data[CONF_PROTOCOL] == "https"
-            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
+            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] is False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
-            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] is True
             assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_LOCAL_POLL_INTERVAL
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
@@ -114,7 +119,7 @@ async def test_migrate_local_config_min(hass, caplog):
             assert len(caplog.records) == 1
 
             config_flow = lennoxs30ConfigFlow()
-            with patch.object(config_flow, "async_set_unique_id") as unique_id_mock:
+            with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == "10.0.0.1"
                 assert result["type"] == "create_entry"
@@ -132,7 +137,7 @@ async def test_migrate_local_config_min(hass, caplog):
                 assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == data[CONF_PII_IN_MESSAGE_LOGS]
                 assert migration_data[CONF_MESSAGE_DEBUG_FILE] == data[CONF_MESSAGE_DEBUG_FILE]
                 assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == data[CONF_MESSAGE_DEBUG_LOGGING]
-                assert data[CONF_CLOUD_CONNECTION] == False
+                assert data[CONF_CLOUD_CONNECTION] is False
                 assert data[CONF_APP_ID] == LENNOX_DEFAULT_LOCAL_APP_ID
                 assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
                 assert migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
@@ -170,13 +175,13 @@ async def test_migrate_local_config_full(hass, caplog):
             assert CONF_HOSTS not in migration_data
             assert migration_data[CONF_HOST] == "10.0.0.1"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
-            assert migration_data[CONF_CREATE_SENSORS] == False
-            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
-            assert migration_data[CONF_CREATE_INVERTER_POWER] == False
+            assert migration_data[CONF_CREATE_SENSORS] is False
+            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] is False
+            assert migration_data[CONF_CREATE_INVERTER_POWER] is False
             assert migration_data[CONF_PROTOCOL] == "https"
-            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
+            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] is False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
-            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] is True
             assert migration_data[CONF_APP_ID] == "ha_prod"
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
@@ -184,7 +189,7 @@ async def test_migrate_local_config_full(hass, caplog):
             assert len(caplog.records) == 1
 
             config_flow = lennoxs30ConfigFlow()
-            with patch.object(config_flow, "async_set_unique_id") as unique_id_mock:
+            with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == "10.0.0.1"
                 assert result["type"] == "create_entry"
@@ -202,7 +207,7 @@ async def test_migrate_local_config_full(hass, caplog):
                 assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == data[CONF_PII_IN_MESSAGE_LOGS]
                 assert migration_data[CONF_MESSAGE_DEBUG_FILE] == data[CONF_MESSAGE_DEBUG_FILE]
                 assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == data[CONF_MESSAGE_DEBUG_LOGGING]
-                assert data[CONF_CLOUD_CONNECTION] == False
+                assert data[CONF_CLOUD_CONNECTION] is False
                 assert data[CONF_APP_ID] == "ha_prod"
                 assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
                 assert migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
@@ -238,13 +243,13 @@ async def test_migrate_local_config_multiple(hass, caplog):
             assert CONF_HOSTS not in migration_data
             assert migration_data[CONF_HOST] == "10.0.0.1"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
-            assert migration_data[CONF_CREATE_SENSORS] == False
-            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
-            assert migration_data[CONF_CREATE_INVERTER_POWER] == False
+            assert migration_data[CONF_CREATE_SENSORS] is False
+            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] is False
+            assert migration_data[CONF_CREATE_INVERTER_POWER] is False
             assert migration_data[CONF_PROTOCOL] == "https"
-            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
+            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] is False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
-            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] is True
             assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_LOCAL_POLL_INTERVAL
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
@@ -256,13 +261,13 @@ async def test_migrate_local_config_multiple(hass, caplog):
             assert CONF_HOSTS not in migration_data
             assert migration_data[CONF_HOST] == "10.0.0.2"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
-            assert migration_data[CONF_CREATE_SENSORS] == False
-            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
-            assert migration_data[CONF_CREATE_INVERTER_POWER] == False
+            assert migration_data[CONF_CREATE_SENSORS] is False
+            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] is False
+            assert migration_data[CONF_CREATE_INVERTER_POWER] is False
             assert migration_data[CONF_PROTOCOL] == "https"
-            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
+            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] is False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
-            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] is True
             assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_LOCAL_POLL_INTERVAL
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_LOCAL_TIMEOUT
@@ -300,18 +305,18 @@ async def test_migrate_cloud_config_min(hass, caplog):
             assert migration_data[CONF_EMAIL] == "myemail@email.com"
             assert migration_data[CONF_PASSWORD] == "mypassword"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
-            assert migration_data[CONF_CREATE_SENSORS] == False
-            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
+            assert migration_data[CONF_CREATE_SENSORS] is False
+            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] is False
             assert migration_data[CONF_PROTOCOL] == "https"
-            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
+            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] is False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
-            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] is True
             assert migration_data[CONF_SCAN_INTERVAL] == DEFAULT_POLL_INTERVAL
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_CLOUD_TIMEOUT
 
             config_flow = lennoxs30ConfigFlow()
-            with patch.object(config_flow, "async_set_unique_id") as unique_id_mock:
+            with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == redact_email(migration_data[CONF_EMAIL])
                 assert result["type"] == "create_entry"
@@ -328,7 +333,7 @@ async def test_migrate_cloud_config_min(hass, caplog):
                 assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == data[CONF_PII_IN_MESSAGE_LOGS]
                 assert migration_data[CONF_MESSAGE_DEBUG_FILE] == data[CONF_MESSAGE_DEBUG_FILE]
                 assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == data[CONF_MESSAGE_DEBUG_LOGGING]
-                assert data[CONF_CLOUD_CONNECTION] == True
+                assert data[CONF_CLOUD_CONNECTION] is True
                 assert data[CONF_APP_ID] == LENNOX_DEFAULT_CLOUD_APP_ID
                 assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
                 assert migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
@@ -367,17 +372,17 @@ async def test_migrate_cloud_config_full(hass, caplog):
             assert migration_data[CONF_EMAIL] == "myemail@email.com"
             assert migration_data[CONF_PASSWORD] == "mypassword"
             assert migration_data[CONF_FAST_POLL_INTERVAL] == 0.75
-            assert migration_data[CONF_CREATE_SENSORS] == False
-            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] == False
+            assert migration_data[CONF_CREATE_SENSORS] is False
+            assert migration_data[CONF_ALLERGEN_DEFENDER_SWITCH] is False
             assert migration_data[CONF_PROTOCOL] == "https"
-            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == False
+            assert migration_data[CONF_PII_IN_MESSAGE_LOGS] is False
             assert migration_data[CONF_MESSAGE_DEBUG_FILE] == ""
-            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == True
+            assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] is True
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_CLOUD_TIMEOUT
 
             config_flow = lennoxs30ConfigFlow()
-            with patch.object(config_flow, "async_set_unique_id") as unique_id_mock:
+            with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == redact_email(migration_data[CONF_EMAIL])
                 assert result["type"] == "create_entry"
@@ -394,7 +399,7 @@ async def test_migrate_cloud_config_full(hass, caplog):
                 assert migration_data[CONF_PII_IN_MESSAGE_LOGS] == data[CONF_PII_IN_MESSAGE_LOGS]
                 assert migration_data[CONF_MESSAGE_DEBUG_FILE] == data[CONF_MESSAGE_DEBUG_FILE]
                 assert migration_data[CONF_MESSAGE_DEBUG_LOGGING] == data[CONF_MESSAGE_DEBUG_LOGGING]
-                assert data[CONF_CLOUD_CONNECTION] == True
+                assert data[CONF_CLOUD_CONNECTION] is True
                 assert data[CONF_APP_ID] == "thisismyapp_id"
                 assert migration_data[CONF_SCAN_INTERVAL] == data[CONF_SCAN_INTERVAL]
                 assert migration_data[CONF_FAST_POLL_COUNT] == data[CONF_FAST_POLL_COUNT]
@@ -402,7 +407,7 @@ async def test_migrate_cloud_config_full(hass, caplog):
 
 
 @pytest.mark.asyncio
-async def test_upgrade_config_v1(hass, caplog):
+async def test_upgrade_config_v1(hass):
     data = {
         "cloud_connection": False,
         "host": "192.168.1.93",
@@ -426,21 +431,21 @@ async def test_upgrade_config_v1(hass, caplog):
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
         assert config_entry.version == 4
-        assert new_data["cloud_connection"] == False
+        assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
-        assert new_data["create_sensors"] == True
-        assert new_data["allergen_defender_switch"] == False
-        assert new_data["create_inverter_power"] == False
-        assert new_data["create_diagnostic_sensors"] == False
-        assert new_data["create_parameters"] == False
+        assert new_data["create_sensors"] is True
+        assert new_data["allergen_defender_switch"] is False
+        assert new_data["create_inverter_power"] is False
+        assert new_data["create_diagnostic_sensors"] is False
+        assert new_data["create_parameters"] is False
         assert new_data["protocol"] == "https"
         assert new_data["scan_interval"] == 1
         assert new_data["fast_scan_interval"] == 0.75
         assert new_data["init_wait_time"] == 30
-        assert new_data["pii_in_message_logs"] == False
-        assert new_data["message_debug_logging"] == True
-        assert new_data["log_messages_to_file"] == False
+        assert new_data["pii_in_message_logs"] is False
+        assert new_data["message_debug_logging"] is True
+        assert new_data["log_messages_to_file"] is False
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == 30
@@ -469,28 +474,28 @@ async def test_upgrade_config_v1(hass, caplog):
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
         assert config_entry.version == 4
-        assert new_data["cloud_connection"] == True
+        assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
         assert new_data["app_id"] == "homeassistant"
-        assert new_data["create_sensors"] == True
-        assert new_data["allergen_defender_switch"] == False
-        assert new_data["create_inverter_power"] == False
-        assert new_data["create_diagnostic_sensors"] == False
+        assert new_data["create_sensors"] is True
+        assert new_data["allergen_defender_switch"] is False
+        assert new_data["create_inverter_power"] is False
+        assert new_data["create_diagnostic_sensors"] is False
         assert new_data["protocol"] == "https"
         assert new_data["scan_interval"] == 1
         assert new_data["fast_scan_interval"] == 0.75
         assert new_data["init_wait_time"] == 30
-        assert new_data["pii_in_message_logs"] == False
-        assert new_data["message_debug_logging"] == True
-        assert new_data["log_messages_to_file"] == False
+        assert new_data["pii_in_message_logs"] is False
+        assert new_data["message_debug_logging"] is True
+        assert new_data["log_messages_to_file"] is False
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
 
 
 @pytest.mark.asyncio
-async def test_upgrade_config_v2(hass, caplog):
+async def test_upgrade_config_v2(hass):
     data = {
         "cloud_connection": False,
         "host": "192.168.1.93",
@@ -516,25 +521,25 @@ async def test_upgrade_config_v2(hass, caplog):
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
         assert config_entry.version == 4
-        assert new_data["cloud_connection"] == False
+        assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
-        assert new_data["create_sensors"] == True
-        assert new_data["allergen_defender_switch"] == False
-        assert new_data["create_inverter_power"] == False
-        assert new_data["create_parameters"] == False
+        assert new_data["create_sensors"] is True
+        assert new_data["allergen_defender_switch"] is False
+        assert new_data["create_inverter_power"] is False
+        assert new_data["create_parameters"] is False
         assert new_data["protocol"] == "https"
         assert new_data["scan_interval"] == 1
         assert new_data["fast_scan_interval"] == 0.75
         assert new_data["init_wait_time"] == 30
-        assert new_data["pii_in_message_logs"] == False
-        assert new_data["message_debug_logging"] == True
-        assert new_data["log_messages_to_file"] == False
+        assert new_data["pii_in_message_logs"] is False
+        assert new_data["message_debug_logging"] is True
+        assert new_data["log_messages_to_file"] is False
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == 30
 
-        assert new_data["create_diagnostic_sensors"] == False
+        assert new_data["create_diagnostic_sensors"] is False
 
     data = {
         "cloud_connection": True,
@@ -562,25 +567,25 @@ async def test_upgrade_config_v2(hass, caplog):
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
         assert config_entry.version == 4
-        assert new_data["cloud_connection"] == True
+        assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
         assert new_data["app_id"] == "homeassistant"
-        assert new_data["create_sensors"] == True
-        assert new_data["allergen_defender_switch"] == False
-        assert new_data["create_inverter_power"] == False
+        assert new_data["create_sensors"] is True
+        assert new_data["allergen_defender_switch"] is False
+        assert new_data["create_inverter_power"] is False
         assert new_data["protocol"] == "https"
         assert new_data["scan_interval"] == 1
         assert new_data["fast_scan_interval"] == 0.75
         assert new_data["init_wait_time"] == 30
-        assert new_data["pii_in_message_logs"] == False
-        assert new_data["message_debug_logging"] == True
-        assert new_data["log_messages_to_file"] == False
+        assert new_data["pii_in_message_logs"] is False
+        assert new_data["message_debug_logging"] is True
+        assert new_data["log_messages_to_file"] is False
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
 
-        assert new_data["create_diagnostic_sensors"] == False
+        assert new_data["create_diagnostic_sensors"] is False
 
 
 @pytest.mark.asyncio
@@ -611,25 +616,25 @@ async def test_upgrade_config_v3(hass, caplog):
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
         assert config_entry.version == 4
-        assert new_data["cloud_connection"] == False
+        assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
-        assert new_data["create_sensors"] == True
-        assert new_data["allergen_defender_switch"] == False
-        assert new_data["create_inverter_power"] == False
+        assert new_data["create_sensors"] is True
+        assert new_data["allergen_defender_switch"] is False
+        assert new_data["create_inverter_power"] is False
         assert new_data["protocol"] == "https"
         assert new_data["scan_interval"] == 1
         assert new_data["fast_scan_interval"] == 0.75
         assert new_data["init_wait_time"] == 30
-        assert new_data["pii_in_message_logs"] == False
-        assert new_data["message_debug_logging"] == True
-        assert new_data["log_messages_to_file"] == False
+        assert new_data["pii_in_message_logs"] is False
+        assert new_data["message_debug_logging"] is True
+        assert new_data["log_messages_to_file"] is False
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == 30
-        assert new_data["create_diagnostic_sensors"] == False
+        assert new_data["create_diagnostic_sensors"] is False
 
-        assert new_data["create_parameters"] == False
+        assert new_data["create_parameters"] is False
 
     data = {
         "cloud_connection": True,
@@ -657,43 +662,43 @@ async def test_upgrade_config_v3(hass, caplog):
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
         assert config_entry.version == 4
-        assert new_data["cloud_connection"] == True
+        assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
         assert new_data["app_id"] == "homeassistant"
-        assert new_data["create_sensors"] == True
-        assert new_data["allergen_defender_switch"] == False
-        assert new_data["create_inverter_power"] == False
+        assert new_data["create_sensors"] is True
+        assert new_data["allergen_defender_switch"] is False
+        assert new_data["create_inverter_power"] is False
         assert new_data["protocol"] == "https"
         assert new_data["scan_interval"] == 1
         assert new_data["fast_scan_interval"] == 0.75
         assert new_data["init_wait_time"] == 30
-        assert new_data["pii_in_message_logs"] == False
-        assert new_data["message_debug_logging"] == True
-        assert new_data["log_messages_to_file"] == False
+        assert new_data["pii_in_message_logs"] is False
+        assert new_data["message_debug_logging"] is True
+        assert new_data["log_messages_to_file"] is False
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
-        assert new_data["create_diagnostic_sensors"] == False
+        assert new_data["create_diagnostic_sensors"] is False
 
 
 def test_config_flow_host_valid(hass, caplog):
-    assert host_valid("10.23.23.45") == True
-    assert host_valid("10.23.23.45:9191") == True
-    assert host_valid("localhost") == True
-    assert host_valid("mydomain.google.com") == True
-    assert host_valid("mydomain.google.com:444") == True
-    assert host_valid("<>DDDD>") == False
+    assert host_valid("10.23.23.45") is True
+    assert host_valid("10.23.23.45:9191") is True
+    assert host_valid("localhost") is True
+    assert host_valid("mydomain.google.com") is True
+    assert host_valid("mydomain.google.com:444") is True
+    assert host_valid("<>DDDD>") is False
 
 
 def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     cf = lennoxs30ConfigFlow()
     cf.hass = hass
-    assert cf._host_in_configuration_exists("localhost") == False
+    assert cf._host_in_configuration_exists("localhost") is False
 
     schema = cf.get_advanced_schema(is_cloud=False)
     si = schema.schema["scan_interval"]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -702,7 +707,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 300
 
     si = schema.schema[CONF_FAST_POLL_INTERVAL]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "float"
@@ -711,7 +716,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 300.0
 
     si = schema.schema[CONF_FAST_POLL_COUNT]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -720,7 +725,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 100
 
     si = schema.schema[CONF_INIT_WAIT_TIME]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -729,7 +734,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 300
 
     si = schema.schema[CONF_TIMEOUT]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -745,13 +750,13 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     si = schema.schema[CONF_LOG_MESSAGES_TO_FILE]
     assert si == cv.boolean
     si = schema.schema[CONF_MESSAGE_DEBUG_FILE]
-    assert si == cv.string
+    assert si == cv.string  # pylint: disable=W0143
 
     # TODO - don't know how to validate the default values.
 
     schema = cf.get_advanced_schema(is_cloud=True)
     si = schema.schema["scan_interval"]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -760,7 +765,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 300
 
     si = schema.schema[CONF_FAST_POLL_INTERVAL]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "float"
@@ -769,7 +774,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 300.0
 
     si = schema.schema[CONF_FAST_POLL_COUNT]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -778,7 +783,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 100
 
     si = schema.schema[CONF_INIT_WAIT_TIME]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -787,7 +792,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert v1.max == 300
 
     si = schema.schema[CONF_TIMEOUT]
-    si.required == False
+    assert si.required is False
     v0: vol.Coerce = si.validators[0]
     assert isinstance(v0, vol.Coerce)
     assert v0.type_name == "int"
@@ -803,7 +808,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     si = schema.schema[CONF_LOG_MESSAGES_TO_FILE]
     assert si == cv.boolean
     si = schema.schema[CONF_MESSAGE_DEBUG_FILE]
-    assert si == cv.string
+    assert si == cv.string  # pylint: disable=W0143
 
 
 @pytest.mark.asyncio
@@ -811,52 +816,52 @@ async def test_lennoxS30ConfigFlow_async_step_user(manager: Manager, hass, caplo
     cf = lennoxs30ConfigFlow()
     cf.hass = hass
     res = await cf.async_step_user(user_input=None)
-    res["type"] == "form"
-    res["step_id"] == "user"
-    res["data_schema"] == STEP_ONE
-    len(res["errors"]) == 0
+    assert res["type"] == "form"
+    assert res["step_id"] == "user"
+    assert res["data_schema"] == STEP_ONE
+    assert len(res["errors"]) == 0
 
     user_input: dict = {}
     user_input[CONF_CLOUD_CONNECTION] = True
     user_input[CONF_LOCAL_CONNECTION] = True
     res = await cf.async_step_user(user_input=user_input)
-    res["type"] == "form"
-    res["step_id"] == "user"
-    res["data_schema"] == STEP_ONE
-    len(res["errors"]) == 1
+    assert res["type"] == "form"
+    assert res["step_id"] == "user"
+    assert res["data_schema"] == STEP_ONE
+    assert len(res["errors"]) == 1
     assert res["errors"][CONF_LOCAL_CONNECTION] == "select_cloud_or_local"
 
     user_input: dict = {}
     user_input[CONF_CLOUD_CONNECTION] = False
     user_input[CONF_LOCAL_CONNECTION] = False
     res = await cf.async_step_user(user_input=user_input)
-    res["type"] == "form"
-    res["step_id"] == "user"
-    res["data_schema"] == STEP_ONE
-    len(res["errors"]) == 1
+    assert res["type"] == "form"
+    assert res["step_id"] == "user"
+    assert res["data_schema"] == STEP_ONE
+    assert len(res["errors"]) == 1
     assert res["errors"][CONF_LOCAL_CONNECTION] == "select_cloud_or_local"
 
     user_input: dict = {}
     user_input[CONF_CLOUD_CONNECTION] = True
     user_input[CONF_LOCAL_CONNECTION] = False
     res = await cf.async_step_user(user_input=user_input)
-    res["type"] == "form"
-    res["step_id"] == "cloud"
-    res["data_schema"] == STEP_CLOUD
-    len(res["errors"]) == 0
-    len(cf.config_input) == 1
-    cf.config_input[CONF_CLOUD_CONNECTION] == True
+    assert res["type"] == "form"
+    assert res["step_id"] == "cloud"
+    assert res["data_schema"] == STEP_CLOUD
+    assert len(res["errors"]) == 0
+    assert len(cf.config_input) == 1
+    assert cf.config_input[CONF_CLOUD_CONNECTION] is True
 
     user_input: dict = {}
     user_input[CONF_CLOUD_CONNECTION] = False
     user_input[CONF_LOCAL_CONNECTION] = True
     res = await cf.async_step_user(user_input=user_input)
-    res["type"] == "form"
-    res["step_id"] == "local"
-    res["data_schema"] == STEP_LOCAL
-    len(res["errors"]) == 0
-    len(cf.config_input) == 1
-    assert cf.config_input[CONF_CLOUD_CONNECTION] == False
+    assert res["type"] == "form"
+    assert res["step_id"] == "local"
+    assert res["data_schema"] == STEP_LOCAL
+    assert len(res["errors"]) == 0
+    assert len(cf.config_input) == 1
+    assert cf.config_input[CONF_CLOUD_CONNECTION] is False
 
 
 @pytest.mark.asyncio
@@ -876,20 +881,20 @@ async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, capl
             cf.config_input[CONF_CLOUD_CONNECTION] = True
             res = await cf.async_step_cloud(user_input=user_input)
             assert len(cf.config_input) == 6
-            assert cf.config_input[CONF_CLOUD_CONNECTION] == True
+            assert cf.config_input[CONF_CLOUD_CONNECTION] is True
             assert cf.config_input[CONF_EMAIL] == "pete.rage@rage.com"
             assert cf.config_input[CONF_PASSWORD] == "secret"
             assert cf.config_input[CONF_APP_ID] == "ha_prod"
-            assert cf.config_input[CONF_CREATE_SENSORS] == True
-            assert cf.config_input[CONF_ALLERGEN_DEFENDER_SWITCH] == True
+            assert cf.config_input[CONF_CREATE_SENSORS] is True
+            assert cf.config_input[CONF_ALLERGEN_DEFENDER_SWITCH] is True
 
             assert try_to_connect.call_count == 1
             assert async_set_unique_id.call_count == 1
             assert async_set_unique_id.call_args[0][0] == "lennoxs30_pete.rage@rage.com"
-            res["type"] == "form"
-            res["step_id"] == "advanced"
-            res["data_schema"] == cf.get_advanced_schema(True)
-            len(res["errors"]) == 0
+            assert res["type"] == "form"
+            assert res["step_id"] == "advanced"
+            assert len(res["data_schema"].schema) == len(cf.get_advanced_schema(True).schema)
+            assert res["errors"] == {}
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -906,11 +911,11 @@ async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, capl
                 cf.config_input[CONF_CLOUD_CONNECTION] = True
                 res = await cf.async_step_cloud(user_input=user_input)
                 assert len(cf.config_input) == 1
-                res["type"] == "form"
-                res["step_id"] == "cloud"
-                res["data_schema"] == STEP_CLOUD
-                len(res["errors"]) == 1
-                res["errors"]["base"] = "unable_to_connect_login"
+                assert res["type"] == "form"
+                assert res["step_id"] == "cloud"
+                assert res["data_schema"] == STEP_CLOUD
+                assert len(res["errors"]) == 1
+                assert res["errors"]["base"] == "unable_to_connect_login"
                 assert len(caplog.messages) == 1
                 assert "This is the error" in caplog.messages[0]
 
@@ -929,11 +934,11 @@ async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, capl
                 cf.config_input[CONF_CLOUD_CONNECTION] = True
                 res = await cf.async_step_cloud(user_input=user_input)
                 assert len(cf.config_input) == 1
-                res["type"] == "form"
-                res["step_id"] == "cloud"
-                res["data_schema"] == STEP_CLOUD
-                len(res["errors"]) == 1
-                res["errors"]["base"] = "unable_to_connect_cloud"
+                assert res["type"] == "form"
+                assert res["step_id"] == "cloud"
+                assert res["data_schema"] == STEP_CLOUD
+                assert len(res["errors"]) == 1
+                assert res["errors"]["base"] == "unable_to_connect_cloud"
                 assert len(caplog.messages) == 1
                 assert "This is the error" in caplog.messages[0]
 
@@ -960,20 +965,20 @@ async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, capl
             assert len(cf.config_input) == 9
             assert cf.config_input[CONF_HOST] == "10.11.12.13:4444"
             assert cf.config_input[CONF_APP_ID] == "ha_prod"
-            assert cf.config_input[CONF_CREATE_SENSORS] == True
-            assert cf.config_input[CONF_ALLERGEN_DEFENDER_SWITCH] == True
-            assert cf.config_input[CONF_CREATE_INVERTER_POWER] == True
-            assert cf.config_input[CONF_CREATE_DIAGNOSTICS_SENSORS] == True
-            assert cf.config_input[CONF_CREATE_PARAMETERS] == True
+            assert cf.config_input[CONF_CREATE_SENSORS] is True
+            assert cf.config_input[CONF_ALLERGEN_DEFENDER_SWITCH] is True
+            assert cf.config_input[CONF_CREATE_INVERTER_POWER] is True
+            assert cf.config_input[CONF_CREATE_DIAGNOSTICS_SENSORS] is True
+            assert cf.config_input[CONF_CREATE_PARAMETERS] is True
             assert cf.config_input[CONF_PROTOCOL] == "https"
 
             assert try_to_connect.call_count == 1
             assert async_set_unique_id.call_count == 1
             assert async_set_unique_id.call_args[0][0] == "lennoxs30_10.11.12.13:4444"
-            res["type"] == "form"
-            res["step_id"] == "advanced"
-            res["data_schema"] == cf.get_advanced_schema(False)
-            len(res["errors"]) == 0
+            assert res["type"] == "form"
+            assert res["step_id"] == "advanced"
+            assert len(res["data_schema"].schema) == len(cf.get_advanced_schema(False).schema)
+            assert len(res["errors"]) == 0
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -993,11 +998,11 @@ async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, capl
                 cf.config_input[CONF_CLOUD_CONNECTION] = False
                 res = await cf.async_step_local(user_input=user_input)
                 assert len(cf.config_input) == 1
-                res["type"] == "form"
-                res["step_id"] == "local"
-                res["data_schema"] == STEP_LOCAL
-                len(res["errors"]) == 1
-                res["errors"]["base"] = "unable_to_connect_local"
+                assert res["type"] == "form"
+                assert res["step_id"] == "local"
+                assert res["data_schema"] == STEP_LOCAL
+                assert len(res["errors"]) == 1
+                assert res["errors"]["host"] == "unable_to_connect_local"
                 assert len(caplog.messages) == 1
                 assert "This is the error" in caplog.messages[0]
 
@@ -1018,11 +1023,11 @@ async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, capl
             cf.config_input[CONF_CLOUD_CONNECTION] = False
             res = await cf.async_step_local(user_input=user_input)
             assert len(cf.config_input) == 1
-            res["type"] == "form"
-            res["step_id"] == "local"
-            res["data_schema"] == STEP_LOCAL
-            len(res["errors"]) == 1
-            res["errors"][CONF_HOST] = "already_configured"
+            assert res["type"] == "form"
+            assert res["step_id"] == "local"
+            assert res["data_schema"] == STEP_LOCAL
+            assert len(res["errors"]) == 1
+            assert res["errors"][CONF_HOST] == "already_configured"
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -1039,11 +1044,11 @@ async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, capl
         cf.config_input[CONF_CLOUD_CONNECTION] = False
         res = await cf.async_step_local(user_input=user_input)
         assert len(cf.config_input) == 1
-        res["type"] == "form"
-        res["step_id"] == "local"
-        res["data_schema"] == STEP_LOCAL
-        len(res["errors"]) == 1
-        res["errors"][CONF_HOST] = "invalid_hostname"
+        assert res["type"] == "form"
+        assert res["step_id"] == "local"
+        assert res["data_schema"] == STEP_LOCAL
+        assert len(res["errors"]) == 1
+        assert res["errors"][CONF_HOST] == "invalid_hostname"
 
 
 @pytest.mark.asyncio
@@ -1142,7 +1147,7 @@ async def test_OptionsFlowHandler_async_step_init_cloud_save(
 
         assert data[CONF_EMAIL] == config_entry_cloud.data[CONF_EMAIL]
         assert data[CONF_CLOUD_CONNECTION] == config_entry_cloud.data[CONF_CLOUD_CONNECTION]
-        assert data[CONF_LOG_MESSAGES_TO_FILE] == False
+        assert data[CONF_LOG_MESSAGES_TO_FILE] is False
         assert data[CONF_MESSAGE_DEBUG_FILE] == ""
 
         assert res["type"] == "create_entry"
@@ -1166,7 +1171,7 @@ async def test_OptionsFlowHandler_async_step_init_local_save(
         data = call.kwargs["data"]
 
         assert data[CONF_HOST] == config_entry_local.data[CONF_HOST]
-        assert data[CONF_LOG_MESSAGES_TO_FILE] == True
+        assert data[CONF_LOG_MESSAGES_TO_FILE] is True
         assert data[CONF_MESSAGE_DEBUG_FILE] == "s30_message.log"
 
         assert res["type"] == "create_entry"
@@ -1192,7 +1197,7 @@ async def test_lennoxS30ConfigFlow_try_to_connect_cloud(manager: Manager, hass, 
             assert cf.manager.api._username == user_input[CONF_EMAIL]
             assert cf.manager.api._password == user_input[CONF_PASSWORD]
             assert cf.manager.api._applicationid == user_input[CONF_APP_ID]
-            assert cf.manager.api.isLANConnection == False
+            assert cf.manager.api.isLANConnection is False
 
 
 @pytest.mark.asyncio
@@ -1213,6 +1218,15 @@ async def test_lennoxS30ConfigFlow_try_to_connect_local(manager: Manager, hass, 
             assert async_shutdown.call_count == 1
 
             assert cf.manager.api._applicationid == user_input[CONF_APP_ID]
-            assert cf.manager.api.isLANConnection == True
+            assert cf.manager.api.isLANConnection is True
             assert cf.manager.api.ip == user_input[CONF_HOST]
             assert cf.manager.api._protocol == user_input[CONF_PROTOCOL]
+
+
+@pytest.mark.asyncio
+async def test_async_setup(hass):
+    hass.data[LENNOX_DOMAIN] = {"abc": "abc"}
+    config: ConfigType = {}
+    result: bool = await async_setup(hass, config)
+    assert result is True
+    assert hass.data[LENNOX_DOMAIN] == {}

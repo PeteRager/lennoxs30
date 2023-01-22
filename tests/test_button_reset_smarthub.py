@@ -15,7 +15,11 @@ from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.button import ResetSmartHubButton
 
-from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
+from tests.conftest import (
+    conf_test_button_info_async_press,
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+)
 
 
 @pytest.mark.asyncio
@@ -41,7 +45,7 @@ async def test_button_reset_smarthub_subscription(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager):
+async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     button = ResetSmartHubButton(hass, manager, system)
@@ -69,6 +73,7 @@ async def test_button_reset_smarthub_async_press(hass, manager_mz: Manager):
 
     manager.parameter_safety_turn_off(system.sysId)
     await conf_test_exception_handling(system, "reset_smart_controller", button, button.async_press)
+    await conf_test_button_info_async_press(system, "reset_smart_controller", button, caplog)
 
 
 @pytest.mark.asyncio

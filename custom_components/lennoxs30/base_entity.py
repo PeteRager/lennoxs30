@@ -1,4 +1,6 @@
+# pylint: disable=line-too-long
 """Provides a base entity mixin to be used in all entities to drive availability from cloud status or connection status"""
+
 import logging
 from lennoxs30api import lennox_system
 from . import Manager
@@ -33,12 +35,14 @@ class S30BaseEntityMixin(object):
 
     def cloud_status_update_callback(self):
         """Called when cloud status updated"""
-        _LOGGER.debug(f"cloud_status_update_callback cloud_status [{self._system.cloud_status}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("cloud_status_update_callback cloud_status [%s]", self._system.cloud_status)
         self.schedule_update_ha_state()
 
     def connection_state_callback(self, connected: bool):
         """Called when connection state updates"""
-        _LOGGER.debug(f"connection_state_callback connected [{connected}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("connection_state_callback connected [%s]", connected)
         self.schedule_update_ha_state()
 
     @property

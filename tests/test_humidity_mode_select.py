@@ -24,7 +24,11 @@ from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.select import HumidityModeSelect
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
-from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
+from tests.conftest import (
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+    conf_test_select_info_async_select_option,
+)
 
 
 @pytest.mark.asyncio
@@ -186,6 +190,8 @@ async def test_humidity_mode_select_async_select_options(hass, manager_mz: Manag
     await conf_test_exception_handling(
         zone, "setHumidityMode", c, c.async_select_option, option=LENNOX_HUMIDITY_MODE_HUMIDIFY
     )
+
+    await conf_test_select_info_async_select_option(system, "setHumidityMode", c, caplog)
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
