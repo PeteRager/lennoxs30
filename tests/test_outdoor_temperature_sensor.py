@@ -1,29 +1,27 @@
+# pylint: disable=too-many-lines
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=invalid-name
+# pylint: disable=protected-access
+# pylint: disable=line-too-long
+
 import logging
-from lennoxs30api.s30api_async import (
-    LENNOX_STATUS_NOT_EXIST,
-    LENNOX_STATUS_GOOD,
-    LENNOX_STATUS_NOT_AVAILABLE,
-    lennox_system,
-)
-from custom_components.lennoxs30 import (
-    Manager,
-)
+from unittest.mock import patch
 import pytest
-from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
-from custom_components.lennoxs30.sensor import (
-    S30OutdoorTempSensor,
-)
-
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-)
-
-
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE
 
+from lennoxs30api.s30api_async import (
+    LENNOX_STATUS_GOOD,
+    LENNOX_STATUS_NOT_AVAILABLE,
+    LENNOX_BAD_STATUS,
+    lennox_system,
+)
 
-from unittest.mock import patch
+from custom_components.lennoxs30 import Manager
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
+from custom_components.lennoxs30.sensor import S30OutdoorTempSensor
 
 from tests.conftest import conftest_base_entity_availability
 
@@ -36,9 +34,9 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
 
     assert system.outdoorTemperatureStatus == LENNOX_STATUS_GOOD
     assert s.unique_id == (system.unique_id + "_OT").replace("-", "")
-    assert s.available == True
-    assert s.should_poll == False
-    assert s.update() == True
+    assert s.available is True
+    assert s.should_poll is False
+    assert s.update() is True
     assert s.name == system.name + "_outdoor_temperature"
     assert len(s.extra_state_attributes) == 0
     manager.is_metric = False
@@ -56,46 +54,40 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
         assert x[0] == LENNOX_DOMAIN
         assert x[1] == system.unique_id + "_ou"
 
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
-        assert s.native_value == None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_EXIST in msg
-
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_AVAILABLE
-        assert s.native_value == None
-        assert len(caplog.records) == 1
-        msg = caplog.messages[0]
-        assert LENNOX_STATUS_NOT_AVAILABLE in msg
+    for badstatus in LENNOX_BAD_STATUS:
+        caplog.clear()
+        with caplog.at_level(logging.WARNING):
+            system.outdoorTemperatureStatus = badstatus
+            assert s.native_value is None
+            assert s.available is False
+            assert len(caplog.records) == 1
+            msg = caplog.messages[0]
+            assert badstatus in msg
 
 
 @pytest.mark.asyncio
-async def test_outdoor_temperature_sensor_subscription(hass, manager: Manager, caplog):
+async def test_outdoor_temperature_sensor_subscription(hass, manager: Manager):
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]
     s = S30OutdoorTempSensor(hass, manager, system)
     await s.async_added_to_hass()
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        set = {"outdoorTemperature": system.outdoorTemperature + 1}
-        system.attr_updater(set, "outdoorTemperature")
+        update_set = {"outdoorTemperature": system.outdoorTemperature + 1}
+        system.attr_updater(update_set, "outdoorTemperature")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        set = {"outdoorTemperatureC": system.outdoorTemperatureC + 1}
-        system.attr_updater(set, "outdoorTemperatureC")
-        system.executeOnUpdateCallbacks()
-        assert update_callback.call_count == 1
-
-    with patch.object(s, "schedule_update_ha_state") as update_callback:
-        set = {"outdoorTemperatureStatus": LENNOX_STATUS_NOT_AVAILABLE}
-        system.attr_updater(set, "outdoorTemperatureStatus")
+        update_set = {"outdoorTemperatureC": system.outdoorTemperatureC + 1}
+        system.attr_updater(update_set, "outdoorTemperatureC")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
 
     conftest_base_entity_availability(manager, system, s)
+
+    with patch.object(s, "schedule_update_ha_state") as update_callback:
+        update_set = {"outdoorTemperatureStatus": LENNOX_STATUS_NOT_AVAILABLE}
+        system.attr_updater(update_set, "outdoorTemperatureStatus")
+        system.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1

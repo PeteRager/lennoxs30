@@ -33,7 +33,7 @@ from lennoxs30api import (
     lennox_zone,
     lennox_equipment,
     lennox_equipment_diagnostic,
-    LENNOX_STATUS_NOT_AVAILABLE,
+    LENNOX_BAD_STATUS,
     LENNOX_STATUS_NOT_EXIST,
 )
 
@@ -280,13 +280,16 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
         return self._myname
 
     @property
+    def available(self):
+        if self._system.outdoorTemperatureStatus in LENNOX_BAD_STATUS:
+            return False
+        return super().available
+
+    @property
     def native_value(self):
-        if (
-            self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_EXIST
-            or self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_AVAILABLE
-        ):
+        if self._system.outdoorTemperatureStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
-                f"S30OutdoorTempSensor [{self._myname}] has bad data quality [{self._system.outdoorTemperatureStatus}] returning None "
+                f"S30OutdoorTempSensor [{self._myname}] has bad data quality [{self._system.outdoorTemperatureStatus}] returning None"
             )
             return None
         if self._manager.is_metric is False:
@@ -352,11 +355,22 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
         return {}
 
     @property
+    def available(self):
+        if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
+            return False
+        return super().available
+
+    @property
     def name(self):
         return self._myname
 
     @property
     def native_value(self):
+        if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                f"S30TempSensor [{self._myname}] has bad data quality [{self._zone.temperatureStatus}] returning None"
+            )
+            return None
         if self._manager.is_metric is False:
             return self._zone.getTemperature()
         return self._zone.getTemperatureC()
@@ -424,7 +438,18 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
         return self._myname
 
     @property
+    def available(self):
+        if self._zone.humidityStatus in LENNOX_BAD_STATUS:
+            return False
+        return super().available
+
+    @property
     def native_value(self):
+        if self._zone.humidityStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                f"S30HumiditySensor [{self._myname}] has bad data quality [{self._zone.humidityStatus}] returning None"
+            )
+            return None
         return self._zone.getHumidity()
 
     @property
