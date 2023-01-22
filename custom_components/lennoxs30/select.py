@@ -58,7 +58,7 @@ async def async_setup_entry(
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager.api.system_list:
         if system.is_none(system.dehumidifierType) is False:
-            _LOGGER.debug("Create DehumidificationModeSelect system [%s], system.sysId")
+            _LOGGER.debug("Create DehumidificationModeSelect system [%s]", system.sysId)
             sel = DehumidificationModeSelect(hass, manager, system)
             select_list.append(sel)
         for zone in system.zone_list:
