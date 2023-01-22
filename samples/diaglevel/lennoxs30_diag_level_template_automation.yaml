@@ -1,0 +1,22 @@
+### Automation to keep the Lennox Controller in Diagnostic Level 2
+### Substitution Parameter
+####  SYSTEM_NAME - you lennox system name
+- id: Lennox SYSTEM_NAME Diagnostic Level Control
+  alias: Lennox SYSTEM_NAME Diagnostic Level Control
+  trigger:
+    - platform: template
+      value_template: >-
+        {{ is_state('number.SYSTEM_NAME_diagnostic_level','0') }}
+      for: "00:01:00"
+  condition: "{{ is_state('input_boolean.SYSTEM_NAME_enable_diag_level_control', 'on') }} "
+  action:
+    - service: system_log.write
+      data:
+        level: info
+        message: "Lennox SYSTEM_NAME diag level is 0 for 1 minute, setting diag level to 2"
+        logger: lennoxs30
+    - service: number.set_value
+      data:
+        value: 2
+      target:
+        entity_id: number.SYSTEM_NAME_diagnostic_level
