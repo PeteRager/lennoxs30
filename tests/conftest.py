@@ -222,7 +222,7 @@ def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manag
         email=None,
         password=None,
         poll_interval=1,
-        fast_poll_interval=2,
+        fast_poll_interval=0.5,
         allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
