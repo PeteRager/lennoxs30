@@ -86,7 +86,9 @@ async def async_setup_entry(
         if manager.api.isLANConnection is False or (
             manager.create_inverter_power is False and manager.create_diagnostic_sensors is False
         ):
-            _LOGGER.debug("async_setup_entry - not creating diagnostic level number because inverter power not enabled")
+            _LOGGER.debug(
+                "async_setup_entry - not creating diagnostic level number because inverter power and diagnostics not enabled"
+            )
         else:
             number = DiagnosticLevelNumber(hass, manager, system)
             number_list.append(number)

@@ -351,7 +351,7 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         _LOGGER.debug("async_added_to_hass S30TempSensor myname [%s]", self._myname)
-        self._zone.registerOnUpdateCallback(self.update_callback, ["temperature", "temperatureC"])
+        self._zone.registerOnUpdateCallback(self.update_callback, ["temperature", "temperatureC", "temperatureStatus"])
         await super().async_added_to_hass()
 
     def update_callback(self):
@@ -372,6 +372,11 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def available(self):
         if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                "S30TempSensor [%s] has bad data quality [%s] returning Not Available",
+                self._myname,
+                self._zone.temperatureStatus,
+            )
             return False
         return super().available
 
@@ -383,7 +388,9 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
     def native_value(self):
         if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
-                f"S30TempSensor [{self._myname}] has bad data quality [{self._zone.temperatureStatus}] returning None"
+                "S30TempSensor [%s] has bad data quality [%s] returning None",
+                self._myname,
+                self._zone.temperatureStatus,
             )
             return None
         if self._manager.is_metric is False:
@@ -430,7 +437,7 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         _LOGGER.debug("async_added_to_hass S30TempSensor myname [%s]", self._myname)
-        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity"])
+        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity", "humidityStatus"])
         await super().async_added_to_hass()
 
     def update_callback(self):
@@ -455,6 +462,11 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
     @property
     def available(self):
         if self._zone.humidityStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                "S30HumiditySensor [%s] has bad data quality [%s] returning Not Available",
+                self._myname,
+                self._zone.humidityStatus,
+            )
             return False
         return super().available
 
@@ -462,7 +474,9 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
     def native_value(self):
         if self._zone.humidityStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
-                f"S30HumiditySensor [{self._myname}] has bad data quality [{self._zone.humidityStatus}] returning None"
+                "S30HumiditySensor [%s] has bad data quality [%s] returning None",
+                self._myname,
+                self._zone.humidityStatus,
             )
             return None
         return self._zone.getHumidity()

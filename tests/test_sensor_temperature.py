@@ -59,10 +59,15 @@ async def test_temperature_sensor(hass, manager: Manager, caplog):
         with caplog.at_level(logging.WARNING):
             zone.temperatureStatus = badstatus
             assert s.native_value is None
-            assert s.available is False
             assert len(caplog.records) == 1
+            assert s.available is False
+            assert len(caplog.records) == 2
             msg = caplog.messages[0]
             assert badstatus in msg
+            assert s._myname in msg
+            msg = caplog.messages[1]
+            assert badstatus in msg
+            assert s._myname in msg
 
 
 @pytest.mark.asyncio
@@ -89,3 +94,12 @@ async def test_temperature_sensor_subscription(hass, manager: Manager):
         assert s.native_value == zone.temperatureC
 
     conftest_base_entity_availability(manager, system, s)
+
+    with patch.object(s, "schedule_update_ha_state") as update_callback:
+        manager.is_metric = True
+        update_set = {"temperatureStatus": "error"}
+        zone.attr_updater(update_set, "temperatureStatus")
+        zone.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert s.native_value is None
+        assert s.available is False

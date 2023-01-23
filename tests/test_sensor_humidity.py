@@ -55,10 +55,15 @@ async def test_humidity_sensor(hass, manager: Manager, caplog):
         with caplog.at_level(logging.WARNING):
             zone.humidityStatus = badstatus
             assert s.native_value is None
-            assert s.available is False
             assert len(caplog.records) == 1
+            assert s.available is False
+            assert len(caplog.records) == 2
             msg = caplog.messages[0]
+            assert s._myname in msg
             assert badstatus in msg
+            msg = caplog.messages[1]
+            assert badstatus in msg
+            assert s._myname in msg
 
 
 @pytest.mark.asyncio
@@ -77,3 +82,12 @@ async def test_humidity_sensor_subscription(hass, manager: Manager):
         assert s.state == zone.humidity
 
     conftest_base_entity_availability(manager, system, s)
+
+    with patch.object(s, "schedule_update_ha_state") as update_callback:
+        manager.is_metric = False
+        update_set = {"humidityStatus": "error"}
+        zone.attr_updater(update_set, "humidityStatus")
+        zone.executeOnUpdateCallbacks()
+        assert update_callback.call_count == 1
+        assert s.state is None
+        assert s.available is False
