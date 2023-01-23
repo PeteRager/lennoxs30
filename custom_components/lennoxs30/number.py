@@ -1,6 +1,4 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-# pylint: disable=logging-not-lazy
-# pylint: disable=logging-fstring-interpolation
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -50,6 +48,7 @@ from .helpers import (
 
 from .base_entity import S30BaseEntityMixin
 from .const import (
+    LOG_INFO_NUMBER_ASYNC_SET_VALUE,
     MANAGER,
     UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
     UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
@@ -87,7 +86,9 @@ async def async_setup_entry(
         if manager.api.isLANConnection is False or (
             manager.create_inverter_power is False and manager.create_diagnostic_sensors is False
         ):
-            _LOGGER.debug("async_setup_entry - not creating diagnostic level number because inverter power not enabled")
+            _LOGGER.debug(
+                "async_setup_entry - not creating diagnostic level number because inverter power and diagnostics not enabled"
+            )
         else:
             number = DiagnosticLevelNumber(hass, manager, system)
             number_list.append(number)
@@ -119,17 +120,17 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
         super().__init__(manager, system)
         self._hass = hass
         self._myname = self._system.name + "_diagnostic_level"
-        _LOGGER.debug(f"Create DiagnosticLevelNumber myname [{self._myname}]")
+        _LOGGER.debug("Create DiagnosticLevelNumber myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass DiagnosticLevelNumber myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass DiagnosticLevelNumber myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(self.update_callback, ["diagLevel"])
         await super().async_added_to_hass()
 
     def update_callback(self):
         """Called when state has changed"""
-        _LOGGER.debug(f"update_callback DiagnosticLevelNumber myname [{self._myname}]")
+        _LOGGER.debug("update_callback DiagnosticLevelNumber myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -159,6 +160,7 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
+        _LOGGER.info(LOG_INFO_NUMBER_ASYNC_SET_VALUE, self.__class__.__name__, self._myname, value)
         try:
             if value == 1:
                 _LOGGER.warning(
@@ -166,7 +168,9 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
                 )
             if value != 0 and (self._system.internetStatus or self._system.relayServerConnected):
                 _LOGGER.warning(
-                    f"Diagnostic Level Number - setting to a non-zero value is not recommended for systems connected to the lennox cloud internetStatus [{self._system.internetStatus}] relayServerConnected [{self._system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                    "Diagnostic Level Number - setting to a non-zero value is not recommended for systems connected to the lennox cloud internetStatus [%s] relayServerConnected [%s] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md",
+                    self._system.internetStatus,
+                    self._system.relayServerConnected,
                 )
             await self._system.set_diagnostic_level(value)
         except S30Exception as ex:
@@ -192,11 +196,11 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
         super().__init__(manager, system)
         self._hass = hass
         self._myname = self._system.name + "_dehumidification_overcooling"
-        _LOGGER.debug(f"Create DehumidificationOverCooling myname [{self._myname}]")
+        _LOGGER.debug("Create DehumidificationOverCooling myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass DehumidificationOverCooling myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass DehumidificationOverCooling myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -216,7 +220,7 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
 
     def update_callback(self):
         """Called when state has changed"""
-        _LOGGER.debug(f"update_callback DehumidificationOverCooling myname [{self._myname}]")
+        _LOGGER.debug("update_callback DehumidificationOverCooling myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -260,7 +264,7 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        _LOGGER.info(f"DehumidificationOverCooling::async_set_native_value [{self._myname}] value [{value}]")
+        _LOGGER.info(LOG_INFO_NUMBER_ASYNC_SET_VALUE, self.__class__.__name__, self._myname, value)
         try:
             if self._manager.is_metric:
                 await self._system.set_enhancedDehumidificationOvercooling(r_c=value)
@@ -289,11 +293,11 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
         super().__init__(manager, system)
         self._hass = hass
         self._myname = self._system.name + "_circulate_time"
-        _LOGGER.debug(f"Create CirculateTime myname [{self._myname}]")
+        _LOGGER.debug("Create CirculateTime myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass CirculateTime myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass CirculateTime myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -304,7 +308,7 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
 
     def update_callback(self):
         """Called when state has changed"""
-        _LOGGER.debug(f"update_callback CirculateTime myname [{self._myname}]")
+        _LOGGER.debug("update_callback CirculateTime myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -338,7 +342,8 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        _LOGGER.info(f"CirculateTime::async_set_native_value myname [{self._myname}] value [{value}]")
+        _LOGGER.info(LOG_INFO_NUMBER_ASYNC_SET_VALUE, self.__class__.__name__, self._myname, value)
+
         try:
             await self._system.set_circulateTime(value)
         except S30Exception as ex:
@@ -364,17 +369,17 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
         super().__init__(manager, system)
         self._hass = hass
         self._myname = self._system.name + "_timed_ventilation"
-        _LOGGER.debug(f"Create TimedVentilationNumber myname [{self._myname}]")
+        _LOGGER.debug("Create TimedVentilationNumber myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass TimedVentilationNumber myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass TimedVentilationNumber myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(self.update_callback, ["ventilationRemainingTime"])
         await super().async_added_to_hass()
 
     def update_callback(self):
         """Called when state has changed"""
-        _LOGGER.debug(f"update_callback TimedVentilationNumber myname [{self._myname}]")
+        _LOGGER.debug("update_callback TimedVentilationNumber myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -404,7 +409,8 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        _LOGGER.info(f"TimedVentilationNumber set value to [{value}]")
+        _LOGGER.info(LOG_INFO_NUMBER_ASYNC_SET_VALUE, self.__class__.__name__, self._myname, value)
+
         try:
             value_i = int(value)
             value_seconds = value_i * 60
@@ -448,13 +454,19 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
 
         self._myname = helper_create_equipment_entity_name(system, equipment, parameter.name, prefix="par")
         _LOGGER.debug(
-            f"Create EquipmentParameterNumber eq [{equipment.equipment_id}] pid [{parameter.pid}] myname [{self._myname}]"
+            "Create EquipmentParameterNumber eq [%d] pid [%d] myname [%s]",
+            equipment.equipment_id,
+            parameter.pid,
+            self._myname,
         )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         _LOGGER.debug(
-            f"async_added_to_hass EquipmentParameterNumber eq [{self.equipment.equipment_id}] pid [{self.parameter.pid}]  myname [{self._myname}]"
+            "async_added_to_hass EquipmentParameterNumber eq [%d] pid [%d]  myname [%s]",
+            self.equipment.equipment_id,
+            self.parameter.pid,
+            self._myname,
         )
         self._system.registerOnUpdateCallbackEqParameters(
             self.update_callback,
@@ -464,9 +476,13 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
 
     def update_callback(self, pid: str):
         """Called when state has changed"""
-        _LOGGER.debug(
-            f"update_callback EquipmentParameterNumber myname [{self._myname}] [{pid}] [{self.parameter.value}]"
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "update_callback EquipmentParameterNumber myname [%s] [%s] [%s]",
+                self._myname,
+                pid,
+                self.parameter.value,
+            )
         self.schedule_update_ha_state()
 
     @property
@@ -498,9 +514,7 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        _LOGGER.info(
-            f"EquipmentParameterNumber::async_set_native_value [{self._myname}] set value to [{value}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
-        )
+        _LOGGER.info(LOG_INFO_NUMBER_ASYNC_SET_VALUE, self.__class__.__name__, self._myname, value)
 
         if self._manager.parameter_safety_on(self._system.sysId):
             raise HomeAssistantError(f"Unable to set parameter [{self._myname}] parameter safety switch is on")
@@ -538,7 +552,12 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     async def async_set_zonetest_parameter(self, value: float, enabled: bool):
         """Async function for setting zone test parameters"""
         _LOGGER.info(
-            f"EquipmentParameterNumber::async_set_zonetest_parameter [{self._myname}] set value to [{value}] enabled [{enabled}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
+            "EquipmentParameterNumber::async_set_zonetest_parameter [%s] set value to [%f] enabled [%s] equipment_id [%d] pid [%s]",
+            self._myname,
+            value,
+            enabled,
+            self.equipment.equipment_id,
+            self.equipment.equipment_id,
         )
 
         if self.equipment.equipment_id != 0:

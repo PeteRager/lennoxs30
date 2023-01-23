@@ -7,7 +7,9 @@
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name
 # pylint: disable=missing-function-docstring
+# pylint: disable=protected-access
 import json
+import logging
 import os
 from unittest.mock import patch
 
@@ -23,6 +25,9 @@ from lennoxs30api.lennox_equipment import (
 from lennoxs30api.s30exception import S30Exception
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.components.number import NumberEntity
+from homeassistant.components.select import SelectEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.setup import async_setup_component
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -217,7 +222,7 @@ def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manag
         email=None,
         password=None,
         poll_interval=1,
-        fast_poll_interval=2,
+        fast_poll_interval=0.5,
         allergen_defender_switch=False,
         app_id="HA",
         conf_init_wait_time=30,
@@ -456,3 +461,80 @@ async def conf_test_exception_handling(target, method_name: str, entity, async_m
         assert "This is the error" in ex.args[0]
         assert "unexpected" in ex.args[0]
         assert entity.name in ex.args[0]
+
+
+async def conf_test_number_info_async_set_native_value(target, method_name: str, entity: NumberEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_set_native_value(100)
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert "value [100.0]" in msg
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_set_native_value" in msg
+
+
+async def conf_test_select_info_async_select_option(target, method_name: str, entity: SelectEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_select_option("Hello")
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert "option [Hello]" in msg
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_select_option" in msg
+
+
+async def conf_test_switch_info_async_turn_on(target, method_name: str, entity: SwitchEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_turn_on()
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_turn_on" in msg
+
+
+async def conf_test_switch_info_async_turn_off(target, method_name: str, entity: SwitchEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_turn_off()
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_turn_off" in msg
+
+
+async def conf_test_button_info_async_press(target, method_name: str, entity: SwitchEntity, caplog):
+    with patch.object(target, method_name) as _:
+        with caplog.at_level(logging.INFO):
+            caplog.clear()
+            try:
+                await entity.async_press()
+            except HomeAssistantError as _:
+                pass
+            assert len(caplog.messages) > 0
+            assert caplog.records[0].levelname == "INFO"
+            msg = caplog.records[0].message
+            assert f"name [{entity._myname}]" in msg
+            assert f"{entity.__class__.__name__}::async_press" in msg

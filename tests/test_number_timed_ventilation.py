@@ -22,7 +22,11 @@ from custom_components.lennoxs30.const import (
 )
 from custom_components.lennoxs30.number import TimedVentilationNumber
 
-from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
+from tests.conftest import (
+    conf_test_exception_handling,
+    conftest_base_entity_availability,
+    conf_test_number_info_async_set_native_value,
+)
 
 
 @pytest.mark.asyncio
@@ -117,6 +121,7 @@ async def test_timed_ventilation_time_set_value(hass, manager: Manager, caplog):
         assert "abc" in str(ex)
 
     await conf_test_exception_handling(system, "ventilation_timed", c, c.async_set_native_value, value=101)
+    await conf_test_number_info_async_set_native_value(system, "ventilation_timed", c, caplog)
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,60 @@
+# Script to adjust the fan cfm for a single zone lennox system.
+# Note: running this script takes the HVAC offline for 1-2 minutes
+lennoxs30_set_fan_cfm:
+  description: "Set the CFM for the Fan for a single zone system"
+  fields:
+    system_name:
+      description: "system name for the LennoxS30"
+      example: "system"
+    cfm:
+      description: "CFM to set the parameter to"
+      example: "250"
+  mode: queued
+  sequence:
+    - service: system_log.write
+      data:
+        level: info
+        message: "Seting Fan CFM to {{cfm}}"
+        logger: lennoxs30
+    # Turn off parameter safety prior to setting the parameter
+    - service: switch.turn_off
+      target:
+        entity_id: "switch.{{system_name}}_parameter_safety"
+    - service: number.set_value
+      target:
+        entity_id: "number.{{system_name}}_par_iu_continuous_indoor_blower_airflow"
+      data:
+        value: "{{cfm}}"
+    # Execute a short delay prior to triggering the parameter update button
+    - delay: "00:00:05"
+    - service: button.press
+      target:
+        entity_id: "button.{{system_name}}_parameter_update"
+    - service: switch.turn_on
+      target:
+        entity_id: "switch.{{system_name}}_parameter_safety"
+    - service: system_log.write
+      data:
+        level: info
+        message: "Waiting 1:30 for S30 to update"
+        logger: lennoxs30
+    # The S30 seems to always be back-online after this delay
+    - delay: "00:01:30"
+    # Toggle the diag level off and on, in order to restore some diags that go offline
+    # as a result of the CFM being changed.
+    - service: number.set_value
+      target:
+        entity_id: "number.{{system_name}}_diagnostic_level"
+      data:
+        value: "0"
+    - delay: "00:00:01"
+    - service: number.set_value
+      target:
+        entity_id: "number.{{system_name}}_diagnostic_level"
+      data:
+        value: "2"
+    - service: system_log.write
+      data:
+        level: info
+        message: "Set CFM Complete"
+        logger: lennoxs30

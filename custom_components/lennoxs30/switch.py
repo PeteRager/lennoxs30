@@ -1,6 +1,4 @@
 """Support for Lennoxs30 ventilation and allergend defender switches"""
-# pylint: disable=logging-not-lazy
-# pylint: disable=logging-fstring-interpolation
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -24,6 +22,8 @@ from lennoxs30api.s30exception import S30Exception
 
 from .base_entity import S30BaseEntityMixin
 from .const import (
+    LOG_INFO_SWITCH_ASYNC_TURN_OFF,
+    LOG_INFO_SWITCH_ASYNC_TURN_ON,
     MANAGER,
     UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH,
     VENTILATION_EQUIPMENT_ID,
@@ -42,26 +42,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     switch_list = []
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager.api.system_list:
-        _LOGGER.info(f"async_setup_platform ventilation [{system.supports_ventilation()}]")
+        _LOGGER.debug("async_setup_platform ventilation [%s]", system.supports_ventilation())
         if system.supports_ventilation():
-            _LOGGER.info(f"Create S30 ventilation switch system [{system.sysId}]")
+            _LOGGER.info("Create S30 ventilation switch system [%s]", system.sysId)
             switch = S30VentilationSwitch(hass, manager, system)
             switch_list.append(switch)
         if manager.allergen_defender_switch:
-            _LOGGER.info(f"Create S30 allergenDefender switch system [{system.sysId}]")
+            _LOGGER.info("Create S30 allergenDefender switch system [%s]", system.sysId)
             switch = S30AllergenDefenderSwitch(hass, manager, system)
             switch_list.append(switch)
         if system.numberOfZones > 1:
-            _LOGGER.info(f"Create S30 zoning switch system [{system.sysId}]")
+            _LOGGER.info("Create S30 zoning switch system [%s]", system.sysId)
             switch = S30ZoningSwitch(hass, manager, system)
             switch_list.append(switch)
 
         ma_switch = S30ManualAwayModeSwitch(hass, manager, system)
         switch_list.append(ma_switch)
-        _LOGGER.info(f"Create S30ManualAwayModeSwitch system [{system.sysId}]")
+        _LOGGER.info("Create S30ManualAwayModeSwitch system [%s]", system.sysId)
         sa_switch = S30SmartAwayEnableSwitch(hass, manager, system)
         switch_list.append(sa_switch)
-        _LOGGER.info(f"Create S30SmartAwayEnableSwitch system [{system.sysId}]")
+        _LOGGER.info("Create S30SmartAwayEnableSwitch system [%s]", system.sysId)
 
         if manager.create_equipment_parameters:
             par_safety_switch = S30ParameterSafetySwitch(hass, manager, system)
@@ -69,8 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     if len(switch_list) != 0:
         async_add_entities(switch_list, True)
-        _LOGGER.debug(f"switch:async_setup_platform exit - created [{len(switch_list)}] switch entitites")
+        _LOGGER.debug("switch:async_setup_platform  created [%d] switch entitites", len(switch_list))
         return True
+    return False
 
 
 class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -96,7 +97,8 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
 
     def update_callback(self):
         """Update callback when data changes"""
-        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -136,13 +138,15 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
             _LOGGER.warning("Unable to find VENTILATION_EQUIPMENT_ID in device map, please raise an issue")
         else:
             _LOGGER.error(
-                f"No equipment device map found for sysId [{self._system.sysId}] equipment VENTILATION_EQUIPMENT_ID, please raise an issue"
+                "No equipment device map found for sysId [%s] equipment VENTILATION_EQUIPMENT_ID, please raise an issue",
+                self._system.sysId,
             )
         return {
             "identifiers": {(DOMAIN, self._system.unique_id)},
         }
 
     async def async_turn_on(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
         try:
             await self._system.ventilation_on()
             self._manager.mp_wakeup_event.set()
@@ -154,8 +158,8 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
             ) from ex
 
     async def async_turn_off(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
         try:
-            _LOGGER.debug("ventilation:async_turn_off")
             called = False
             if self._system.ventilationMode == "on":
                 _LOGGER.debug("ventilation:async_turn_off calling ventilation_off")
@@ -190,7 +194,8 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
 
     def update_callback(self):
         """Update callback when data changes"""
-        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -226,6 +231,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
         return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
         try:
             await self._system.allergenDefender_on()
             self._manager.mp_wakeup_event.set()
@@ -237,6 +243,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
             ) from ex
 
     async def async_turn_off(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
         try:
             await self._system.allergenDefender_off()
             self._manager.mp_wakeup_event.set()
@@ -268,7 +275,8 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
 
     def update_callback(self):
         """Update callback when data changes"""
-        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -293,6 +301,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
         return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
         try:
             await self._system.set_manual_away_mode(True)
             self._manager.mp_wakeup_event.set()
@@ -304,6 +313,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
             ) from ex
 
     async def async_turn_off(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
         try:
             await self._system.set_manual_away_mode(False)
             self._manager.mp_wakeup_event.set()
@@ -335,7 +345,8 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
 
     def update_callback(self):
         """Update callback when data changes"""
-        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -367,6 +378,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
         return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
         try:
             await self._system.enable_smart_away(True)
             self._manager.mp_wakeup_event.set()
@@ -378,6 +390,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
             ) from ex
 
     async def async_turn_off(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
         try:
             await self._system.enable_smart_away(False)
             self._manager.mp_wakeup_event.set()
@@ -409,7 +422,8 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
 
     def update_callback(self):
         """Update callback when data changes"""
-        _LOGGER.info(f"update_callback myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -441,6 +455,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
         return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
         try:
             await self._system.centralMode_off()
             self._manager.mp_wakeup_event.set()
@@ -452,6 +467,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
             ) from ex
 
     async def async_turn_off(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
         try:
             await self._system.centralMode_on()
             self._manager.mp_wakeup_event.set()
@@ -509,10 +525,12 @@ class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):
         return {"identifiers": {(DOMAIN, self._system.unique_id)}}
 
     async def async_turn_on(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
         self._manager.parameter_safety_turn_on(self._system.sysId)
         self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
+        _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
         self._manager.parameter_safety_turn_off(self._system.sysId)
         asyncio.create_task(self.async_rearm_task())
         self.schedule_update_ha_state()

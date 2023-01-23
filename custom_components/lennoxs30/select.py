@@ -1,6 +1,4 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-# pylint: disable=logging-not-lazy
-# pylint: disable=logging-fstring-interpolation
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -41,7 +39,7 @@ from .helpers import (
 )
 
 from .base_entity import S30BaseEntityMixin
-from .const import MANAGER, UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT
+from .const import LOG_INFO_SELECT_ASYNC_SELECT_OPTION, MANAGER, UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT
 from . import DOMAIN, Manager
 
 
@@ -60,13 +58,13 @@ async def async_setup_entry(
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager.api.system_list:
         if system.is_none(system.dehumidifierType) is False:
-            _LOGGER.debug(f"Create DehumidificationModeSelect [{system.sysId}] system [{system.sysId}]")
+            _LOGGER.debug("Create DehumidificationModeSelect system [%s]", system.sysId)
             sel = DehumidificationModeSelect(hass, manager, system)
             select_list.append(sel)
         for zone in system.zone_list:
             if zone.is_zone_active():
                 if zone.dehumidificationOption or zone.humidificationOption:
-                    _LOGGER.debug(f"Create HumiditySelect [{system.sysId}] zone [{zone.name}]")
+                    _LOGGER.debug("Create HumiditySelect [%s] zone [%s]", system.sysId, zone.name)
                     climate = HumidityModeSelect(hass, manager, system, zone)
                     select_list.append(climate)
 
@@ -95,11 +93,11 @@ class HumidityModeSelect(S30BaseEntityMixin, SelectEntity):
         self.hass: HomeAssistant = hass
         self._zone = zone
         self._myname = self._system.name + "_" + self._zone.name + "_humidity_mode"
-        _LOGGER.debug(f"Create HumidityModeSelect myname [{self._myname}]")
+        _LOGGER.debug("Create HumidityModeSelect myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass HumidityModeSelect myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass HumidityModeSelect myname [%s]", self._myname)
         self._zone.registerOnUpdateCallback(
             self.zone_update_callback,
             [
@@ -116,16 +114,22 @@ class HumidityModeSelect(S30BaseEntityMixin, SelectEntity):
 
     def zone_update_callback(self):
         """Callback for zone updates"""
-        _LOGGER.debug(
-            f"zone_update_callback HumidityModeSelect myname [{self._myname}] humidityMode [{self._zone.humidityMode}]"
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "zone_update_callback HumidityModeSelect myname [%s] humidityMode [%s],",
+                self._myname,
+                self._zone.humidityMode,
+            )
         self.schedule_update_ha_state()
 
     def system_update_callback(self):
         """Callback for system updates"""
-        _LOGGER.debug(
-            f"system_update_callback HumidityModeSelect myname [{self._myname}] system zoning mode [{self._system.zoningMode}]"
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "system_update_callback HumidityModeSelect myname [%s] system zoning mode [%s]",
+                self._myname,
+                self._system.zoningMode,
+            )
         self.schedule_update_ha_state()
 
     @property
@@ -156,6 +160,7 @@ class HumidityModeSelect(S30BaseEntityMixin, SelectEntity):
         return opt_list
 
     async def async_select_option(self, option: str) -> None:
+        _LOGGER.info(LOG_INFO_SELECT_ASYNC_SELECT_OPTION, self.__class__.__name__, self._myname, option)
         if self._zone.is_zone_disabled:
             raise HomeAssistantError(f"Unable to control humidity mode as zone [{self._myname}] is disabled")
         try:
@@ -188,11 +193,11 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
         super().__init__(manager, system)
         self.hass: HomeAssistant = hass
         self._myname = self._system.name + "_dehumidification_mode"
-        _LOGGER.debug(f"Create DehumidificationModeSelect myname [{self._myname}]")
+        _LOGGER.debug("Create DehumidificationModeSelect myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass DehumidificationModeSelect myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass DehumidificationModeSelect myname %s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.system_update_callback,
             [
@@ -203,9 +208,12 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
 
     def system_update_callback(self):
         """Callback for system updates"""
-        _LOGGER.debug(
-            f"system_update_callback DehumidificationModeSelect myname [{self._myname}] dehumidification_mode [{self._system.dehumidificationMode}]"
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "system_update_callback DehumidificationModeSelect myname [%s] dehumidification_mode [%s]",
+                self._myname,
+                self._system.dehumidificationMode,
+            )
         self.schedule_update_ha_state()
 
     @property
@@ -232,6 +240,7 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
         return ["normal", "max", "climate IQ"]
 
     async def async_select_option(self, option: str) -> None:
+        _LOGGER.info(LOG_INFO_SELECT_ASYNC_SELECT_OPTION, self.__class__.__name__, self._myname, option)
         mode = None
         if option == "max":
             mode = LENNOX_DEHUMIDIFICATION_MODE_HIGH
@@ -277,11 +286,11 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
         self.equipment = equipment
         self.parameter = parameter
         self._myname = helper_create_equipment_entity_name(system, equipment, parameter.name, prefix="par")
-        _LOGGER.debug(f"Create EquipmentParameterSelect myname [{self._myname}]")
+        _LOGGER.debug("Create EquipmentParameterSelect myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass EquipmentParameterSelect myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass EquipmentParameterSelect myname [%s]", self._myname)
         self._system.registerOnUpdateCallbackEqParameters(
             self.eq_par_update_callback,
             [f"{self.equipment.equipment_id}_{self.parameter.pid}"],
@@ -290,7 +299,8 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
 
     def eq_par_update_callback(self, pid: str):
         """Callback for equipment parameter updates"""
-        _LOGGER.debug(f"system_update_callback EquipmentParameterSelect myname [{self._myname}]  [{pid}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("system_update_callback EquipmentParameterSelect myname [%s]  [%s]", self._myname, pid)
         self.schedule_update_ha_state()
 
     @property
@@ -310,7 +320,10 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
             return self.parameter.radio[int(self.parameter.value)]
         except Exception:
             _LOGGER.error(
-                f"EquipmentParameterSelect unable to find current radio option value [{self.parameter.value}] pid [{self.parameter.pid}] radio [{self.parameter.radio.items()}]"
+                "EquipmentParameterSelect unable to find current radio option value [%s] pid [%s] radio [%s]",
+                self.parameter.value,
+                self.parameter.pid,
+                self.parameter.radio.items(),
             )
             return None
 
@@ -323,9 +336,7 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
-        _LOGGER.info(
-            f"EquipmentParameterSelect [{self._myname}] set value to [{option}] equipment_id [{self.equipment.equipment_id}] pid [{self.parameter.pid}]"
-        )
+        _LOGGER.info(LOG_INFO_SELECT_ASYNC_SELECT_OPTION, self.__class__.__name__, self._myname, option)
 
         if self._manager.parameter_safety_on(self._system.sysId):
             raise HomeAssistantError(f"Unable to set parameter [{self._myname}] parameter safety switch is on")

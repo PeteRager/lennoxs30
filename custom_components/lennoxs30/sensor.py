@@ -1,6 +1,4 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
-# pylint: disable=logging-not-lazy
-# pylint: disable=logging-fstring-interpolation
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -33,7 +31,7 @@ from lennoxs30api import (
     lennox_zone,
     lennox_equipment,
     lennox_equipment_diagnostic,
-    LENNOX_STATUS_NOT_AVAILABLE,
+    LENNOX_BAD_STATUS,
     LENNOX_STATUS_NOT_EXIST,
 )
 
@@ -60,40 +58,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager.api.system_list:
         if system.outdoorTemperatureStatus != LENNOX_STATUS_NOT_EXIST:
-            _LOGGER.info(f"Create S30OutdoorTempSensor system [{system.sysId}]")
+            _LOGGER.debug("Create S30OutdoorTempSensor system [%s]", system.sysId)
             sensor = S30OutdoorTempSensor(hass, manager, system)
             sensor_list.append(sensor)
-        else:
-            _LOGGER.info(f"Not creating S30OutdoorTempSensor system [{system.sysId}] - sensor does not exist")
 
         if manager.create_inverter_power:
-            _LOGGER.info(f"Create S30InverterPowerSensor system [{system.sysId}]")
+            _LOGGER.debug("Create S30InverterPowerSensor system [%s]", system.sysId)
             if system.diagLevel != 2:
                 _LOGGER.warning(
-                    f"Power Inverter Sensor requires S30 to be in diagLevel 2, currently in [{system.diagLevel}]"
+                    "Power Inverter Sensor requires S30 to be in diagLevel 2, currently in [%s]", system.diagLevel
                 )
             if system.internetStatus or system.relayServerConnected:
                 _LOGGER.warning(
-                    f"To prevent S30 instability - Power Inverter Sensor requires S30 to be isolated from internet - internetStatus [{system.internetStatus}] relayServerConnected [{system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                    "To prevent S30 instability - Power Inverter Sensor requires S30 to be isolated from internet - internetStatus [%s] relayServerConnected [%s] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md",
+                    system.internetStatus,
+                    system.relayServerConnected,
                 )
             power_sensor = S30InverterPowerSensor(hass, manager, system)
             sensor_list.append(power_sensor)
 
         if manager.create_diagnostic_sensors:
-            _LOGGER.info(f"Create Diagnostic Sensors system [{system.sysId}]")
+            _LOGGER.debug("Create Diagnostic Sensors system [%s]", system.sysId)
             if system.diagLevel != 2:
-                _LOGGER.warning(f"Diagnostics requires S30 to be in diagLevel 2, currently in [{system.diagLevel}]")
+                _LOGGER.warning("Diagnostics requires S30 to be in diagLevel 2, currently in [%s]", system.diagLevel)
             if system.internetStatus or system.relayServerConnected:
                 _LOGGER.warning(
-                    f"To prevent S30 instability - diagnostics requires S30 to be isolated from internet - internetStatus [{system.internetStatus}] relayServerConnected [{system.relayServerConnected}] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md"
+                    "To prevent S30 instability - diagnostics requires S30 to be isolated from internet - internetStatus [%s] relayServerConnected [%s] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md",
+                    system.internetStatus,
+                    system.relayServerConnected,
                 )
+
             for _, eq in system.equipment.items():
                 equip: lennox_equipment = eq
                 if equip.equipment_id != 0:
                     for _, diagnostic in equip.diagnostics.items():
                         if diagnostic.valid:
-                            _LOGGER.info(
-                                f"Create Diagsensor system [{system.sysId}] eid [{equip.equipment_id}] did [{diagnostic.diagnostic_id}] name [{diagnostic.name}]"
+                            _LOGGER.debug(
+                                "Create Diagsensor system [%s] eid [%s] did [%s] name [%s]",
+                                system.sysId,
+                                equip.equipment_id,
+                                diagnostic.diagnostic_id,
+                                diagnostic.name,
                             )
                             diagsensor = S30DiagSensor(hass, manager, system, equip, diagnostic)
                             sensor_list.append(diagsensor)
@@ -101,9 +106,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if manager.create_sensors:
             for zone in system.zone_list:
                 if zone.is_zone_active():
-                    _LOGGER.info(f"Create S30TempSensor sensor system [{system.sysId}] zone [{zone.id}]")
+                    _LOGGER.debug("Create S30TempSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30TempSensor(hass, manager, system, zone))
-                    _LOGGER.info(f"Create S30HumSensor sensor system [{system.sysId}] zone [{zone.id}]")
+                    _LOGGER.debug("Create S30HumSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30HumiditySensor(hass, manager, system, zone))
 
         if manager.create_alert_sensors:
@@ -112,11 +117,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
-        _LOGGER.debug(f"sensor:async_setup_platform exit - created [{len(sensor_list)}] entitites")
         return True
-    else:
-        _LOGGER.info("sensor:async_setup_platform exit - no sensors found")
-        return False
+    return False
 
 
 class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
@@ -141,11 +143,11 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
         elif self._equipment.equipment_id == 2:
             suffix = "iu"
         self._myname = f"{self._system.name}_{suffix}_{self._diagnostic.name}".replace(" ", "_")
-        _LOGGER.debug(f"Create S30DiagSensor myname [{self._myname}]")
+        _LOGGER.debug("Create S30DiagSensor myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30DiagSensor myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30DiagSensor myname [%s]", self._myname)
         self._system.registerOnUpdateCallbackDiag(
             self.update_callback,
             [f"{self._equipment.equipment_id}_{self._diagnostic.diagnostic_id}"],
@@ -155,12 +157,14 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
 
     def update_callback(self, eid_did, newval):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"update_callback S30DiagSSensor myname [{self._myname}] value {newval}")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback S30DiagSSensor myname [%s] value [%s]", self._myname, newval)
         self.schedule_update_ha_state()
 
     def system_update_callback(self):
         """Callback to execute on system data change"""
-        _LOGGER.debug(f"system_update_callback S30DiagSSensor myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("system_update_callback S30DiagSSensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -228,11 +232,20 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
                     "identifiers": {(DOMAIN, device.unique_name)},
                 }
             _LOGGER.warning(
-                f"Unable to find equipment in device map [{self._equipment.equipment_id}] [{self._equipment.equipment_name}] [{self._equipment.equipment_type_name}] [{self._equipment.equipType}], please raise an issue and post a message log"
+                "Unable to find equipment in device map [%s] [%s] [%s] [%s], please raise an issue and post a message log",
+                self._equipment.equipment_id,
+                self._equipment.equipment_name,
+                self._equipment.equipment_type_name,
+                self._equipment.equipType,
             )
         else:
             _LOGGER.error(
-                f"No equipment device map found for sysId [{self._system.sysId}] equipment [{self._equipment.equipment_id}] [{self._equipment.equipment_name}] [{self._equipment.equipment_type_name}] [{self._equipment.equipType}], please raise an issue and post a message log"
+                "No equipment device map found for sysId [%s] equipment [%s] [%s] [%s] [%s], please raise an issue and post a message log",
+                self._system.sysId,
+                self._equipment.equipment_id,
+                self._equipment.equipment_name,
+                self._equipment.equipment_type_name,
+                self._equipment.equipType,
             )
         return {
             "identifiers": {(DOMAIN, self._system.unique_id)},
@@ -253,7 +266,7 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30OutdoorTempSensor myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30OutdoorTempSensor myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             ["outdoorTemperature", "outdoorTemperatureC", "outdoorTemperatureStatus"],
@@ -262,7 +275,7 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
 
     def update_callback(self):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"update_callback S30OutdoorTempSensor myname [{self._myname}]")
+        _LOGGER.debug("update_callback S30OutdoorTempSensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -280,13 +293,18 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
         return self._myname
 
     @property
+    def available(self):
+        if self._system.outdoorTemperatureStatus in LENNOX_BAD_STATUS:
+            return False
+        return super().available
+
+    @property
     def native_value(self):
-        if (
-            self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_EXIST
-            or self._system.outdoorTemperatureStatus == LENNOX_STATUS_NOT_AVAILABLE
-        ):
+        if self._system.outdoorTemperatureStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
-                f"S30OutdoorTempSensor [{self._myname}] has bad data quality [{self._system.outdoorTemperatureStatus}] returning None "
+                "S30OutdoorTempSensor [%s] has bad data quality [%s] returning None",
+                self._myname,
+                self._system.outdoorTemperatureStatus,
             )
             return None
         if self._manager.is_metric is False:
@@ -332,13 +350,13 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30TempSensor myname [{self._myname}]")
-        self._zone.registerOnUpdateCallback(self.update_callback, ["temperature", "temperatureC"])
+        _LOGGER.debug("async_added_to_hass S30TempSensor myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(self.update_callback, ["temperature", "temperatureC", "temperatureStatus"])
         await super().async_added_to_hass()
 
     def update_callback(self):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"update_callback S30TempSensor myname [{self._myname}]")
+        _LOGGER.debug("update_callback S30TempSensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -352,11 +370,29 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
         return {}
 
     @property
+    def available(self):
+        if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                "S30TempSensor [%s] has bad data quality [%s] returning Not Available",
+                self._myname,
+                self._zone.temperatureStatus,
+            )
+            return False
+        return super().available
+
+    @property
     def name(self):
         return self._myname
 
     @property
     def native_value(self):
+        if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                "S30TempSensor [%s] has bad data quality [%s] returning None",
+                self._myname,
+                self._zone.temperatureStatus,
+            )
+            return None
         if self._manager.is_metric is False:
             return self._zone.getTemperature()
         return self._zone.getTemperatureC()
@@ -400,13 +436,13 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30TempSensor myname [{self._myname}]")
-        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity"])
+        _LOGGER.debug("async_added_to_hass S30TempSensor myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(self.update_callback, ["humidity", "humidityStatus"])
         await super().async_added_to_hass()
 
     def update_callback(self):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"update_callback S30HumiditySensor myname [{self._myname}]")
+        _LOGGER.debug("update_callback S30HumiditySensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -424,7 +460,25 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
         return self._myname
 
     @property
+    def available(self):
+        if self._zone.humidityStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                "S30HumiditySensor [%s] has bad data quality [%s] returning Not Available",
+                self._myname,
+                self._zone.humidityStatus,
+            )
+            return False
+        return super().available
+
+    @property
     def native_value(self):
+        if self._zone.humidityStatus in LENNOX_BAD_STATUS:
+            _LOGGER.warning(
+                "S30HumiditySensor [%s] has bad data quality [%s] returning None",
+                self._myname,
+                self._zone.humidityStatus,
+            )
+            return None
         return self._zone.getHumidity()
 
     @property
@@ -457,7 +511,7 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30TempSensor myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30TempSensor myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             ["diagInverterInputVoltage", "diagInverterInputCurrent"],
@@ -467,12 +521,14 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
 
     def system_update_callback(self):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"system_update_callback S30InverterPowerSensor myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("system_update_callback S30InverterPowerSensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     def update_callback(self):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"update_callback S30InverterPowerSensor [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback S30InverterPowerSensor [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -498,19 +554,23 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def native_value(self):
         if self._system.diagInverterInputVoltage is None or self._system.diagInverterInputCurrent is None:
-            _LOGGER.debug(f"Values are None for diagnostic sensors  [{self._myname}]")
+            _LOGGER.debug("Values are None for diagnostic sensors  [%s]", self._myname)
             return None
         if (
             self._system.diagInverterInputVoltage == "waiting..."
             or self._system.diagInverterInputCurrent == "waiting..."
         ):
-            _LOGGER.debug(f"System is waiting for values for diagnostic sensors  [{self._myname}]")
+            _LOGGER.debug("System is waiting for values for diagnostic sensors [%s]", self._myname)
             return None
         try:
             return int(float(self._system.diagInverterInputVoltage) * float(self._system.diagInverterInputCurrent))
         except ValueError as e:
             _LOGGER.warning(
-                f"state myname [{self._myname}] diagInverterInputVoltage [{self._system.diagInverterInputVoltage}] diagInverterInputCurrent [{self._system.diagInverterInputCurrent}] failed: {e}"
+                "state myname [%s] diagInverterInputVoltage [%s] diagInverterInputCurrent [%s] exception: [%s]",
+                self._myname,
+                self._system.diagInverterInputVoltage,
+                self._system.diagInverterInputCurrent,
+                e,
             )
         return None
 
@@ -548,13 +608,14 @@ class S30AlertSensor(S30BaseEntityMixin, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30AlertSensor myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30AlertSensor myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(self.update_callback, ["alert"])
         await super().async_added_to_hass()
 
     def update_callback(self):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"update_callback S30AlertSensor myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback S30AlertSensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -599,7 +660,7 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug(f"async_added_to_hass S30ActiveAlertList myname [{self._myname}]")
+        _LOGGER.debug("async_added_to_hass S30ActiveAlertList myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
             [
@@ -614,7 +675,8 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
 
     def update_callback(self):
         """Callback to execute on data change"""
-        _LOGGER.debug(f"update_callback S30ActiveAlertList myname [{self._myname}]")
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback S30ActiveAlertList myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
