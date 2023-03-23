@@ -4,6 +4,7 @@ A custom component for Home Assistant to integrate with Lennox iComfort S30, E30
 Cloud Connections depending on the device model. We believe these configurations work - let us know if your experience is different!
 
 - S30 - cloud or local connections
+- S40 - new model not known if it works
 - E30 - cloud or local connections
 - M30 - cloud connections only.
 
