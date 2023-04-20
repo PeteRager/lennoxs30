@@ -1,12 +1,12 @@
 {
+  "domain": "lennoxs30",
+  "name": "Lennox S30/E30",
   "codeowners": ["@PeteRager"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/PeteRager/lennoxs30/blob/master/README.MD",
-  "domain": "lennoxs30",
   "iot_class": "local_push",
   "issue_tracker" : "https://github.com/PeteRager/lennoxs30/issues",
-  "name": "Lennox S30/E30",
   "quality_scale": "platinum",
   "requirements": ["lennoxs30api==0.2.2"],
   "version": "2023.1.0"
