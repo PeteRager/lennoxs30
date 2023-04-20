@@ -60,7 +60,7 @@ async def test_parameter_safety_switch(hass, manager: Manager):
 @pytest.mark.asyncio
 async def test_parameter_safety_switch_turn_on_off(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
-    c = S30ParameterSafetySwitch(hass, manager, system, 1.0)
+    c = S30ParameterSafetySwitch(hass, manager, system, 0.0)
 
     manager.parameter_safety_turn_on(system.sysId)
     assert c.is_on is True
@@ -79,5 +79,6 @@ async def test_parameter_safety_switch_turn_on_off(hass, manager: Manager, caplo
         assert update_callback.call_count == 1
         assert c.is_on is True
 
-    await conf_test_switch_info_async_turn_off(c, "schedule_update_ha_state", c, caplog)
-    await conf_test_switch_info_async_turn_on(c, "schedule_update_ha_state", c, caplog)
+    with patch.object(c, "async_rearm_task"):
+        await conf_test_switch_info_async_turn_off(c, "schedule_update_ha_state", c, caplog)
+        await conf_test_switch_info_async_turn_on(c, "schedule_update_ha_state", c, caplog)

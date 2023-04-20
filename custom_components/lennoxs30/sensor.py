@@ -44,6 +44,8 @@ from .const import (
     UNIQUE_ID_SUFFIX_DIAG_SENSOR,
 )
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
+from .ble_device_22v25 import lennox_22v25_sensors
+from .sensor_ble import S40BleSensor
 
 from . import Manager
 
@@ -114,6 +116,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if manager.create_alert_sensors:
             sensor_list.append(S30AlertSensor(hass, manager, system))
             sensor_list.append(S30ActiveAlertsList(hass, manager, system))
+
+        for ble_device in system.ble_devices.values():
+            if ble_device.deviceType == "tstat":
+                continue
+            elif ble_device.controlModelNumber == "22V25":
+                for sensor_dict in lennox_22v25_sensors:
+                    if sensor_dict["input_id"] not in ble_device.inputs:
+                        _LOGGER.error(
+                            "Error S40BleSensor name [%s] sensor_name [%s] no input_id [%d]",
+                            ble_device.deviceName,
+                            sensor_dict["name"],
+                            sensor_dict["input_id"],
+                        )
+                        continue
+                    sensor_value = ble_device.inputs[sensor_dict["input_id"]]
+                    status_value = None
+                    if "status_id" in sensor_dict:
+                        if sensor_dict["status_id"] not in ble_device.inputs:
+                            _LOGGER.error(
+                                "Error S40BleSensor name [%s] sensor_name [%s] no status_id [%d]",
+                                ble_device.deviceName,
+                                sensor_dict["name"],
+                                sensor_dict["status_id"],
+                            )
+                            continue
+                        status_value = ble_device.inputs[sensor_dict["status_id"]]
+                    sensor_list.append(
+                        S40BleSensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict)
+                    )
+            else:
+                _LOGGER.error(
+                    "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
+                    ble_device.deviceName,
+                    ble_device.deviceType,
+                    ble_device.controlModelNumber,
+                )
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)

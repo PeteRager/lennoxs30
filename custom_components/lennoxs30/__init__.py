@@ -68,6 +68,7 @@ from .device import (
     S30OutdoorUnit,
     S30VentilationUnit,
     S30ZoneThermostat,
+    S40BleDevice,
 )
 from .util import dict_redact_fields
 
@@ -538,25 +539,25 @@ class Manager(object):
                 self.system_equip_device_map[system.sysId] = equip_device_map
             s30: S30ControllerDevice = S30ControllerDevice(self._hass, self.config_entry, system)
             s30.register_device()
-            if s30.eq is not None:
-                equip_device_map[s30.eq.equipment_id] = s30
+            if s30.equipment is not None:
+                equip_device_map[s30.equipment.equipment_id] = s30
 
             if system.has_outdoor_unit:
                 s30_outdoor_unit = S30OutdoorUnit(self._hass, self.config_entry, system, s30)
                 s30_outdoor_unit.register_device()
-                if s30_outdoor_unit.eq is not None:
-                    equip_device_map[s30_outdoor_unit.eq.equipment_id] = s30_outdoor_unit
+                if s30_outdoor_unit.equipment is not None:
+                    equip_device_map[s30_outdoor_unit.equipment.equipment_id] = s30_outdoor_unit
             if system.has_indoor_unit:
                 s30_indoor_unit = S30IndoorUnit(self._hass, self.config_entry, system, s30)
                 s30_indoor_unit.register_device()
-                if s30_indoor_unit.eq is not None:
-                    equip_device_map[s30_indoor_unit.eq.equipment_id] = s30_indoor_unit
+                if s30_indoor_unit.equipment is not None:
+                    equip_device_map[s30_indoor_unit.equipment.equipment_id] = s30_indoor_unit
 
             for eq in system.equipment.values():
                 if eq.equipment_id != 0 and equip_device_map.get(eq.equipment_id) is None:
                     aux_unit = S30AuxiliaryUnit(self._hass, self.config_entry, system, s30, eq)
                     aux_unit.register_device()
-                    equip_device_map[aux_unit.eq.equipment_id] = aux_unit
+                    equip_device_map[aux_unit.equipment.equipment_id] = aux_unit
 
             if system.supports_ventilation():
                 d: S30VentilationUnit = S30VentilationUnit(self._hass, self.config_entry, system, s30)
@@ -567,6 +568,11 @@ class Manager(object):
                 if zone.is_zone_active():
                     z: S30ZoneThermostat = S30ZoneThermostat(self._hass, self.config_entry, system, zone, s30)
                     z.register_device()
+
+            for ble_device in system.ble_devices.values():
+                if ble_device.deviceType != "tstat":
+                    ble: S40BleDevice = S40BleDevice(self._hass, self.config_entry, system, ble_device, s30)
+                    ble.register_device()
 
     async def initialize_retry_task(self):
         """Retries the connection on failure"""
@@ -730,6 +736,7 @@ class Manager(object):
                 _LOGGER.exception("update_cloud_presence unexpected exception sysid [%s] error %s", system.sysId, e)
 
     def get_reinitialize(self):
+        """Determine if object is reinitializing"""
         return self._reinitialize
 
     async def messagePump_task(self) -> None:

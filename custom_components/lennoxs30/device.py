@@ -1,26 +1,34 @@
-from lennoxs30api.s30api_async import lennox_system, lennox_zone, lennox_equipment
-from .const import LENNOX_DOMAIN, LENNOX_MFG
+"""HASS devices"""
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from lennoxs30api.s30api_async import lennox_system, lennox_zone, lennox_equipment, LennoxBle
+
+from .const import LENNOX_DOMAIN, LENNOX_MFG
 
 
 class Device(object):
-    def __init__(self, eq: lennox_equipment):
-        self.eq: lennox_equipment = eq
+    """Represent a HASS device"""
+
+    def __init__(self, equipment: lennox_equipment):
+        self.equipment: lennox_equipment = equipment
 
     @property
     def hw_version(self):
-        if self.eq is not None:
-            return self.eq.unit_serial_number
+        """Returns HW Version"""
+        if self.equipment is not None:
+            return self.equipment.unit_serial_number
         return None
 
     @property
     def unique_name(self) -> str:
+        """Generate Unnique Name"""
         raise NotImplementedError
 
 
 class S30ControllerDevice(Device):
+    """Represents S30 smart hub"""
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, system: lennox_system):
         super().__init__(system.equipment.get(0))
         self._hass = hass
@@ -32,6 +40,7 @@ class S30ControllerDevice(Device):
         return self._system.unique_id
 
     def register_device(self):
+        """Registers the device with HASS"""
         device_registry = dr.async_get(self._hass)
 
         device_registry.async_get_or_create(
@@ -47,6 +56,8 @@ class S30ControllerDevice(Device):
 
 
 class S30OutdoorUnit(Device):
+    """Represents Lennox Outdoor Unit"""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -66,14 +77,16 @@ class S30OutdoorUnit(Device):
 
     @property
     def device_model(self):
-        if self.eq is not None:
-            return self.eq.unit_model_number
+        """Returns the device model"""
+        if self.equipment is not None:
+            return self.equipment.unit_model_number
         return self._system.outdoorUnitType
 
     def register_device(self):
+        """Registers device with HASS"""
         device_registry = dr.async_get(self._hass)
-        if self.eq is not None and self.eq.equipment_type_name is not None:
-            name = f"{self._system.name} {self.eq.equipment_type_name}"
+        if self.equipment is not None and self.equipment.equipment_type_name is not None:
+            name = f"{self._system.name} {self.equipment.equipment_type_name}"
         elif self._system.outdoorUnitType is not None:
             name = f"{self._system.name} {self._system.outdoorUnitType}"
         else:
@@ -92,6 +105,8 @@ class S30OutdoorUnit(Device):
 
 
 class S30IndoorUnit(Device):
+    """Represents Lennox Indoor Unit"""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -111,14 +126,16 @@ class S30IndoorUnit(Device):
 
     @property
     def device_model(self):
-        if self.eq is not None:
-            return self.eq.unit_model_number
+        """Returns the device model"""
+        if self.equipment is not None:
+            return self.equipment.unit_model_number
         return self._system.indoorUnitType
 
     def register_device(self):
+        """Registers device with HASS"""
         device_registry = dr.async_get(self._hass)
-        if self.eq is not None and self.eq.equipment_type_name is not None:
-            name = f"{self._system.name} {self.eq.equipment_type_name}"
+        if self.equipment is not None and self.equipment.equipment_type_name is not None:
+            name = f"{self._system.name} {self.equipment.equipment_type_name}"
         elif self._system.indoorUnitType is not None:
             name = f"{self._system.name} {self._system.indoorUnitType}"
         else:
@@ -137,6 +154,8 @@ class S30IndoorUnit(Device):
 
 
 class S30AuxiliaryUnit(Device):
+    """Represent an Auxiliary Unit like a heat exhanger"""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -154,21 +173,23 @@ class S30AuxiliaryUnit(Device):
     @property
     def unique_name(self) -> str:
         # Not sure if every device has a serial number.
-        if self.eq.unit_serial_number is None:
-            suffix = self.eq.equipment_id
+        if self.equipment.unit_serial_number is None:
+            suffix = self.equipment.equipment_id
         else:
-            suffix = self.eq.unit_serial_number
+            suffix = self.equipment.unit_serial_number
         return f"{self._system.unique_id}_{suffix}"
 
     @property
     def device_model(self):
-        if self.eq is not None:
-            return self.eq.unit_model_number
+        """Return the device model"""
+        if self.equipment is not None:
+            return self.equipment.unit_model_number
         return None
 
     def register_device(self):
+        """Registers the device with HASS"""
         device_registry = dr.async_get(self._hass)
-        name = f"{self._system.name} {self.eq.equipment_type_name}"
+        name = f"{self._system.name} {self.equipment.equipment_type_name}"
 
         device_registry.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
@@ -183,6 +204,8 @@ class S30AuxiliaryUnit(Device):
 
 
 class S30VentilationUnit(Device):
+    """Represents a ventilation unit"""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -204,11 +227,13 @@ class S30VentilationUnit(Device):
 
     @property
     def device_model(self):
+        """Returns the device model"""
         if self._system.ventilationUnitType == "ventilation":
             return "Fresh Air Damper"
         return self._system.ventilationUnitType
 
     def register_device(self):
+        """Registers the device with HASS"""
         device_registry = dr.async_get(self._hass)
         name = f"{self._system.name} Ventilator"
 
@@ -224,6 +249,8 @@ class S30VentilationUnit(Device):
 
 
 class S30ZoneThermostat(Device):
+    """Represents a thermostat"""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -232,6 +259,7 @@ class S30ZoneThermostat(Device):
         zone: lennox_zone,
         s30_device: S30ControllerDevice,
     ):
+        Device.__init__(self, None)
         self._hass = hass
         self._system = system
         self._zone = zone
@@ -243,6 +271,7 @@ class S30ZoneThermostat(Device):
         return self._zone.unique_id
 
     def register_device(self):
+        """Registers the device with HASS"""
         device_registry = dr.async_get(self._hass)
 
         device_registry.async_get_or_create(
@@ -252,4 +281,47 @@ class S30ZoneThermostat(Device):
             name=self._system.name + "_" + self._zone.name,
             model="thermostat",
             via_device=(LENNOX_DOMAIN, self._s30_controller_device.unique_name),
+        )
+
+
+def helper_create_ble_device_id(system: lennox_system, ble_device: LennoxBle):
+    """Constructs a device id for Lennox BLE device"""
+    return f"{system.unique_id}_ble_{ble_device.ble_id}"
+
+
+class S40BleDevice(Device):
+    """Represents a thermostat"""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        system: lennox_system,
+        ble_device: LennoxBle,
+        s30_device: S30ControllerDevice,
+    ):
+        Device.__init__(self, None)
+        self._hass: HomeAssistant = hass
+        self._system: lennox_system = system
+        self._ble_device: LennoxBle = ble_device
+        self._config_entry: ConfigEntry = config_entry
+        self._s30_controller_device: S30ControllerDevice = s30_device
+
+    @property
+    def unique_name(self) -> str:
+        return helper_create_ble_device_id(self._system, self._ble_device)
+
+    def register_device(self):
+        """Registers the device with HASS"""
+        device_registry = dr.async_get(self._hass)
+
+        device_registry.async_get_or_create(
+            config_entry_id=self._config_entry.entry_id,
+            identifiers={(LENNOX_DOMAIN, self.unique_name)},
+            manufacturer=LENNOX_MFG,
+            name=self._system.name + " " + self._ble_device.deviceName,
+            model=self._ble_device.controlModelNumber,
+            via_device=(LENNOX_DOMAIN, self._s30_controller_device.unique_name),
+            sw_version=self._ble_device.controlSoftwareVersion,
+            hw_version=self._ble_device.controlHardwareVersion,
         )

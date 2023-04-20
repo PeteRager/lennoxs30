@@ -1,15 +1,20 @@
+"""Tests the setup of sensors"""
+# pylint: disable=consider-using-enumerate
 import logging
+from unittest.mock import Mock
+
 from lennoxs30api.s30api_async import (
     LENNOX_STATUS_NOT_EXIST,
     LENNOX_STATUS_GOOD,
     lennox_system,
 )
+import pytest
+
+
 from custom_components.lennoxs30 import (
     Manager,
 )
-import pytest
 from custom_components.lennoxs30.const import MANAGER
-
 from custom_components.lennoxs30.sensor import (
     S30ActiveAlertsList,
     S30AlertSensor,
@@ -20,13 +25,15 @@ from custom_components.lennoxs30.sensor import (
     async_setup_entry,
     S30OutdoorTempSensor,
 )
+from custom_components.lennoxs30.sensor_ble import S40BleSensor
 
 
-from unittest.mock import Mock
+from tests.conftest import loadfile
 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry(hass, manager: Manager, caplog):
+    """Tests the sensor setup"""
     system: lennox_system = manager.api.system_list[0]
     entry = manager.config_entry
     hass.data["lennoxs30"] = {}
@@ -228,3 +235,52 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 2
     assert isinstance(sensor_list[0], S30AlertSensor)
     assert isinstance(sensor_list[1], S30ActiveAlertsList)
+
+    # BLE Sensors
+    message = loadfile("system_04_furn_ac_zoning_ble.json", system.sysId)
+    system.processMessage(message)
+    system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
+    manager.create_inverter_power = False
+    manager.create_sensors = False
+    manager.create_diagnostic_sensors = False
+    manager.create_alert_sensors = False
+    async_add_entities = Mock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 22
+    for index in range(0, 22):
+        assert isinstance(sensor_list[index], S40BleSensor)
+
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        system.ble_devices[512].inputs.pop(4000)
+        system.ble_devices[512].inputs.pop(4051)
+        async_add_entities = Mock()
+        await async_setup_entry(hass, entry, async_add_entities)
+        assert async_add_entities.called == 1
+        sensor_list = async_add_entities.call_args[0][0]
+        assert len(sensor_list) == 20
+        assert len(caplog.records) == 2
+
+        assert system.ble_devices[512].deviceName in caplog.messages[0]
+        assert "4000" in caplog.messages[0]
+        assert "input_id" in caplog.messages[0]
+        assert "rssi" in caplog.messages[0]
+
+        assert system.ble_devices[512].deviceName in caplog.messages[1]
+        assert "4051" in caplog.messages[1]
+        assert "status_id" in caplog.messages[1]
+        assert "temperature" in caplog.messages[1]
+
+    with caplog.at_level(logging.ERROR):
+        caplog.clear()
+        system.ble_devices[513].controlModelNumber = "SOME_NEW_DEVICE"
+        system.ble_devices.pop(512)
+        async_add_entities = Mock()
+        await async_setup_entry(hass, entry, async_add_entities)
+        assert async_add_entities.called == 0
+        assert len(caplog.records) == 1
+
+        assert system.ble_devices[513].deviceName in caplog.messages[0]
+        assert "SOME_NEW_DEVICE" in caplog.messages[0]

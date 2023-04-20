@@ -258,7 +258,6 @@ def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manag
 
 @pytest.fixture
 def manager_2_systems(hass) -> Manager:
-
     config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
@@ -315,7 +314,6 @@ def manager_2_systems(hass) -> Manager:
 
 @pytest.fixture
 def manager_mz(hass) -> Manager:
-
     config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
@@ -361,7 +359,6 @@ def manager_mz(hass) -> Manager:
 
 @pytest.fixture
 def manager_system_04_furn_ac_zoning(hass) -> Manager:
-
     config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
     config.unique_id = "12345"
 
@@ -407,6 +404,15 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
     api.processMessage(data)
 
     return manager_to_return
+
+
+@pytest.fixture
+def manager_system_04_furn_ac_zoning_ble(manager_system_04_furn_ac_zoning: Manager) -> Manager:
+    api = manager_system_04_furn_ac_zoning.api
+    data = loadfile("system_04_furn_ac_zoning_ble.json", "0000000-0000-0000-0000-000000000001")
+    api.processMessage(data)
+
+    return manager_system_04_furn_ac_zoning
 
 
 def conftest_parameter_extra_attributes(
