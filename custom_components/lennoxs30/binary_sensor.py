@@ -21,6 +21,7 @@ from lennoxs30api import lennox_system, LENNOX_OUTDOOR_UNIT_HP
 
 
 from .base_entity import S30BaseEntityMixin
+from .binary_sensor_ble_commstatus import BleCommStatusBinarySensor
 from .const import (
     MANAGER,
     UNIQUE_ID_SUFFIX_AUX_HI_AMBIENT_LOCKOUT,
@@ -58,6 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if system.outdoorUnitType == LENNOX_OUTDOOR_UNIT_HP:
             sensor_list.append(S30HeatpumpLowAmbientLockout(hass, manager, system))
             sensor_list.append(S30AuxheatHighAmbientLockout(hass, manager, system))
+
+        for ble_device in system.ble_devices.values():
+            if ble_device.deviceType == "tstat":
+                continue
+            sensor_list.append(BleCommStatusBinarySensor(hass, manager, system, ble_device))
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)

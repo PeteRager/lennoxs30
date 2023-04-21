@@ -4,12 +4,7 @@ import logging
 from unittest.mock import patch
 import pytest
 
-from homeassistant.const import (
-    PERCENTAGE,
-    UnitOfTemperature,
-)
-
-
+from homeassistant.const import UnitOfTemperature
 from lennoxs30api.s30api_async import (
     lennox_system,
     LENNOX_BLE_COMMSTATUS_AVAILABLE,
@@ -20,7 +15,7 @@ from custom_components.lennoxs30 import (
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
-from custom_components.lennoxs30.sensor import S30AlertSensor, S40BleSensor, lennox_22v25_sensors
+from custom_components.lennoxs30.sensor import S40BleSensor, lennox_22v25_sensors
 from tests.conftest import conftest_base_entity_availability
 
 
