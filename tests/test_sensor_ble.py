@@ -156,4 +156,4 @@ async def test_ble_sensor_diag_category(hass, manager_system_04_furn_ac_zoning_b
     assert sensor.extra_state_attributes is None
     assert sensor.native_value == -66
     assert sensor.entity_category == "diagnostic"
-    assert sensor.native_unit_of_measurement is None
+    assert sensor.native_unit_of_measurement == "dBm"

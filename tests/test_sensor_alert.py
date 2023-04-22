@@ -29,7 +29,7 @@ async def test_alert_sensor(hass, manager: Manager):
     assert sensor.should_poll is False
     assert sensor.available is True
     assert sensor.update() is True
-    assert sensor.state_class == "measurement"
+    assert sensor.state_class is None
     assert len(sensor.extra_state_attributes) == 0
 
     assert sensor.state == system.alert

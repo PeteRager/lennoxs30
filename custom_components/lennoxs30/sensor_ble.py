@@ -53,14 +53,12 @@ class S40BleSensor(S30BaseEntityMixin, SensorEntity):
     ):
         super().__init__(manager, system)
         self._hass: HomeAssistant = hass
-        self._myname: str = (
-            self._system.name + " " + ble_device.deviceName + " " + sensor_dict["name"]
-        )
+        self._myname: str = self._system.name + " " + ble_device.deviceName + " " + sensor_dict["name"]
         self._ble_device: LennoxBle = ble_device
         self._sensor_dict: dict = sensor_dict
         self._sensor_value: LennoxBleInput = sensor_value
         self._status_value: LennoxBleInput = status_value
-        self._uom: str = lennox_uom_to_ha_uom(sensor_value.unit)
+        self._uom: str = sensor_dict.get("uom", lennox_uom_to_ha_uom(sensor_value.unit))
         self._state_class: str = sensor_dict.get("state_class", None)
         self._device_class: str = sensor_dict.get("device_class", None)
         self._entity_category: str = sensor_dict.get("entity_category", None)
@@ -68,9 +66,7 @@ class S40BleSensor(S30BaseEntityMixin, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         _LOGGER.debug("async_added_to_hass S40BleSensor myname [%s]", self._myname)
-        self._ble_device.register_on_update_callback(
-            self.commstatus_update, ["commStatus"]
-        )
+        self._ble_device.register_on_update_callback(self.commstatus_update, ["commStatus"])
         self._sensor_value.register_on_update_callback(self.sensor_value_update)
         if self._status_value is not None:
             self._status_value.register_on_update_callback(self.status_value_update)
@@ -131,9 +127,7 @@ class S40BleSensor(S30BaseEntityMixin, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
-            "identifiers": {
-                (DOMAIN, helper_create_ble_device_id(self._system, self._ble_device))
-            },
+            "identifiers": {(DOMAIN, helper_create_ble_device_id(self._system, self._ble_device))},
         }
 
     @property

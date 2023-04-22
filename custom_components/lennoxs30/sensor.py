@@ -674,10 +674,6 @@ class S30AlertSensor(S30BaseEntityMixin, SensorEntity):
         return self._system.alert
 
     @property
-    def state_class(self):
-        return SensorStateClass.MEASUREMENT
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return helper_get_equipment_device_info(self._manager, self._system, 0)

@@ -4,6 +4,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+
 lennox_22v25_sensors = [
     {
         "input_id": 4000,
@@ -11,6 +13,7 @@ lennox_22v25_sensors = [
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        "uom": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
     {"input_id": 4001, "name": "alarm_status", "entity_category": EntityCategory.DIAGNOSTIC},
     {"input_id": 4002, "name": "device_state", "entity_category": EntityCategory.DIAGNOSTIC},
@@ -27,6 +30,7 @@ lennox_22v25_sensors = [
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        "uom": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
     {
         "input_id": 4050,
