@@ -168,6 +168,7 @@ async def test_async_setup_entry_local(hass, caplog):
                         assert "connection will be retried" in record.message
 
 
+@pytest.mark.asyncio
 async def test_async_setup_entry_cloud(hass, caplog):
     data = {
         "cloud_connection": True,
@@ -225,6 +226,7 @@ async def test_async_setup_entry_cloud(hass, caplog):
             assert manager.connection_state == DOMAIN_STATE
 
 
+@pytest.mark.asyncio
 async def test_async_setup_entry_multiple(hass, caplog):
     data = {
         "cloud_connection": False,
@@ -391,6 +393,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
             assert manager.connection_state == "lennoxs30.conn_pete_rage"
 
 
+@pytest.mark.asyncio
 async def test_async_unload_entry_success(hass, caplog):
     data = {
         "cloud_connection": False,
@@ -437,6 +440,7 @@ async def test_async_unload_entry_success(hass, caplog):
                     assert res is True
 
 
+@pytest.mark.asyncio
 async def test_async_unload_entry_unload_fail(hass, caplog):
     data = {
         "cloud_connection": False,

@@ -4,7 +4,6 @@ import logging
 from unittest.mock import patch
 import pytest
 
-from homeassistant.const import UnitOfTemperature
 from lennoxs30api.s30api_async import (
     lennox_system,
     LENNOX_BLE_COMMSTATUS_AVAILABLE,
@@ -15,34 +14,33 @@ from custom_components.lennoxs30 import (
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
-from custom_components.lennoxs30.sensor import S40BleSensor, lennox_22v25_sensors
+from custom_components.lennoxs30.binary_sensor import BleBinarySensor
+from custom_components.lennoxs30.ble_device_22v25 import lennox_22v25_binary_sensors
 from tests.conftest import conftest_base_entity_availability
 
 
 @pytest.mark.asyncio
-async def test_ble_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
+async def test_ble_binary_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
 
     system: lennox_system = manager.api.system_list[0]
     ble_device = system.ble_devices[513]
-    sensor_dict = lennox_22v25_sensors[5]
+    sensor_dict = lennox_22v25_binary_sensors[0]
     input_sensor = ble_device.inputs[sensor_dict["input_id"]]
     status_sensor = ble_device.inputs[sensor_dict["status_id"]]
-    sensor = S40BleSensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)
+    sensor = BleBinarySensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)
 
-    assert sensor.unique_id == (system.unique_id + "_BLE_513_4050").replace("-", "")
+    assert sensor.unique_id == (system.unique_id + "_BLE_513_4056").replace("-", "")
     assert sensor.name == system.name + " " + ble_device.deviceName + " " + sensor_dict["name"]
     assert sensor.available is True
     assert sensor.should_poll is False
     assert sensor.available is True
     assert sensor.update() is True
-    assert sensor.state_class == "measurement"
-    assert sensor.device_class == "temperature"
+    assert sensor.device_class == "occupancy"
     assert sensor.extra_state_attributes is None
-    assert sensor.native_value == 66.5
+    assert sensor.is_on is True
     assert sensor.entity_category is None
-    assert sensor.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
 
     identifiers = sensor.device_info["identifiers"]
     for ids in identifiers:
@@ -58,36 +56,27 @@ async def test_ble_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
     status_sensor.value = LENNOX_BLE_STATUS_INPUT_AVAILABLE
     assert sensor.available is True
 
-    with caplog.at_level(logging.WARNING):
-        caplog.clear()
-        input_sensor.value = "NOT_A_NUMBER"
-        assert sensor.native_value is None
-        assert len(caplog.messages) == 1
-        assert sensor.name in caplog.messages[0]
-        assert "NOT_A_NUMBER" in caplog.messages[0]
-        assert "could not convert" in caplog.messages[0]
-
 
 @pytest.mark.asyncio
-async def test_ble_subscription(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
+async def test_ble_binary_sensorsubscription(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Test the alert sensor subscription"""
     manager = manager_system_04_furn_ac_zoning_ble
     system: lennox_system = manager.api.system_list[0]
     ble_device = system.ble_devices[513]
-    sensor_dict = lennox_22v25_sensors[5]
+    sensor_dict = lennox_22v25_binary_sensors[0]
     input_sensor = ble_device.inputs[sensor_dict["input_id"]]
     status_sensor = ble_device.inputs[sensor_dict["status_id"]]
-    sensor = S40BleSensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)
+    sensor = BleBinarySensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)
     await sensor.async_added_to_hass()
 
     with caplog.at_level(logging.DEBUG):
         with patch.object(sensor, "schedule_update_ha_state") as update_callback:
             caplog.clear()
-            update = {"value": "65.4"}
+            update = {"value": "0"}
             input_sensor.attr_updater(update, "value")
             input_sensor.execute_on_update_callbacks()
             assert update_callback.call_count == 1
-            assert sensor.native_value == 65.4
+            assert sensor.is_on is False
             assert len(caplog.messages) == 2
             assert sensor.name in caplog.messages[1]
             assert "sensor_value_update" in caplog.messages[1]
@@ -131,29 +120,3 @@ async def test_ble_subscription(hass, manager_system_04_furn_ac_zoning_ble: Mana
             assert sensor.available is True
 
     conftest_base_entity_availability(manager, system, sensor)
-
-
-@pytest.mark.asyncio
-async def test_ble_sensor_diag_category(hass, manager_system_04_furn_ac_zoning_ble: Manager):
-    """Test the alert sensor"""
-    manager = manager_system_04_furn_ac_zoning_ble
-
-    system: lennox_system = manager.api.system_list[0]
-    ble_device = system.ble_devices[513]
-    sensor_dict = lennox_22v25_sensors[0]
-    input_sensor = ble_device.inputs[sensor_dict["input_id"]]
-    status_sensor = None
-    sensor = S40BleSensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)
-
-    assert sensor.unique_id == (system.unique_id + "_BLE_513_4000").replace("-", "")
-    assert sensor.name == system.name + " " + ble_device.deviceName + " " + sensor_dict["name"]
-    assert sensor.available is True
-    assert sensor.should_poll is False
-    assert sensor.available is True
-    assert sensor.update() is True
-    assert sensor.state_class == "measurement"
-    assert sensor.device_class == "signal_strength"
-    assert sensor.extra_state_attributes is None
-    assert sensor.native_value == -66
-    assert sensor.entity_category == "diagnostic"
-    assert sensor.native_unit_of_measurement is None

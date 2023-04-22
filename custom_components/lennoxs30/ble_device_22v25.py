@@ -1,10 +1,8 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
 # pylint: disable=line-too-long
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.components.sensor import (
-    SensorStateClass,
-    SensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 
 lennox_22v25_sensors = [
     {
@@ -52,7 +50,6 @@ lennox_22v25_sensors = [
         "device_class": SensorDeviceClass.BATTERY,
         "entity_category": EntityCategory.DIAGNOSTIC,
     },
-    {"input_id": 4056, "status_id": 4057, "name": "occupancy", "state_class": SensorStateClass.MEASUREMENT},
     {
         "input_id": 4058,
         "status_id": 4059,
@@ -67,4 +64,8 @@ lennox_22v25_sensors = [
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.TEMPERATURE,
     },
+]
+
+lennox_22v25_binary_sensors = [
+    {"input_id": 4056, "status_id": 4057, "name": "occupancy", "device_class": BinarySensorDeviceClass.OCCUPANCY},
 ]

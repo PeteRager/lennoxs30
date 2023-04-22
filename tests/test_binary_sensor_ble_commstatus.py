@@ -26,7 +26,7 @@ async def test_binary_sensor_ble_commstatus(hass, manager_system_04_furn_ac_zoni
     ble_device: LennoxBle = system.ble_devices[513]
 
     sensor = BleCommStatusBinarySensor(hass, manager, system, ble_device)
-    assert sensor.name == f"{system.name}_{ble_device.deviceName}_comm_status"
+    assert sensor.name == f"{system.name} {ble_device.deviceName} comm_status"
     assert sensor.unique_id == (system.unique_id + "_BLE_COMMSTATUS_513").replace("-", "")
     assert sensor.update() is True
     assert sensor.should_poll is False
