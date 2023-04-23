@@ -12,19 +12,16 @@ from typing import Any
 
 from homeassistant.const import (
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    FREQUENCY_HERTZ,
-    ELECTRIC_CURRENT_AMPERE,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    ELECTRIC_POTENTIAL_VOLT,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+    UnitOfTime,
+    UnitOfFrequency,
+    UnitOfElectricPotential,
+    UnitOfElectricCurrent,
 )
 
 from lennoxs30api import lennox_system
 from lennoxs30api.lennox_equipment import lennox_equipment, lennox_equipment_parameter
-
 from . import DOMAIN, Manager
 
 
@@ -33,25 +30,25 @@ _LOGGER = logging.getLogger(__name__)
 
 def lennox_uom_to_ha_uom(unit: str) -> str:
     """Converts a Lennox UOM to a HASS UOM"""
-    if unit == "F":
-        return TEMP_FAHRENHEIT
-    if unit == "C":
-        return TEMP_CELSIUS  # Not validated - do no know if European Units report
+    if unit == "F" or unit == "Fahreheit":
+        return UnitOfTemperature.FAHRENHEIT
+    if unit == "C" or unit == "Celsius":
+        return UnitOfTemperature.CELSIUS  # Not validated - do no know if European Units report
     if unit == "CFM":
-        return VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE
+        return UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE
     if unit == "min":
-        return TIME_MINUTES
-    if unit == "sec":
-        return TIME_SECONDS
+        return UnitOfTime.MINUTES
+    if unit == "sec" or unit == "Sec":
+        return UnitOfTime.SECONDS
     if unit == "%":
         return PERCENTAGE
     if unit == "Hz":
-        return FREQUENCY_HERTZ
+        return UnitOfFrequency.HERTZ
     if unit == "V":
-        return ELECTRIC_POTENTIAL_VOLT
+        return UnitOfElectricPotential.VOLT
     if unit == "A":
-        return ELECTRIC_CURRENT_AMPERE
-    if unit == "":
+        return UnitOfElectricCurrent.AMPERE
+    if unit == "" or unit == "none":
         return None
     return unit
 

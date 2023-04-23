@@ -1,23 +1,27 @@
-# Lennox S30/E30 Component
+# Lennox S40/S30/E30/M30 Component
 
-A custom component for Home Assistant to integrate with Lennox iComfort S30, E30 or M30 thermostats; supporting local LAN connections and Lennox
+A custom component for Home Assistant to integrate with Lennox iComfort S40, S30, E30 or M30 thermostats; supporting local LAN connections and Lennox
 Cloud Connections depending on the device model. We believe these configurations work - let us know if your experience is different!
 
-- S30 - cloud or local connections
-- S40 - new model not known if it works
-- E30 - cloud or local connections
-- M30 - cloud connections only.
+
+| Device Type | Local Connection | Cloud Connection |
+| ----------- | ---------------- | ---------------- |
+| S30         | Yes              | Yes              |
+| S40         | Yes              | Unknown          |
+| E30         | Yes              | Yes              |
+| M30         | No               | Yes              |
 
 > **Please Note:** This component **does not** support the other models of Lennox Thermostats.
 
 # Requirements
 
-- Home Assistant >= 2022.11.0
-- S30/E30 Thermostat linked to a lennoxicomfort.com account or an S30/E30 Thermostat on local LAN with a static/ DHCP leased IP address
+- Home Assistant >= 2023.3.0
+- Thermostat linked to a lennoxicomfort.com account or a Thermostat on local LAN with a static/ DHCP leased IP address
 
 # Important Information
 
-- It is recommended to disable automatic software updates on the S30. This will prevent outages if new versions are not compatible with this integration.
+- Note: Where we mention S30 in this documentation that also applies to S40, E30 and M30
+- It is recommended to disable automatic software updates on the Thermostat. This will prevent outages if new versions are not compatible with this integration.
 - If you have more than one S30 in your local network, please use a different app_id for each instance (e.g. homeassistant_1, homeassistant_2)
 - If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
 - **WARNING** If using the Power Inverter or Diagnostic Sensors - S30 stability problems may arise if your system is connected to the Lennox Cloud. Please review [docs/diagnostics.md](./docs/diagnostics.md) before using.
@@ -290,6 +294,31 @@ The entity also has a set of attributes to provide diagnostic data:
 | hostname               | string   | The hostname used by this connection or None if a cloud connection                                                                                                                                                                                                      |
 | sibling_id             | string   | The ID of the sibling or None if no sibling                                                                                                                                                                                                                             |
 | sibling_ip             | string   | The IP address of the sibling or None if no sibling                                                                                                                                                                                                                     |
+
+## S40 Remote Sensors
+
+The S40 supports the use of remote sensors. Bluetooth Low Energy (BLE) is the technology used for the sensor to communicate with the panel. Currently, we have only seen one type of sensor (22V25); if your system has other types of sensors, please open an issue so we can add support.
+
+### 22V25 - BLE Smart Room Sensor
+
+The 22V25 is a battery powered room sensor.
+
+![plot](./doc_images/ble_master_bedroom.png)
+
+| Entity Type   | Name                | Description                                                                                                            |
+| ------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| sensor        | Analog Temperature  | Provides the analog temperature. It is not clear what the different is between this and the other temperature sensors  |
+| sensor        | Battery             | The battery level in %                                                                                                 |
+| sensor        | Ble rssi            | Signal Strength. Unclear what this is vs rssi                                                                          |
+| sensor        | Digital Temperature | Provides the digital temperature. It is not clear what the different is between this and the other temperature sensors |
+| sensor        | Humidity            | Provides the relative humidity                                                                                         |
+| sensor        | Rssi                | Signal Strength. Unclear what this is vs ble_rssi                                                                      |
+| sensor        | Temperature         | Provides the temperature                                                                                               |
+| sensor        | Total Powered Time  | Time in seconds the device has been powered                                                                            |
+| binary_sensor | Alarm Status        | Unknown - need info                                                                                                    |
+| binary_sensor | Comm_status         | Indicates if communication to the device is up                                                                         |
+| binary_sensor | Device State        | Unknown - need info                                                                                                    |
+| binary_sensor | Occupancy           | Indicates if the room is occupied                                                                                      |
 
 ## Sensors
 

@@ -10,7 +10,7 @@ import asyncio
 import logging
 import time
 from unittest import mock
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -923,7 +923,7 @@ async def test_manager_messagePump(manager_us_customary_units: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_manager_get_reinitialize(manager_us_customary_units: Manager, caplog):
+async def test_manager_get_reinitialize(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     manager._reinitialize = False
     assert manager.get_reinitialize() is False
@@ -932,16 +932,12 @@ async def test_manager_get_reinitialize(manager_us_customary_units: Manager, cap
 
 
 @pytest.mark.asyncio
-async def test_manager_async_shutdown_s30_initialize(manager_us_customary_units: Manager, caplog):
+async def test_manager_async_shutdown_s30_initialize(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     manager._climate_entities_initialized = True
-    with patch.object(manager, "messagePump") as messagePump, patch.object(
-        manager, "connect_subscribe"
-    ) as connect_subscribe, patch.object(
+    with patch.object(manager, "messagePump") as messagePump, patch.object(manager, "connect_subscribe"), patch.object(
         manager, "configuration_initialization"
-    ) as configuration_initialization, patch.object(
-        manager.api, "shutdown"
-    ) as api_shutdown:
+    ), patch.object(manager.api, "shutdown"):
         messagePump.return_value = False
 
         await manager.s30_initialize()

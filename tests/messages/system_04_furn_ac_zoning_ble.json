@@ -1,0 +1,2863 @@
+{
+    "MessageId": 0,
+    "SenderID": "**redacted**",
+    "TargetID": "homeassistant",
+    "MessageType": "PropertyChange",
+    "Data": {
+        "ble": {
+            "status": {
+                "state": "normal",
+                "discoveryStatus": "discoveryCompleted",
+                "writeAccess": "internal"
+            },
+            "uiRasGroupSettings": {
+                "writeAccess": "internal"
+            },
+            "szDevices": 3,
+            "devices": [
+                {
+                    "device": {
+                        "deviceName": "s40 1",
+                        "cfStatus": "configured",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "disabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 768,
+                        "zId": 0,
+                        "deviceType": "tstat",
+                        "config": {
+                            "powerType": "linePowered",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "Control Model Number",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "107088-01"
+                                            }
+                                        ],
+                                        "fid": 3000,
+                                        "unit": "",
+                                        "format": "nts"
+                                    }
+                                },
+                                {
+                                    "id": 1,
+                                    "feature": {
+                                        "name": "Control Serial Number",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "BT23A09840"
+                                            }
+                                        ],
+                                        "fid": 3001
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "feature": {
+                                        "name": "Control Hardware Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "A"
+                                            }
+                                        ],
+                                        "fid": 3002
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "feature": {
+                                        "name": "Control Software Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "04.15.0012"
+                                            }
+                                        ],
+                                        "fid": 3003
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 4,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "deviceProvAddress": 65535,
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 0
+                },
+                {
+                    "device": {
+                        "deviceName": "Master Bedroom",
+                        "cfStatus": "configured",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "on",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 512,
+                        "zId": 0,
+                        "deviceType": "ras",
+                        "config": {
+                            "powerType": "batteryPowered",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "Control Model Number",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "22V25"
+                                            }
+                                        ],
+                                        "fid": 3000,
+                                        "unit": "",
+                                        "format": "nts"
+                                    }
+                                },
+                                {
+                                    "id": 1,
+                                    "feature": {
+                                        "name": "Control Serial Number",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "TS22M01658"
+                                            }
+                                        ],
+                                        "fid": 3001
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "feature": {
+                                        "name": "Control Hardware Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "B"
+                                            }
+                                        ],
+                                        "fid": 3002
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "feature": {
+                                        "name": "Control Software Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "04.00.0481"
+                                            }
+                                        ],
+                                        "fid": 3003
+                                    }
+                                },
+                                {
+                                    "id": 4,
+                                    "feature": {
+                                        "name": "Node Information",
+                                        "format": "uint8",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "10"
+                                            }
+                                        ],
+                                        "fid": 3004
+                                    }
+                                },
+                                {
+                                    "id": 5,
+                                    "feature": {
+                                        "name": "Control Bootloader Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "01.10.0004"
+                                            }
+                                        ],
+                                        "fid": 3005
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "Equipment Name",
+                                        "pid": 2000,
+                                        "defaultValue": "RAS",
+                                        "enabled": true,
+                                        "szValues": 3,
+                                        "value": "RAS",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value",
+                                        "string": {
+                                            "max": "100"
+                                        },
+                                        "format": "nts",
+                                        "descriptor": "string"
+                                    },
+                                    "id": 0
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "TX Power",
+                                        "format": "int8",
+                                        "pid": 2001,
+                                        "defaultValue": "19",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "19",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "20",
+                                            "min": "10",
+                                            "inc": "1"
+                                        },
+                                        "unit": "DBM"
+                                    },
+                                    "id": 1
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Status Update Transmission Frequency",
+                                        "format": "uint16",
+                                        "pid": 2002,
+                                        "defaultValue": "1800",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "1800",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "1800",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 2
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Enable or Disable Diagnostic Data In Device Status Message",
+                                        "format": "uint8",
+                                        "pid": 2003,
+                                        "defaultValue": "0",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 3
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Enable or Disable Logging",
+                                        "format": "uint8",
+                                        "pid": 2004,
+                                        "defaultValue": "1",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 4
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Low RSSI Threshold Value",
+                                        "format": "int8",
+                                        "pid": 2005,
+                                        "defaultValue": "170",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "-86",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "176",
+                                            "min": "156",
+                                            "inc": "1"
+                                        },
+                                        "unit": "DBM"
+                                    },
+                                    "id": 5
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Low RSSI Detection Counter",
+                                        "format": "uint8",
+                                        "pid": 2006,
+                                        "defaultValue": "5",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "1",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "10",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 6
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Temperature Threshold Value",
+                                        "format": "float",
+                                        "pid": 2054,
+                                        "defaultValue": "0.200000",
+                                        "enabled": true,
+                                        "szValues": 4,
+                                        "value": "0.200000",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "3.000000",
+                                            "min": "0.100000",
+                                            "inc": "0.100000"
+                                        },
+                                        "unit": "Fahrenheit"
+                                    },
+                                    "id": 7
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Humidity publish threshold",
+                                        "format": "uint8",
+                                        "pid": 2055,
+                                        "defaultValue": "1",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "1",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "3",
+                                            "min": "1",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Percentage"
+                                    },
+                                    "id": 8
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Occupied detection time value",
+                                        "format": "uint32",
+                                        "pid": 2056,
+                                        "defaultValue": "1800",
+                                        "enabled": true,
+                                        "szValues": 4,
+                                        "value": "1800",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "1800",
+                                            "min": "10",
+                                            "inc": "60"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 9
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Minimum counts for motion detection",
+                                        "format": "uint32",
+                                        "pid": 2057,
+                                        "defaultValue": "2",
+                                        "enabled": true,
+                                        "szValues": 4,
+                                        "value": "2",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "5",
+                                            "min": "2",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 10
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Sensor sampling time",
+                                        "format": "uint16",
+                                        "pid": 2058,
+                                        "defaultValue": "120",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "120",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "300",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 11
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Friend poll interval time",
+                                        "format": "uint16",
+                                        "pid": 2061,
+                                        "defaultValue": "120",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "120",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "600",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 12
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Sleep_mode_off",
+                                        "format": "uint8",
+                                        "pid": 2062,
+                                        "defaultValue": "0",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 13
+                                }
+                            ],
+                            "szFeatures": 6,
+                            "szParameters": 14,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "deviceProvAddress": 8195,
+                        "devStatus": {
+                            "szStatus": 17,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "rssi",
+                                        "vid": 4000,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "-58"
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": "none",
+                                        "format": "int8"
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                },
+                                {
+                                    "id": 1,
+                                    "status": {
+                                        "name": "Alarm status",
+                                        "vid": 4001,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "1"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "status": {
+                                        "name": "Device State",
+                                        "vid": 4002,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "1"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "status": {
+                                        "name": "Total Powered Time in Secs",
+                                        "vid": 4003,
+                                        "format": "uint32",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "612348"
+                                            }
+                                        ],
+                                        "unit": "Sec"
+                                    }
+                                },
+                                {
+                                    "id": 4,
+                                    "status": {
+                                        "name": "S40_BLE_RSSI",
+                                        "vid": 4004,
+                                        "format": "int8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "-52"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "id": 5
+                                },
+                                {
+                                    "id": 6
+                                },
+                                {
+                                    "id": 7
+                                },
+                                {
+                                    "id": 8
+                                },
+                                {
+                                    "id": 9
+                                },
+                                {
+                                    "id": 10,
+                                    "status": {
+                                        "name": "RAS Tsense",
+                                        "vid": 4050,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "66.970001"
+                                            }
+                                        ],
+                                        "unit": "Fahreheit"
+                                    }
+                                },
+                                {
+                                    "id": 11,
+                                    "status": {
+                                        "name": "RAS Tsense status",
+                                        "vid": 4051,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS humidity %",
+                                        "vid": 4052,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "55"
+                                            }
+                                        ],
+                                        "unit": "%"
+                                    },
+                                    "id": 12
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Humidity Sensor status",
+                                        "vid": 4053,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 13
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS BAT %",
+                                        "vid": 4054,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "100.000000"
+                                            }
+                                        ],
+                                        "unit": "%"
+                                    },
+                                    "id": 14
+                                },
+                                {
+                                    "id": 15,
+                                    "status": {
+                                        "name": "RAS Bat Status",
+                                        "vid": 4055,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Occupancy",
+                                        "vid": 4056,
+                                        "format": "bool8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 16
+                                },
+                                {
+                                    "id": 17,
+                                    "status": {
+                                        "name": "RAS Occupancy Status",
+                                        "vid": 4057,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Digital Temp",
+                                        "vid": 4058,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "68.989998"
+                                            }
+                                        ],
+                                        "unit": "Fahreheit"
+                                    },
+                                    "id": 18
+                                },
+                                {
+                                    "id": 19,
+                                    "status": {
+                                        "name": "RAS Digital Temp status",
+                                        "vid": 4059,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Analog Temp",
+                                        "vid": 4060,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "66.970001"
+                                            }
+                                        ],
+                                        "unit": "Fahreheit"
+                                    },
+                                    "id": 20
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Analog Temp status",
+                                        "vid": 4061,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 21
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "active"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true,
+                            "temperatureStatus": "inRange"
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 1
+                },
+                {
+                    "device": {
+                        "deviceName": "Basement",
+                        "cfStatus": "configured",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "on",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 513,
+                        "zId": 0,
+                        "deviceType": "ras",
+                        "config": {
+                            "powerType": "batteryPowered",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "Control Model Number",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "22V25"
+                                            }
+                                        ],
+                                        "fid": 3000,
+                                        "unit": "",
+                                        "format": "nts"
+                                    }
+                                },
+                                {
+                                    "id": 1,
+                                    "feature": {
+                                        "name": "Control Serial Number",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "TS22M01659"
+                                            }
+                                        ],
+                                        "fid": 3001
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "feature": {
+                                        "name": "Control Hardware Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "B"
+                                            }
+                                        ],
+                                        "fid": 3002
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "feature": {
+                                        "name": "Control Software Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "04.00.0481"
+                                            }
+                                        ],
+                                        "fid": 3003
+                                    }
+                                },
+                                {
+                                    "id": 4,
+                                    "feature": {
+                                        "name": "Node Information",
+                                        "format": "uint8",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "10"
+                                            }
+                                        ],
+                                        "fid": 3004
+                                    }
+                                },
+                                {
+                                    "id": 5,
+                                    "feature": {
+                                        "name": "Control Bootloader Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "01.10.0004"
+                                            }
+                                        ],
+                                        "fid": 3005
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "Equipment Name",
+                                        "pid": 2000,
+                                        "defaultValue": "RAS",
+                                        "enabled": true,
+                                        "szValues": 3,
+                                        "value": "RAS",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value",
+                                        "string": {
+                                            "max": "100"
+                                        },
+                                        "format": "nts",
+                                        "descriptor": "string"
+                                    },
+                                    "id": 0
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "TX Power",
+                                        "format": "int8",
+                                        "pid": 2001,
+                                        "defaultValue": "19",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "19",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "20",
+                                            "min": "10",
+                                            "inc": "1"
+                                        },
+                                        "unit": "DBM"
+                                    },
+                                    "id": 1
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Status Update Transmission Frequency",
+                                        "format": "uint16",
+                                        "pid": 2002,
+                                        "defaultValue": "1800",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "1800",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "1800",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 2
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Enable or Disable Diagnostic Data In Device Status Message",
+                                        "format": "uint8",
+                                        "pid": 2003,
+                                        "defaultValue": "0",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 3
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Enable or Disable Logging",
+                                        "format": "uint8",
+                                        "pid": 2004,
+                                        "defaultValue": "1",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 4
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Low RSSI Threshold Value",
+                                        "format": "int8",
+                                        "pid": 2005,
+                                        "defaultValue": "170",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "-86",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "176",
+                                            "min": "156",
+                                            "inc": "1"
+                                        },
+                                        "unit": "DBM"
+                                    },
+                                    "id": 5
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Low RSSI Detection Counter",
+                                        "format": "uint8",
+                                        "pid": 2006,
+                                        "defaultValue": "5",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "1",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "10",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 6
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Temperature Threshold Value",
+                                        "format": "float",
+                                        "pid": 2054,
+                                        "defaultValue": "0.200000",
+                                        "enabled": true,
+                                        "szValues": 4,
+                                        "value": "0.200000",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "3.000000",
+                                            "min": "0.100000",
+                                            "inc": "0.100000"
+                                        },
+                                        "unit": "Fahrenheit"
+                                    },
+                                    "id": 7
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Humidity publish threshold",
+                                        "format": "uint8",
+                                        "pid": 2055,
+                                        "defaultValue": "1",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "1",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "3",
+                                            "min": "1",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Percentage"
+                                    },
+                                    "id": 8
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Occupied detection time value",
+                                        "format": "uint32",
+                                        "pid": 2056,
+                                        "defaultValue": "1800",
+                                        "enabled": true,
+                                        "szValues": 4,
+                                        "value": "1800",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "1800",
+                                            "min": "10",
+                                            "inc": "60"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 9
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Minimum counts for motion detection",
+                                        "format": "uint32",
+                                        "pid": 2057,
+                                        "defaultValue": "2",
+                                        "enabled": true,
+                                        "szValues": 4,
+                                        "value": "2",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "5",
+                                            "min": "2",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 10
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Sensor sampling time",
+                                        "format": "uint16",
+                                        "pid": 2058,
+                                        "defaultValue": "120",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "120",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "300",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 11
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Friend poll interval time",
+                                        "format": "uint16",
+                                        "pid": 2061,
+                                        "defaultValue": "120",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "120",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "600",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Second"
+                                    },
+                                    "id": 12
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Sleep_mode_off",
+                                        "format": "uint8",
+                                        "pid": 2062,
+                                        "defaultValue": "0",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 13
+                                }
+                            ],
+                            "szFeatures": 6,
+                            "szParameters": 14,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "deviceProvAddress": 8196,
+                        "devStatus": {
+                            "szStatus": 17,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "rssi",
+                                        "vid": 4000,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "-66"
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": "none",
+                                        "format": "int8"
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                },
+                                {
+                                    "id": 1,
+                                    "status": {
+                                        "name": "Alarm status",
+                                        "vid": 4001,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "1"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "status": {
+                                        "name": "Device State",
+                                        "vid": 4002,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "1"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "status": {
+                                        "name": "Total Powered Time in Secs",
+                                        "vid": 4003,
+                                        "format": "uint32",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "612257"
+                                            }
+                                        ],
+                                        "unit": "Sec"
+                                    }
+                                },
+                                {
+                                    "id": 4,
+                                    "status": {
+                                        "name": "S40_BLE_RSSI",
+                                        "vid": 4004,
+                                        "format": "int8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "-53"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "id": 5
+                                },
+                                {
+                                    "id": 6
+                                },
+                                {
+                                    "id": 7
+                                },
+                                {
+                                    "id": 8
+                                },
+                                {
+                                    "id": 9
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Tsense",
+                                        "vid": 4050,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "66.470001"
+                                            }
+                                        ],
+                                        "unit": "Fahreheit"
+                                    },
+                                    "id": 10
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Tsense status",
+                                        "vid": 4051,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 11
+                                },
+                                {
+                                    "id": 12,
+                                    "status": {
+                                        "name": "RAS humidity %",
+                                        "vid": 4052,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "54"
+                                            }
+                                        ],
+                                        "unit": "%"
+                                    }
+                                },
+                                {
+                                    "id": 13,
+                                    "status": {
+                                        "name": "RAS Humidity Sensor status",
+                                        "vid": 4053,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS BAT %",
+                                        "vid": 4054,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "100.000000"
+                                            }
+                                        ],
+                                        "unit": "%"
+                                    },
+                                    "id": 14
+                                },
+                                {
+                                    "id": 15,
+                                    "status": {
+                                        "name": "RAS Bat Status",
+                                        "vid": 4055,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Occupancy",
+                                        "vid": 4056,
+                                        "format": "bool8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "1"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 16
+                                },
+                                {
+                                    "id": 17,
+                                    "status": {
+                                        "name": "RAS Occupancy Status",
+                                        "vid": 4057,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Digital Temp",
+                                        "vid": 4058,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "67.730003"
+                                            }
+                                        ],
+                                        "unit": "Fahreheit"
+                                    },
+                                    "id": 18
+                                },
+                                {
+                                    "id": 19,
+                                    "status": {
+                                        "name": "RAS Digital Temp status",
+                                        "vid": 4059,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    }
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Analog Temp",
+                                        "vid": 4060,
+                                        "format": "float",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "66.470001"
+                                            }
+                                        ],
+                                        "unit": "Fahreheit"
+                                    },
+                                    "id": 20
+                                },
+                                {
+                                    "status": {
+                                        "name": "RAS Analog Temp status",
+                                        "vid": 4061,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "0"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 21
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "active"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": true,
+                            "writeAccess": "internal",
+                            "doNotPersist": true,
+                            "temperatureStatus": "inRange"
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 2
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 3
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 4
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 5
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 6
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 7
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 8
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 9
+                },
+                {
+                    "device": {
+                        "deviceName": "",
+                        "cfStatus": "unKnown",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            }
+                        },
+                        "wdn": 0,
+                        "zId": 0,
+                        "deviceType": "unKnown",
+                        "config": {
+                            "powerType": "unKnown",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "",
+                                        "szValues": 0,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "fid": 0,
+                                        "unit": ""
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "",
+                                        "pid": 0,
+                                        "defaultValue": "",
+                                        "enabled": false,
+                                        "szValues": 0,
+                                        "value": "",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "",
+                                        "string": {
+                                            "max": ""
+                                        }
+                                    },
+                                    "id": 0
+                                }
+                            ],
+                            "szFeatures": 0,
+                            "szParameters": 0,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "devStatus": {
+                            "szStatus": 0,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "",
+                                        "vid": 0,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": ""
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": ""
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "unKnown"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    },
+                    "writeAccess": "internal",
+                    "id": 10
+                }
+            ],
+            "bleGwController": {
+                "writeAccess": "internal",
+                "command": "",
+                "publisher": {
+                    "writeAccess": "openAll",
+                    "publisherName": "unknown",
+                    "doNotPersist": true
+                }
+            },
+            "publisher": {
+                "writeAccess": "openAll",
+                "publisherName": "unknown",
+                "doNotPersist": true
+            },
+            "userEdited": {
+                "writeAccess": "openAll",
+                "iaq": {
+                    "writeAccess": "openAll",
+                    "doNotPersist": true
+                },
+                "ras": {
+                    "scheduleFrom": "",
+                    "doNotPersist": true,
+                    "enableState": "unknown",
+                    "senBasedParticpt": "unknown",
+                    "writeAccess": "openAll",
+                    "sleep": "off",
+                    "followMe": "unknown",
+                    "scheduleTill": ""
+                },
+                "doNotPersist": true
+            },
+            "command": {
+                "writeAccess": "remote",
+                "request": {
+                    "toOne": {
+                        "deviceName": "",
+                        "uniqueIdentifier": 0,
+                        "doNotPersist": true,
+                        "cmdAndData": {
+                            "cmd": {
+                                "requestType": "unKnown",
+                                "writeAccess": "remote",
+                                "doNotPersist": true
+                            },
+                            "writeAccess": "remote",
+                            "update": {
+                                "doNotPersist": true,
+                                "pid": 0,
+                                "value": "",
+                                "writeAccess": "remote"
+                            },
+                            "doNotPersist": true
+                        },
+                        "writeAccess": "remote"
+                    },
+                    "toAll": {
+                        "cmdAndData": {
+                            "cmd": {
+                                "requestType": "unKnown",
+                                "writeAccess": "remote",
+                                "doNotPersist": true
+                            },
+                            "writeAccess": "remote",
+                            "update": {
+                                "doNotPersist": true,
+                                "pid": 0,
+                                "value": "",
+                                "writeAccess": "remote"
+                            },
+                            "doNotPersist": true
+                        },
+                        "writeAccess": "remote",
+                        "doNotPersist": true
+                    },
+                    "doNotPersist": true,
+                    "toGroup": {
+                        "cmdAndData": {
+                            "cmd": {
+                                "requestType": "unKnown",
+                                "writeAccess": "remote",
+                                "doNotPersist": true
+                            },
+                            "writeAccess": "remote",
+                            "update": {
+                                "doNotPersist": true,
+                                "pid": 0,
+                                "value": "",
+                                "writeAccess": "remote"
+                            },
+                            "doNotPersist": true
+                        },
+                        "targetGroup": "unKnown",
+                        "writeAccess": "remote",
+                        "doNotPersist": true
+                    },
+                    "writeAccess": "remote"
+                },
+                "response": {
+                    "deviceName": "",
+                    "uniqueIdentifier": 0,
+                    "doNotPersist": true,
+                    "ack": {
+                        "resp": "unKnown",
+                        "writeAccess": "remote",
+                        "doNotPersist": true
+                    },
+                    "cmd": {
+                        "requestType": "unKnown",
+                        "writeAccess": "remote",
+                        "doNotPersist": true
+                    },
+                    "update": {
+                        "doNotPersist": true,
+                        "pid": 0,
+                        "value": "",
+                        "writeAccess": "remote"
+                    },
+                    "writeAccess": "remote"
+                },
+                "doNotPersist": true
+            },
+            "internalRequest": {
+                "deviceName": "",
+                "uniqueIdentifier": 0,
+                "doNotPersist": true,
+                "requestType": "unKnown",
+                "writeAccess": "local"
+            }
+        }
+    }
+}

@@ -9,12 +9,11 @@ from typing import Any
 
 from homeassistant.const import (
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    FREQUENCY_HERTZ,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfFrequency,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +43,8 @@ from .const import (
     UNIQUE_ID_SUFFIX_DIAG_SENSOR,
 )
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
+from .ble_device_22v25 import lennox_22v25_sensors
+from .sensor_ble import S40BleSensor
 
 from . import Manager
 
@@ -114,6 +115,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if manager.create_alert_sensors:
             sensor_list.append(S30AlertSensor(hass, manager, system))
             sensor_list.append(S30ActiveAlertsList(hass, manager, system))
+
+        for ble_device in system.ble_devices.values():
+            if ble_device.deviceType == "tstat":
+                continue
+            elif ble_device.controlModelNumber == "22V25":
+                for sensor_dict in lennox_22v25_sensors:
+                    if sensor_dict["input_id"] not in ble_device.inputs:
+                        _LOGGER.error(
+                            "Error S40BleSensor name [%s] sensor_name [%s] no input_id [%d]",
+                            ble_device.deviceName,
+                            sensor_dict["name"],
+                            sensor_dict["input_id"],
+                        )
+                        continue
+                    sensor_value = ble_device.inputs[sensor_dict["input_id"]]
+                    status_value = None
+                    if "status_id" in sensor_dict:
+                        if sensor_dict["status_id"] not in ble_device.inputs:
+                            _LOGGER.error(
+                                "Error S40BleSensor name [%s] sensor_name [%s] no status_id [%d]",
+                                ble_device.deviceName,
+                                sensor_dict["name"],
+                                sensor_dict["status_id"],
+                            )
+                            continue
+                        status_value = ble_device.inputs[sensor_dict["status_id"]]
+                    sensor_list.append(
+                        S40BleSensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict)
+                    )
+            else:
+                _LOGGER.error(
+                    "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
+                    ble_device.deviceName,
+                    ble_device.deviceType,
+                    ble_device.controlModelNumber,
+                )
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
@@ -205,15 +242,15 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def device_class(self):
         uom = self.native_unit_of_measurement
-        if uom == TEMP_FAHRENHEIT:
+        if uom == UnitOfTemperature.FAHRENHEIT:
             return SensorDeviceClass.TEMPERATURE
-        elif uom == TEMP_CELSIUS:
+        elif uom == UnitOfTemperature.CELSIUS:
             return SensorDeviceClass.TEMPERATURE
-        elif uom == ELECTRIC_POTENTIAL_VOLT:
+        elif uom == UnitOfElectricPotential.VOLT:
             return SensorDeviceClass.VOLTAGE
-        elif uom == ELECTRIC_CURRENT_AMPERE:
+        elif uom == UnitOfElectricCurrent.AMPERE:
             return SensorDeviceClass.CURRENT
-        elif uom == FREQUENCY_HERTZ:
+        elif uom == UnitOfFrequency.HERTZ:
             return SensorDeviceClass.FREQUENCY
         return None
 
@@ -314,8 +351,8 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         if self._manager.is_metric is False:
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def device_class(self):
@@ -400,8 +437,8 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         if self._manager.is_metric is False:
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def device_class(self):
@@ -576,7 +613,7 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
 
     @property
     def native_unit_of_measurement(self):
-        return POWER_WATT
+        return UnitOfPower.WATT
 
     @property
     def device_class(self):
@@ -634,10 +671,6 @@ class S30AlertSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def native_value(self):
         return self._system.alert
-
-    @property
-    def state_class(self):
-        return SensorStateClass.MEASUREMENT
 
     @property
     def device_info(self) -> DeviceInfo:

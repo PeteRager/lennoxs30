@@ -1,26 +1,26 @@
-"""Test config flow."""
+"""Test devices."""
+# pylint: disable=too-many-lines
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=invalid-name
+# pylint: disable=protected-access
+# pylint: disable=line-too-long
 
-from unittest.mock import ANY, patch
+from unittest.mock import patch
+
 from lennoxs30api.s30api_async import lennox_zone, LENNOX_NONE_STR
-
+from homeassistant.helpers import device_registry as dr
 import pytest
-import os
-import json
-
-from custom_components.lennoxs30.const import (
-    LENNOX_MFG,
-    VENTILATION_EQUIPMENT_ID,
-)
-
-
-# from tests.common import MockConfigEntry
 
 from custom_components.lennoxs30 import (
     DOMAIN,
     Manager,
 )
 
-from homeassistant.helpers import device_registry as dr
+from custom_components.lennoxs30.const import (
+    LENNOX_MFG,
+    VENTILATION_EQUIPMENT_ID,
+)
 
 from custom_components.lennoxs30.device import (
     S30AuxiliaryUnit,
@@ -31,20 +31,11 @@ from custom_components.lennoxs30.device import (
 )
 
 
-def loadfile(name) -> json:
-    script_dir = os.path.dirname(__file__) + "/messages/"
-    file_path = os.path.join(script_dir, name)
-    with open(file_path) as f:
-        data = json.load(f)
-    return data
-
-
 @pytest.mark.asyncio
-async def test_create_devices_multiple_times(hass, manager_2_systems: Manager, caplog):
+async def test_create_devices_multiple_times(hass, manager_2_systems: Manager):
     manager = manager_2_systems
     device_registry = dr.async_get(hass)
-    system = manager.api.system_list[0]
-    with patch.object(device_registry, "async_get_or_create") as mock_create_device:
+    with patch.object(device_registry, "async_get_or_create"):
         await manager.create_devices()
 
         assert len(manager.system_equip_device_map[manager.api.system_list[0].sysId]) == 3
@@ -58,7 +49,7 @@ async def test_create_devices_multiple_times(hass, manager_2_systems: Manager, c
 
 
 @pytest.mark.asyncio
-async def test_create_devices(hass, manager_2_systems: Manager, caplog):
+async def test_create_devices(hass, manager_2_systems: Manager):
     manager = manager_2_systems
     device_registry = dr.async_get(hass)
     system = manager.api.system_list[0]
@@ -76,6 +67,7 @@ async def test_create_devices(hass, manager_2_systems: Manager, caplog):
         assert call.kwargs["name"] == manager.api.system_list[0].name
         assert call.kwargs["model"] == manager.api.system_list[0].productType
         assert call.kwargs["sw_version"] == manager.api.system_list[0].softwareVersion
+        elem = None
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -137,7 +129,7 @@ async def test_create_devices(hass, manager_2_systems: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_create_devices_no_outdoor(hass, manager: Manager, caplog):
+async def test_create_devices_no_outdoor(hass, manager: Manager):
     device_registry = dr.async_get(hass)
     system = manager.api.system_list[0]
     with patch.object(device_registry, "async_get_or_create") as mock_create_device:
@@ -154,6 +146,7 @@ async def test_create_devices_no_outdoor(hass, manager: Manager, caplog):
         assert call.kwargs["name"] == manager.api.system_list[0].name
         assert call.kwargs["model"] == manager.api.system_list[0].productType
         assert call.kwargs["sw_version"] == manager.api.system_list[0].softwareVersion
+        elem = None
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -198,7 +191,7 @@ async def test_create_devices_no_outdoor(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_create_devices_no_indoor(hass, manager: Manager, caplog):
+async def test_create_devices_no_indoor(hass, manager: Manager):
     device_registry = dr.async_get(hass)
     system = manager.api.system_list[0]
     with patch.object(device_registry, "async_get_or_create") as mock_create_device:
@@ -216,6 +209,7 @@ async def test_create_devices_no_indoor(hass, manager: Manager, caplog):
         assert call.kwargs["name"] == manager.api.system_list[0].name
         assert call.kwargs["model"] == manager.api.system_list[0].productType
         assert call.kwargs["sw_version"] == manager.api.system_list[0].softwareVersion
+        elem = None
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -259,22 +253,23 @@ async def test_create_devices_no_indoor(hass, manager: Manager, caplog):
 
 
 @pytest.mark.asyncio
-async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
-    manager: Manager = manager_system_04_furn_ac_zoning
+async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zoning_ble: Manager):
+    manager: Manager = manager_system_04_furn_ac_zoning_ble
     device_registry = dr.async_get(hass)
     system = manager.api.system_list[0]
     with patch.object(device_registry, "async_get_or_create") as mock_create_device:
         await manager.create_devices()
-        call = mock_create_device.mock_calls[0]
-
+        assert mock_create_device.call_count == 10
         assert len(manager.system_equip_device_map[system.sysId]) == 5
 
+        call = mock_create_device.mock_calls[0]
         identifiers = call.kwargs["identifiers"]
         assert call.kwargs["manufacturer"] == LENNOX_MFG
         assert call.kwargs["suggested_area"] == "basement"
         assert call.kwargs["name"] == manager.api.system_list[0].name
         assert call.kwargs["model"] == manager.api.system_list[0].productType
         assert call.kwargs["sw_version"] == manager.api.system_list[0].softwareVersion
+        elem = None
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -393,13 +388,31 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert elem[0] == DOMAIN
         assert elem[1] == zone.unique_id
 
-        assert mock_create_device.call_count == 8
+        index = 8
+        for ble_device in system.ble_devices.values():
+            if ble_device.deviceType == "tstat":
+                continue
+            call = mock_create_device.mock_calls[index]
+            identifiers = call.kwargs["identifiers"]
+            assert call.kwargs["manufacturer"] == LENNOX_MFG
+            assert call.kwargs["name"] == system.name + " " + ble_device.deviceName
+            assert call.kwargs["model"] == ble_device.controlModelNumber
+            assert call.kwargs["sw_version"] == ble_device.controlSoftwareVersion
+            assert call.kwargs["hw_version"] == ble_device.controlHardwareVersion
+            assert call.kwargs["via_device"][0] == DOMAIN
+            assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+
+            for elem in identifiers:
+                break
+            assert elem[0] == DOMAIN
+            assert elem[1] == f"{system.unique_id}_ble_{ble_device.ble_id}"
+            index += 1
 
 
 @pytest.mark.asyncio
-async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
-    manager = manager_system_04_furn_ac_zoning
+async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning: Manager):
     """Test to make sure we don't crash if no equipment is received"""
+    manager = manager_system_04_furn_ac_zoning
     device_registry = dr.async_get(hass)
     system = manager.api.system_list[0]
     # Wipe out the equipment list.
@@ -419,6 +432,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert call.kwargs["name"] == manager.api.system_list[0].name
         assert call.kwargs["model"] == manager.api.system_list[0].productType
         assert call.kwargs["sw_version"] == manager.api.system_list[0].softwareVersion
+        elem = None
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -430,7 +444,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert call.kwargs["suggested_area"] == "outside"
         assert call.kwargs["name"] == manager.api.system_list[0].name + " " + system.outdoorUnitType
         assert call.kwargs["model"] == "air conditioner"
-        assert call.kwargs["hw_version"] == None
+        assert call.kwargs["hw_version"] is None
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
         assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
@@ -445,7 +459,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert call.kwargs["suggested_area"] == "basement"
         assert call.kwargs["name"] == manager.api.system_list[0].name + " " + system.indoorUnitType
         assert call.kwargs["model"] == "furnace"
-        assert call.kwargs["hw_version"] == None
+        assert call.kwargs["hw_version"] is None
         assert "sw_version" not in call.kwargs
         assert call.kwargs["via_device"][0] == DOMAIN
         assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
@@ -456,7 +470,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
 
 
 @pytest.mark.asyncio
-async def test_S30VentilationUnit_device_model(hass, manager_2_systems: Manager, caplog):
+async def test_S30VentilationUnit_device_model(hass, manager_2_systems: Manager):
     manager = manager_2_systems
     system = manager.api.system_list[1]
     s30 = S30ControllerDevice(hass, manager.config_entry, system)
