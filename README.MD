@@ -3,6 +3,7 @@
 A custom component for Home Assistant to integrate with Lennox iComfort S40, S30, E30 or M30 thermostats; supporting local LAN connections and Lennox
 Cloud Connections depending on the device model. We believe these configurations work - let us know if your experience is different!
 
+
 | Device Type | Local Connection | Cloud Connection |
 | ----------- | ---------------- | ---------------- |
 | S30         | Yes              | Yes              |
