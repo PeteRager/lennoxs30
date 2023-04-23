@@ -22,7 +22,7 @@ class Device(object):
 
     @property
     def unique_name(self) -> str:
-        """Generate Unnique Name"""
+        """Generate Unique Name"""
         raise NotImplementedError
 
 
