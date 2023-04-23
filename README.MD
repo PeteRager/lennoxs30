@@ -304,20 +304,20 @@ The 22V25 is a battery powered room sensor.
 
 ![plot](./doc_images/ble_master_bedroom.png)
 
-| Entity Type   | Name                | Description                                                                                                           |
-| ------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| sensor        | Analog Temperature  | Provide the analog temperature. It is not clear what the different is between this and the other temperature sensors  |
-| sensor        | Battery             | The battery level in %                                                                                                |
-| sensor        | Ble rssi            | Signal Strength. Unclear what this is vs rssi                                                                         |
-| sensor        | Digital Temperature | Provide the digital temperature. It is not clear what the different is between this and the other temperature sensors |
-| sensor        | Humidity            | Provides the relative humidity                                                                                        |
-| sensor        | Rssi                | Signal Strength. Unclear what this is vs ble_rssi                                                                     |
-| sensor        | Temperature         | Provides the temperature                                                                                              |
-| sensor        | Total Powered Time  | Time in seconds the device has been powered                                                                           |
-| binary_sensor | Alarm Status        | Unknown - need info                                                                                                   |
-| binary_sensor | Comm_status         | Indicates if communication to the device is up                                                                        |
-| binary_sensor | Device State        | Unknown - need info                                                                                                   |
-| binary_sensor | Occupancy           | Indicates if the room is occupied                                                                                     |
+| Entity Type   | Name                | Description                                                                                                            |
+| ------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| sensor        | Analog Temperature  | Provides the analog temperature. It is not clear what the different is between this and the other temperature sensors  |
+| sensor        | Battery             | The battery level in %                                                                                                 |
+| sensor        | Ble rssi            | Signal Strength. Unclear what this is vs rssi                                                                          |
+| sensor        | Digital Temperature | Provides the digital temperature. It is not clear what the different is between this and the other temperature sensors |
+| sensor        | Humidity            | Provides the relative humidity                                                                                         |
+| sensor        | Rssi                | Signal Strength. Unclear what this is vs ble_rssi                                                                      |
+| sensor        | Temperature         | Provides the temperature                                                                                               |
+| sensor        | Total Powered Time  | Time in seconds the device has been powered                                                                            |
+| binary_sensor | Alarm Status        | Unknown - need info                                                                                                    |
+| binary_sensor | Comm_status         | Indicates if communication to the device is up                                                                         |
+| binary_sensor | Device State        | Unknown - need info                                                                                                    |
+| binary_sensor | Occupancy           | Indicates if the room is occupied                                                                                      |
 
 ## Sensors
 
