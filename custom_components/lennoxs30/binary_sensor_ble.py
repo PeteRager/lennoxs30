@@ -55,7 +55,7 @@ class BleCommStatusBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
     def update_callback(self):
         """Callback for data change"""
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("update_callback S40BleCommStatusBinarySensor myname [%s]", self._myname)
+            _LOGGER.debug("update_callback BleCommStatusBinarySensor myname [%s]", self._myname)
         self.schedule_update_ha_state()
 
     @property
@@ -117,7 +117,7 @@ class BleBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        _LOGGER.debug("async_added_to_hass BleCommStatusBinarySensor myname [%s]", self._myname)
+        _LOGGER.debug("async_added_to_hass BleBinarySensor myname [%s]", self._myname)
         self._ble_device.register_on_update_callback(self.commstatus_update, ["commStatus"])
         self._sensor_value.register_on_update_callback(self.sensor_value_update)
         if self._status_value is not None:
