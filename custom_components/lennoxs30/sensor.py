@@ -9,12 +9,11 @@ from typing import Any
 
 from homeassistant.const import (
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    FREQUENCY_HERTZ,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfFrequency,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -243,15 +242,15 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def device_class(self):
         uom = self.native_unit_of_measurement
-        if uom == TEMP_FAHRENHEIT:
+        if uom == UnitOfTemperature.FAHRENHEIT:
             return SensorDeviceClass.TEMPERATURE
-        elif uom == TEMP_CELSIUS:
+        elif uom == UnitOfTemperature.CELSIUS:
             return SensorDeviceClass.TEMPERATURE
-        elif uom == ELECTRIC_POTENTIAL_VOLT:
+        elif uom == UnitOfElectricPotential.VOLT:
             return SensorDeviceClass.VOLTAGE
-        elif uom == ELECTRIC_CURRENT_AMPERE:
+        elif uom == UnitOfElectricCurrent.AMPERE:
             return SensorDeviceClass.CURRENT
-        elif uom == FREQUENCY_HERTZ:
+        elif uom == UnitOfFrequency.HERTZ:
             return SensorDeviceClass.FREQUENCY
         return None
 
@@ -352,8 +351,8 @@ class S30OutdoorTempSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         if self._manager.is_metric is False:
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def device_class(self):
@@ -438,8 +437,8 @@ class S30TempSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         if self._manager.is_metric is False:
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def device_class(self):
@@ -614,7 +613,7 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
 
     @property
     def native_unit_of_measurement(self):
-        return POWER_WATT
+        return UnitOfPower.WATT
 
     @property
     def device_class(self):
