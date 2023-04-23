@@ -26,7 +26,7 @@ async def test_ble_binary_sensor(hass, manager_system_04_furn_ac_zoning_ble: Man
 
     system: lennox_system = manager.api.system_list[0]
     ble_device = system.ble_devices[513]
-    sensor_dict = lennox_22v25_binary_sensors[0]
+    sensor_dict = lennox_22v25_binary_sensors[2]
     input_sensor = ble_device.inputs[sensor_dict["input_id"]]
     status_sensor = ble_device.inputs[sensor_dict["status_id"]]
     sensor = BleBinarySensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)
@@ -63,7 +63,7 @@ async def test_ble_binary_sensorsubscription(hass, manager_system_04_furn_ac_zon
     manager = manager_system_04_furn_ac_zoning_ble
     system: lennox_system = manager.api.system_list[0]
     ble_device = system.ble_devices[513]
-    sensor_dict = lennox_22v25_binary_sensors[0]
+    sensor_dict = lennox_22v25_binary_sensors[2]
     input_sensor = ble_device.inputs[sensor_dict["input_id"]]
     status_sensor = ble_device.inputs[sensor_dict["status_id"]]
     sensor = BleBinarySensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)

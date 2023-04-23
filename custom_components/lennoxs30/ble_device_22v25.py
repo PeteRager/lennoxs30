@@ -15,8 +15,6 @@ lennox_22v25_sensors = [
         "entity_category": EntityCategory.DIAGNOSTIC,
         "uom": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
-    {"input_id": 4001, "name": "alarm_status", "entity_category": EntityCategory.DIAGNOSTIC},
-    {"input_id": 4002, "name": "device_state", "entity_category": EntityCategory.DIAGNOSTIC},
     {
         "input_id": 4003,
         "name": "total powered time",
@@ -71,5 +69,7 @@ lennox_22v25_sensors = [
 ]
 
 lennox_22v25_binary_sensors = [
+    {"input_id": 4001, "name": "alarm_status", "entity_category": EntityCategory.DIAGNOSTIC},
+    {"input_id": 4002, "name": "device_state", "entity_category": EntityCategory.DIAGNOSTIC},
     {"input_id": 4056, "status_id": 4057, "name": "occupancy", "device_class": BinarySensorDeviceClass.OCCUPANCY},
 ]

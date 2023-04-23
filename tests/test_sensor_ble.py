@@ -26,7 +26,7 @@ async def test_ble_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
 
     system: lennox_system = manager.api.system_list[0]
     ble_device = system.ble_devices[513]
-    sensor_dict = lennox_22v25_sensors[5]
+    sensor_dict = lennox_22v25_sensors[3]
     input_sensor = ble_device.inputs[sensor_dict["input_id"]]
     status_sensor = ble_device.inputs[sensor_dict["status_id"]]
     sensor = S40BleSensor(hass, manager, system, ble_device, input_sensor, status_sensor, sensor_dict)

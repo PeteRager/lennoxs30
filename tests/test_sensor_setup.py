@@ -248,8 +248,8 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 20
-    for index in range(0, 20):
+    assert len(sensor_list) == 16
+    for index in range(0, 16):
         assert isinstance(sensor_list[index], S40BleSensor)
 
     with caplog.at_level(logging.ERROR):
@@ -260,7 +260,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 18
+        assert len(sensor_list) == 14
         assert len(caplog.records) == 2
 
         assert system.ble_devices[512].deviceName in caplog.messages[0]
