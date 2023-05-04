@@ -174,6 +174,11 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
         self._equipment: lennox_equipment = equipment
         self._diagnostic: lennox_equipment_diagnostic = diagnostic
 
+        if diagnostic.unit.strip() == "":
+            self._state_class = None
+        else:
+            self._state_class = SensorStateClass.MEASUREMENT
+
         suffix = str(self._equipment.equipment_id)
         if self._equipment.equipment_id == 1:
             suffix = "ou"
@@ -217,6 +222,11 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
         """Return native value of the sensor."""
         if self._diagnostic.value == "waiting...":
             return None
+        if self._state_class == SensorStateClass.MEASUREMENT:
+            try:
+                _ = float(self._diagnostic.value)
+            except ValueError:
+                return None
         return self._diagnostic.value
 
     @property
@@ -256,7 +266,7 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
 
     @property
     def state_class(self):
-        return SensorStateClass.MEASUREMENT
+        return self._state_class
 
     @property
     def device_info(self) -> DeviceInfo:
