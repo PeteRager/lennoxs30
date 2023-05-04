@@ -44,6 +44,7 @@ from .const import (
 )
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
 from .ble_device_22v25 import lennox_22v25_sensors
+from .ble_device_21p02 import lennox_21p02_sensors
 from .sensor_ble import S40BleSensor
 
 from . import Manager
@@ -119,8 +120,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         for ble_device in system.ble_devices.values():
             if ble_device.deviceType == "tstat":
                 continue
-            elif ble_device.controlModelNumber == "22V25":
-                for sensor_dict in lennox_22v25_sensors:
+            ble_sensors: dict = None
+            if ble_device.controlModelNumber == "22V25":
+                ble_sensors = lennox_22v25_sensors
+            elif ble_device.controlModelNumber == "21P02":
+                ble_sensors = lennox_21p02_sensors
+            if ble_sensors:
+                for sensor_dict in ble_sensors:
                     if sensor_dict["input_id"] not in ble_device.inputs:
                         _LOGGER.error(
                             "Error S40BleSensor name [%s] sensor_name [%s] no input_id [%d]",

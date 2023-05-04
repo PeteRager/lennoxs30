@@ -259,7 +259,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
     system = manager.api.system_list[0]
     with patch.object(device_registry, "async_get_or_create") as mock_create_device:
         await manager.create_devices()
-        assert mock_create_device.call_count == 10
+        assert mock_create_device.call_count == 11
         assert len(manager.system_equip_device_map[system.sysId]) == 5
 
         call = mock_create_device.mock_calls[0]

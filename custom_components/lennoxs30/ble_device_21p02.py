@@ -1,12 +1,10 @@
-"""Support for Lennox BLE Remote Sensor"""
-# pylint: disable=line-too-long
+"""Lennox BLE Air Quality Sensor"""
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, CONCENTRATION_PARTS_PER_MILLION
 
-lennox_22v25_sensors = [
+lennox_21p02_sensors = [
     {
         "input_id": 4000,
         "name": "rssi",
@@ -31,45 +29,32 @@ lennox_22v25_sensors = [
         "uom": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
     {
-        "input_id": 4050,
-        "status_id": 4051,
-        "name": "temperature",
+        "input_id": 4100,
+        "status_id": 4102,
+        "name": "pm2_5",
         "state_class": SensorStateClass.MEASUREMENT,
-        "device_class": SensorDeviceClass.TEMPERATURE,
+        "device_class": SensorDeviceClass.PM25,
+        "uom": CONCENTRATION_PARTS_PER_MILLION,
     },
     {
-        "input_id": 4052,
-        "status_id": 4053,
-        "name": "humidity",
+        "input_id": 4103,
+        "status_id": 4104,
+        "name": "co2",
         "state_class": SensorStateClass.MEASUREMENT,
-        "device_class": SensorDeviceClass.HUMIDITY,
+        "device_class": SensorDeviceClass.CO2,
     },
     {
-        "input_id": 4054,
-        "status_id": 4055,
-        "name": "battery",
+        "input_id": 4105,
+        "status_id": 4106,
+        "name": "voc",
         "state_class": SensorStateClass.MEASUREMENT,
-        "device_class": SensorDeviceClass.BATTERY,
-        "entity_category": EntityCategory.DIAGNOSTIC,
-    },
-    {
-        "input_id": 4058,
-        "status_id": 4059,
-        "name": "digital temperature",
-        "state_class": SensorStateClass.MEASUREMENT,
-        "device_class": SensorDeviceClass.TEMPERATURE,
-    },
-    {
-        "input_id": 4060,
-        "status_id": 4061,
-        "name": "analog temperature",
-        "state_class": SensorStateClass.MEASUREMENT,
-        "device_class": SensorDeviceClass.TEMPERATURE,
+        "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        "uom": CONCENTRATION_PARTS_PER_MILLION,
     },
 ]
 
-lennox_22v25_binary_sensors = [
+lennox_21p02_binary_sensors = [
     {"input_id": 4001, "name": "alarm_status", "entity_category": EntityCategory.DIAGNOSTIC},
     {"input_id": 4002, "name": "device_state", "entity_category": EntityCategory.DIAGNOSTIC},
-    {"input_id": 4056, "status_id": 4057, "name": "occupancy", "device_class": BinarySensorDeviceClass.OCCUPANCY},
+    {"input_id": 4107, "name": "idle_switch", "entity_category": EntityCategory.DIAGNOSTIC},
 ]

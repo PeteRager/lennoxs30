@@ -74,7 +74,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 10
+    assert len(sensor_list) == 14
     assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
     assert isinstance(sensor_list[1], S30CloudConnectedStatus)
     assert isinstance(sensor_list[2], BleCommStatusBinarySensor)
@@ -85,6 +85,10 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     assert isinstance(sensor_list[7], BleBinarySensor)
     assert isinstance(sensor_list[8], BleBinarySensor)
     assert isinstance(sensor_list[9], BleBinarySensor)
+    assert isinstance(sensor_list[10], BleCommStatusBinarySensor)
+    assert isinstance(sensor_list[11], BleBinarySensor)
+    assert isinstance(sensor_list[12], BleBinarySensor)
+    assert isinstance(sensor_list[13], BleBinarySensor)
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -94,7 +98,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 8
+        assert len(sensor_list) == 12
         assert len(caplog.records) == 2
 
         assert system.ble_devices[512].deviceName in caplog.messages[0]
@@ -115,7 +119,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 3
+        assert len(sensor_list) == 7
         assert len(caplog.records) == 1
 
         assert system.ble_devices[513].deviceName in caplog.messages[0]
