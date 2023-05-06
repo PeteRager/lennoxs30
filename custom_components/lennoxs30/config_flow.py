@@ -1,8 +1,30 @@
+"""Integration Configuration"""
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=line-too-long
+# pylint: disable=missing-function-docstring
+
 import ipaddress
+import logging
 import re
+import voluptuous as vol
+
+
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_PROTOCOL,
+    CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
+)
+from homeassistant.helpers import config_validation as cv
+
+
 from lennoxs30api.s30exception import EC_LOGIN, S30Exception
 
-import voluptuous as vol
 from . import Manager
 from .const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
@@ -26,19 +48,6 @@ from .const import (
     CONF_CREATE_PARAMETERS,
 )
 from .util import dict_redact_fields, redact_email
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_PROTOCOL,
-    CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
-)
-from homeassistant.helpers import config_validation as cv
-import logging
 
 
 DEFAULT_POLL_INTERVAL: int = 10
@@ -100,10 +109,10 @@ def lennox30_entries(hass: HomeAssistant):
     return set(entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN))
 
 
-class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Lennox S30 configflow."""
 
-    VERSION = 4
+    VERSION = 5
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _host_in_configuration_exists(self, host) -> bool:
@@ -147,15 +156,15 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         self.config_input = {}
-        _LOGGER.debug(f"async_step_user user_input [{dict_redact_fields(user_input)}]")
+        _LOGGER.debug("async_step_user user_input [%s]", dict_redact_fields(user_input))
         if user_input is not None:
             cloud_connection = user_input[CONF_CLOUD_CONNECTION]
             local_connection = user_input[CONF_LOCAL_CONNECTION]
             if cloud_connection == local_connection:
                 errors[CONF_LOCAL_CONNECTION] = "select_cloud_or_local"
             else:
-                dict = {CONF_CLOUD_CONNECTION: cloud_connection}
-                self.config_input.update(dict)
+                update_dict = {CONF_CLOUD_CONNECTION: cloud_connection}
+                self.config_input.update(update_dict)
                 if cloud_connection:
                     return await self.async_step_cloud()
                 else:
@@ -166,7 +175,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_cloud(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-        _LOGGER.debug(f"async_step_cloud user_input [{dict_redact_fields(user_input)}]")
+        _LOGGER.debug("async_step_cloud user_input [%s]", dict_redact_fields(user_input))
         if user_input is not None:
             await self.async_set_unique_id(DOMAIN + "_" + user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
@@ -174,9 +183,9 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.try_to_connect(user_input)
                 self.config_input.update(user_input)
                 return await self.async_step_advanced()
-            except S30Exception as e:
-                _LOGGER.error(f"async_step_cloud error [{e.as_string()}]")
-                if e.error_code == EC_LOGIN:
+            except S30Exception as ex:
+                _LOGGER.error("async_step_cloud error [%s]", ex.as_string())
+                if ex.error_code == EC_LOGIN:
                     errors["base"] = "unable_to_connect_login"
                 else:
                     errors["base"] = "unable_to_connect_cloud"
@@ -185,7 +194,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_local(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-        _LOGGER.debug(f"async_step_local user_input [{dict_redact_fields(user_input)}]")
+        _LOGGER.debug("async_step_local user_input [%s]", dict_redact_fields(user_input))
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -200,14 +209,14 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.try_to_connect(user_input)
                     self.config_input.update(user_input)
                     return await self.async_step_advanced()
-                except S30Exception as e:
-                    _LOGGER.error(f"async_step_local error [{e.as_string()}]")
+                except S30Exception as ex:
+                    _LOGGER.error("async_step_local error [%s]", ex.as_string())
                     errors[CONF_HOST] = "unable_to_connect_local"
         return self.async_show_form(step_id="local", data_schema=STEP_LOCAL, errors=errors)
 
     async def async_step_advanced(self, user_input=None):
         errors = {}
-        _LOGGER.debug(f"async_step_advanced user_input [{dict_redact_fields(user_input)}]")
+        _LOGGER.debug("async_step_advanced user_input [%s]", dict_redact_fields(user_input))
 
         if user_input is not None:
             self.config_input.update(user_input)
@@ -227,7 +236,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         if self.config_input[CONF_LOG_MESSAGES_TO_FILE] is False:
             self.config_input[CONF_MESSAGE_DEBUG_FILE] = ""
-        _LOGGER.debug(f"async_step_advanced config_input [{dict_redact_fields(self.config_input)}]")
+        _LOGGER.debug("async_step_advanced config_input [%s]", dict_redact_fields(self.config_input))
         return self.async_create_entry(title=title, data=self.config_input)
 
     async def try_to_connect(self, user_input):
@@ -270,7 +279,7 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input) -> FlowResult:
         """Handle the import step."""
         self.config_input = {}
-        _LOGGER.debug(f"async_step_import user_input [{dict_redact_fields(user_input)}]")
+        _LOGGER.debug("async_step_import user_input [%s]", dict_redact_fields(user_input))
         self.config_input.update(user_input)
         return await self.create_entry()
 
@@ -281,6 +290,8 @@ class lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Classs to handle options flow"""
+
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
@@ -288,7 +299,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         _LOGGER.debug(
-            f"OptionsFlowHandler:async_step_init user_input [{dict_redact_fields(user_input)}] data [{dict_redact_fields(self.config_entry.data)}]"
+            "OptionsFlowHandler:async_step_init user_input [%s] data [%s]",
+            dict_redact_fields(user_input),
+            dict_redact_fields(self.config_entry.data),
         )
         if user_input is not None:
             if CONF_HOST in self.config_entry.data:
