@@ -2,7 +2,11 @@
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+)
 
 lennox_21p02_sensors = [
     {
@@ -34,6 +38,7 @@ lennox_21p02_sensors = [
         "name": "pm25",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.PM25,
+        "uom": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     {
         "input_id": 4103,
@@ -41,6 +46,7 @@ lennox_21p02_sensors = [
         "name": "co2",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.CO2,
+        "uom": CONCENTRATION_PARTS_PER_MILLION,
     },
     {
         "input_id": 4105,
@@ -48,6 +54,8 @@ lennox_21p02_sensors = [
         "name": "voc",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        "uom": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "precision": 2,
     },
 ]
 
@@ -60,74 +68,80 @@ lennox_21p02_binary_sensors = [
 lennox_iaq_sensors = [
     {
         "input": "iaq_mitigation_action",
-        "name": "iaq mitigation action",
+        "name": "mitigation action",
     },
     {
         "input": "iaq_mitigation_state",
-        "name": "iaq mitigation state",
+        "name": "mitigation state",
     },
     {
         "input": "iaq_overall_index",
-        "name": "iaq overall index",
+        "name": "overall index",
     },
     {
         "input": "iaq_pm25_sta",
         "status": "iaq_pm25_sta_valid",
-        "name": "iaq pm25 sta",
+        "name": "pm25 sta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.PM25,
+        "uom": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         "precision": 4,
     },
     {
         "input": "iaq_pm25_lta",
         "status": "iaq_pm25_lta_valid",
-        "name": "iaq pm25 lta",
+        "name": "pm25 lta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.PM25,
+        "uom": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         "precision": 4,
     },
     {
         "input": "iaq_pm25_component_score",
-        "name": "iaq pm25 component score",
+        "name": "pm25 component score",
     },
     {
         "input": "iaq_voc_sta",
         "status": "iaq_voc_sta_valid",
-        "name": "iaq voc sta",
+        "name": "voc sta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        "precision": 4,
+        "uom": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "precision": 2,
     },
     {
         "input": "iaq_voc_lta",
         "status": "iaq_voc_lta_valid",
-        "name": "iaq voc lta",
+        "name": "voc lta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        "precision": 4,
+        "uom": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "precision": 2,
     },
     {
         "input": "iaq_voc_component_score",
-        "name": "iaq voc component score",
+        "name": "voc component score",
     },
     {
         "input": "iaq_co2_lta",
         "status": "iaq_co2_lta_valid",
-        "name": "iaq co2 lta",
+        "name": "co2 lta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.CO2,
+        "uom": CONCENTRATION_PARTS_PER_MILLION,
         "precision": 1,
     },
     {
         "input": "iaq_co2_sta",
         "status": "iaq_co2_sta_valid",
-        "name": "iaq co2 sta",
+        "name": "co2 sta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.CO2,
+        "uom": CONCENTRATION_PARTS_PER_MILLION,
         "precision": 1,
     },
     {
         "input": "iaq_co2_component_score",
-        "name": "iaq co2 component score",
+        "name": "co2 component score",
     },
 ]

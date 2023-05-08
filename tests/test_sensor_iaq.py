@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
 from lennoxs30api.s30api_async import lennox_system
 from custom_components.lennoxs30 import Manager
@@ -34,7 +35,7 @@ async def test_iaq_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
     assert sensor.extra_state_attributes is None
     assert sensor.native_value == round(system.iaq_pm25_lta, sensor_dict["precision"])
     assert sensor.entity_category is None
-    assert sensor.native_unit_of_measurement is None
+    assert sensor.native_unit_of_measurement == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
     system.iaq_pm25_lta_valid = False
     assert sensor.available is False
