@@ -37,7 +37,7 @@ from lennoxs30api.s30exception import S30Exception, EC_LOGIN, EC_COMMS_ERROR
 from custom_components.lennoxs30.config_flow import (
     OptionsFlowHandler,
     host_valid,
-    lennoxs30ConfigFlow,
+    Lennoxs30ConfigFlow,
     STEP_CLOUD,
     STEP_LOCAL,
     STEP_ONE,
@@ -72,6 +72,7 @@ from custom_components.lennoxs30 import (
     Manager,
     async_migrate_entry,
     async_setup,
+    g_unique_id_update,
 )
 from custom_components.lennoxs30.util import redact_email
 
@@ -118,7 +119,7 @@ async def test_migrate_local_config_min(hass, caplog):
 
             assert len(caplog.records) == 1
 
-            config_flow = lennoxs30ConfigFlow()
+            config_flow = Lennoxs30ConfigFlow()
             with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == "10.0.0.1"
@@ -188,7 +189,7 @@ async def test_migrate_local_config_full(hass, caplog):
 
             assert len(caplog.records) == 1
 
-            config_flow = lennoxs30ConfigFlow()
+            config_flow = Lennoxs30ConfigFlow()
             with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == "10.0.0.1"
@@ -315,7 +316,7 @@ async def test_migrate_cloud_config_min(hass, caplog):
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_CLOUD_TIMEOUT
 
-            config_flow = lennoxs30ConfigFlow()
+            config_flow = Lennoxs30ConfigFlow()
             with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == redact_email(migration_data[CONF_EMAIL])
@@ -381,7 +382,7 @@ async def test_migrate_cloud_config_full(hass, caplog):
             assert migration_data[CONF_FAST_POLL_COUNT] == 10
             assert migration_data[CONF_TIMEOUT] == DEFAULT_CLOUD_TIMEOUT
 
-            config_flow = lennoxs30ConfigFlow()
+            config_flow = Lennoxs30ConfigFlow()
             with patch.object(config_flow, "async_set_unique_id") as _:
                 result = await config_flow.async_step_import(migration_data)
                 assert result["title"] == redact_email(migration_data[CONF_EMAIL])
@@ -430,7 +431,7 @@ async def test_upgrade_config_v1(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 4
+        assert config_entry.version == 5
         assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
@@ -473,7 +474,7 @@ async def test_upgrade_config_v1(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 4
+        assert config_entry.version == 5
         assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
@@ -520,7 +521,7 @@ async def test_upgrade_config_v2(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 4
+        assert config_entry.version == 5
         assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
@@ -566,7 +567,7 @@ async def test_upgrade_config_v2(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 4
+        assert config_entry.version == 5
         assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
@@ -615,7 +616,7 @@ async def test_upgrade_config_v3(hass, caplog):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 4
+        assert config_entry.version == 5
         assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
@@ -661,7 +662,7 @@ async def test_upgrade_config_v3(hass, caplog):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 4
+        assert config_entry.version == 5
         assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
@@ -681,6 +682,8 @@ async def test_upgrade_config_v3(hass, caplog):
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
         assert new_data["create_diagnostic_sensors"] is False
 
+        assert len(g_unique_id_update) != 0
+
 
 def test_config_flow_host_valid(hass, caplog):
     assert host_valid("10.23.23.45") is True
@@ -692,7 +695,7 @@ def test_config_flow_host_valid(hass, caplog):
 
 
 def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow()
+    cf = Lennoxs30ConfigFlow()
     cf.hass = hass
     assert cf._host_in_configuration_exists("localhost") is False
 
@@ -813,7 +816,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_async_step_user(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow()
+    cf = Lennoxs30ConfigFlow()
     cf.hass = hass
     res = await cf.async_step_user(user_input=None)
     assert res["type"] == "form"
@@ -866,7 +869,7 @@ async def test_lennoxS30ConfigFlow_async_step_user(manager: Manager, hass, caplo
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow()
+    cf = Lennoxs30ConfigFlow()
     cf.hass = hass
 
     with patch.object(cf, "async_set_unique_id") as async_set_unique_id:
@@ -945,7 +948,7 @@ async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, capl
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow()
+    cf = Lennoxs30ConfigFlow()
     cf.hass = hass
 
     with patch.object(cf, "async_set_unique_id") as async_set_unique_id:
@@ -1053,7 +1056,7 @@ async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, capl
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_async_step_advanced(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow()
+    cf = Lennoxs30ConfigFlow()
     cf.hass = hass
 
     with patch.object(cf, "create_entry") as create_entry:
@@ -1070,7 +1073,7 @@ async def test_lennoxS30ConfigFlow_async_step_advanced(manager: Manager, hass, c
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_async_get_options_flow(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow().async_get_options_flow(manager.config_entry)
+    cf = Lennoxs30ConfigFlow().async_get_options_flow(manager.config_entry)
     cf.hass = hass
     assert isinstance(cf, OptionsFlowHandler)
 
@@ -1083,7 +1086,7 @@ async def test_OptionsFlowHandler_async_step_init_local(config_entry_local, hass
 
     # TODO validate each scheme element
     schema = res["data_schema"].schema
-
+    # pylint: disable=unused-variable
     si = schema[CONF_APP_ID]
     si = schema[CONF_CREATE_SENSORS]
     si = schema[CONF_ALLERGEN_DEFENDER_SWITCH]
@@ -1111,6 +1114,7 @@ async def test_OptionsFlowHandler_async_step_init_cloud(config_entry_cloud, hass
 
     # TODO validate each scheme element
     schema = res["data_schema"].schema
+    # pylint: disable=unused-variable
     si = schema[CONF_PASSWORD]
     si = schema[CONF_APP_ID]
     si = schema[CONF_CREATE_SENSORS]
@@ -1179,7 +1183,7 @@ async def test_OptionsFlowHandler_async_step_init_local_save(
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_try_to_connect_cloud(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow()
+    cf = Lennoxs30ConfigFlow()
     cf.config_input = {}
     cf.config_input[CONF_CLOUD_CONNECTION] = True
     cf.hass = hass
@@ -1202,7 +1206,7 @@ async def test_lennoxS30ConfigFlow_try_to_connect_cloud(manager: Manager, hass, 
 
 @pytest.mark.asyncio
 async def test_lennoxS30ConfigFlow_try_to_connect_local(manager: Manager, hass, caplog):
-    cf = lennoxs30ConfigFlow()
+    cf = Lennoxs30ConfigFlow()
     cf.config_input = {}
     cf.config_input[CONF_CLOUD_CONNECTION] = False
     cf.hass = hass
