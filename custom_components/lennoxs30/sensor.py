@@ -34,7 +34,7 @@ from lennoxs30api import (
     LENNOX_STATUS_NOT_EXIST,
 )
 
-
+from . import Manager
 from .base_entity import S30BaseEntityMixin
 from .const import (
     MANAGER,
@@ -44,10 +44,10 @@ from .const import (
 )
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
 from .ble_device_22v25 import lennox_22v25_sensors
-from .ble_device_21p02 import lennox_21p02_sensors
+from .ble_device_21p02 import lennox_21p02_sensors, lennox_iaq_sensors
 from .sensor_ble import S40BleSensor
+from .sensor_iaq import S40IAQSensor
 
-from . import Manager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,6 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             if ble_device.controlModelNumber == "22V25":
                 ble_sensors = lennox_22v25_sensors
             elif ble_device.controlModelNumber == "21P02":
+                for sensor_item in lennox_iaq_sensors:
+                    sensor_list.append(S40IAQSensor(hass, manager, system, ble_device, sensor_item))
                 ble_sensors = lennox_21p02_sensors
             if ble_sensors:
                 for sensor_dict in ble_sensors:

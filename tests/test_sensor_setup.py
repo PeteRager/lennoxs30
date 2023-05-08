@@ -26,6 +26,7 @@ from custom_components.lennoxs30.sensor import (
     S30OutdoorTempSensor,
 )
 from custom_components.lennoxs30.sensor_ble import S40BleSensor
+from custom_components.lennoxs30.sensor_iaq import S40IAQSensor
 
 
 from tests.conftest import loadfile
@@ -248,9 +249,9 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 22
-    for index in range(0, 16):
-        assert isinstance(sensor_list[index], S40BleSensor)
+    assert len(sensor_list) == 34
+    for index in range(0, 34):
+        assert isinstance(sensor_list[index], S40BleSensor | S40IAQSensor)
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -260,7 +261,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 20
+        assert len(sensor_list) == 32
         assert len(caplog.records) == 2
 
         assert system.ble_devices[512].deviceName in caplog.messages[0]
