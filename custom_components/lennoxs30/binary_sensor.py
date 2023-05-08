@@ -25,6 +25,7 @@ from custom_components.lennoxs30.binary_sensor_ble import BleBinarySensor
 from .base_entity import S30BaseEntityMixin
 from .binary_sensor_ble import BleCommStatusBinarySensor
 from .ble_device_22v25 import lennox_22v25_binary_sensors
+from .ble_device_21p02 import lennox_21p02_binary_sensors
 from .const import (
     MANAGER,
     UNIQUE_ID_SUFFIX_AUX_HI_AMBIENT_LOCKOUT,
@@ -68,8 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 continue
             sensor_list.append(BleCommStatusBinarySensor(hass, manager, system, ble_device))
 
+            ble_sensors: dict = None
             if ble_device.controlModelNumber == "22V25":
-                for sensor_dict in lennox_22v25_binary_sensors:
+                ble_sensors = lennox_22v25_binary_sensors
+            elif ble_device.controlModelNumber == "21P02":
+                ble_sensors = lennox_21p02_binary_sensors
+            if ble_sensors:
+                for sensor_dict in ble_sensors:
                     if sensor_dict["input_id"] not in ble_device.inputs:
                         _LOGGER.error(
                             "Error BleBinarySensor name [%s] sensor_name [%s] no input_id [%d]",
