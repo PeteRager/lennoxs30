@@ -16,6 +16,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, METRIC_SYSTEM
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, device_registry as dr
 
 from lennoxs30api.s30api_async import (
     lennox_system,
@@ -41,6 +42,7 @@ from custom_components.lennoxs30 import (
     RETRY_INTERVAL_SECONDS,
     Manager,
 )
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
 
 @pytest.mark.asyncio
@@ -956,12 +958,12 @@ async def test_manager_async_shutdown_s30_initialize(manager_us_customary_units:
 
 
 @pytest.mark.asyncio
-async def test_manager_async_shutdown_reinitialize(manager_us_customary_units: Manager, caplog):
+async def test_manager_async_shutdown_reinitialize(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     manager._climate_entities_initialized = True
-    with patch.object(manager, "messagePump") as messagePump, patch.object(
-        manager, "connect_subscribe"
-    ) as connect_subscribe, patch.object(manager.api, "shutdown") as api_shutdown:
+    with patch.object(manager, "messagePump") as messagePump, patch.object(manager, "connect_subscribe"), patch.object(
+        manager.api, "shutdown"
+    ):
         messagePump.return_value = False
 
         await manager.reinitialize_task()
@@ -977,6 +979,125 @@ async def test_manager_async_shutdown_reinitialize(manager_us_customary_units: M
         except asyncio.TimeoutError as e:
             ex = e
         assert ex is None
+
+
+@pytest.mark.asyncio
+async def test_manager_unique_id_update(hass, manager_us_customary_units: Manager):
+    manager = manager_us_customary_units
+    system = manager.api.system_list[0]
+    system.productType = "S40"
+    entry_id = manager.config_entry.entry_id
+
+    ent_reg = er.async_get(hass)
+    ent_reg.async_get_or_create(
+        "switch", LENNOX_DOMAIN, "123_HA", suggested_object_id="away", config_entry=manager.config_entry
+    )
+    ent_reg.async_get_or_create(
+        "sensor", LENNOX_DOMAIN, "1234_HA", suggested_object_id="temperature", config_entry=manager.config_entry
+    )
+    ent_reg.async_get_or_create("sensor", "other_domain", "123_HA", suggested_object_id="humidity")
+    ent_reg.async_get_or_create(
+        "climate", LENNOX_DOMAIN, "123_CL_ZONE1", suggested_object_id="zone1", config_entry=manager.config_entry
+    )
+
+    await manager.unique_id_updates()
+
+    assert ent_reg.async_get("switch.away").unique_id == f"{system.unique_id}_HA".replace("-", "")
+    assert ent_reg.async_get("sensor.temperature").unique_id == "1234_HA"
+    assert ent_reg.async_get("sensor.humidity").unique_id == "123_HA"
+    assert ent_reg.async_get("climate.zone1").unique_id == f"{system.unique_id}_CL_ZONE1".replace("-", "")
+
+    entry_id = manager.config_entry.entry_id
+
+    dev_reg = dr.async_get(hass)
+    id1 = dev_reg.async_get_or_create(config_entry_id=entry_id, name="S30", identifiers={("lennoxs30", "123")}).id
+    id2 = dev_reg.async_get_or_create(
+        config_entry_id=entry_id, name="Indoor Unit", identifiers={("lennoxs30", "123_iu")}
+    ).id
+    id3 = dev_reg.async_get_or_create(
+        config_entry_id=entry_id, name="Outdoor Unit", identifiers={("lennoxs30", "1234_ou")}
+    ).id
+    id4 = dev_reg.async_get_or_create(config_entry_id="12345", name="Other", identifiers={("other", "123")}).id
+
+    await manager.unique_id_updates()
+
+    entry = dev_reg.async_get(id1)
+    unique_id = None
+    for unique_id in entry.identifiers:
+        break
+    assert unique_id[1] == system.unique_id
+    entry = dev_reg.async_get(id2)
+    for unique_id in entry.identifiers:
+        break
+    assert unique_id[1] == f"{system.unique_id}_iu"
+
+    entry = dev_reg.async_get(id3)
+    for unique_id in entry.identifiers:
+        break
+    assert unique_id[1] == "1234_ou"
+
+    entry = dev_reg.async_get(id4)
+    for unique_id in entry.identifiers:
+        break
+    assert unique_id[1] == "123"
+
+
+@pytest.mark.asyncio
+async def test_manager_unique_id_update_nop(manager_us_customary_units: Manager):
+    manager = manager_us_customary_units
+
+    with patch.object(manager, "_update_device_unique_ids") as patch_update_device_unique_ids, patch.object(
+        manager, "_update_entity_unique_ids"
+    ) as patch__update_entity_unique_ids:
+        await manager.unique_id_updates()
+        assert patch_update_device_unique_ids.call_count == 0
+        assert patch__update_entity_unique_ids.call_count == 0
+
+    system = manager.api.system_list[0]
+    system.productType = "S40"
+    manager.api.isLANConnection = False
+    with patch.object(manager, "_update_device_unique_ids") as patch_update_device_unique_ids, patch.object(
+        manager, "_update_entity_unique_ids"
+    ) as patch__update_entity_unique_ids:
+        await manager.unique_id_updates()
+        assert patch_update_device_unique_ids.call_count == 0
+        assert patch__update_entity_unique_ids.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_manager_unique_id_update_errors(manager_us_customary_units: Manager, caplog):
+    manager = manager_us_customary_units
+    system = manager.api.system_list[0]
+    system.productType = "S40"
+    with caplog.at_level(logging.ERROR), patch.object(
+        manager, "_update_device_unique_ids"
+    ) as patch_update_device_unique_ids, patch.object(
+        manager, "_update_entity_unique_ids"
+    ) as patch__update_entity_unique_ids:
+        caplog.clear()
+        patch__update_entity_unique_ids.side_effect = KeyError("this is the error")
+        await manager.unique_id_updates()
+        assert patch_update_device_unique_ids.call_count == 1
+        assert patch__update_entity_unique_ids.call_count == 1
+
+        assert len(caplog.messages) == 1
+        assert "this is the error" in caplog.messages[0]
+        assert "Failed to update entity unique_ids" in caplog.messages[0]
+
+    with caplog.at_level(logging.ERROR), patch.object(
+        manager, "_update_device_unique_ids"
+    ) as patch_update_device_unique_ids, patch.object(
+        manager, "_update_entity_unique_ids"
+    ) as patch_update_entity_unique_ids:
+        caplog.clear()
+        patch_update_device_unique_ids.side_effect = KeyError("this is the error")
+        await manager.unique_id_updates()
+        assert patch_update_device_unique_ids.call_count == 1
+        assert patch_update_entity_unique_ids.call_count == 1
+
+        assert len(caplog.messages) == 1
+        assert "this is the error" in caplog.messages[0]
+        assert "Failed to update device unique_ids" in caplog.messages[0]
 
 
 # There are problems with Event Loops that makes this test fail.  Needs fixing.

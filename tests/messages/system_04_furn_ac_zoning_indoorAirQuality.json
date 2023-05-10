@@ -1,0 +1,73 @@
+{
+        "MessageId": 0,
+        "SenderID": "LCC",
+        "TargetID": "ha_entryway",
+        "MessageType": "PropertyChange",
+        "Data": {
+            "indoorAirQuality": {
+                "mitigation_action": "Filtration",
+                "error_cause": "None",
+                "required_cleaning_cfm": 0,
+                "mitigation_state": "State_Paused",
+                "holdoff_time": 0,
+                "clear_persistent_error": false,
+                "overall_index": "Fair",
+                "writeAccess": "openAll",
+                "holdoff_status": "None",
+                "holdoff_request": "None",
+                "cleanliness_level": "Basic",
+                "holdoff_time_selected": 0,
+                "sensor": [
+                {
+                    "enable_display": true,
+                    "sta": 0,
+                    "trending_score_validNumber": true,
+                    "scaling_factor": 1,
+                    "component_score": "Good",
+                    "value": 0,
+                    "lta": 0.186265,
+                    "trending_score": -5.1e-05,
+                    "sta_validNumber": true,
+                    "id": 0,
+                    "lta_validNumber": true,
+                    "name": "PM25"
+                },
+                {
+                    "enable_display": true,
+                    "sta": 1299.726944,
+                    "trending_score_validNumber": true,
+                    "component_score": "Fair",
+                    "value": 1250,
+                    "id": 1,
+                    "lta": 297.103471,
+                    "lta_validNumber": true,
+                    "sta_validNumber": true,
+                    "scaling_factor": 2.25,
+                    "trending_score": -0.011101,
+                    "name": "VOC"
+                },
+                {
+                    "enable_display": true,
+                    "sta": 671.416944,
+                    "trending_score_validNumber": true,
+                    "component_score": "Good",
+                    "value": 671,
+                    "id": 2,
+                    "lta": 656.788879,
+                    "lta_validNumber": true,
+                    "sta_validNumber": true,
+                    "scaling_factor": 1,
+                    "trending_score": -0.001181,
+                    "name": "CO2"
+                }
+            ],
+            "cleanliness_level_selected": "Basic",
+            "sz_sensor": 3,
+            "publisher": {
+                "writeAccess": "openAll",
+                "publisherName": "unknown",
+                "doNotPersist": true
+            }
+        }
+    }
+}

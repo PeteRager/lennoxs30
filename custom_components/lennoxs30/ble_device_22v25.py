@@ -1,4 +1,4 @@
-"""Support for Lennoxs30 outdoor temperature sensor"""
+"""Support for Lennox BLE Remote Sensor"""
 # pylint: disable=line-too-long
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass

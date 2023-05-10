@@ -403,6 +403,9 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
     data = loadfile("device_response_lcc.json", "0000000-0000-0000-0000-000000000001")
     api.processMessage(data)
 
+    data = loadfile("system_04_furn_ac_zoning_indoorAirQuality.json", "0000000-0000-0000-0000-000000000001")
+    api.processMessage(data)
+
     return manager_to_return
 
 
