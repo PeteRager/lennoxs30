@@ -610,7 +610,7 @@ class Manager(object):
                         unique_id = x[1]
                         if unique_id.startswith("123_"):
                             suffix = unique_id.removeprefix("123_")
-                            new_unique_id = f"{system.unique_id}_{suffix}".replace("-", "")
+                            new_unique_id = f"{system.unique_id}_{suffix}"
                             device_update_list[regentry.id] = new_unique_id
                             _LOGGER.info(
                                 "Updating device [%s] identifier [%s] new unique id [%s]",
@@ -619,7 +619,7 @@ class Manager(object):
                                 new_unique_id,
                             )
                         elif unique_id == "123":
-                            new_unique_id = system.unique_id.replace("-", "")
+                            new_unique_id = system.unique_id
                             device_update_list[regentry.id] = new_unique_id
                             _LOGGER.info(
                                 "Updating device [%s] identifier [%s] new unique id [%s]",

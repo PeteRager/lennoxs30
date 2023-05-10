@@ -1025,12 +1025,11 @@ async def test_manager_unique_id_update(hass, manager_us_customary_units: Manage
     unique_id = None
     for unique_id in entry.identifiers:
         break
-    assert unique_id[1] == system.unique_id.replace("-", "")
-
+    assert unique_id[1] == system.unique_id
     entry = dev_reg.async_get(id2)
     for unique_id in entry.identifiers:
         break
-    assert unique_id[1] == f"{system.unique_id}_iu".replace("-", "")
+    assert unique_id[1] == f"{system.unique_id}_iu"
 
     entry = dev_reg.async_get(id3)
     for unique_id in entry.identifiers:

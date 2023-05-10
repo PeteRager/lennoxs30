@@ -3,7 +3,6 @@
 A custom component for Home Assistant to integrate with Lennox iComfort S40, S30, E30 or M30 thermostats; supporting local LAN connections and Lennox
 Cloud Connections depending on the device model. We believe these configurations work - let us know if your experience is different!
 
-
 | Device Type | Local Connection | Cloud Connection |
 | ----------- | ---------------- | ---------------- |
 | S30         | Yes              | Yes              |
@@ -319,6 +318,43 @@ The 22V25 is a battery powered room sensor.
 | binary_sensor | Comm_status         | Indicates if communication to the device is up                                                                         |
 | binary_sensor | Device State        | Unknown - need info                                                                                                    |
 | binary_sensor | Occupancy           | Indicates if the room is occupied                                                                                      |
+
+### 21P02 - BLE Indoor Air Quality
+
+The 21P02 is a line powered air quality sensor.
+
+![plot](./doc_images/iaq.PNG)
+
+#### Sensors
+
+| Entity Type | Name                 | Units   | Notes                                            |
+| ----------- | -------------------- | ------- | ------------------------------------------------ |
+| sensor      | Co2                  | PPM     | CO2 level                                        |
+| sensor      | Co2 component score  | Text    | Fair, Good ?                                     |
+| sensor      | Co2 lta              | PPM     | long term average                                |
+| sensor      | Co2 sta              | PPM     | short term average                               |
+| sensor      | Mitigation Action    | Text    | Current action being taken to addess air quality |
+| sensor      | Mitigation State     | Text    | ?                                                |
+| sensor      | Overall Index        | Text    | Overall air quality - Fair, Good, ?              |
+| sensor      | Pm25                 | ug/m3 ? | Particulate Matter level                         |
+| sensor      | Pm25 component score | Text    | Fair, Good ?                                     |
+| sensor      | Pm25 lta             | ug/m3 ? | long term average                                |
+| sensor      | Pm25 sta             | ug/m3 ? | short term average                               |
+| sensor      | VOC                  | ug/m3 ? | Volatile Organic Compounds                       |
+| sensor      | VOC component score  | Text    | Fair, Good ?                                     |
+| sensor      | VOC lta              | ug/m3 ? | long term average                                |
+| sensor      | VOC sta              | ug/m3 ? | short term average                               |
+
+#### Diagnostic Sensors
+
+| Entity Type   | Name               | Description                                       |
+| ------------- | ------------------ | ------------------------------------------------- |
+| binary_sensor | Alarm Status       | Unknown - need info                               |
+| sensor        | Ble rssi           | Signal Strength. Unclear what this is vs rssi     |
+| binary_sensor | Comm_status        | Indicates if communication to the device is up    |
+| binary_sensor | Device State       | Unknown - need info                               |
+| sensor        | Rssi               | Signal Strength. Unclear what this is vs ble_rssi |
+| sensor        | Total Powered Time | Time in seconds the device has been powered       |
 
 ## Sensors
 
