@@ -59,6 +59,7 @@ from .const import (
     CONF_CLOUD_CONNECTION,
     MANAGER,
     VENTILATION_EQUIPMENT_ID,
+    CONF_LONG_POLL_DELAY,
 )
 from .device import (
     Device,
@@ -221,6 +222,9 @@ def _upgrade_config(config: dict, current_version: int) -> int:
     if current_version == 4:
         g_unique_id_update[4] = True
         current_version = 5
+    if current_version == 5:
+        config[CONF_LONG_POLL_DELAY] = 5
+        current_version = 6
     return current_version
 
 
@@ -291,6 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     fast_poll_interval = entry.data[CONF_FAST_POLL_INTERVAL]
     fast_poll_count = entry.data[CONF_FAST_POLL_COUNT]
     timeout = entry.data[CONF_TIMEOUT]
+    long_poll_delay = entry.data[CONF_LONG_POLL_DELAY]
 
     allergen_defender_switch = entry.data[CONF_ALLERGEN_DEFENDER_SWITCH]
 
@@ -304,7 +309,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         conf_message_debug_file = None
 
     _LOGGER.debug(
-        "async_setup starting scan_interval [%s] fast_scan_interval[%s] app_id [%s] config_init_wait_time [%s] create_sensors [%s] create_inverter_power [%s] create_diagnostic_sensors [%s] timeout [%s]",
+        "async_setup starting scan_interval [%s] fast_scan_interval[%s] app_id [%s] config_init_wait_time [%s] create_sensors [%s] create_inverter_power [%s] create_diagnostic_sensors [%s] timeout [%s] long_poll_delay [%s]",
         poll_interval,
         fast_poll_interval,
         app_id,
@@ -313,6 +318,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         create_inverter_power,
         create_diagnostic_sensors,
         timeout,
+        long_poll_delay,
     )
 
     manager = Manager(
@@ -337,6 +343,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         message_logging_file=conf_message_debug_file,
         create_diagnostic_sensors=create_diagnostic_sensors,
         create_equipment_parameters=create_parameters,
+        long_poll_delay=long_poll_delay,
     )
     try:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_shutdown)
@@ -409,6 +416,7 @@ class Manager(object):
         message_logging_file: str = None,
         create_diagnostic_sensors: bool = False,
         create_equipment_parameters: bool = False,
+        long_poll_delay: int = None,
     ):
         self.system_parameter_safety_on = {}
         self.config_entry: ConfigEntry = config
@@ -426,6 +434,7 @@ class Manager(object):
         self._pii_message_log = pii_message_logs
         self._message_debug_logging = message_debug_logging
         self._message_logging_file = message_logging_file
+        self._long_poll_delay: int = None if long_poll_delay is None else int(long_poll_delay)
         self.api: s30api_async = s30api_async(
             email,
             password,
@@ -436,6 +445,7 @@ class Manager(object):
             message_debug_logging=self._message_debug_logging,
             message_logging_file=self._message_logging_file,
             timeout=timeout,
+            long_poll_delay=self._long_poll_delay,
         )
         self._shutdown = False
         self._retrieve_task = None

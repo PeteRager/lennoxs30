@@ -31,6 +31,7 @@ from custom_components.lennoxs30.const import (
     CONF_FAST_POLL_COUNT,
     LENNOX_DOMAIN,
     MANAGER,
+    CONF_LONG_POLL_DELAY,
 )
 from custom_components.lennoxs30 import (
     DOMAIN,
@@ -64,6 +65,7 @@ async def test_async_setup_entry_local(hass, caplog):
         "message_debug_file": "messages.log",
         CONF_FAST_POLL_COUNT: 5,
         CONF_TIMEOUT: 30,
+        CONF_LONG_POLL_DELAY: 5,
     }
     hass.data[LENNOX_DOMAIN] = {}
 
@@ -189,6 +191,7 @@ async def test_async_setup_entry_cloud(hass, caplog):
         "message_debug_file": "",
         CONF_FAST_POLL_COUNT: 5,
         CONF_TIMEOUT: 30,
+        CONF_LONG_POLL_DELAY: 5,
     }
     hass.data[LENNOX_DOMAIN] = {}
 
@@ -247,6 +250,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         "message_debug_file": "messages.log",
         CONF_FAST_POLL_COUNT: 5,
         CONF_TIMEOUT: 30,
+        CONF_LONG_POLL_DELAY: 5,
     }
     hass.data[LENNOX_DOMAIN] = {}
 
@@ -301,6 +305,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         "message_debug_file": "messages.log",
         CONF_FAST_POLL_COUNT: 5,
         CONF_TIMEOUT: 30,
+        CONF_LONG_POLL_DELAY: 5,
     }
     hass.data[LENNOX_DOMAIN] = {}
 
@@ -356,6 +361,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         "message_debug_file": "",
         CONF_FAST_POLL_COUNT: 5,
         CONF_TIMEOUT: 30,
+        CONF_LONG_POLL_DELAY: 5,
     }
     hass.data[LENNOX_DOMAIN] = {}
 
@@ -414,6 +420,7 @@ async def test_async_unload_entry_success(hass, caplog):
         "message_debug_file": "messages.log",
         CONF_FAST_POLL_COUNT: 5,
         CONF_TIMEOUT: 30,
+        CONF_LONG_POLL_DELAY: 5,
     }
     hass.data[LENNOX_DOMAIN] = {}
 
@@ -461,6 +468,7 @@ async def test_async_unload_entry_unload_fail(hass, caplog):
         "message_debug_file": "messages.log",
         CONF_FAST_POLL_COUNT: 5,
         CONF_TIMEOUT: 30,
+        CONF_LONG_POLL_DELAY: 5,
     }
     hass.data[LENNOX_DOMAIN] = {}
 

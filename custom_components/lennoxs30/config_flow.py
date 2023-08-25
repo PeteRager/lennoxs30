@@ -46,6 +46,7 @@ from .const import (
     LENNOX_DEFAULT_LOCAL_APP_ID,
     CONF_LOCAL_CONNECTION,
     CONF_CREATE_PARAMETERS,
+    CONF_LONG_POLL_DELAY,
 )
 from .util import dict_redact_fields, redact_email
 
@@ -112,7 +113,7 @@ def lennox30_entries(hass: HomeAssistant):
 class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Lennox S30 configflow."""
 
-    VERSION = 5
+    VERSION = 6
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _host_in_configuration_exists(self, host) -> bool:
@@ -122,6 +123,7 @@ class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     def get_advanced_schema(self, is_cloud: bool):
+        long_poll_delay = 5
         if is_cloud:
             scan_interval = 15
             conf_wait_time = 60
@@ -145,6 +147,9 @@ class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Coerce(int), vol.Range(min=1, max=300)
                 ),
                 vol.Optional(CONF_TIMEOUT, default=timeout): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
+                vol.Optional(CONF_LONG_POLL_DELAY, default=long_poll_delay): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=30)
+                ),
                 vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
                 vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
                 vol.Optional(CONF_LOG_MESSAGES_TO_FILE, default=False): cv.boolean,
@@ -364,6 +369,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Optional(CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]): vol.All(
                             vol.Coerce(int), vol.Range(min=15, max=300)
                         ),
+                        vol.Optional(
+                            CONF_LONG_POLL_DELAY, default=self.config_entry.data[CONF_LONG_POLL_DELAY]
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=30)),
                         vol.Optional(CONF_PROTOCOL, default=self.config_entry.data[CONF_PROTOCOL]): cv.string,
                         vol.Optional(
                             CONF_PII_IN_MESSAGE_LOGS,
@@ -422,6 +430,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Optional(CONF_TIMEOUT, default=self.config_entry.data[CONF_TIMEOUT]): vol.All(
                             vol.Coerce(int), vol.Range(min=15, max=300)
                         ),
+                        vol.Optional(
+                            CONF_LONG_POLL_DELAY, default=self.config_entry.data[CONF_LONG_POLL_DELAY]
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=30)),
                         vol.Optional(
                             CONF_PII_IN_MESSAGE_LOGS,
                             default=self.config_entry.data[CONF_PII_IN_MESSAGE_LOGS],

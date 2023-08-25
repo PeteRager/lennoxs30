@@ -63,6 +63,7 @@ from custom_components.lennoxs30.const import (
     CONF_CREATE_DIAGNOSTICS_SENSORS,
     CONF_CREATE_PARAMETERS,
     LENNOX_DOMAIN,
+    CONF_LONG_POLL_DELAY,
 )
 
 from custom_components.lennoxs30 import (
@@ -431,7 +432,7 @@ async def test_upgrade_config_v1(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 5
+        assert config_entry.version == 6
         assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
@@ -450,6 +451,7 @@ async def test_upgrade_config_v1(hass):
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == 30
+        assert new_data["long_poll_delay"] == 5
 
     data = {
         "cloud_connection": True,
@@ -474,7 +476,7 @@ async def test_upgrade_config_v1(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 5
+        assert config_entry.version == 6
         assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
@@ -493,6 +495,7 @@ async def test_upgrade_config_v1(hass):
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
+        assert new_data["long_poll_delay"] == 5
 
 
 @pytest.mark.asyncio
@@ -521,7 +524,7 @@ async def test_upgrade_config_v2(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 5
+        assert config_entry.version == 6
         assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
@@ -539,6 +542,7 @@ async def test_upgrade_config_v2(hass):
         assert new_data["message_debug_file"] == ""
         assert new_data["fast_scan_count"] == 10
         assert new_data["timeout"] == 30
+        assert new_data["long_poll_delay"] == 5
 
         assert new_data["create_diagnostic_sensors"] is False
 
@@ -567,7 +571,7 @@ async def test_upgrade_config_v2(hass):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 5
+        assert config_entry.version == 6
         assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
@@ -587,6 +591,7 @@ async def test_upgrade_config_v2(hass):
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
 
         assert new_data["create_diagnostic_sensors"] is False
+        assert new_data["long_poll_delay"] == 5
 
 
 @pytest.mark.asyncio
@@ -616,7 +621,7 @@ async def test_upgrade_config_v3(hass, caplog):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 5
+        assert config_entry.version == 6
         assert new_data["cloud_connection"] is False
         assert new_data["host"] == "192.168.1.93"
         assert new_data["app_id"] == "homeassistant"
@@ -636,6 +641,7 @@ async def test_upgrade_config_v3(hass, caplog):
         assert new_data["create_diagnostic_sensors"] is False
 
         assert new_data["create_parameters"] is False
+        assert new_data["long_poll_delay"] == 5
 
     data = {
         "cloud_connection": True,
@@ -662,7 +668,7 @@ async def test_upgrade_config_v3(hass, caplog):
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
         new_data = update_entry.call_args_list[0].kwargs["data"]
-        assert config_entry.version == 5
+        assert config_entry.version == 6
         assert new_data["cloud_connection"] is True
         assert new_data["email"] == "pete@pete.com"
         assert new_data["password"] == "secret"
@@ -683,6 +689,7 @@ async def test_upgrade_config_v3(hass, caplog):
         assert new_data["create_diagnostic_sensors"] is False
 
         assert len(g_unique_id_update) != 0
+        assert new_data["long_poll_delay"] == 5
 
 
 def test_config_flow_host_valid(hass, caplog):
@@ -1103,7 +1110,8 @@ async def test_OptionsFlowHandler_async_step_init_local(config_entry_local, hass
     si = schema[CONF_MESSAGE_DEBUG_LOGGING]
     si = schema[CONF_LOG_MESSAGES_TO_FILE]
     si = schema[CONF_MESSAGE_DEBUG_FILE]
-    assert len(schema) == 16
+    si = schema[CONF_LONG_POLL_DELAY]
+    assert len(schema) == 17
 
 
 @pytest.mark.asyncio
@@ -1128,8 +1136,9 @@ async def test_OptionsFlowHandler_async_step_init_cloud(config_entry_cloud, hass
     si = schema[CONF_MESSAGE_DEBUG_LOGGING]
     si = schema[CONF_LOG_MESSAGES_TO_FILE]
     si = schema[CONF_MESSAGE_DEBUG_FILE]
+    si = schema[CONF_LONG_POLL_DELAY]
 
-    assert len(schema) == 13
+    assert len(schema) == 14
 
 
 @pytest.mark.asyncio

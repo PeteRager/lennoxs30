@@ -17,6 +17,7 @@ CONF_MESSAGE_DEBUG_FILE = "message_debug_file"
 CONF_CLOUD_CONNECTION = "cloud_connection"
 CONF_LOCAL_CONNECTION = "local_connection"
 CONF_CREATE_PARAMETERS = "create_parameters"
+CONF_LONG_POLL_DELAY = "long_poll_delay"
 
 DEFAULT_CLOUD_TIMEOUT = 60
 DEFAULT_LOCAL_TIMEOUT = 30

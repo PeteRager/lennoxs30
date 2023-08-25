@@ -70,6 +70,7 @@ from custom_components.lennoxs30.const import (
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
     CONF_CREATE_PARAMETERS,
+    CONF_LONG_POLL_DELAY,
 )
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -135,6 +136,7 @@ def config_entry_local() -> config_entries.ConfigEntry:
     config.data[CONF_FAST_POLL_INTERVAL] = 1.0
     config.data[CONF_FAST_POLL_COUNT] = 5
     config.data[CONF_TIMEOUT] = 30
+    config.data[CONF_LONG_POLL_DELAY] = 5
     config.data[CONF_PROTOCOL] = "https"
     config.data[CONF_FAST_POLL_COUNT] = 5
     config.data[CONF_PII_IN_MESSAGE_LOGS] = False
@@ -160,6 +162,7 @@ def config_entry_cloud() -> config_entries.ConfigEntry:
     config.data[CONF_FAST_POLL_INTERVAL] = 1.0
     config.data[CONF_FAST_POLL_COUNT] = 5
     config.data[CONF_TIMEOUT] = 30
+    config.data[CONF_LONG_POLL_DELAY] = 5
     config.data[CONF_FAST_POLL_COUNT] = 5
     config.data[CONF_PII_IN_MESSAGE_LOGS] = False
     config.data[CONF_MESSAGE_DEBUG_LOGGING] = False
