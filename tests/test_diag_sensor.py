@@ -17,6 +17,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
     ELECTRIC_POTENTIAL_VOLT,
     TIME_MINUTES,
+    REVOLUTIONS_PER_MINUTE,
 )
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
@@ -155,6 +156,14 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager):
     diagnostic = equipment.diagnostics[1]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
     assert s.unit_of_measurement == PERCENTAGE
+    assert s.device_class is None
+
+    equipment = system.equipment[2]
+    diagnostic = equipment.diagnostics[4]
+    assert diagnostic.name.endswith("RPM")
+    assert diagnostic.unit.strip() == ""
+    s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
+    assert s.native_unit_of_measurement == REVOLUTIONS_PER_MINUTE
     assert s.device_class is None
 
     equipment = system.equipment[1]
