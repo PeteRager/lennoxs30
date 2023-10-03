@@ -1,27 +1,26 @@
-from pickle import FALSE
-from lennoxs30api.s30api_async import (
-    LENNOX_VENTILATION_DAMPER,
-    lennox_system,
-)
-from custom_components.lennoxs30 import (
-    Manager,
-)
-import pytest
-from custom_components.lennoxs30.const import MANAGER
+"""Test setup of select entities"""
+# pylint: disable=line-too-long
+# pylint: disable=protected-access
 
+from unittest.mock import Mock
+import pytest
+
+from lennoxs30api.s30api_async import LENNOX_VENTILATION_2_SPEED_HRV, lennox_system
+from custom_components.lennoxs30 import Manager
+
+from custom_components.lennoxs30.const import MANAGER
 from custom_components.lennoxs30.select import (
     DehumidificationModeSelect,
     HumidityModeSelect,
     EquipmentParameterSelect,
+    VentilationModeSelect,
     async_setup_entry,
 )
 
 
-from unittest.mock import Mock
-
-
 @pytest.mark.asyncio
-async def test_async_number_setup_entry(hass, manager: Manager, caplog):
+async def test_async_number_setup_entry(hass, manager: Manager):
+    """Test the select setup"""
     system: lennox_system = manager.api.system_list[0]
     entry = manager.config_entry
     hass.data["lennoxs30"] = {}
@@ -93,3 +92,17 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 15
     for i in range(0, 15):
         assert isinstance(sensor_list[i], EquipmentParameterSelect)
+
+    # VenitlatioNModeSelect should be created
+    system.dehumidifierType = None
+    for zone in system.zone_list:
+        zone.dehumidificationOption = False
+        zone.humidificationOption = False
+    manager.create_equipment_parameters = False
+    system.ventilationUnitType = LENNOX_VENTILATION_2_SPEED_HRV
+    async_add_entities = Mock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.call_count == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 1
+    assert isinstance(sensor_list[0], VentilationModeSelect)
