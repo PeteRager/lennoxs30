@@ -368,7 +368,7 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
     def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system):
         super().__init__(manager, system)
         self._hass = hass
-        self._myname = self._system.name + "_timed_ventilation"
+        self._myname = self._system.name + "_ventilate_now"
         _LOGGER.debug("Create TimedVentilationNumber myname [%s]", self._myname)
 
     async def async_added_to_hass(self) -> None:

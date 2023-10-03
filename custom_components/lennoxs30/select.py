@@ -23,6 +23,10 @@ from lennoxs30api.s30api_async import (
     LENNOX_DEHUMIDIFICATION_MODE_HIGH,
     LENNOX_DEHUMIDIFICATION_MODE_MEDIUM,
     LENNOX_DEHUMIDIFICATION_MODE_AUTO,
+    LENNOX_VENTILATION_MODES,
+    LENNOX_VENTILATION_MODE_INSTALLER,
+    LENNOX_VENTILATION_MODE_ON,
+    LENNOX_VENTILATION_MODE_OFF,
     lennox_system,
     lennox_zone,
 )
@@ -39,7 +43,12 @@ from .helpers import (
 )
 
 from .base_entity import S30BaseEntityMixin
-from .const import LOG_INFO_SELECT_ASYNC_SELECT_OPTION, MANAGER, UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT
+from .const import (
+    LOG_INFO_SELECT_ASYNC_SELECT_OPTION,
+    MANAGER,
+    UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT,
+    UNIQUE_ID_SUFFIX_VENTILATION_SELECT,
+)
 from . import DOMAIN, Manager
 
 
@@ -61,6 +70,11 @@ async def async_setup_entry(
             _LOGGER.debug("Create DehumidificationModeSelect system [%s]", system.sysId)
             sel = DehumidificationModeSelect(hass, manager, system)
             select_list.append(sel)
+
+        if system.supports_ventilation():
+            _LOGGER.info("Create S30 ventilation select system [%s]", system.sysId)
+            select_list.append(VentilationModeSelect(hass, manager, system))
+
         for zone in system.zone_list:
             if zone.is_zone_active():
                 if zone.dehumidificationOption or zone.humidificationOption:
@@ -362,3 +376,86 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return helper_get_parameter_extra_attributes(self.equipment, self.parameter)
+
+
+class VentilationModeSelect(S30BaseEntityMixin, SelectEntity):
+    """Set the ventilation mode"""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+    ):
+        super().__init__(manager, system)
+        self.hass: HomeAssistant = hass
+        self._myname = self._system.name + "_ventilation_mode"
+        _LOGGER.debug("Create VentilationModeSelect myname [%s]", self._myname)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug("async_added_to_hass VentilationModeSelect myname [%s]", self._myname)
+        self._system.registerOnUpdateCallback(
+            self.system_update_callback,
+            [
+                "ventilationMode",
+                "ventilationControlMode",
+            ],
+        )
+        await super().async_added_to_hass()
+
+    def system_update_callback(self):
+        """Callback for system updates"""
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "system_update_callback VentilationModeSelect myname [%s] system ventilation mode [%s]",
+                self._myname,
+                self._system.ventilationMode,
+            )
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return self._system.unique_id + UNIQUE_ID_SUFFIX_VENTILATION_SELECT
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def current_option(self) -> str:
+        return self._system.ventilationMode
+
+    @property
+    def options(self) -> list:
+        return LENNOX_VENTILATION_MODES
+
+    async def async_select_option(self, option: str) -> None:
+        _LOGGER.info(LOG_INFO_SELECT_ASYNC_SELECT_OPTION, self.__class__.__name__, self._myname, option)
+        try:
+            if option == LENNOX_VENTILATION_MODE_ON:
+                await self._system.ventilation_on()
+            elif option == LENNOX_VENTILATION_MODE_OFF:
+                await self._system.ventilation_off()
+            elif option == LENNOX_VENTILATION_MODE_INSTALLER:
+                await self._system.ventilation_installer()
+            else:
+                raise HomeAssistantError(f"select_option [{self._myname}] invalid mode [{option}]")
+        except Exception as ex:
+            raise HomeAssistantError(f"select_option unexpected exception, [{self._myname}] exception [{ex}]") from ex
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        result = {
+            "identifiers": {(DOMAIN, self._system.unique_id)},
+        }
+        return result
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attrs: dict[str, Any] = {}
+        attrs["installer_settings"] = self._system.ventilationControlMode
+        return attrs
