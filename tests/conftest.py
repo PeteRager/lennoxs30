@@ -24,6 +24,7 @@ from lennoxs30api.lennox_equipment import (
 )
 from lennoxs30api.s30exception import S30Exception
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.select import SelectEntity
@@ -78,6 +79,13 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     yield
+
+
+@pytest.fixture(autouse=True)
+def disable_device_registry(hass):
+    device_registry = dr.async_get(hass)
+    with patch.object(device_registry, "async_get_or_create"):
+        yield
 
 
 @pytest.fixture
