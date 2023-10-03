@@ -493,6 +493,7 @@ class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):
         self._hass = hass
         self._myname = self._system.name + "_parameter_safety"
         self._rearm_duration_sec = rearm_duration_sec
+        self._rearm_task = None
         manager.parameter_safety_turn_on(self._system.sysId)
 
     @property
@@ -527,12 +528,15 @@ class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_ON, self.__class__.__name__, self._myname)
         self._manager.parameter_safety_turn_on(self._system.sysId)
+        if self._rearm_task is not None:
+            self._rearm_task.cancel()
+            self._rearm_task = None
         self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
         self._manager.parameter_safety_turn_off(self._system.sysId)
-        asyncio.create_task(self.async_rearm_task())
+        self._rearm_task = asyncio.create_task(self.async_rearm_task())
         self.schedule_update_ha_state()
 
     async def async_rearm_task(self):
