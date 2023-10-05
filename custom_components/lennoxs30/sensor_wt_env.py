@@ -55,7 +55,7 @@ lennox_wt_env_sensors = [
     },
     {
         "name": "wt env uv index",
-        "input": "wt_env_uv_index",
+        "input": "wt_env_uvIndex",
         "availability_attribute": "wt_is_valid",
         "unavailable_value": "error",
     },
