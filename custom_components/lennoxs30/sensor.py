@@ -48,6 +48,7 @@ from .ble_device_22v25 import lennox_22v25_sensors
 from .ble_device_21p02 import lennox_21p02_sensors, lennox_iaq_sensors
 from .sensor_ble import S40BleSensor
 from .sensor_iaq import S40IAQSensor
+from .sensor_wt_env import lennox_wt_env_sensors, WTEnvSensor, lennox_wt_env_sensors_metric, lennox_wt_env_sensors_us
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,6 +106,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                             )
                             diagsensor = S30DiagSensor(hass, manager, system, equip, diagnostic)
                             sensor_list.append(diagsensor)
+
+        if system.is_s40:
+            for env in lennox_wt_env_sensors:
+                wt_sensor = WTEnvSensor(hass, manager, system, env)
+                sensor_list.append(wt_sensor)
+            if manager.is_metric:
+                for env in lennox_wt_env_sensors_metric:
+                    wt_sensor = WTEnvSensor(hass, manager, system, env)
+                    sensor_list.append(wt_sensor)
+            else:
+                for env in lennox_wt_env_sensors_us:
+                    wt_sensor = WTEnvSensor(hass, manager, system, env)
+                    sensor_list.append(wt_sensor)
 
         if manager.create_sensors:
             for zone in system.zone_list:
