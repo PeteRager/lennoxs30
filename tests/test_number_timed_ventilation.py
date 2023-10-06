@@ -40,7 +40,7 @@ async def test_timed_ventilation_time_unique_id(hass, manager: Manager):
 async def test_timed_ventilation_time_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = TimedVentilationNumber(hass, manager, system)
-    assert c.name == system.name + "_timed_ventilation"
+    assert c.name == system.name + "_ventilate_now"
 
 
 @pytest.mark.asyncio

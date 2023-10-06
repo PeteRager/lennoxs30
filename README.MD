@@ -20,6 +20,7 @@ Cloud Connections depending on the device model. We believe these configurations
 # Important Information
 
 - Note: Where we mention S30 in this documentation that also applies to S40, E30 and M30
+- If you are having problems with your S40 - please make sure you have software version 04.25.0070 or greater installed. You also may need to shutdown HA and reboot the thermostats in order to establish a connection.
 - It is recommended to disable automatic software updates on the Thermostat. This will prevent outages if new versions are not compatible with this integration.
 - If you have more than one S30 in your local network, please use a different app_id for each instance (e.g. homeassistant_1, homeassistant_2)
 - If you are running more than 1 Home Assistant communicating to the S30 (for example a test and prod system) - you _MUST_ use a different _app_id_ for each instance - [Detailed Configuration](#Detailed-Configuration-Parameters)
@@ -164,7 +165,7 @@ If you want to change the integration configuration, do into the integrations pa
 
 The integration detects the unit system configured in Home Assistant and reports the data in the correct units. Celsius is in 0.5 degree increments. Fahrenheit is in 1.0 degrees increments. The Lennox API delivers data in both units, so there is no conversion in the Integration and what you see in the Lennox UI should be what you see in HA.
 
-# HASS Scripts and automation samples
+# Homeassistant Scripts and automation samples
 
 Samples of useful automations and scripts can be found in the [samples/](./samples/) directory. If you have some you'd like included, open a pull request.
 
@@ -232,23 +233,23 @@ The integration provides all of the standard climate attributes, including
 
 In addition the following extra attributes are provided, to allow for a more detailed information on the current zone operation.
 
-| Attribute Name    | Description                                                                                                                                                                                                                                                        |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                                                                                           |
-| aux               | Auxiliary Heating is On when True, off when False. Typically this means the hest pump is disabled and the furnace is running instead.                                                                                                                              |
-| balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                                                                                            |
-| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                    |
-| damper            | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open.                                                                                                                                                             |
-| defrost           | Defrost is active                                                                                                                                                                                                                                                  |
-| demand            | CFM of air demand for the zone. Thanks @blyons16 for getting this information from his installers                                                                                                                                                                  |
-| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                                                                                             |
-| heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                    |
-| humidityOperation | Current active humidity operation - **Waiting**,**Humidifying**, **Drying** or **Off**                                                                                                                                                                             |
-| ssr               | Not known what this attribute indicates. If you know let us know!                                                                                                                                                                                                  |
-| tempOperation     | Current active temperature operation heating or cooling                                                                                                                                                                                                            |
-| ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                                                                                                 |
-| zoneEnabled       | Indicates if the zone is currently enabled. When in a multi-zone system, disabling iHarmony Zoning, turns the system into a single zone system controlled by Zone 1. The other climate entities are disabled except for reporting Ambient Temperature and Humidity |
-| zoningMode        | The system zoning mode - **central** or **zoned**                                                                                                                                                                                                                  |
+| Attribute Name    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| aux               | Auxiliary Heating is On when True, off when False. Typically this means the hest pump is disabled and the furnace is running instead.                                                                                                                                                                                                                                                                                                                                                                        |
+| balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                                                                                                                                                                                                                                                                                                                                      |
+| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                                                                                                                                                                                                                                                              |
+| damper            | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open.                                                                                                                                                                                                                                                                                                                                                                                                       |
+| defrost           | Defrost is active                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| demand            | % of maximum CFM of air demand for the zone. Value is 0-100                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| fan               | Indicates if the fan is currently running. Note: this is true only when the fan is running and there is no active HVAC action (cooling, heating, etc.)                                                                                                                                                                                                                                                                                                                                                       |
+| heatCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                                                                                                                                                                                                                                                              |
+| humidityOperation | Current active humidity operation - **Waiting**,**Humidifying**, **Drying** or **Off**                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ssr               | When enabled, smooth set back begins recovery up to two hours before the programmed time so that the programmed temperature is reached at the corresponding programmed event time. Assume 12°F (6.72°C) per hour for first-stage gas/electric heating and 6°F (3.36°C) per hour for first-stage compressor based heating or cooling.With Smooth Set Back disabled, the system will start a recovery at the programmed time. Options are enabled or disabled. Default is enabled. See manual for more details |
+| tempOperation     | Current active temperature operation heating or cooling                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ventilation       | Indicates if external ventilation is currently active on this zone                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| zoneEnabled       | Indicates if the zone is currently enabled. When in a multi-zone system, disabling iHarmony Zoning, turns the system into a single zone system controlled by Zone 1. The other climate entities are disabled except for reporting Ambient Temperature and Humidity                                                                                                                                                                                                                                           |
+| zoningMode        | The system zoning mode - **central** or **zoned**                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ## lennoxs30.state or lennoxs30.conn\_\<hostname\> or lennoxs30.\_<redacted email_address\>
 
@@ -327,23 +328,23 @@ The 21P02 is a line powered air quality sensor.
 
 #### Sensors
 
-| Entity Type | Name                 | Units   | Notes                                            |
-| ----------- | -------------------- | ------- | ------------------------------------------------ |
-| sensor      | Co2                  | PPM     | CO2 level                                        |
-| sensor      | Co2 component score  | Text    | Fair, Good ?                                     |
-| sensor      | Co2 lta              | PPM     | long term average                                |
-| sensor      | Co2 sta              | PPM     | short term average                               |
-| sensor      | Mitigation Action    | Text    | Current action being taken to addess air quality |
-| sensor      | Mitigation State     | Text    | ?                                                |
-| sensor      | Overall Index        | Text    | Overall air quality - Fair, Good, ?              |
-| sensor      | Pm25                 | ug/m3 ? | Particulate Matter level                         |
-| sensor      | Pm25 component score | Text    | Fair, Good ?                                     |
-| sensor      | Pm25 lta             | ug/m3 ? | long term average                                |
-| sensor      | Pm25 sta             | ug/m3 ? | short term average                               |
-| sensor      | VOC                  | ug/m3 ? | Volatile Organic Compounds                       |
-| sensor      | VOC component score  | Text    | Fair, Good ?                                     |
-| sensor      | VOC lta              | ug/m3 ? | long term average                                |
-| sensor      | VOC sta              | ug/m3 ? | short term average                               |
+| Entity Type | Name                 | Units   | Notes                                             |
+| ----------- | -------------------- | ------- | ------------------------------------------------- |
+| sensor      | Co2                  | PPM     | CO2 level                                         |
+| sensor      | Co2 component score  | Text    | Fair, Good ?                                      |
+| sensor      | Co2 lta              | PPM     | long term average                                 |
+| sensor      | Co2 sta              | PPM     | short term average                                |
+| sensor      | Mitigation Action    | Text    | Current action being taken to address air quality |
+| sensor      | Mitigation State     | Text    | ?                                                 |
+| sensor      | Overall Index        | Text    | Overall air quality - Fair, Good, ?               |
+| sensor      | Pm25                 | ug/m3 ? | Particulate Matter level                          |
+| sensor      | Pm25 component score | Text    | Fair, Good ?                                      |
+| sensor      | Pm25 lta             | ug/m3 ? | long term average                                 |
+| sensor      | Pm25 sta             | ug/m3 ? | short term average                                |
+| sensor      | VOC                  | ug/m3 ? | Volatile Organic Compounds                        |
+| sensor      | VOC component score  | Text    | Fair, Good ?                                      |
+| sensor      | VOC lta              | ug/m3 ? | long term average                                 |
+| sensor      | VOC sta              | ug/m3 ? | short term average                                |
 
 #### Diagnostic Sensors
 
@@ -526,22 +527,59 @@ switch.<system_name>\_manual_away_mode
 
 ### ventilation
 
-If your system has an external outdoor air damper, a 1 or 2 stage ERV, or a 1 or 2 stage HRV, a switch will be created.
+If your system has an external outdoor air damper, a 1 or 2 stage ERV, or a 1 or 2 stage HRV ventilation controls will be created.
 
-switch.<system_name>\_ventilation
+There are two different aspects of ventilation
+
+1. The Ventilation Mode which is **On**, **Off** or **Installer**. When set to **Installer** the system will run in a Timed mode or ASHRAE mode depending on how the installer configured the system. When set to **On** the ventilation will run indefinitely. When set to **Off** the ventilation will not run.
+2. **Ventilate Now** - this is a one time ventilation for a duration. For example, on the panel, select Ventilate Now and enter 10 minutes - and ventilation will run for 10 minutes.
+
+If the system is receiving weather data; ventilation will not occur if the outside dewpoint is above the configured threshold. The outside dewpoint, for S40, is available in **sensor.\*\_wt_env_dewpoint**. The threshold is available in an equipment parameter called **Ventilation High Outdoor Dew Point Limit**
+
+#### select.<system_name>\_ventilation_mode
+
+Allows setting ventilation mode to On, Off or Installer.
+
+Attribute **installer_settings** contains **installer** or **ASHRAE**
+
+#### number.<system_name>\_ventilate_now
+
+Note: in older installs this entity may be called **number.<system_name>\_timed_ventilation**, it was renamed in 2023_10_0 to make it similar to the panel text.
+
+Setting this to a non-zero number will place the system into a **ventilate now** mode for the specified number of minutes. This is equivalent to selecting a timed ventilation from the S30 panel. As the amount of remaining time decreases, the value of the number will update.
+
+For example, setting this to 10 - will start ventilation for 10 minutes. After 1 minute has elapsed; this value will be 9; after another minute it will be 8. Setting this to Zero cancels any in-progress timed ventilation. Another way to cancel a timed ventilation is to turn the ventilation switch entity off.
+
+#### switch.<system_name>\_ventilation
 
 The switch will reflect the current state of the ventilation damper and will allow turning the mode on or off.  
 The switch has the following attributes:
 
-| Attribute                | Type | Description                                                              |
-| ------------------------ | ---- | ------------------------------------------------------------------------ |
-| ventilationRemainingTime | int  | number of minutes remaining in ventilation action                        |
-| ventilatingUntilTime     | int  | integer timestamp of the end time of the ventilation action              |
-| diagVentilationRuntime   | int  | total number of minutes the system has ventilated for over it's lifetime |
-| alwaysOn                 | bool | indicates if the switch is on because of an **always on** command        |
-| timed                    | bool | indicates if the switch is on because a timed ventilation is active      |
+| Attribute                | Type | Description                                                                       |
+| ------------------------ | ---- | --------------------------------------------------------------------------------- |
+| ventilationRemainingTime | int  | number of minutes remaining in ventilation action                                 |
+| ventilatingUntilTime     | int  | integer timestamp of the end time of the ventilation action                       |
+| diagVentilationRuntime   | int  | total number of minutes the system has ventilated for over it's lifetime          |
+| alwaysOn                 | bool | indicates if the switch is on because of an **always on** command                 |
+| timed                    | bool | indicates if the switch is on because a ventilate now timed ventilation is active |
 
-Turning this switch on is equivalent to selecting "Always On" from the S30 Panel. If a timed ventilation is active, this switch will be on and turning it off will cancel the timed ventilation.
+Turning this switch on is equivalent to selecting "Always On" from the S30 Panel. If a ventilate now is active, this switch will be on and turning it off will cancel the timed ventilation.
+
+### weather - S40 only
+
+The S40 makes its weather data available. The S30 does not appear to. While the data includes an hourly and daily forecast - that information is available in HA through a variety of weather providers. However there are specific environmental data that the S40 uses to control ventilation and allergen defender mode - this information is available in a set of sensors. Note: if your S40 is not connected to the internet these sensors will be unavailable.
+
+| Sensor                           | Type   | Values                                                                               |
+| -------------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| sensor.\*\_wt_env_air_quality    | string | "hazardous","very unhealthy", "unhealthy", "unhealthy sensitive", "moderate", "good" |
+| sensor.\*\_wt_env_tree           | string | "low","moderate","high","very high", "extreme"                                       |
+| sensor.\*\_wt_env_grass          | string | "low","moderate","high","very high", "extreme"                                       |
+| sensor.\*\_wt_env_mold           | string | "low","moderate","high","very high", "extreme"                                       |
+| sensor.\*\_wt_env_uv_index       | string | "low","moderate","high","very high", "extreme"                                       |
+| sensor.\*\_wt_env_dewpoint       | number | C or F                                                                               |
+| sensor.\*\_wt_env_wind_speed     | number | Km/H, MPH                                                                            |
+| sensor.\*\_wt_env_cloud_coverage | number | 0-100                                                                                |
+| sensor.\*\_wt_env_humidity       | number | 0-100                                                                                |
 
 ### zoning mode
 
@@ -620,7 +658,7 @@ binary_sensor.<system_name>\_relay_server
 
 ### cloud_connected (cloud connections only)
 
-This sensor indicates if the themostat is "Online" in the Lennox Cloud. The state should be connected. A **disconnected** state indicates that the integration is able to communicate to the Lennox Cloud but the thermostat is not able to. Typically this indicates a Wifi config issue with the thermostat.
+This sensor indicates if the thermostat is "Online" in the Lennox Cloud. The state should be connected. A **disconnected** state indicates that the integration is able to communicate to the Lennox Cloud but the thermostat is not able to. Typically this indicates a Wifi config issue with the thermostat.
 
 During testing, turning off the wifi router the S30 was connected caused this sensor to become **disconnected** after 5 minutes. The sensor is configured to be updated every 10 minutes.
 
@@ -647,12 +685,6 @@ number.<system_name>\_circulate_time
 ### dehumidification_overcooling
 
 Lennox systems with dehumidifiers may have the ability to provide overcooling to lower the humidity when the dehumidification mode is **Max**. This number allow you to set this over-cooling. Typically is is 0-4 degrees F or 0-2 degrees Celsius.
-
-### timed_ventilation
-
-Lennox Systems with ventilation configured for timed mode (not ASHRAE) will have this number entity created. The entity is in units of minutes. Setting this to a non-zero number will place the system into ventilation mode for the specified number of minutes. This is equivalent to selecting a timed ventilation from the S30 panel. As the amount of remaining time decreases, the value of the number will update.
-
-For example, setting this to 10 - will start ventilation for 10 minutes. After 1 minute has elapsed; this value will be 9; after another minute it will be 8. Setting this to Zero cancels any in-progress timed ventilaion. Another way to cancel a timed ventilation is to turn the ventilation switch entity off.
 
 ## Button Entities
 

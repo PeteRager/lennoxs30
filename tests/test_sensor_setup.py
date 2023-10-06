@@ -2,18 +2,18 @@
 # pylint: disable=consider-using-enumerate
 import logging
 from unittest.mock import Mock
+import pytest
+
+from homeassistant.const import UnitOfTemperature
 
 from lennoxs30api.s30api_async import (
     LENNOX_STATUS_NOT_EXIST,
     LENNOX_STATUS_GOOD,
     lennox_system,
+    LENNOX_PRODUCT_TYPE_S40,
 )
-import pytest
 
-
-from custom_components.lennoxs30 import (
-    Manager,
-)
+from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import MANAGER
 from custom_components.lennoxs30.sensor import (
     S30ActiveAlertsList,
@@ -27,7 +27,7 @@ from custom_components.lennoxs30.sensor import (
 )
 from custom_components.lennoxs30.sensor_ble import S40BleSensor
 from custom_components.lennoxs30.sensor_iaq import S40IAQSensor
-
+from custom_components.lennoxs30.sensor_wt_env import WTEnvSensor
 
 from tests.conftest import loadfile
 
@@ -286,3 +286,45 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
 
         assert system.ble_devices[513].deviceName in caplog.messages[0]
         assert "SOME_NEW_DEVICE" in caplog.messages[0]
+
+    # Weather Sensors
+    message = loadfile("weather.json", system.sysId)
+    system.processMessage(message)
+    system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
+    manager.create_inverter_power = False
+    manager.create_sensors = False
+    manager.create_diagnostic_sensors = False
+    manager.create_alert_sensors = False
+    async_add_entities = Mock()
+
+    # Weather only supported on S40
+    assert not system.is_s40
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 0
+
+    system.productType = LENNOX_PRODUCT_TYPE_S40
+    assert system.is_s40
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 10
+    for index in range(0, 10):
+        sensor = sensor_list[index]
+        assert isinstance(sensor, WTEnvSensor)
+        assert sensor.native_value is not None
+        assert sensor.available
+
+    sensor: WTEnvSensor = sensor_list[9]
+    assert manager.is_metric
+    assert sensor.native_unit_of_measurement == UnitOfTemperature.CELSIUS
+
+    manager.is_metric = False
+    await async_setup_entry(hass, entry, async_add_entities)
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 10
+    for index in range(0, 10):
+        assert isinstance(sensor_list[index], WTEnvSensor)
+
+    sensor: WTEnvSensor = sensor_list[9]
+    assert sensor.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
