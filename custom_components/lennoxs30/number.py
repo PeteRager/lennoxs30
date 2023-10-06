@@ -29,7 +29,6 @@ from lennoxs30api import (
     lennox_system,
     LENNOX_CIRCULATE_TIME_MAX,
     LENNOX_CIRCULATE_TIME_MIN,
-    LENNOX_VENTILATION_CONTROL_MODE_TIMED,
 )
 
 from lennoxs30api.lennox_equipment import (
@@ -98,7 +97,7 @@ async def async_setup_entry(
         number = CirculateTime(hass, manager, system)
         number_list.append(number)
 
-        if system.supports_ventilation() and system.ventilationControlMode == LENNOX_VENTILATION_CONTROL_MODE_TIMED:
+        if system.supports_ventilation():
             number = TimedVentilationNumber(hass, manager, system)
             number_list.append(number)
 
