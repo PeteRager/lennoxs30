@@ -310,7 +310,10 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     sensor_list = async_add_entities.call_args[0][0]
     assert len(sensor_list) == 10
     for index in range(0, 10):
-        assert isinstance(sensor_list[index], WTEnvSensor)
+        sensor = sensor_list[index]
+        assert isinstance(sensor, WTEnvSensor)
+        assert sensor.native_value is not None
+        assert sensor.available
 
     sensor: WTEnvSensor = sensor_list[9]
     assert manager.is_metric
