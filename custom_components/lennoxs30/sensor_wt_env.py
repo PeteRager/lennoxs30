@@ -180,7 +180,7 @@ class WTEnvSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def native_value(self):
         value = getattr(self._system, self._system_attr)
-        if self._state_class is None:
+        if self._state_class is None or value is None:
             return value
         try:
             return round(float(value), self._precision)
@@ -214,6 +214,9 @@ class WTEnvSensor(S30BaseEntityMixin, SensorEntity):
 
     @property
     def available(self) -> bool:
+        attr_val = getattr(self._system, self._system_attr)
+        if attr_val is None:
+            return False
         if getattr(self._system, self._system_attr) == self._unavailable_value:
             return False
         if getattr(self._system, self._availability_attribute) is False:

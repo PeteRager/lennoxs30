@@ -22,10 +22,15 @@ async def test_wt_env_sensor_text(hass, manager_system_04_furn_ac_zoning_ble: Ma
     manager = manager_system_04_furn_ac_zoning_ble
     system: lennox_system = manager.api.system_list[0]
     system.productType = LENNOX_PRODUCT_TYPE_S40
+
+    sensor_dict = lennox_wt_env_sensors[0]
+    sensor = WTEnvSensor(hass, manager, system, sensor_dict)
+    assert sensor.available is False
+    assert sensor.native_value is None
+
     data = loadfile("weather.json", system.sysId)
     manager.api.processMessage(data)
 
-    sensor_dict = lennox_wt_env_sensors[0]
     sensor = WTEnvSensor(hass, manager, system, sensor_dict)
 
     assert sensor.unique_id == (system.unique_id + "wt_env_airQuality").replace("-", "")
@@ -62,6 +67,12 @@ async def test_wt_env_sensor_humidity(hass, manager_system_04_furn_ac_zoning_ble
     manager = manager_system_04_furn_ac_zoning_ble
     system: lennox_system = manager.api.system_list[0]
     system.productType = LENNOX_PRODUCT_TYPE_S40
+
+    sensor_dict = lennox_wt_env_sensors[6]
+    sensor = WTEnvSensor(hass, manager, system, sensor_dict)
+    assert sensor.available is False
+    assert sensor.native_value is None
+
     data = loadfile("weather.json", system.sysId)
     manager.api.processMessage(data)
 
