@@ -73,6 +73,10 @@ async def test_wt_env_sensor_humidity(hass, manager_system_04_furn_ac_zoning_ble
     assert sensor.available is False
     assert sensor.native_value is None
 
+    system.wt_env_humidity = "not an integer"
+    assert sensor.native_value is None
+    assert sensor.available is False
+
     data = loadfile("weather.json", system.sysId)
     manager.api.processMessage(data)
 

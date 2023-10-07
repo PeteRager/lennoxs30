@@ -215,11 +215,10 @@ class WTEnvSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def available(self) -> bool:
         attr_val = getattr(self._system, self._system_attr)
-        if attr_val is None:
+        if attr_val is None or attr_val == self._unavailable_value:
             return False
-        if getattr(self._system, self._system_attr) == self._unavailable_value:
-            return False
-        if getattr(self._system, self._availability_attribute) is False:
+        attr_avail = getattr(self._system, self._availability_attribute)
+        if attr_avail is None or attr_avail is False:
             return False
         return super().available
 
