@@ -721,10 +721,6 @@ Some times I will need a message log. To enable message logging do the following
 
 ![plot](./doc_images/local_config.png)
 
-## A note on Debug Log Files
-
-The Lennox configuration that comes back from the API contains every configuration parameter of your system - including Personally Identifiable Information. The system by default redacts this information in the log files. Still the recommendation is not to publicly post these. If we need them to debug an issue we can use email.
-
 # Detailed Configuration Parameters
 
 This section documents the detailed configuration parameters, that are editable through the UI. This configuration is stored in the config/.storage/core_config_entries file. Editing this file is not recommended.
