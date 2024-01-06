@@ -237,7 +237,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             if self._manager.is_metric is False:
                 return self._zone.minCsp
             return self._zone.minCspC
-        if self._zone.systemMode == LENNOX_HVAC_HEAT:
+        if self._zone.systemMode in [LENNOX_HVAC_HEAT,LENNOX_HVAC_EMERGENCY_HEAT]:
             if self._manager.is_metric is False:
                 return self._zone.minHsp
             return self._zone.minHspC
@@ -264,7 +264,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             if self._manager.is_metric is False:
                 return self._zone.maxCsp
             return self._zone.maxCspC
-        if self._zone.systemMode == LENNOX_HVAC_HEAT:
+        if self._zone.systemMode in [LENNOX_HVAC_HEAT,LENNOX_HVAC_EMERGENCY_HEAT]:
             if self._manager.is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC
