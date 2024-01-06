@@ -158,6 +158,10 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     assert c.min_temp == zone.minHsp
     assert c.max_temp == zone.maxHsp
 
+    zone.systemMode = LENNOX_HVAC_EMERGENCY_HEAT
+    assert c.min_temp == zone.minHsp
+    assert c.max_temp == zone.maxHsp
+
     assert system.single_setpoint_mode is True
     zone.systemMode = LENNOX_HVAC_HEAT_COOL
     assert c.min_temp == zone.minCsp
