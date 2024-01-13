@@ -1,0 +1,48 @@
+{
+    "MessageId": 0,
+    "SenderID": "**redacted**",
+    "TargetID": "homeassistant",
+    "MessageType": "PropertyChange",
+    "Data": {
+        "interfaces": [
+            {
+                "publisher": {
+                    "publisherName": "lcc"
+                },
+                "Info": {
+                    "status": {
+                        "macAddr": "60:a4:4c:6b:d2:4c",
+                        "ssid": "wifi_home",
+                        "ip": "10.0.0.10",
+                        "router": "10.0.0.1",
+                        "networkStatus": "enabled",
+                        "channel": 0,
+                        "dns": "8.8.8.8",
+                        "dns2": "4.4.4.4",
+                        "subnetMask": "255.255.0.0",
+                        "bitRate": 72200000,
+                        "speed": " 72.2 MBit per second",
+                        "rssi": -68
+                    },
+                    "APDetails": {
+                        "rssi": -68,
+                        "security": "WPA-Personal",
+                        "password": "**redacted**",
+                        "ssid": "**redacted**",
+                        "bssid": "60:a4:4c:6b:d2:4c"
+                    },
+                    "diagnostics": {
+                        "ssid": "**redacted**",
+                        "bssid": "60:a4:4c:6b:d2:4c",
+                        "txByteCount": 75453148,
+                        "rxByteCount": 0,
+                        "ip4addr": "**redacted**",
+                        "txPacketCount": 157356,
+                        "rxPacketCount": 0
+                    }
+                },
+                "id": 0
+            }
+        ]
+    }
+}
