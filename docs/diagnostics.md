@@ -2,9 +2,9 @@
 
 ## Updates 2024-01
 
-**WARNING** improperly configuring diagnostics may cause system stability issues - including excessive controller reboots. communication instability and loss of control. As of Jan 2024, Lennox firmware updates have improved the stability (or at least we are receiving less reports.)
+**WARNING** improperly configuring diagnostics may cause system stability issues - including excessive controller reboots. communication instability and loss of control. As of Jan 2024, Lennox firmware updates have improved the stability (or at least we are receiving less reports of issues)
 
-In order to use diagnostics, your network should be setup to prevent the S30 from communicating to the Lennox Cloud. This will require router and firewall configuration.
+In order to use diagnostics, your network should be setup to prevent the S30 from communicating to the Lennox Cloud. This will require router and firewall configuration. When diagnostics is enabled the data updates every 4 seconds and will be sent to the integration and the Lennox Cloud.
 
 If you are using the integration for the first time, the recommendation is to get your system working without diagnostics for a week, to prove it is stable.
 
@@ -26,7 +26,7 @@ For us Home Assistant enthusiasts, this primary use case is real-time power cons
 
 Enabling diagnostic is done by setting the system diagnostic level from its default 0 to 2. When enabled, the system sends an update every 4 seconds containing the sensor data. This is sent to every connected client, which includes this integration, the lennox cloud and the Lennox App on your phone. This is where the problems occur. We believe when there is not be enough bandwidth to push the diagnostic data to the Lennox Cloud, across fhe cellular network to the phone apps. This causes data to start backing up in the S30 and eventually it exceeds a limit (runs out of memory?) and reboots. When it is rebooting your HVAC is off. Once it comes back up, the cycle repeats.
 
-Note:  As of December 2023 on S40s that are internet connected, it appears that Lennox is automatically disabling diagnostics after a timeout. This is likely to prevent excessive data hitting their cloud. This behavior has not been reported on S40s that are not internet connected.
+Note:  As of December 2023 on S40s that are internet connected, it appears that Lennox is automatically disabling diagnostics after a timeout. This is likely to prevent excessive data hitting their cloud. This behavior has not been reported on S40s that are not internet connected. While the **official** recommendation to to not operate diagnsotics with a cloud connected system. If you are cloud connected and see this behavior the following script has been shown to automatically correct the issue.
 
 ```
 alias: Fix Lennox S40 Diagnostics
