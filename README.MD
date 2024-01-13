@@ -29,6 +29,7 @@ Cloud Connections depending on the device model. We believe these configurations
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 - Adjusting the fan CFM in a single zone system causes some diagnostics to stop updating. Changing the diag_level to 0 and back to 2 solves the issue. A script is available [here](./samples/set_fan_cfm)
 - A power outage to the Lennox Controller causes the diag_level to be reset to 0 on reboot. An automation/package is available [here](./samples/diaglevel) to automatically reset.
+- If you add new equipment (BLE Sensors), restart HA in order for the integration to pickup the new equipment.
 
 # Planning your install
 
@@ -58,43 +59,9 @@ If you like this integration
 
 HACS is recommended as it provides automated install and will notify you when updates are available.
 
-This assumes you have [HACS](https://github.com/hacs/integration) installed and know how to use it. If you need help with this, go to the HACS project documentation. This documentation is based on HACS 1.23.0 - other versions may have different UI.
+This assumes you have [HACS](https://github.com/hacs/integration) installed and know how to use it. If you need help with this, go to the HACS project documentation.
 
-Add custom repository in _HACS_
-
-1. Click on HACS in your menu to open the HACS panel, then click on integrations (https://your.domain/hacs/integrations).
-1. Click on the 3 dots in the top right corner.
-1. Select "Custom repositories"
-1. Add the URL to the repository: `https://github.com/PeteRager/lennoxs30`
-1. Select the integration category.
-1. Click the "ADD" button.
-
-Once done, you should see the new repository, appearing in a list like this. Click the **Download** button
-
-![plot](./doc_images/hacs_1.PNG)
-
-After clicking download, you will be prompted for which version to download. Select the latest - which will be the default - and click download.
-
-![plot](./doc_images/hacs_2.PNG)
-
-Once the download is complete, you will see that to make the component available requires a restart. Restart Home Assistant.
-
-![plot](./doc_images/hacs_3.PNG)
-
-Once Home Assistant restarts and you navigate to HACS. This screen should appear showing the component is added.
-
-![plot](./doc_images/hacs_4.PNG)
-
-Next go to Home Assistant / Configuration / Integrations and select add integration. Search for lennox. Select the integration and follow the [Configuration Steps](#Configuration)
-
-![plot](./doc_images/hacs_5.PNG)
-
-Alternate HACS instructions for old versions - Add integration in _HACS_
-
-1. In the HACS panel, go to integrations and click the '+ Explore & add repositories' button.
-1. Search for `Lennox iComfort WiFi Thermostat Integration` and click `Install this repository in HACS`.
-1. Restart HA to load the integration into HA.<br>
-1. Follow the Configuration Instructions below
+As of October 2023, this integration is included in the HACS default configuration.
 
 ## Manually
 
