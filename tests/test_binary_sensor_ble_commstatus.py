@@ -3,7 +3,7 @@
 import logging
 from unittest.mock import patch
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from lennoxs30api.s30api_async import lennox_system, LENNOX_BLE_COMMSTATUS_AVAILABLE, LennoxBle
 import pytest
 
@@ -45,7 +45,7 @@ async def test_binary_sensor_ble_commstatus(hass, manager_system_04_furn_ac_zoni
     assert attrs["commStatus"] == "BAD_STATUS"
 
     assert sensor.entity_category == "diagnostic"
-    assert sensor.device_class == DEVICE_CLASS_CONNECTIVITY
+    assert sensor.device_class == BinarySensorDeviceClass.CONNECTIVITY
 
     identifiers = sensor.device_info["identifiers"]
     for element in identifiers:

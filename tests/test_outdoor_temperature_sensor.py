@@ -9,8 +9,8 @@ import logging
 from unittest.mock import patch
 import pytest
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorDeviceClass
+from homeassistant.const import UnitOfTemperature
 
 from lennoxs30api.s30api_async import (
     LENNOX_STATUS_GOOD,
@@ -41,12 +41,12 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     assert len(s.extra_state_attributes) == 0
     manager.is_metric = False
     assert s.native_value == system.outdoorTemperature
-    assert s.native_unit_of_measurement == TEMP_FAHRENHEIT
+    assert s.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
     manager.is_metric = True
     assert s.native_value == system.outdoorTemperatureC
-    assert s.native_unit_of_measurement == TEMP_CELSIUS
+    assert s.native_unit_of_measurement == UnitOfTemperature.CELSIUS
 
-    assert s.device_class == DEVICE_CLASS_TEMPERATURE
+    assert s.device_class == SensorDeviceClass.TEMPERATURE
     assert s.state_class == STATE_CLASS_MEASUREMENT
 
     identifiers = s.device_info["identifiers"]

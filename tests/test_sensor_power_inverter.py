@@ -17,10 +17,10 @@ from custom_components.lennoxs30.sensor import (
     S30InverterPowerSensor,
 )
 
-from homeassistant.const import TEMP_CELSIUS, POWER_WATT, DEVICE_CLASS_POWER
+from homeassistant.const import POWER_WATT
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_MEASUREMENT, SensorDeviceClass
 )
 
 
@@ -68,7 +68,7 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
 
     assert s.unit_of_measurement == POWER_WATT
 
-    assert s.device_class == DEVICE_CLASS_POWER
+    assert s.device_class == SensorDeviceClass.POWER
     assert s.state_class == STATE_CLASS_MEASUREMENT
 
     identifiers = s.device_info["identifiers"]

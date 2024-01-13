@@ -11,12 +11,12 @@ import pytest
 
 from homeassistant.const import (
     PERCENTAGE,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     FREQUENCY_HERTZ,
     ELECTRIC_CURRENT_AMPERE,
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
     ELECTRIC_POTENTIAL_VOLT,
-    TIME_MINUTES,
+    UnitOfTime,
     REVOLUTIONS_PER_MINUTE,
 )
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorDeviceClass
@@ -169,13 +169,13 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager):
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[9]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.native_unit_of_measurement == TEMP_FAHRENHEIT
+    assert s.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
     assert s.device_class == SensorDeviceClass.TEMPERATURE
 
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[12]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.unit_of_measurement == TIME_MINUTES
+    assert s.unit_of_measurement == UnitOfTime.MINUTES
     assert s.device_class is None
 
     equipment = system.equipment[1]

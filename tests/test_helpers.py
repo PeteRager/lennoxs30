@@ -3,14 +3,12 @@ import logging
 import pytest
 from homeassistant.const import (
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     FREQUENCY_HERTZ,
     ELECTRIC_CURRENT_AMPERE,
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
     ELECTRIC_POTENTIAL_VOLT,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime
 )
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
@@ -24,11 +22,11 @@ from custom_components.lennoxs30.number import EquipmentParameterNumber
 
 
 def test_helpers_lennox_uom_to_ha_uom():
-    assert lennox_uom_to_ha_uom("F") == TEMP_FAHRENHEIT
-    assert lennox_uom_to_ha_uom("C") == TEMP_CELSIUS
+    assert lennox_uom_to_ha_uom("F") == UnitOfTemperature.FAHRENHEIT
+    assert lennox_uom_to_ha_uom("C") == UnitOfTemperature.CELSIUS
     assert lennox_uom_to_ha_uom("CFM") == VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE
-    assert lennox_uom_to_ha_uom("min") == TIME_MINUTES
-    assert lennox_uom_to_ha_uom("sec") == TIME_SECONDS
+    assert lennox_uom_to_ha_uom("min") == UnitOfTime.MINUTES
+    assert lennox_uom_to_ha_uom("sec") == UnitOfTime.SECONDS
     assert lennox_uom_to_ha_uom("%") == PERCENTAGE
     assert lennox_uom_to_ha_uom("Hz") == FREQUENCY_HERTZ
     assert lennox_uom_to_ha_uom("V") == ELECTRIC_POTENTIAL_VOLT
