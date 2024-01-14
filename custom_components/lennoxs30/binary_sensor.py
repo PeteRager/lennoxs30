@@ -12,8 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PRESENCE,
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -181,7 +180,7 @@ class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_PRESENCE
+        return BinarySensorDeviceClass.PRESENCE
 
 
 class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
@@ -241,7 +240,7 @@ class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def entity_category(self):
@@ -304,7 +303,7 @@ class S30RelayServerStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def entity_category(self):
@@ -376,7 +375,7 @@ class S30CloudConnectedStatus(S30BaseEntityMixin, BinarySensorEntity):
 
     @property
     def device_class(self):
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def entity_category(self):

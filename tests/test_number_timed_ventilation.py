@@ -9,7 +9,7 @@ import logging
 from unittest.mock import patch
 import pytest
 
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.exceptions import HomeAssistantError
 
 from lennoxs30api.s30api_async import lennox_system
@@ -47,7 +47,7 @@ async def test_timed_ventilation_time_name(hass, manager: Manager):
 async def test_timed_ventilation_time_unit_of_measure(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = TimedVentilationNumber(hass, manager, system)
-    assert c.unit_of_measurement == TIME_MINUTES
+    assert c.unit_of_measurement == UnitOfTime.MINUTES
 
 
 @pytest.mark.asyncio

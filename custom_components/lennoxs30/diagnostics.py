@@ -1,4 +1,4 @@
-"""Diagnostics support for Nest."""
+"""Diagnostics support for LennoxS30."""
 # pylint: disable=line-too-long
 from __future__ import annotations
 from typing import Any

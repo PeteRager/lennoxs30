@@ -8,7 +8,7 @@
 from unittest.mock import patch
 import pytest
 
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import HomeAssistantError
 
 from lennoxs30api.s30api_async import lennox_system
@@ -54,7 +54,7 @@ async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
-    assert c.unit_of_measurement == TEMP_FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
 
 
 @pytest.mark.asyncio
