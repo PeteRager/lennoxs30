@@ -27,6 +27,7 @@ from custom_components.lennoxs30.sensor import (
 )
 from custom_components.lennoxs30.sensor_ble import S40BleSensor
 from custom_components.lennoxs30.sensor_iaq import S40IAQSensor
+from custom_components.lennoxs30.sensor_wifi import WifiRSSISensor
 from custom_components.lennoxs30.sensor_wt_env import WTEnvSensor
 
 from tests.conftest import loadfile
@@ -46,9 +47,19 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     manager.create_sensors = False
     manager.create_diagnostic_sensors = False
     manager.create_alert_sensors = False
+    manager.api.isLANConnection = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 0
+
+    manager.api.isLANConnection = True
+    async_add_entities = Mock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 1
+    assert isinstance(sensor_list[0], WifiRSSISensor)
+    manager.api.isLANConnection = False
 
     # Outdoor Temperature Sensor
     system.outdoorTemperatureStatus = LENNOX_STATUS_GOOD
