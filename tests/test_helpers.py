@@ -1,13 +1,14 @@
-from logging import ERROR, WARNING
+"""Test for the helper module"""
+# pylint: disable=line-too-long
 import logging
 import pytest
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
-    FREQUENCY_HERTZ,
-    ELECTRIC_CURRENT_AMPERE,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    ELECTRIC_POTENTIAL_VOLT,
+    UnitOfFrequency,
+    UnitOfElectricCurrent,
+    UnitOfVolumeFlowRate,
+    UnitOfElectricPotential,
     UnitOfTime
 )
 from custom_components.lennoxs30 import Manager
@@ -18,25 +19,26 @@ from custom_components.lennoxs30.helpers import (
     helper_get_equipment_device_info,
     lennox_uom_to_ha_uom,
 )
-from custom_components.lennoxs30.number import EquipmentParameterNumber
 
 
 def test_helpers_lennox_uom_to_ha_uom():
+    """Test the conversion of unit from lennox to HA"""
     assert lennox_uom_to_ha_uom("F") == UnitOfTemperature.FAHRENHEIT
     assert lennox_uom_to_ha_uom("C") == UnitOfTemperature.CELSIUS
-    assert lennox_uom_to_ha_uom("CFM") == VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE
+    assert lennox_uom_to_ha_uom("CFM") == UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE
     assert lennox_uom_to_ha_uom("min") == UnitOfTime.MINUTES
     assert lennox_uom_to_ha_uom("sec") == UnitOfTime.SECONDS
     assert lennox_uom_to_ha_uom("%") == PERCENTAGE
-    assert lennox_uom_to_ha_uom("Hz") == FREQUENCY_HERTZ
-    assert lennox_uom_to_ha_uom("V") == ELECTRIC_POTENTIAL_VOLT
-    assert lennox_uom_to_ha_uom("A") == ELECTRIC_CURRENT_AMPERE
-    assert lennox_uom_to_ha_uom("") == None
+    assert lennox_uom_to_ha_uom("Hz") == UnitOfFrequency.HERTZ
+    assert lennox_uom_to_ha_uom("V") == UnitOfElectricPotential.VOLT
+    assert lennox_uom_to_ha_uom("A") == UnitOfElectricCurrent.AMPERE
+    assert lennox_uom_to_ha_uom("") is None
     assert lennox_uom_to_ha_uom("my_custom_unit") == "my_custom_unit"
 
 
 @pytest.mark.asyncio
 async def test_helpers_helper_get_equipment_device_info(manager: Manager):
+    """Test the helper to create device info"""
     await manager.create_devices()
     system = manager.api.system_list[0]
     device_info = helper_get_equipment_device_info(manager, system, 1)
@@ -49,6 +51,7 @@ async def test_helpers_helper_get_equipment_device_info(manager: Manager):
 
 @pytest.mark.asyncio
 async def test_helpers_helper_get_equipment_device_info_no_system(manager: Manager, caplog):
+    """Test the helper to create device info"""
     system = manager.api.system_list[0]
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -65,6 +68,7 @@ async def test_helpers_helper_get_equipment_device_info_no_system(manager: Manag
 
 @pytest.mark.asyncio
 async def test_helpers_helper_get_equipment_device_info_no_device(manager: Manager, caplog):
+    """Test the helper to create device info"""
     await manager.create_devices()
     system = manager.api.system_list[0]
     manager.system_equip_device_map[system.sysId] = {}
@@ -82,7 +86,8 @@ async def test_helpers_helper_get_equipment_device_info_no_device(manager: Manag
 
 
 @pytest.mark.asyncio
-async def test_helpers_create_equipment_entity_name(manager: Manager, caplog):
+async def test_helpers_create_equipment_entity_name(manager: Manager):
+    """Test the helper to create device info"""
     await manager.create_devices()
     system = manager.api.system_list[0]
     equipment = system.equipment[0]
