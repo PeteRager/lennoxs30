@@ -456,6 +456,21 @@ Example JSON
 ]
 ```
 
+### wifi_rssi
+
+Local Connections Only.  Reports the WIFI signal strength, this sensor can be used to diagnose WIFI dropout issues.
+
+ Attribute                  | Type        | Description                                                         |
+| -------------------------- | ----------- | ------------------------------------------------------------------- |
+| macAddr                 | string | MAC Address of the controller  |
+| ssid         | string         | WIFI network name |
+| ip     | string        | IP Address of the controller                                  |
+| router | string       | IP Address of the router gateway                                  |
+| dns | string       | DNS IP Address                                   |
+| dns2 | string       | Secondary DNS IP address                                  |
+| subnetMask | string       | LAN subnet mask                                 |
+| bitrate | float       | WIFI connection bitrate                                  |
+
 ## Select Entities
 
 ### Humidity Mode

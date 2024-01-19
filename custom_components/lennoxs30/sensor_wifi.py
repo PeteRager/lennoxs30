@@ -19,7 +19,6 @@ from lennoxs30api import lennox_system
 from . import Manager
 from .base_entity import S30BaseEntityMixin
 from .const import LENNOX_DOMAIN, UNIQUE_ID_SUFFIX_WIFI_RSSI
-from .helpers import helper_create_system_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
