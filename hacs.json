@@ -2,5 +2,5 @@
     "name": "Lennox S30,E30,M30",
     "render_readme": true,
     "hide_default_branch": true,
-    "homeassistant": "2023.1.0"
+    "homeassistant": "2023.12.0"
 }
