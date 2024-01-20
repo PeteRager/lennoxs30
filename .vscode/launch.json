@@ -1,11 +1,17 @@
 {
-  "version": "0.2.0",
   "configurations": [
-    {
-      "name": "Debug test",
-      "type": "python",
-      "request": "attach",
-      "justMyCode": false
-    }
-  ]
+      {
+          "name": "Python: Debug Tests",
+          "type": "python",
+          "request": "launch",
+          "program": "${file}",
+          "purpose": ["debug-test"],
+          "console": "integratedTerminal",
+          "justMyCode": false,
+          "presentation": {
+              "hidden": true, // keep original launch order in 'run and debug' tab
+          }
+      },
+  ],
+  "version": "0.2.0"
 }

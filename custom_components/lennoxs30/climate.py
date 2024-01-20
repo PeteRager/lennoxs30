@@ -25,8 +25,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -225,8 +224,8 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         if self._manager.is_metric is False:
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def min_temp(self):
@@ -237,7 +236,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             if self._manager.is_metric is False:
                 return self._zone.minCsp
             return self._zone.minCspC
-        if self._zone.systemMode == LENNOX_HVAC_HEAT:
+        if self._zone.systemMode in [LENNOX_HVAC_HEAT,LENNOX_HVAC_EMERGENCY_HEAT]:
             if self._manager.is_metric is False:
                 return self._zone.minHsp
             return self._zone.minHspC
@@ -264,7 +263,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             if self._manager.is_metric is False:
                 return self._zone.maxCsp
             return self._zone.maxCspC
-        if self._zone.systemMode == LENNOX_HVAC_HEAT:
+        if self._zone.systemMode in [LENNOX_HVAC_HEAT,LENNOX_HVAC_EMERGENCY_HEAT]:
             if self._manager.is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC

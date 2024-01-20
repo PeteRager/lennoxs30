@@ -29,8 +29,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature
 )
 
 
@@ -94,7 +93,7 @@ async def test_climate_min_max_c(hass, manager_mz: Manager):
 
     # Metric Tests
     assert manager.is_metric is True
-    assert c.temperature_unit == TEMP_CELSIUS
+    assert c.temperature_unit == UnitOfTemperature.CELSIUS
     zone.systemMode = LENNOX_HVAC_OFF
     assert c.min_temp is None
     assert c.max_temp is None
@@ -104,6 +103,10 @@ async def test_climate_min_max_c(hass, manager_mz: Manager):
     assert c.max_temp == zone.maxCspC
 
     zone.systemMode = LENNOX_HVAC_HEAT
+    assert c.min_temp == zone.minHspC
+    assert c.max_temp == zone.maxHspC
+
+    zone.systemMode = LENNOX_HVAC_EMERGENCY_HEAT
     assert c.min_temp == zone.minHspC
     assert c.max_temp == zone.maxHspC
 
@@ -141,7 +144,7 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     manager.is_metric = False
 
     assert manager.is_metric is False
-    assert c.temperature_unit == TEMP_FAHRENHEIT
+    assert c.temperature_unit == UnitOfTemperature.FAHRENHEIT
     zone.systemMode = LENNOX_HVAC_OFF
     assert c.min_temp is None
     assert c.max_temp is None
@@ -151,6 +154,10 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     assert c.max_temp == zone.maxCsp
 
     zone.systemMode = LENNOX_HVAC_HEAT
+    assert c.min_temp == zone.minHsp
+    assert c.max_temp == zone.maxHsp
+
+    zone.systemMode = LENNOX_HVAC_EMERGENCY_HEAT
     assert c.min_temp == zone.minHsp
     assert c.max_temp == zone.maxHsp
 
