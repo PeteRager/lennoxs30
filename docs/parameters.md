@@ -1,4 +1,4 @@
-# Lennox S30 Equipment Parameters Beta
+# Lennox S30 Equipment Parameters
 
 **WARNING** improperly setting equipment parameters could render your HVAC system inoperable - please use caution and write down old values before changing and review this document.
 

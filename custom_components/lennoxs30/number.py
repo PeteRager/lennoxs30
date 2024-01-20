@@ -12,9 +12,8 @@ import voluptuous as vol
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TIME_MINUTES,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import HomeAssistantError
@@ -234,8 +233,8 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
     @property
     def native_unit_of_measurement(self):
         if self._manager.is_metric is False:
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def native_max_value(self) -> float:
@@ -427,7 +426,7 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
 
     @property
     def native_unit_of_measurement(self):
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def device_info(self) -> DeviceInfo:

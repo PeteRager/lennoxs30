@@ -9,8 +9,8 @@ import logging
 from unittest.mock import patch
 import pytest
 
-from homeassistant.const import PERCENTAGE, DEVICE_CLASS_HUMIDITY
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.const import PERCENTAGE
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorDeviceClass
 
 from lennoxs30api.s30api_async import (
     LENNOX_BAD_STATUS,
@@ -42,7 +42,7 @@ async def test_humidity_sensor(hass, manager: Manager, caplog):
     assert s.state == zone.humidity
     assert s.unit_of_measurement == PERCENTAGE
 
-    assert s.device_class == DEVICE_CLASS_HUMIDITY
+    assert s.device_class == SensorDeviceClass.HUMIDITY
     assert s.state_class == STATE_CLASS_MEASUREMENT
 
     identifiers = s.device_info["identifiers"]

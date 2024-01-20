@@ -9,8 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature
 )
 
 from lennoxs30api.s30api_async import (
@@ -53,9 +52,9 @@ async def test_dehumd_overcool_unique_id_unit_of_measure(hass, manager: Manager)
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
     c = DehumidificationOverCooling(hass, manager, system)
-    assert c.unit_of_measurement == TEMP_CELSIUS
+    assert c.unit_of_measurement == UnitOfTemperature.CELSIUS
     manager.is_metric = False
-    assert c.unit_of_measurement == TEMP_FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
 
 
 @pytest.mark.asyncio

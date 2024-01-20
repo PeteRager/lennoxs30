@@ -13,7 +13,7 @@ from custom_components.lennoxs30.binary_sensor import S30InternetStatus
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
 )
 
 from tests.conftest import conftest_base_entity_availability
@@ -31,7 +31,7 @@ async def test_internet_status_init(hass, manager: Manager, caplog):
     assert system.internetStatus == None
     assert c.available == False
     assert c.entity_category == "diagnostic"
-    assert c.device_class == DEVICE_CLASS_CONNECTIVITY
+    assert c.device_class == BinarySensorDeviceClass.CONNECTIVITY
 
     identifiers = c.device_info["identifiers"]
     for x in identifiers:

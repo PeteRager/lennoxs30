@@ -48,8 +48,8 @@ from .ble_device_22v25 import lennox_22v25_sensors
 from .ble_device_21p02 import lennox_21p02_sensors, lennox_iaq_sensors
 from .sensor_ble import S40BleSensor
 from .sensor_iaq import S40IAQSensor
+from .sensor_wifi import WifiRSSISensor
 from .sensor_wt_env import lennox_wt_env_sensors, WTEnvSensor, lennox_wt_env_sensors_metric, lennox_wt_env_sensors_us
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,6 +174,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     ble_device.deviceType,
                     ble_device.controlModelNumber,
                 )
+
+        if manager.api.isLANConnection:
+            sensor_list.append(WifiRSSISensor(hass, manager, system))
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)

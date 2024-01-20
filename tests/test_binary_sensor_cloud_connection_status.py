@@ -16,7 +16,7 @@ from custom_components.lennoxs30.binary_sensor import S30CloudConnectedStatus
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
 )
 
 
@@ -43,7 +43,7 @@ async def test_cloud_connected_status_init(hass, manager: Manager, caplog):
     assert c.available == False
 
     assert c.entity_category == "diagnostic"
-    assert c.device_class == DEVICE_CLASS_CONNECTIVITY
+    assert c.device_class == BinarySensorDeviceClass.CONNECTIVITY
 
     identifiers = c.device_info["identifiers"]
     for x in identifiers:
