@@ -1503,6 +1503,21 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
                 assert ex is not None
                 assert "System Mode is [off]" in str(ex)
 
+    system.single_setpoint_mode = False
+    zone.systemMode = "off"
+    with patch.object(c, "async_set_hvac_mode") as async_set_hvac_mode:
+        with patch.object(zone, "perform_setpoint") as perform_setpoint:
+            with caplog.at_level(logging.ERROR):
+                caplog.clear()
+                ex: HomeAssistantError = None
+                try:
+                    await c.async_set_temperature(temperature=73)
+                except HomeAssistantError as err:
+                    ex = err
+                assert ex is not None
+                assert "System Mode is [off]" in str(ex)                
+    system.single_setpoint_mode = False
+ 
     zone.systemMode = "cool"
     with patch.object(c, "async_set_hvac_mode") as async_set_hvac_mode:
         with patch.object(zone, "perform_setpoint") as perform_setpoint:
