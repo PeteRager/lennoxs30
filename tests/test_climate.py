@@ -757,11 +757,23 @@ async def test_climate_supported_features(hass, manager_mz: Manager):
     assert feat & SUPPORT_PRESET_MODE != 0
     assert feat & SUPPORT_FAN_MODE != 0
 
-    c._zone.heatingOption = True
+    c._zone.emergencyHeatingOption = False
     with patch.object(system, "has_emergency_heat") as has_emergency_heat:
         has_emergency_heat.return_value = True
         feat = c.supported_features
         assert feat & SUPPORT_AUX_HEAT != 0
+
+    c._zone.emergencyHeatingOption = True
+    with patch.object(system, "has_emergency_heat") as has_emergency_heat:
+        has_emergency_heat.return_value = False
+        feat = c.supported_features
+        assert feat & SUPPORT_AUX_HEAT != 0
+
+    c._zone.emergencyHeatingOption = False
+    with patch.object(system, "has_emergency_heat") as has_emergency_heat:
+        has_emergency_heat.return_value = False
+        feat = c.supported_features
+        assert feat & SUPPORT_AUX_HEAT == 0
 
     zone1: lennox_zone = system.zone_list[1]
     c1 = S30Climate(hass, manager, system, zone1)

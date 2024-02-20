@@ -215,7 +215,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         ):
             mask |= ClimateEntityFeature.TARGET_HUMIDITY
 
-        if self._zone.heatingOption and self._system.has_emergency_heat():
+        if self._zone.emergencyHeatingOption or self._system.has_emergency_heat():
             mask |= ClimateEntityFeature.AUX_HEAT
 
         _LOGGER.debug("climate:supported_features name [%s] support_flags [%d]", self._myname, SUPPORT_FLAGS)
