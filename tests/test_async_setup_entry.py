@@ -320,7 +320,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
 
     data = {
         "cloud_connection": True,
-        "email": "pete.rage@rage.com",
+        "email": "pete._rage@rage.com",
         "password": "rage",
         "app_id": "homeassistant",
         "create_sensors": True,
@@ -354,7 +354,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager._poll_interval == 1
         assert manager._fast_poll_interval == 0.75
         assert manager._fast_poll_count == 5
-        assert manager.api._username == "pete.rage@rage.com"
+        assert manager.api._username == "pete._rage@rage.com"
         assert manager.api._password == "rage"
         assert manager._pii_message_log is False
         assert manager._message_debug_logging is True
