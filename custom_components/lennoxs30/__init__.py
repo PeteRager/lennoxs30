@@ -471,7 +471,7 @@ class Manager(object):
         else:
             if ip_address is None:
                 e_name = email.split("@")
-                redacted_email: str = e_name[0].replace(".", "_")
+                redacted_email: str = e_name[0].replace(".", "_").replace("__","_")
                 self.connection_state = "lennoxs30.conn_" + redacted_email
             else:
                 self.connection_state = "lennoxs30.conn_" + self._ip_address.replace(".", "_").replace(":", "_")
