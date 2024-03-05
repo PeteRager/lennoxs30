@@ -316,11 +316,11 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager.create_equipment_parameters is False
         assert manager._conf_init_wait_time == 30
         assert manager.is_metric is True
-        assert manager.connection_state == "lennoxs30.conn_192_168_1_94"
+        assert manager.connection_state == "lennoxs30.conn_192168194"
 
     data = {
         "cloud_connection": True,
-        "email": "pete._rage@rage.com",
+        "email": "_pete._rage@rage.com",
         "password": "rage",
         "app_id": "homeassistant",
         "create_sensors": True,
@@ -354,7 +354,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager._poll_interval == 1
         assert manager._fast_poll_interval == 0.75
         assert manager._fast_poll_count == 5
-        assert manager.api._username == "pete._rage@rage.com"
+        assert manager.api._username == "_pete._rage@rage.com"
         assert manager.api._password == "rage"
         assert manager._pii_message_log is False
         assert manager._message_debug_logging is True
@@ -367,7 +367,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager.create_equipment_parameters is False
         assert manager._conf_init_wait_time == 30
         assert manager.is_metric is True
-        assert manager.connection_state == "lennoxs30.conn_pete_rage"
+        assert manager.connection_state == "lennoxs30.conn_peterage"
 
 
 @pytest.mark.asyncio
