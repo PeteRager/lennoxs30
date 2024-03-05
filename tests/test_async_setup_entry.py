@@ -316,7 +316,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager.create_equipment_parameters is False
         assert manager._conf_init_wait_time == 30
         assert manager.is_metric is True
-        assert manager.connection_state == "lennoxs30.conn_192168194"
+        assert manager.connection_state == "lennoxs30.conn_192_168_1_94"
 
     data = {
         "cloud_connection": True,
@@ -367,7 +367,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager.create_equipment_parameters is False
         assert manager._conf_init_wait_time == 30
         assert manager.is_metric is True
-        assert manager.connection_state == "lennoxs30.conn_peterage"
+        assert manager.connection_state == "lennoxs30.conn_pete_rage"
 
 
 @pytest.mark.asyncio
