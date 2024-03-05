@@ -17,10 +17,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.const import (
-    CONF_TIMEOUT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 

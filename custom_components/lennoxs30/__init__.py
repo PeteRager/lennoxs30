@@ -9,7 +9,6 @@ import asyncio
 from asyncio.locks import Event
 import logging
 import re
-import re
 import time
 import voluptuous as vol
 
