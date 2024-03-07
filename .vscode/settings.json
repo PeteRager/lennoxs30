@@ -23,12 +23,5 @@
     "setpoints",
     "sysuptime"
   ],
-  "python.formatting.provider": "black",
-  "python.formatting.blackArgs": ["--line-length", "120"],
-  "cSpell.enabled": false,
-  "python.linting.flake8Enabled": false,
-  "python.linting.enabled": true,
-  "python.linting.flake8Args": ["--config=setup.cfg", "--doctests"],
-  "python.linting.pylintEnabled": true,
- 
+  "cSpell.enabled": false, 
 }

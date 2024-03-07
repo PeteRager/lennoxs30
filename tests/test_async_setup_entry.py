@@ -17,10 +17,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.const import (
-    CONF_TIMEOUT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
@@ -320,7 +317,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
 
     data = {
         "cloud_connection": True,
-        "email": "pete._rage@rage.com",
+        "email": "_pete._rage@rage.com",
         "password": "rage",
         "app_id": "homeassistant",
         "create_sensors": True,
@@ -354,7 +351,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager._poll_interval == 1
         assert manager._fast_poll_interval == 0.75
         assert manager._fast_poll_count == 5
-        assert manager.api._username == "pete._rage@rage.com"
+        assert manager.api._username == "_pete._rage@rage.com"
         assert manager.api._password == "rage"
         assert manager._pii_message_log is False
         assert manager._message_debug_logging is True
