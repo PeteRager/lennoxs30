@@ -4,6 +4,7 @@
 # pylint: disable=unused-argument
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name
+# pylint: disable=abstract-method
 
 from __future__ import annotations
 
@@ -31,6 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.exceptions import HomeAssistantError
 
 from lennoxs30api import (
@@ -99,7 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 class S30Climate(S30BaseEntityMixin, ClimateEntity):
     """Class for Lennox S30 thermostat."""
-
     def __init__(self, hass, manager: Manager, system: lennox_system, zone: lennox_zone):
         """Initialize the climate device."""
         super().__init__(manager, system)
@@ -603,9 +604,26 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         res = self._zone.systemMode == LENNOX_HVAC_EMERGENCY_HEAT
         return res
 
+    def _create_aux_heat_issue(self, service: str):
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            service,
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_aux_heat",
+            learn_more_url="https://github.com/PeteRager/lennoxs30/blob/master/docs/aux_heat.md"
+        )
+        _LOGGER.warning(
+            "climate.%s is deprecated and will be removed in version 2024.10", service
+        )
+
+
     async def async_turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
         _LOGGER.info("climate:async_turn_aux_heat_on zone [%s]", self._myname)
+        self._create_aux_heat_issue("turn_aux_heat_on")
         if self.is_zone_disabled:
             raise HomeAssistantError(f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled")
         try:
@@ -620,6 +638,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
     async def async_turn_aux_heat_off(self):
         _LOGGER.info("climate:async_turn_aux_heat_off zone [%s]", self._myname)
+        self._create_aux_heat_issue("turn_aux_heat_off")
         # When Aux is turned off, we will revert the zone to Heat Mode.
         if self.is_zone_disabled:
             raise HomeAssistantError(f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled")

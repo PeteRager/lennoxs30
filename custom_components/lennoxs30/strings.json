@@ -82,5 +82,11 @@
         "title": "Options"
       }
     }
+  },
+  "issues" : {
+      "deprecated_aux_heat": {
+        "title": "Climate Aux heat is being removed",
+        "description": "Please use the aux heat switch to turn on/off emergency heat."
+      }
   }
 }

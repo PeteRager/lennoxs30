@@ -16,10 +16,9 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.const import (
-    UnitOfTemperature
-)
+from homeassistant.const import UnitOfTemperature
 from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.helpers import issue_registry as ir
 
 from lennoxs30api.s30api_async import (
     LENNOX_HVAC_COOL,
@@ -1233,14 +1232,20 @@ async def test_climate_turn_aux_heat_on(hass, manager_mz: Manager, caplog):
     manager.is_metric = False
     zone: lennox_zone = system.zone_list[1]
     c = S30Climate(hass, manager, system, zone)
+    assert c.__climate_reported_legacy_aux is True
     zone.systemMode = LENNOX_HVAC_HEAT
 
-    with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.WARNING):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
             await c.async_turn_aux_heat_on()
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_EMERGENCY_HEAT
+            assert "turn_aux_heat_on is deprecated and will be removed in version 2024.10" in caplog.text
+            issue_registry = ir.async_get(hass)
+            issue = issue_registry.async_get_issue(LENNOX_DOMAIN, "turn_aux_heat_on")
+            assert issue.breaks_in_ha_version == "2024.10.0"
+            assert issue.translation_key == "deprecated_aux_heat"
 
     await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_on)
 
@@ -1267,12 +1272,17 @@ async def test_climate_turn_aux_heat_off(hass, manager_mz: Manager, caplog):
     c = S30Climate(hass, manager, system, zone)
     zone.systemMode = LENNOX_HVAC_HEAT
 
-    with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.WARNING):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
             await c.async_turn_aux_heat_off()
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_HEAT
+            assert "turn_aux_heat_off is deprecated and will be removed in version 2024.10" in caplog.text
+            issue_registry = ir.async_get(hass)
+            issue = issue_registry.async_get_issue(LENNOX_DOMAIN, "turn_aux_heat_off")
+            assert issue.breaks_in_ha_version == "2024.10.0"
+            assert issue.translation_key == "deprecated_aux_heat"
 
     await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_off)
 
