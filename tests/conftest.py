@@ -76,13 +76,6 @@ from custom_components.lennoxs30.const import (
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
-
-@pytest.fixture(autouse=True)
-def socket_enabled():
-    pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    pytest_socket.disable_socket(allow_unix_socket=True)
-
-
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     yield
