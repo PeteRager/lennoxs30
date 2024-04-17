@@ -2,9 +2,9 @@
   "python.testing.pytestArgs": [
     "tests","--asyncio-mode=auto"
   ],
+  "python.experiments.optOutFrom": ["pythonTestAdapter"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.experiments.enabled": false,
   "cSpell.words": [
     "ASHRAE",
     "automations",

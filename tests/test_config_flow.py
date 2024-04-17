@@ -426,7 +426,7 @@ async def test_upgrade_config_v1(hass):
         "message_debug_file": "",
     }
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -469,7 +469,7 @@ async def test_upgrade_config_v1(hass):
         "message_debug_file": "",
     }
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -516,7 +516,7 @@ async def test_upgrade_config_v2(hass):
         "timeout": 30,
     }
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -562,7 +562,7 @@ async def test_upgrade_config_v2(hass):
         "timeout": 30,
     }
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -611,7 +611,7 @@ async def test_upgrade_config_v3(hass, caplog):
         "timeout": 30,
     }
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -657,7 +657,7 @@ async def test_upgrade_config_v3(hass, caplog):
         "timeout": 30,
     }
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1

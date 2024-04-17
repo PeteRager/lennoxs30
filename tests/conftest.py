@@ -14,6 +14,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+import pytest_socket
 
 from lennoxs30api.s30api_async import (
     lennox_system,
@@ -78,7 +79,9 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 
 @pytest.fixture(autouse=True)
 def socket_enabled():
-    pass
+    pytest_socket.socket_allow_hosts(["127.0.0.1"])
+    pytest_socket.disable_socket(allow_unix_socket=True)
+
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
@@ -131,8 +134,7 @@ def loadfile(name: str, sysId: str = None) -> json:
 
 @pytest.fixture
 def config_entry_local() -> config_entries.ConfigEntry:
-    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
-    config.unique_id = "12345"
+    config = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345")
     config.data = {}
     config.data[CONF_CLOUD_CONNECTION] = False
     config.data[CONF_HOST] = "10.0.0.1"
@@ -158,8 +160,7 @@ def config_entry_local() -> config_entries.ConfigEntry:
 
 @pytest.fixture
 def config_entry_cloud() -> config_entries.ConfigEntry:
-    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
-    config.unique_id = "12345"
+    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345")
     config.data = {}
     config.data[CONF_CLOUD_CONNECTION] = True
     config.data[CONF_EMAIL] = "pete.rage@rage.com"
@@ -270,8 +271,7 @@ def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manag
 
 @pytest.fixture
 def manager_2_systems(hass) -> Manager:
-    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
-    config.unique_id = "12345"
+    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345")
 
     manager_to_return = Manager(
         hass=hass,
@@ -326,9 +326,7 @@ def manager_2_systems(hass) -> Manager:
 
 @pytest.fixture
 def manager_mz(hass) -> Manager:
-    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
-    config.unique_id = "12345"
-
+    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345")
     manager_to_return = Manager(
         hass=hass,
         config=config,
@@ -371,9 +369,7 @@ def manager_mz(hass) -> Manager:
 
 @pytest.fixture
 def manager_system_04_furn_ac_zoning(hass) -> Manager:
-    config = config_entries.ConfigEntry(version=1, domain=DOMAIN, title="10.0.0.1", data={}, source="User")
-    config.unique_id = "12345"
-
+    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345")
     manager_to_return = Manager(
         hass=hass,
         config=config,
