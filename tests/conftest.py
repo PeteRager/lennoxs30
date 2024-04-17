@@ -14,7 +14,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-import pytest_socket
 
 from lennoxs30api.s30api_async import (
     lennox_system,
