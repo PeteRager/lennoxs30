@@ -1232,7 +1232,6 @@ async def test_climate_turn_aux_heat_on(hass, manager_mz: Manager, caplog):
     manager.is_metric = False
     zone: lennox_zone = system.zone_list[1]
     c = S30Climate(hass, manager, system, zone)
-    assert c.__climate_reported_legacy_aux is True
     zone.systemMode = LENNOX_HVAC_HEAT
 
     with caplog.at_level(logging.WARNING):

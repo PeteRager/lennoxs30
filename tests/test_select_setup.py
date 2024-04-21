@@ -14,12 +14,13 @@ from custom_components.lennoxs30.select import (
     HumidityModeSelect,
     EquipmentParameterSelect,
     VentilationModeSelect,
+    ZoneModeSelect,
     async_setup_entry,
 )
 
 
 @pytest.mark.asyncio
-async def test_async_number_setup_entry(hass, manager: Manager):
+async def test_async_select_setup_entry(hass, manager: Manager):
     """Test the select setup"""
     system: lennox_system = manager.api.system_list[0]
     entry = manager.config_entry
@@ -106,3 +107,18 @@ async def test_async_number_setup_entry(hass, manager: Manager):
     sensor_list = async_add_entities.call_args[0][0]
     assert len(sensor_list) == 1
     assert isinstance(sensor_list[0], VentilationModeSelect)
+
+    # ZoneModeSelect should be created
+    system.dehumidifierType = None
+    for zone in system.zone_list:
+        zone.dehumidificationOption = False
+        zone.humidificationOption = False
+        zone.emergencyHeatingOption = True
+    manager.create_equipment_parameters = False
+    system.ventilationUnitType = None
+    async_add_entities = Mock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.call_count == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 1
+    assert isinstance(sensor_list[0], ZoneModeSelect)
