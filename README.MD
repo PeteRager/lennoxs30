@@ -9,6 +9,7 @@ Cloud Connections depending on the device model. We believe these configurations
 | S40         | Yes              | Unknown          |
 | E30         | Yes              | Yes              |
 | M30         | No               | Yes              |
+| Armstrong Comfort Sync A3 | Yes | Unknown |
 
 > **Please Note:** This component **does not** support the other models of Lennox Thermostats.
 
