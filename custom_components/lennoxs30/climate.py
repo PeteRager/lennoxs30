@@ -32,7 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.exceptions import HomeAssistantError
 
 from lennoxs30api import (
