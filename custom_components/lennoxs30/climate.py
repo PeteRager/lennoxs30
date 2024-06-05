@@ -605,18 +605,8 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return res
 
     def _create_aux_heat_issue(self, service: str):
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            service,
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_aux_heat",
-            learn_more_url="https://github.com/PeteRager/lennoxs30/blob/master/docs/aux_heat.md"
-        )
         _LOGGER.warning(
-            "climate.%s is deprecated and will be removed in version 2024.10", service
+            "climate.%s is deprecated and will be removed in version 2024.10 learn more https://github.com/PeteRager/lennoxs30/blob/master/docs/aux_heat.md", service
         )
 
 
