@@ -64,7 +64,7 @@ async def test_async_setup_entry_local(hass: HomeAssistant, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -182,7 +182,7 @@ async def test_async_setup_entry_cloud(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -236,7 +236,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345")
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -286,7 +286,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test1", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test1", data = data, source="my_source", unique_id="123456")
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -337,7 +337,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test3", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test2", data = data, source="my_source", unique_id="1234567")
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -391,7 +391,7 @@ async def test_async_unload_entry_success(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as _:
         res = await async_setup_entry(hass, config_entry)
@@ -437,7 +437,7 @@ async def test_async_unload_entry_unload_fail(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(1, DOMAIN, "Test", data, "my_source")
+    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source")
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()

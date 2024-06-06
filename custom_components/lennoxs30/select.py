@@ -4,10 +4,12 @@
 # pylint: disable=unused-argument
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name
+# pylint: disable=abstract-method
 from typing import Any
 import logging
 
 
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +22,8 @@ from lennoxs30api.s30api_async import (
     LENNOX_HUMIDITY_MODE_OFF,
     LENNOX_HUMIDITY_MODE_HUMIDIFY,
     LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_HVAC_EMERGENCY_HEAT,
+    LENNOX_HVAC_HEAT_COOL,
     LENNOX_DEHUMIDIFICATION_MODE_HIGH,
     LENNOX_DEHUMIDIFICATION_MODE_MEDIUM,
     LENNOX_DEHUMIDIFICATION_MODE_AUTO,
@@ -48,6 +52,7 @@ from .const import (
     MANAGER,
     UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT,
     UNIQUE_ID_SUFFIX_VENTILATION_SELECT,
+    UNIQUE_ID_SUFFIX_ZONEMODE_SELECT,
 )
 from . import DOMAIN, Manager
 
@@ -88,6 +93,13 @@ async def async_setup_entry(
                     if parameter.enabled and parameter.descriptor == LENNOX_EQUIPMENT_PARAMETER_FORMAT_RADIO:
                         select = EquipmentParameterSelect(hass, manager, system, equipment, parameter)
                         select_list.append(select)
+
+        for zone in system.zone_list:
+            if zone.is_zone_active():
+                if zone.emergencyHeatingOption or system.has_emergency_heat():
+                    zone_emergency_heat = ZoneModeSelect(hass, manager, system, zone)
+                    select_list.append(zone_emergency_heat)
+
 
     if len(select_list) != 0:
         async_add_entities(select_list, True)
@@ -459,3 +471,105 @@ class VentilationModeSelect(S30BaseEntityMixin, SelectEntity):
         attrs: dict[str, Any] = {}
         attrs["installer_settings"] = self._system.ventilationControlMode
         return attrs
+
+class ZoneModeSelect(S30BaseEntityMixin, SelectEntity):
+    """Set the zone hvac mode"""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+        zone: lennox_zone,
+    ):
+        super().__init__(manager, system)
+        self.hass: HomeAssistant = hass
+        self._zone = zone
+        self._myname = f"{self._system.name}_{self._zone.name}_hvac_mode"
+        _LOGGER.debug("Create ZoneModeSelect myname [%s]", self._myname)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug("async_added_to_hass VentilationModeSelect myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(self.zone_update_callback, ["systemMode"])
+        self._system.registerOnUpdateCallback(self.system_update_callback, ["zoningMode"])
+        await super().async_added_to_hass()
+
+    def zone_update_callback(self):
+        """Callback for system updates"""
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "zone_update_callback ZoneModeSelect myname [%s]",
+                self._myname,
+            )
+        self.schedule_update_ha_state()
+
+    def system_update_callback(self):
+        """Callback for system updates"""
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "system_update_callback ZoneModeSelect myname [%s]",
+                self._myname,
+            )
+        self.schedule_update_ha_state()
+
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return self._zone.unique_id + UNIQUE_ID_SUFFIX_ZONEMODE_SELECT
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def current_option(self) -> str:
+        r = self._zone.getSystemMode()
+        if r == LENNOX_HVAC_HEAT_COOL:
+            r = HVACMode.HEAT_COOL
+        return r
+
+    @property
+    def options(self) -> list:
+        modes = []
+        if self._zone.is_zone_disabled:
+            return modes
+        modes.append(HVACMode.OFF)
+        if self._zone.coolingOption:
+            modes.append(HVACMode.COOL)
+        if self._zone.heatingOption:
+            modes.append(HVACMode.HEAT)
+        if self._zone.coolingOption and self._zone.heatingOption:
+            modes.append(HVACMode.HEAT_COOL)
+        if self._zone.emergencyHeatingOption or self._system.has_emergency_heat():
+            modes.append(LENNOX_HVAC_EMERGENCY_HEAT)
+        return modes
+
+    async def async_select_option(self, option: str) -> None:
+        _LOGGER.info(LOG_INFO_SELECT_ASYNC_SELECT_OPTION, self.__class__.__name__, self._myname, option)
+        if self._zone.is_zone_disabled:
+            raise HomeAssistantError(f"Unable to set hvac_mode as zone [{self._myname}] is disabled")
+        try:
+            hvac_mode = option if option != HVACMode.HEAT_COOL else LENNOX_HVAC_HEAT_COOL
+            _LOGGER.info(
+                "select:async_set_option [%s] ha_mode [%s] lennox_mode [%s]",
+                self._myname,
+                option,
+                hvac_mode,
+            )
+            await self._zone.setHVACMode(hvac_mode)
+        except S30Exception as ex:
+            raise HomeAssistantError(f"async_select_option [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"async_select_option unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        result = {
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+        }
+        return result

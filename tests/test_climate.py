@@ -12,26 +12,13 @@ import pytest
 from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_NONE,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-)
-from homeassistant.const import (
-    UnitOfTemperature
-)
-
+from homeassistant.const import UnitOfTemperature
+from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.helpers import issue_registry as ir
 
 from lennoxs30api.s30api_async import (
     LENNOX_HVAC_COOL,
@@ -719,61 +706,61 @@ async def test_climate_supported_features(hass, manager_mz: Manager):
     c = S30Climate(hass, manager, system, zone)
     feat = c.supported_features
     assert c.is_single_setpoint_active() is True
-    assert feat & SUPPORT_TARGET_TEMPERATURE != 0
-    assert feat & SUPPORT_TARGET_TEMPERATURE_RANGE == 0
+    assert feat & ClimateEntityFeature.TARGET_TEMPERATURE != 0
+    assert feat & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE == 0
 
     c._zone.system.single_setpoint_mode = False
     c._zone.systemMode = LENNOX_HVAC_HEAT_COOL
     feat = c.supported_features
     assert c.is_single_setpoint_active() is False
-    assert feat & SUPPORT_TARGET_TEMPERATURE == 0
-    assert feat & SUPPORT_TARGET_TEMPERATURE_RANGE != 0
+    assert feat & ClimateEntityFeature.TARGET_TEMPERATURE == 0
+    assert feat & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE != 0
 
     feat = c.supported_features
     assert c._zone.dehumidificationOption is True
     assert c._zone.humidificationOption is False
     assert c._zone.humidityMode == LENNOX_HUMIDITY_MODE_OFF
-    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+    assert feat & ClimateEntityFeature.TARGET_HUMIDITY == 0
 
     c._zone.humidityMode = LENNOX_HUMIDITY_MODE_DEHUMIDIFY
     feat = c.supported_features
-    assert feat & SUPPORT_TARGET_HUMIDITY != 0
+    assert feat & ClimateEntityFeature.TARGET_HUMIDITY != 0
 
     c._zone.dehumidificationOption = False
     c._zone.humidificationOption = True
     c._zone.humidityMode = LENNOX_HUMIDITY_MODE_OFF
     feat = c.supported_features
-    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+    assert feat & ClimateEntityFeature.TARGET_HUMIDITY == 0
 
     c._zone.humidityMode = LENNOX_HUMIDITY_MODE_HUMIDIFY
     feat = c.supported_features
-    assert feat & SUPPORT_TARGET_HUMIDITY != 0
+    assert feat & ClimateEntityFeature.TARGET_HUMIDITY != 0
 
     c._zone.humidificationOption = False
     feat = c.supported_features
-    assert feat & SUPPORT_TARGET_HUMIDITY == 0
+    assert feat & ClimateEntityFeature.TARGET_HUMIDITY == 0
 
-    assert feat & SUPPORT_AUX_HEAT == 0
-    assert feat & SUPPORT_PRESET_MODE != 0
-    assert feat & SUPPORT_FAN_MODE != 0
+    assert feat & ClimateEntityFeature.AUX_HEAT == 0
+    assert feat & ClimateEntityFeature.PRESET_MODE != 0
+    assert feat & ClimateEntityFeature.FAN_MODE != 0
 
     c._zone.emergencyHeatingOption = False
     with patch.object(system, "has_emergency_heat") as has_emergency_heat:
         has_emergency_heat.return_value = True
         feat = c.supported_features
-        assert feat & SUPPORT_AUX_HEAT != 0
+        assert feat & ClimateEntityFeature.AUX_HEAT != 0
 
     c._zone.emergencyHeatingOption = True
     with patch.object(system, "has_emergency_heat") as has_emergency_heat:
         has_emergency_heat.return_value = False
         feat = c.supported_features
-        assert feat & SUPPORT_AUX_HEAT != 0
+        assert feat & ClimateEntityFeature.AUX_HEAT != 0
 
     c._zone.emergencyHeatingOption = False
     with patch.object(system, "has_emergency_heat") as has_emergency_heat:
         has_emergency_heat.return_value = False
         feat = c.supported_features
-        assert feat & SUPPORT_AUX_HEAT == 0
+        assert feat & ClimateEntityFeature.AUX_HEAT == 0
 
     zone1: lennox_zone = system.zone_list[1]
     c1 = S30Climate(hass, manager, system, zone1)
@@ -1018,17 +1005,17 @@ async def test_climate_hvac_mode(hass, manager_mz: Manager):
     zone1: lennox_zone = system.zone_list[1]
     c1 = S30Climate(hass, manager, system, zone1)
 
-    assert c.hvac_mode == HVAC_MODE_HEAT
-    assert c1.hvac_mode == HVAC_MODE_COOL
+    assert c.hvac_mode == HVACMode.HEAT
+    assert c1.hvac_mode == HVACMode.COOL
 
     zone.systemMode = LENNOX_HVAC_HEAT_COOL
-    assert c.hvac_mode == HVAC_MODE_HEAT_COOL
+    assert c.hvac_mode == HVACMode.HEAT_COOL
 
     zone.systemMode = LENNOX_HVAC_EMERGENCY_HEAT
-    assert c.hvac_mode == HVAC_MODE_HEAT
+    assert c.hvac_mode == HVACMode.HEAT
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.hvac_mode == HVAC_MODE_HEAT
+    assert c.hvac_mode == HVACMode.HEAT
     assert c1.hvac_mode is None
 
 
@@ -1055,21 +1042,21 @@ async def test_climate_hvac_modes(hass, manager_mz: Manager):
 
     modes = c.hvac_modes
     assert len(modes) == 4
-    assert HVAC_MODE_OFF in modes
-    assert HVAC_MODE_HEAT in modes
-    assert HVAC_MODE_COOL in modes
-    assert HVAC_MODE_HEAT_COOL in modes
+    assert HVACMode.OFF in modes
+    assert HVACMode.HEAT in modes
+    assert HVACMode.COOL in modes
+    assert HVACMode.HEAT_COOL in modes
 
     zone.coolingOption = False
     modes = c.hvac_modes
     assert len(modes) == 2
-    assert HVAC_MODE_OFF in modes
-    assert HVAC_MODE_HEAT in modes
+    assert HVACMode.OFF in modes
+    assert HVACMode.HEAT in modes
 
     zone.heatingOption = False
     modes = c.hvac_modes
     assert len(modes) == 1
-    assert HVAC_MODE_OFF in modes
+    assert HVACMode.OFF in modes
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     modes = c.hvac_modes
@@ -1087,32 +1074,32 @@ async def test_climate_set_hvac_mode(hass, manager_mz: Manager, caplog):
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
-            await c.async_set_hvac_mode(HVAC_MODE_HEAT)
+            await c.async_set_hvac_mode(HVACMode.HEAT)
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_HEAT
 
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
-            await c.async_set_hvac_mode(HVAC_MODE_COOL)
+            await c.async_set_hvac_mode(HVACMode.COOL)
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_COOL
 
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
-            await c.async_set_hvac_mode(HVAC_MODE_HEAT_COOL)
+            await c.async_set_hvac_mode(HVACMode.HEAT_COOL)
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_HEAT_COOL
 
     with caplog.at_level(logging.ERROR):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
-            await c.async_set_hvac_mode(HVAC_MODE_OFF)
+            await c.async_set_hvac_mode(HVACMode.OFF)
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_OFF
 
-    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_set_hvac_mode, hvac_mode=HVAC_MODE_HEAT_COOL)
+    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_set_hvac_mode, hvac_mode=HVACMode.HEAT_COOL)
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     with caplog.at_level(logging.ERROR):
@@ -1120,7 +1107,7 @@ async def test_climate_set_hvac_mode(hass, manager_mz: Manager, caplog):
             caplog.clear()
             ex: HomeAssistantError = None
             try:
-                await c.async_set_hvac_mode(HVAC_MODE_OFF)
+                await c.async_set_hvac_mode(HVACMode.OFF)
             except HomeAssistantError as err:
                 ex = err
             assert setHVACMode.call_count == 0
@@ -1144,7 +1131,7 @@ async def test_climate_hvac_action(hass, manager_mz: Manager):
     zone.systemMode = LENNOX_HVAC_COOL
     zone.tempOperation = LENNOX_TEMP_OPERATION_OFF
     zone.humOperation = LENNOX_HUMID_OPERATION_OFF
-    assert c.hvac_action == CURRENT_HVAC_IDLE
+    assert c.hvac_action == HVACAction.IDLE
 
     zone.systemMode = LENNOX_HVAC_COOL
     zone.tempOperation = LENNOX_TEMP_OPERATION_COOLING
@@ -1154,12 +1141,12 @@ async def test_climate_hvac_action(hass, manager_mz: Manager):
     zone.systemMode = LENNOX_HVAC_COOL
     zone.tempOperation = LENNOX_TEMP_OPERATION_OFF
     zone.humOperation = LENNOX_HUMID_OPERATION_DEHUMID
-    assert c.hvac_action == CURRENT_HVAC_DRY
+    assert c.hvac_action == HVACAction.DRYING
 
     zone.systemMode = LENNOX_HVAC_COOL
     zone.tempOperation = LENNOX_TEMP_OPERATION_OFF
     zone.humOperation = LENNOX_HUMID_OPERATION_WAITING
-    assert c.hvac_action == CURRENT_HVAC_IDLE
+    assert c.hvac_action == HVACAction.IDLE
 
     zone.tempOperation = LENNOX_TEMP_OPERATION_OFF
     zone.humOperation = "unexpected_humdity_operation"
@@ -1247,12 +1234,13 @@ async def test_climate_turn_aux_heat_on(hass, manager_mz: Manager, caplog):
     c = S30Climate(hass, manager, system, zone)
     zone.systemMode = LENNOX_HVAC_HEAT
 
-    with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.WARNING):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
             await c.async_turn_aux_heat_on()
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_EMERGENCY_HEAT
+            assert "turn_aux_heat_on is deprecated and will be removed in version 2024.10" in caplog.text
 
     await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_on)
 
@@ -1279,12 +1267,13 @@ async def test_climate_turn_aux_heat_off(hass, manager_mz: Manager, caplog):
     c = S30Climate(hass, manager, system, zone)
     zone.systemMode = LENNOX_HVAC_HEAT
 
-    with caplog.at_level(logging.ERROR):
+    with caplog.at_level(logging.WARNING):
         with patch.object(zone, "setHVACMode") as setHVACMode:
             caplog.clear()
             await c.async_turn_aux_heat_off()
             assert setHVACMode.call_count == 1
             assert setHVACMode.await_args[0][0] == LENNOX_HVAC_HEAT
+            assert "turn_aux_heat_off is deprecated and will be removed in version 2024.10" in caplog.text
 
     await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_off)
 
@@ -1527,7 +1516,7 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
                 except HomeAssistantError as err:
                     ex = err
                 assert ex is not None
-                assert "System Mode is [off]" in str(ex)                
+                assert "System Mode is [off]" in str(ex)
     system.single_setpoint_mode = False
  
     zone.systemMode = "cool"
