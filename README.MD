@@ -177,11 +177,9 @@ Away Mode. The **Away** preset will put the S30 system into Manual Away Mode. Yo
 
 Cancel Manual Away Mode or Smart Away Mode. The **cancel away mode** preset will cancel the active away mode (manual or smart) and return the S30 system to whatever state it was in prior to putting it into away mode. This works the same as if you pressed the cancel away icon on the S30 panel.
 
-**Emergency Heat** - Lennox systems that have a heat pump and an auxiliary furnace, have an additional HVAC_MODE to run just the auxiliary furnace. In the S30 App this is shown as Emergency Heat. Home Assistant **does not** allow this mode directly - instead Home Assistant provides support for turning aux_heat on and off - independent of the HVAC_MODE. The integration has the following behavior:
+**Emergency Heat** - Lennox systems that have a heat pump and an auxiliary furnace, have an additional HVAC_MODE to run just the auxiliary furnace. In the S30 App this is shown as Emergency Heat. Home Assistant **does not** allow this mode directly - instead a **select.system_zone_hvac_mode** entity provides support for setting the hvac mode to emergency heat. The integration has the following behavior:
 
-- If Emergency Heat Mode is set in the S30, the HA climate will show Heat and the Aux Heat switch will be on.
-- If the HA Aux Switch is turned on, the S30 Heat Mode will be set to **Emergency Heat**
-- If the HA Aux Switch is turned off, the S30 Heat Mode will be set to **Heat**
+- If Emergency Heat Mode is set in the S30, the HA climate will show Heat and the select entity will show **Emergency Heat**.
 - If the Lennox Auxiliary Heat is running, the **aux** attribute in the HA Climate entity will be set to True and the HA Climate Entity will show **Heating**
 
 **Humidification and Dehumidification**
@@ -473,11 +471,18 @@ Local Connections Only.  Reports the WIFI signal strength, this sensor can be us
 
 ## Select Entities
 
+### HVAC Mode
+
+If your Lennox System has Emergency Heat a select entity will be created to allow you to set the hvac_mode.
+
+select.<system_name><zone_name>\_hvac_mode
+
+
 ### Humidity Mode
 
 If your Lennox System has Humidification or Dehumidification capability, one of these select entities is created per zone to allow you to set the active humidity mode. The available options - depending on your equipment - are **Dehumidify**, **Humidify** and **Off**
 
-select.<system_name><zone_name>\_humidity_mode
+select.<system_name>\_<zone_name>\_humidity_mode
 
 ### Dehumidification Modes
 
