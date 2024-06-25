@@ -1176,6 +1176,11 @@ async def test_climate_preset_modes(hass, manager_mz: Manager):
     assert "schedule IQ" in presets
     assert len(presets) == 9
 
+    zone.overrideActive = True
+    presets = c.preset_modes
+    assert PRESET_SCHEDULE_OVERRIDE in presets
+    assert len(presets) == 10
+
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     presets = c.preset_modes
     assert len(presets) == 0

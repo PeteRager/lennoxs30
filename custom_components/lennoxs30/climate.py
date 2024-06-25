@@ -534,6 +534,8 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         presets.append(PRESET_CANCEL_HOLD)
         presets.append(PRESET_CANCEL_AWAY_MODE)
         presets.append(PRESET_NONE)
+        if self._zone.overrideActive:
+            presets.append(PRESET_SCHEDULE_OVERRIDE)
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("climate:preset_modes name[%s] presets[%s]", self._myname, presets)
         return presets
