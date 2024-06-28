@@ -66,7 +66,7 @@ FAN_CIRCULATE = "circulate"
 # Additional Presets
 PRESET_CANCEL_HOLD = "cancel hold"
 PRESET_CANCEL_AWAY_MODE = "cancel away mode"
-PRESET_SCHEDULE_OVERRIDE = "Schedule Hold"
+PRESET_SCHEDULE_OVERRIDE = "schedule hold"
 # Basic set of support flags for every HVAC setup
 SUPPORT_FLAGS = ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.FAN_MODE
 # Standard set of fan modes
@@ -533,6 +533,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         presets.append(PRESET_AWAY)
         presets.append(PRESET_CANCEL_HOLD)
         presets.append(PRESET_CANCEL_AWAY_MODE)
+        presets.append(PRESET_SCHEDULE_OVERRIDE)
         presets.append(PRESET_NONE)
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("climate:preset_modes name[%s] presets[%s]", self._myname, presets)
@@ -542,6 +543,9 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         _LOGGER.info("climate:async_set_preset_mode name [%s] preset_mode [%s]", self._myname, preset_mode)
         if self.is_zone_disabled:
             raise HomeAssistantError(f"Unable to set preset mode [{preset_mode}] as zone [{self._myname}] is disabled")
+
+        if preset_mode == PRESET_SCHEDULE_OVERRIDE:
+            raise HomeAssistantError(f"Setting preset to {PRESET_SCHEDULE_OVERRIDE} is not a valid operation.")
         try:
             if preset_mode == PRESET_CANCEL_AWAY_MODE:
                 processed = False

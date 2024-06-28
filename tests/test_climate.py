@@ -565,6 +565,10 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
         await c.async_set_preset_mode(PRESET_NONE)
         assert zone_set_manual_mode.call_count == 1
 
+    with pytest.raises(HomeAssistantError) as hae:
+        await c.async_set_preset_mode(PRESET_SCHEDULE_OVERRIDE)    
+    assert PRESET_SCHEDULE_OVERRIDE in str(hae.value)
+
     system.manualAwayMode = False
     system.sa_enabled = False
     system.sa_state = LENNOX_SA_STATE_DISABLED
@@ -1169,12 +1173,13 @@ async def test_climate_preset_modes(hass, manager_mz: Manager):
     assert PRESET_CANCEL_HOLD in presets
     assert PRESET_CANCEL_AWAY_MODE in presets
     assert PRESET_NONE in presets
+    assert PRESET_SCHEDULE_OVERRIDE in presets
     assert "save energy" in presets
     assert "spring/fall" in presets
     assert "winter" in presets
     assert "summer" in presets
     assert "schedule IQ" in presets
-    assert len(presets) == 9
+    assert len(presets) == 10
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     presets = c.preset_modes
