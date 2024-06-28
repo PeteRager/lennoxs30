@@ -1173,16 +1173,12 @@ async def test_climate_preset_modes(hass, manager_mz: Manager):
     assert PRESET_CANCEL_HOLD in presets
     assert PRESET_CANCEL_AWAY_MODE in presets
     assert PRESET_NONE in presets
+    assert PRESET_SCHEDULE_OVERRIDE in presets
     assert "save energy" in presets
     assert "spring/fall" in presets
     assert "winter" in presets
     assert "summer" in presets
     assert "schedule IQ" in presets
-    assert len(presets) == 9
-
-    zone.overrideActive = True
-    presets = c.preset_modes
-    assert PRESET_SCHEDULE_OVERRIDE in presets
     assert len(presets) == 10
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
