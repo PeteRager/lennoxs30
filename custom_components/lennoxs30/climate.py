@@ -562,6 +562,8 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                 await self._system.set_manual_away_mode(True)
                 await self.async_trigger_fast_poll()
                 return
+            if preset_mode == PRESET_SCHEDULE_OVERRIDE:
+                raise HomeAssistantError(f"Setting preset to {PRESET_SCHEDULE_OVERRIDE} is not a valid operation.")
             # Need to cancel away modes before requesting a new preset
             if self._system.get_manual_away_mode():
                 await self._system.set_manual_away_mode(False)
