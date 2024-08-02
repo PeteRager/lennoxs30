@@ -548,10 +548,7 @@ class Manager(object):
         await self.create_devices()
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized is False:
-            for platform in PLATFORMS:
-                self._hass.async_create_task(
-                    self._hass.config_entries.async_forward_entry_setup(self._config, platform)
-                )
+            await self._hass.config_entries.async_forward_entry_setups(self._config, PLATFORMS)
             self._climate_entities_initialized = True
         self.updateState(DS_CONNECTED)
 
