@@ -321,8 +321,8 @@ async def test_manager_s30_initialize(hass: HomeAssistant, manager_us_customary_
             with patch.object(manager, "configuration_initialization") as configuration_initialization:
                 with patch("asyncio.create_task") as create_task:
                     create_task.return_value = "AWAITABLE_TASK"
-                    with patch.object(manager, "create_devices") as create_devices:
-                        with patch.object(hass, "async_create_task") as hass_create_task:
+                    with patch.object(hass.config_entries, "async_forward_entry_setups") as forward_entry_setups:
+                        with patch.object(manager, "create_devices") as create_devices:
                             await manager.s30_initialize()
 
                             assert update_state.call_count == 2
@@ -341,7 +341,7 @@ async def test_manager_s30_initialize(hass: HomeAssistant, manager_us_customary_
                             assert create_devices.call_count == 1
                             assert len(create_devices.mock_calls[0].args) == 0
 
-                            assert hass_create_task.call_count == len(PLATFORMS)
+                            assert forward_entry_setups.call_count == 1
 
 
 @pytest.mark.asyncio
