@@ -743,28 +743,8 @@ async def test_climate_supported_features(hass, manager_mz: Manager):
     c._zone.humidificationOption = False
     feat = c.supported_features
     assert feat & ClimateEntityFeature.TARGET_HUMIDITY == 0
-
-    assert feat & ClimateEntityFeature.AUX_HEAT == 0
     assert feat & ClimateEntityFeature.PRESET_MODE != 0
     assert feat & ClimateEntityFeature.FAN_MODE != 0
-
-    c._zone.emergencyHeatingOption = False
-    with patch.object(system, "has_emergency_heat") as has_emergency_heat:
-        has_emergency_heat.return_value = True
-        feat = c.supported_features
-        assert feat & ClimateEntityFeature.AUX_HEAT != 0
-
-    c._zone.emergencyHeatingOption = True
-    with patch.object(system, "has_emergency_heat") as has_emergency_heat:
-        has_emergency_heat.return_value = False
-        feat = c.supported_features
-        assert feat & ClimateEntityFeature.AUX_HEAT != 0
-
-    c._zone.emergencyHeatingOption = False
-    with patch.object(system, "has_emergency_heat") as has_emergency_heat:
-        has_emergency_heat.return_value = False
-        feat = c.supported_features
-        assert feat & ClimateEntityFeature.AUX_HEAT == 0
 
     zone1: lennox_zone = system.zone_list[1]
     c1 = S30Climate(hass, manager, system, zone1)
@@ -1214,85 +1194,6 @@ async def test_climate_fan_modes(hass, manager_mz: Manager):
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     modes = c.fan_modes
     assert len(modes) == 0
-
-
-@pytest.mark.asyncio
-async def test_climate_is_aux_heat(hass, manager_mz: Manager):
-    manager = manager_mz
-    system: lennox_system = manager.api.system_list[0]
-    manager.is_metric = False
-    zone: lennox_zone = system.zone_list[1]
-    c = S30Climate(hass, manager, system, zone)
-    assert c.is_aux_heat is False
-    zone.systemMode = LENNOX_HVAC_EMERGENCY_HEAT
-    assert c.is_aux_heat is True
-    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.is_aux_heat is None
-
-
-@pytest.mark.asyncio
-async def test_climate_turn_aux_heat_on(hass, manager_mz: Manager, caplog):
-    manager = manager_mz
-    system: lennox_system = manager.api.system_list[0]
-    manager.is_metric = False
-    zone: lennox_zone = system.zone_list[1]
-    c = S30Climate(hass, manager, system, zone)
-    zone.systemMode = LENNOX_HVAC_HEAT
-
-    with caplog.at_level(logging.WARNING):
-        with patch.object(zone, "setHVACMode") as setHVACMode:
-            caplog.clear()
-            await c.async_turn_aux_heat_on()
-            assert setHVACMode.call_count == 1
-            assert setHVACMode.await_args[0][0] == LENNOX_HVAC_EMERGENCY_HEAT
-            assert "turn_aux_heat_on is deprecated and will be removed in version 2024.10" in caplog.text
-
-    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_on)
-
-    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    with caplog.at_level(logging.ERROR):
-        with patch.object(zone, "setHVACMode") as setHVACMode:
-            caplog.clear()
-            ex: HomeAssistantError = None
-            try:
-                await c.async_turn_aux_heat_on()
-            except HomeAssistantError as err:
-                ex = err
-            assert setHVACMode.call_count == 0
-            assert ex is not None
-            assert "disabled" in str(ex)
-
-
-@pytest.mark.asyncio
-async def test_climate_turn_aux_heat_off(hass, manager_mz: Manager, caplog):
-    manager = manager_mz
-    system: lennox_system = manager.api.system_list[0]
-    manager.is_metric = False
-    zone: lennox_zone = system.zone_list[1]
-    c = S30Climate(hass, manager, system, zone)
-    zone.systemMode = LENNOX_HVAC_HEAT
-
-    with caplog.at_level(logging.WARNING):
-        with patch.object(zone, "setHVACMode") as setHVACMode:
-            caplog.clear()
-            await c.async_turn_aux_heat_off()
-            assert setHVACMode.call_count == 1
-            assert setHVACMode.await_args[0][0] == LENNOX_HVAC_HEAT
-            assert "turn_aux_heat_off is deprecated and will be removed in version 2024.10" in caplog.text
-
-    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_turn_aux_heat_off)
-
-    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    with caplog.at_level(logging.ERROR):
-        with patch.object(zone, "setHVACMode") as setHVACMode:
-            caplog.clear()
-            ex: HomeAssistantError = None
-            try:
-                await c.async_turn_aux_heat_off()
-            except HomeAssistantError as err:
-                ex = err
-            assert ex is not None
-            assert "disabled" in str(ex)
 
 
 @pytest.mark.asyncio

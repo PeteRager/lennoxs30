@@ -9,5 +9,5 @@
   "issue_tracker" : "https://github.com/PeteRager/lennoxs30/issues",
   "quality_scale": "platinum",
   "requirements": ["lennoxs30api==0.2.15"],
-  "version": "2024.6.1"
+  "version": "2024.8.0"
 }

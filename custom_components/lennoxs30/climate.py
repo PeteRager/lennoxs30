@@ -215,9 +215,6 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         ):
             mask |= ClimateEntityFeature.TARGET_HUMIDITY
 
-        if self._zone.emergencyHeatingOption or self._system.has_emergency_heat():
-            mask |= ClimateEntityFeature.AUX_HEAT
-
         _LOGGER.debug("climate:supported_features name [%s] support_flags [%d]", self._myname, SUPPORT_FLAGS)
         return mask
 
@@ -599,51 +596,6 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         if self.is_zone_disabled:
             return []
         return FAN_MODES
-
-    @property
-    def is_aux_heat(self) -> bool | None:
-        if self.is_zone_disabled:
-            return None
-        res = self._zone.systemMode == LENNOX_HVAC_EMERGENCY_HEAT
-        return res
-
-    def _create_aux_heat_issue(self, service: str):
-        _LOGGER.warning(
-            "climate.%s is deprecated and will be removed in version 2024.10 learn more https://github.com/PeteRager/lennoxs30/blob/master/docs/aux_heat.md", service
-        )
-
-
-    async def async_turn_aux_heat_on(self):
-        """Turn auxiliary heater on."""
-        _LOGGER.info("climate:async_turn_aux_heat_on zone [%s]", self._myname)
-        self._create_aux_heat_issue("turn_aux_heat_on")
-        if self.is_zone_disabled:
-            raise HomeAssistantError(f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled")
-        try:
-            await self._zone.setHVACMode(LENNOX_HVAC_EMERGENCY_HEAT)
-            await self.async_trigger_fast_poll()
-        except S30Exception as ex:
-            raise HomeAssistantError(f"turn_aux_heat_on [{self._myname}] [{ex.as_string()}]") from ex
-        except Exception as ex:
-            raise HomeAssistantError(
-                f"turn_aux_heat_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
-
-    async def async_turn_aux_heat_off(self):
-        _LOGGER.info("climate:async_turn_aux_heat_off zone [%s]", self._myname)
-        self._create_aux_heat_issue("turn_aux_heat_off")
-        # When Aux is turned off, we will revert the zone to Heat Mode.
-        if self.is_zone_disabled:
-            raise HomeAssistantError(f"Unable to turn_aux_heat_on mode as zone [{self._myname}] is disabled")
-        try:
-            await self._zone.setHVACMode(LENNOX_HVAC_HEAT)
-            await self.async_trigger_fast_poll()
-        except S30Exception as ex:
-            raise HomeAssistantError(f"turn_aux_heat_off [{self._myname}] [{ex.as_string()}]") from ex
-        except Exception as ex:
-            raise HomeAssistantError(
-                f"turn_aux_heat_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature"""
