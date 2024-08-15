@@ -4,7 +4,7 @@
 
 Home Assistant has deprecated aux_heat and will remove it from the product in 2024.10.0
 
-This integration will continue to support aux heat until 2024.10.0
+This integration will continue to support aux heat until 2024.8.0
 
 If you are using aux heat you will need to migrate to use the new functionality before that date.
 
