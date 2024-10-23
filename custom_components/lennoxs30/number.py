@@ -438,6 +438,7 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
 class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     """Set timed ventilation."""
 
+    # These parameters are absolute temperatures and will e given a device class.
     absolute_temperature_pids: list[int] = [
         202, 203, 105, 106, 128, 129, 55, 178, 194,
         195, 179, 297, 298, 299, 300, 301, 302, 326, 327, 328
