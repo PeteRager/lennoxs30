@@ -56,6 +56,8 @@ async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
     c.hass = hass
 
+    # Parameters 72 is not an absolute temperature, so there should be no
+    # unit conversion
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
     assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
     assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
@@ -64,6 +66,8 @@ async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager
     assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
     assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
 
+    # Parameters 292 is an absolute temperature, so there should be
+    # unit conversion
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
     parameter = equipment.parameters[202]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
@@ -114,12 +118,15 @@ async def test_equipment_parameter_number_value(hass, manager: Manager):
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
     c.hass = hass
+
+    # Parameters 72 is not an absolute temperature, so there should be no
+    # unit conversion
     hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
     assert c.value == float(parameter.value)
-
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
     assert c.value == float(parameter.value)
 
+    # Parameters 202 is an absolute temperature, so there should be conversion
     parameter = equipment.parameters[202]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
     c.hass = hass
