@@ -9,11 +9,12 @@ import logging
 from typing import Any
 import voluptuous as vol
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberDeviceClass
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import HomeAssistantError
@@ -437,6 +438,11 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
 class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     """Set timed ventilation."""
 
+    absolute_temperature_pids: list[int] = [
+        202, 203, 105, 106, 128, 129, 55, 178, 194,
+        195, 179, 297, 298, 299, 300, 301, 302, 326, 327, 328
+    ]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -508,7 +514,7 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
 
     @property
     def native_value(self) -> float:
-        return self.parameter.value
+        return float(self.parameter.value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -529,6 +535,21 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     @property
     def native_unit_of_measurement(self):
         return lennox_uom_to_ha_uom(self.parameter.unit)
+    
+    @property
+    def device_class(self):
+        uom = self.native_unit_of_measurement
+        if uom in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT):
+            # Many of the parameters are temperature offsets, for now we only
+            # report absolute temperatures as having the device_class which allows
+            # then to be automatically translated to celsius
+            if self.parameter.pid in self.absolute_temperature_pids:
+                return NumberDeviceClass.TEMPERATURE
+            return None
+        if uom == UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE:
+            return NumberDeviceClass.VOLUME_FLOW_RATE
+        return None
+
 
     @property
     def device_info(self) -> DeviceInfo:

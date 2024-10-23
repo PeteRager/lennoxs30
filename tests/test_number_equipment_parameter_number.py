@@ -54,8 +54,26 @@ async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
     assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
 
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    parameter = equipment.parameters[202]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.CELSIUS
+
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
 
 @pytest.mark.asyncio
 async def test_equipment_parameter_number_max_value(hass, manager: Manager):
@@ -63,6 +81,8 @@ async def test_equipment_parameter_number_max_value(hass, manager: Manager):
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
     assert c.max_value == float(parameter.range_max)
 
 
@@ -72,6 +92,9 @@ async def test_equipment_parameter_number_min_value(hass, manager: Manager):
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+
     assert c.min_value == float(parameter.range_min)
 
 
@@ -90,7 +113,17 @@ async def test_equipment_parameter_number_value(hass, manager: Manager):
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
-    assert c.value == parameter.value
+    c.hass = hass
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    assert c.value == float(parameter.value)
+
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    assert c.value == float(parameter.value)
+
+    parameter = equipment.parameters[202]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    assert c.value == 21.1
 
 
 @pytest.mark.asyncio
