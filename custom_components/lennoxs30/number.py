@@ -464,6 +464,9 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
             parameter.pid,
             self._myname,
         )
+        self._attr_native_unit_of_measurement = lennox_uom_to_ha_uom(self.parameter.unit)
+        self._attr_device_class = self._get_device_class()
+
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -533,22 +536,15 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
                 f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             ) from ex
 
-    @property
-    def native_unit_of_measurement(self):
-        return lennox_uom_to_ha_uom(self.parameter.unit)
-    
-    @property
-    def device_class(self):
-        uom = self.native_unit_of_measurement
+
+    def _get_device_class(self)->NumberDeviceClass|None:
+        uom = self._attr_native_unit_of_measurement
         if uom in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT):
             # Many of the parameters are temperature offsets, for now we only
             # report absolute temperatures as having the device_class which allows
             # then to be automatically translated to celsius
             if self.parameter.pid in self.absolute_temperature_pids:
                 return NumberDeviceClass.TEMPERATURE
-            return None
-        if uom == UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE:
-            return NumberDeviceClass.VOLUME_FLOW_RATE
         return None
 
 
