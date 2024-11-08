@@ -1,8 +1,9 @@
 {
   "configurations": [
+
       {
           "name": "Python: Debug Tests",
-          "type": "python",
+          "type": "",
           "request": "launch",
           "program": "${file}",
           "purpose": ["debug-test"],
@@ -12,6 +13,17 @@
               "hidden": true, // keep original launch order in 'run and debug' tab
           }
       },
+      {
+        "name": "Debug Tests",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "justMyCode": false,
+        "presentation": {
+            "hidden": true, // keep original launch order in 'run and debug' tab
+        }
+    }      
   ],
   "version": "0.2.0"
 }

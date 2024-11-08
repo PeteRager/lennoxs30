@@ -9,7 +9,7 @@ import logging
 from typing import Any
 import voluptuous as vol
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberDeviceClass
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
@@ -437,6 +437,12 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
 class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     """Set timed ventilation."""
 
+    # These parameters are absolute temperatures and will be given a device class.
+    absolute_temperature_pids: list[int] = [
+        202, 203, 105, 106, 128, 129, 55, 178, 194,
+        195, 179, 297, 298, 299, 300, 301, 302, 326, 327, 328
+    ]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -457,6 +463,9 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
             parameter.pid,
             self._myname,
         )
+        self._attr_native_unit_of_measurement = lennox_uom_to_ha_uom(self.parameter.unit)
+        self._attr_device_class = self._get_device_class()
+
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -508,7 +517,7 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
 
     @property
     def native_value(self) -> float:
-        return self.parameter.value
+        return float(self.parameter.value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
@@ -526,9 +535,17 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
                 f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             ) from ex
 
-    @property
-    def native_unit_of_measurement(self):
-        return lennox_uom_to_ha_uom(self.parameter.unit)
+
+    def _get_device_class(self)->NumberDeviceClass|None:
+        uom = self._attr_native_unit_of_measurement
+        if uom in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT):
+            # Many of the parameters are temperature offsets, for now we only
+            # report absolute temperatures as having the device_class which allows
+            # then to be automatically translated to celsius
+            if self.parameter.pid in self.absolute_temperature_pids:
+                return NumberDeviceClass.TEMPERATURE
+        return None
+
 
     @property
     def device_info(self) -> DeviceInfo:

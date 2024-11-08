@@ -8,8 +8,10 @@
 from unittest.mock import patch
 import pytest
 
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, UnitOfVolumeFlowRate
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.components.number import NumberDeviceClass
+
 
 from lennoxs30api.s30api_async import lennox_system
 
@@ -49,12 +51,45 @@ async def test_equipment_parameter_number_name(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_equipment_parameter_number_unit_of_measure(hass, manager: Manager):
+async def test_equipment_parameter_number_uom_device_class(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+
+    # Parameters 72 is not an absolute temperature, so there should be no
+    # unit conversion
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
     assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    assert c.device_class is None
+
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+
+    # Parameters 292 is an absolute temperature, so there should be
+    # unit conversion
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    parameter = equipment.parameters[202]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.CELSIUS
+    assert c.device_class == NumberDeviceClass.TEMPERATURE
+
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    assert c.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    assert c.unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+
+    equipment = system.equipment[2]
+    parameter = equipment.parameters[19]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    assert c.native_unit_of_measurement == UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE
+    assert c.unit_of_measurement == UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE
+    assert c.device_class is None
 
 
 @pytest.mark.asyncio
@@ -63,6 +98,8 @@ async def test_equipment_parameter_number_max_value(hass, manager: Manager):
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
     assert c.max_value == float(parameter.range_max)
 
 
@@ -72,6 +109,9 @@ async def test_equipment_parameter_number_min_value(hass, manager: Manager):
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+
     assert c.min_value == float(parameter.range_min)
 
 
@@ -90,7 +130,20 @@ async def test_equipment_parameter_number_value(hass, manager: Manager):
     equipment = system.equipment[0]
     parameter = equipment.parameters[72]
     c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
-    assert c.value == parameter.value
+    c.hass = hass
+
+    # Parameters 72 is not an absolute temperature, so there should be no
+    # unit conversion
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    assert c.value == float(parameter.value)
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    assert c.value == float(parameter.value)
+
+    # Parameters 202 is an absolute temperature, so there should be conversion
+    parameter = equipment.parameters[202]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    c.hass = hass
+    assert c.value == 21.1
 
 
 @pytest.mark.asyncio

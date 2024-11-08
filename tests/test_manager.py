@@ -38,7 +38,6 @@ from custom_components.lennoxs30 import (
     DS_DISCONNECTED,
     DS_LOGIN_FAILED,
     DS_RETRY_WAIT,
-    PLATFORMS,
     RETRY_INTERVAL_SECONDS,
     Manager,
 )

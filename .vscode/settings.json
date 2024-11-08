@@ -5,6 +5,7 @@
   "python.experiments.optOutFrom": ["pythonTestAdapter"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
+  "debugpy.debugJustMyCode": false,
   "cSpell.words": [
     "ASHRAE",
     "automations",
