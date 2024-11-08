@@ -14,7 +14,6 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
     UnitOfTime,
-    UnitOfVolumeFlowRate,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import HomeAssistantError
