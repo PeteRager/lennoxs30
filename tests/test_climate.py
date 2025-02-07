@@ -752,7 +752,7 @@ async def test_climate_supported_features(hass, manager_mz: Manager):
     assert feat != 0
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     feat = c1.supported_features
-    assert feat == 0
+    assert feat == ClimateEntityFeature(0)
     feat = c.supported_features
     assert feat != 0
 

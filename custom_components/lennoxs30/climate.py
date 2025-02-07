@@ -195,10 +195,10 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return True
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.is_zone_disabled:
-            return 0
+            return ClimateEntityFeature(0)
 
         mask = SUPPORT_FLAGS
 
