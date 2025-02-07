@@ -197,23 +197,22 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        if self.is_zone_disabled:
-            return ClimateEntityFeature(0)
+        mask: ClimateEntityFeature = ClimateEntityFeature(0)
+        if not self.is_zone_disabled:
+            mask = SUPPORT_FLAGS
 
-        mask = SUPPORT_FLAGS
+            # Target temperature.
+            # If its a cooling or heating only system, then there is only one setpoint
+            if self.is_single_setpoint_active():
+                mask |= ClimateEntityFeature.TARGET_TEMPERATURE
+            else:
+                mask |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
-        # Target temperature.
-        # If its a cooling or heating only system, then there is only one setpoint
-        if self.is_single_setpoint_active():
-            mask |= ClimateEntityFeature.TARGET_TEMPERATURE
-        else:
-            mask |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-
-        if (self._zone.humidificationOption or self._zone.dehumidificationOption) and (
-            self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
-            or self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY
-        ):
-            mask |= ClimateEntityFeature.TARGET_HUMIDITY
+            if (self._zone.humidificationOption or self._zone.dehumidificationOption) and (
+                self._zone.humidityMode == LENNOX_HUMIDITY_MODE_DEHUMIDIFY
+                or self._zone.humidityMode == LENNOX_HUMIDITY_MODE_HUMIDIFY
+            ):
+                mask |= ClimateEntityFeature.TARGET_HUMIDITY
 
         _LOGGER.debug("climate:supported_features name [%s] support_flags [%d]", self._myname, SUPPORT_FLAGS)
         return mask
