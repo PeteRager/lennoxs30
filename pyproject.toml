@@ -1,0 +1,12 @@
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "TCH002", 
+    "TCH001", 
+    "COM812", 
+    "PLR0911",
+    "TRY003", # Avoid specifying long messages outside the exception class
+]
+
+[tool.ruff]
+line-length = 120
