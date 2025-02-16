@@ -1000,7 +1000,7 @@ async def test_climate_hvac_mode(hass, manager_mz: Manager):
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     assert c.hvac_mode == HVACMode.HEAT
-    assert c1.hvac_mode is None
+    assert c1.hvac_mode == HVACMode.COOL
 
 
 @pytest.mark.asyncio
@@ -1137,7 +1137,8 @@ async def test_climate_hvac_action(hass, manager_mz: Manager):
     assert c.hvac_action == "unexpected_humdity_operation"
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.hvac_action is None
+    zone.tempOperation = LENNOX_TEMP_OPERATION_COOLING
+    assert c.hvac_action == HVACAction.COOLING
 
 
 @pytest.mark.asyncio
