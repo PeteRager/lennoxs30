@@ -83,7 +83,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         for zone in system.zone_list:
             if zone.is_zone_active():
                 _LOGGER.debug(
-                    "Create S30 Climate system [%s] zone [%s]  metric [%s]", system.sysId, zone.name, manager.is_metric,
+                    "Create S30 Climate system [%s] zone [%s]  metric [%s]",
+                    system.sysId,
+                    zone.name,
+                    manager.is_metric,
                 )
                 climate = S30Climate(hass, manager, system, zone)
                 climate_list.append(climate)
@@ -222,7 +225,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
-    def min_temp(self) -> float|None:
+    def min_temp(self) -> float | None:
         """Return the minimum temperature."""
         if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
             return None
@@ -230,7 +233,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             if self._manager.is_metric is False:
                 return self._zone.minCsp
             return self._zone.minCspC
-        if self._zone.systemMode in [LENNOX_HVAC_HEAT,LENNOX_HVAC_EMERGENCY_HEAT]:
+        if self._zone.systemMode in [LENNOX_HVAC_HEAT, LENNOX_HVAC_EMERGENCY_HEAT]:
             if self._manager.is_metric is False:
                 return self._zone.minHsp
             return self._zone.minHspC
@@ -249,7 +252,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return super().min_temp
 
     @property
-    def max_temp(self) -> float|None:
+    def max_temp(self) -> float | None:
         """Return the maximum temperature."""
         if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
             return None
@@ -257,7 +260,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             if self._manager.is_metric is False:
                 return self._zone.maxCsp
             return self._zone.maxCspC
-        if self._zone.systemMode in [LENNOX_HVAC_HEAT,LENNOX_HVAC_EMERGENCY_HEAT]:
+        if self._zone.systemMode in [LENNOX_HVAC_HEAT, LENNOX_HVAC_EMERGENCY_HEAT]:
             if self._manager.is_metric is False:
                 return self._zone.maxHsp
             return self._zone.maxHspC
@@ -276,7 +279,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return super().max_temp
 
     @property
-    def target_temperature(self) -> float|None:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.is_zone_disabled:
             return None
@@ -286,7 +289,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return self._zone.getTargetTemperatureC()
 
     @property
-    def current_temperature(self) -> float|None:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
@@ -306,7 +309,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return t
 
     @property
-    def target_temperature_high(self) -> float|None:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.is_zone_disabled:
             return None
@@ -319,13 +322,11 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                 )
             return self._zone.csp
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "climate:target_temperature_high name [%s] temperature [%s] C", self._myname, self._zone.cspC
-            )
+            _LOGGER.debug("climate:target_temperature_high name [%s] temperature [%s] C", self._myname, self._zone.cspC)
         return self._zone.cspC
 
     @property
-    def target_temperature_low(self) -> float|None:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.is_zone_disabled:
             return None
@@ -338,13 +339,11 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                 )
             return self._zone.hsp
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "climate:target_temperature_low name [%s] temperature [%s] C", self._myname, self._zone.hspC
-            )
+            _LOGGER.debug("climate:target_temperature_low name [%s] temperature [%s] C", self._myname, self._zone.hspC)
         return self._zone.hspC
 
     @property
-    def current_humidity(self) -> float|None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         if self._zone.humidityStatus in LENNOX_BAD_STATUS:
             _LOGGER.warning(
@@ -378,7 +377,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return 0.5
 
     @property
-    def max_humidity(self) -> float|None:
+    def max_humidity(self) -> float | None:
         """Maximum humidity."""
         if self.is_zone_disabled:
             return None
@@ -389,7 +388,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         return None
 
     @property
-    def min_humidity(self) -> float|None:
+    def min_humidity(self) -> float | None:
         """Minimum humidity."""
         if self.is_zone_disabled:
             return None
@@ -410,7 +409,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return self._zone.husp
         return None
 
-    async def async_set_humidity(self, humidity:float) -> None:
+    async def async_set_humidity(self, humidity: float) -> None:
         """Set new target humidity."""
         _LOGGER.info("climate:async_set_humidity zone [%s] humidity [%s]", self._myname, humidity)
         if self.is_zone_disabled:
@@ -472,7 +471,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             err = f"set_hvac_mode [{self._myname}] [{ex.as_string()}]"
             raise HomeAssistantError(err) from ex
         except Exception as ex:
-            err =  f"set_hvac_mode unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            err = f"set_hvac_mode unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             raise HomeAssistantError(err) from ex
 
     @property
@@ -596,7 +595,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return []
         return FAN_MODES
 
-    async def async_set_temperature(self, **kwargs: dict[str,Any]) -> None:
+    async def async_set_temperature(self, **kwargs: dict[str, Any]) -> None:
         """Set new target temperature."""
         if self.is_zone_disabled:
             err = f"Unable to set_temperature as zone [{self._myname}] is disabled"
@@ -648,7 +647,9 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             # If an HVAC mode is requested; and we are not in that mode, then the first step
             # is to switch the zone into that mode before setting the temperature
             if r_hvac_mode is not None and r_hvac_mode != self.hvac_mode:
-                _LOGGER.debug("climate:async_set_temperature zone [%s] setting hvacMode [%s]", self._myname, r_hvac_mode)
+                _LOGGER.debug(
+                    "climate:async_set_temperature zone [%s] setting hvacMode [%s]", self._myname, r_hvac_mode
+                )
                 await self.async_set_hvac_mode(r_hvac_mode)
 
             if r_hvac_mode is None:
