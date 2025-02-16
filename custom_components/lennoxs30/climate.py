@@ -367,8 +367,6 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current hvac operation mode."""
-        if self.is_zone_disabled:
-            return None
         r = self._zone.getSystemMode()
         if r == LENNOX_HVAC_HEAT_COOL:
             r = HVACMode.HEAT_COOL
@@ -481,8 +479,6 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current hvac state/action."""
-        if self.is_zone_disabled:
-            return None
         to = self._zone.tempOperation
         ho = self._zone.humOperation
         if to != LENNOX_TEMP_OPERATION_OFF:
