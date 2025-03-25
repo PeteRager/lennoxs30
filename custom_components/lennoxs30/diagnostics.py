@@ -1,11 +1,13 @@
 """Diagnostics support for LennoxS30."""
+
 # pylint: disable=line-too-long
 from __future__ import annotations
+
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 from . import MANAGER, Manager
 from .const import LENNOX_DOMAIN
