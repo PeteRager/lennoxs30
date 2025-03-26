@@ -712,6 +712,7 @@ async def test_climate_supported_features(hass, manager_mz: Manager):
     assert c.is_single_setpoint_active() is True
     assert feat & ClimateEntityFeature.TARGET_TEMPERATURE != 0
     assert feat & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE == 0
+    assert feat & ClimateEntityFeature.TURN_OFF != 0
 
     c._zone.system.single_setpoint_mode = False
     c._zone.systemMode = LENNOX_HVAC_HEAT_COOL
@@ -719,6 +720,7 @@ async def test_climate_supported_features(hass, manager_mz: Manager):
     assert c.is_single_setpoint_active() is False
     assert feat & ClimateEntityFeature.TARGET_TEMPERATURE == 0
     assert feat & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE != 0
+    assert feat & ClimateEntityFeature.TURN_OFF != 0
 
     feat = c.supported_features
     assert c._zone.dehumidificationOption is True
@@ -1479,3 +1481,15 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
                 assert perform_setpoint.call_args_list[0].kwargs["r_spC"] == 20
 
     await conf_test_exception_handling(zone, "perform_setpoint", c, c.async_set_temperature, temperature=20)
+
+@pytest.mark.asyncio
+async def test_climate_turn_off(hass, manager_mz: Manager, caplog):
+    manager = manager_mz
+    system: lennox_system = manager.api.system_list[0]
+    zone: lennox_zone = system.zone_list[1]
+    c = S30Climate(hass, manager, system, zone)
+
+    with patch.object(zone, "setHVACMode") as setHVACMode:
+        await c.async_turn_off()
+        assert setHVACMode.call_count == 1
+        assert setHVACMode.await_args[0][0] == LENNOX_HVAC_OFF

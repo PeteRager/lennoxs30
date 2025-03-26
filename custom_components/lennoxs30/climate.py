@@ -67,7 +67,7 @@ PRESET_CANCEL_HOLD = "cancel hold"
 PRESET_CANCEL_AWAY_MODE = "cancel away mode"
 PRESET_SCHEDULE_OVERRIDE = "schedule hold"
 # Basic set of support flags for every HVAC setup
-SUPPORT_FLAGS = ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.FAN_MODE
+SUPPORT_FLAGS = ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TURN_OFF
 # Standard set of fan modes
 FAN_MODES = [FAN_AUTO, FAN_ON, FAN_CIRCULATE]
 
@@ -473,6 +473,11 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         except Exception as ex:
             err = f"set_hvac_mode unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             raise HomeAssistantError(err) from ex
+        
+    def async_turn_off(self) -> None:
+        """Turn off the zone."""
+        _LOGGER.info("climate:async_turn_off name [%s]", self._myname)
+        return self.async_set_hvac_mode(HVACMode.OFF)
 
     @property
     def hvac_action(self) -> HVACAction:
