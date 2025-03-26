@@ -1,12 +1,11 @@
-"""Lennox BLE Air Quality Sensor"""
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
-
+"""Lennox BLE Air Quality Sensor."""
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
+from homeassistant.helpers.entity import EntityCategory
 
 lennox_21p02_sensors = [
     {

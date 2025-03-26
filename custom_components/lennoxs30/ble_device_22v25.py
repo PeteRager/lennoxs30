@@ -1,10 +1,9 @@
-"""Support for Lennox BLE Remote Sensor"""
+"""Support for Lennox BLE Remote Sensor."""
 # pylint: disable=line-too-long
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
-
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.helpers.entity import EntityCategory
 
 lennox_22v25_sensors = [
     {
