@@ -920,7 +920,7 @@ async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, capl
                 assert len(res["errors"]) == 1
                 assert res["errors"]["base"] == "unable_to_connect_login"
                 assert len(caplog.messages) == 1
-                assert "This is the error" in caplog.messages[0]
+                assert "This is the error" in caplog.text
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -943,7 +943,7 @@ async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, capl
                 assert len(res["errors"]) == 1
                 assert res["errors"]["base"] == "unable_to_connect_cloud"
                 assert len(caplog.messages) == 1
-                assert "This is the error" in caplog.messages[0]
+                assert "This is the error" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -1007,7 +1007,7 @@ async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, capl
                 assert len(res["errors"]) == 1
                 assert res["errors"]["host"] == "unable_to_connect_local"
                 assert len(caplog.messages) == 1
-                assert "This is the error" in caplog.messages[0]
+                assert "This is the error" in caplog.text
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()

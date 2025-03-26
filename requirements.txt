@@ -1,0 +1,3 @@
+ pytest-homeassistant-custom-component
+ setuptools
+ 
