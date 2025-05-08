@@ -28,5 +28,11 @@
   "black-formatter.args": ["--line-length", "120"],
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
-  }  
+  },
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false
+  }
 }
