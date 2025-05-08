@@ -1,4 +1,4 @@
-"""Support for Lennoxs30 outdoor temperature sensor"""
+"""Support for Lennoxs30 outdoor temperature sensor."""
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -7,53 +7,51 @@
 
 import logging
 from typing import Any
-import voluptuous as vol
 
-from homeassistant.components.number import NumberEntity, NumberDeviceClass
+import voluptuous as vol
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.helpers import config_validation as cv
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform as ep
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-
-from lennoxs30api.s30exception import S30Exception
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from lennoxs30api import (
-    lennox_system,
     LENNOX_CIRCULATE_TIME_MAX,
     LENNOX_CIRCULATE_TIME_MIN,
+    lennox_system,
+    lennox_zone,
 )
-
 from lennoxs30api.lennox_equipment import (
     LENNOX_EQUIPMENT_PARAMETER_FORMAT_RANGE,
-    lennox_equipment_parameter,
     lennox_equipment,
+    lennox_equipment_parameter,
 )
+from lennoxs30api.s30exception import S30Exception
 
-
+from . import DOMAIN, Manager
+from .base_entity import S30BaseEntityMixin
+from .const import (
+    LOG_INFO_NUMBER_ASYNC_SET_VALUE,
+    MANAGER,
+    UNIQUE_ID_SUFFIX_DEHUM_SETPOINT,
+    UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
+    UNIQUE_ID_SUFFIX_HUM_SETPOINT,
+    UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
+    VENTILATION_EQUIPMENT_ID,
+)
 from .helpers import (
     helper_create_equipment_entity_name,
     helper_get_equipment_device_info,
     helper_get_parameter_extra_attributes,
     lennox_uom_to_ha_uom,
 )
-
-from .base_entity import S30BaseEntityMixin
-from .const import (
-    LOG_INFO_NUMBER_ASYNC_SET_VALUE,
-    MANAGER,
-    UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
-    UNIQUE_ID_SUFFIX_TIMED_VENTILATION_NUMBER,
-    VENTILATION_EQUIPMENT_ID,
-)
-from . import DOMAIN, Manager
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +104,14 @@ async def async_setup_entry(
                     if parameter.enabled and parameter.descriptor == LENNOX_EQUIPMENT_PARAMETER_FORMAT_RANGE:
                         number = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
                         number_list.append(number)
+
+        for zone in system.zone_list:
+            if zone.humidificationOption:
+                number = HumidifySetpointNumber(hass, manager, system, zone)
+                number_list.append(number)
+            if zone.dehumidificationOption:
+                number = DehumidifySetpointNumber(hass, manager, system, zone)
+                number_list.append(number)
 
     if len(number_list) != 0:
         async_add_entities(number_list, True)
@@ -586,4 +592,111 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
         except Exception as ex:
             raise HomeAssistantError(
                 f"async_set_zonetest_parameter unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
+
+class HumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
+    """Set the diagnostic level in the S30."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system, zone: lennox_zone) -> None:
+        super().__init__(manager, system)
+        self._hass = hass
+        self._zone = zone
+        self._myname = f"{system.name}_{zone.name}_hum_setpoint"
+        self._attr_name = self._myname
+        self._attr_unique_id = (zone.unique_id + UNIQUE_ID_SUFFIX_HUM_SETPOINT).replace("-", "")
+        self._attr_device_class = NumberDeviceClass.HUMIDITY
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_native_step = 1
+        self._attr_device_info =  {
+            "identifiers": {(DOMAIN, zone.unique_id)},
+        }
+        _LOGGER.debug("Create HumidifySetpointNumber myname [%s]", self._myname)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug("async_added_to_hass HumidifySetpointNumber myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(self.update_callback)
+        await super().async_added_to_hass()
+
+    def update_callback(self) -> None:
+        """State has changed."""
+        _LOGGER.debug("update_callback HumidifySetpointNumber myname [%s]", self._myname)
+        self.schedule_update_ha_state()
+
+    @property
+    def native_max_value(self) -> float:
+        return self._zone.maxHumSp
+
+    @property
+    def native_min_value(self) -> float:
+        return self._zone.minHumSp
+
+    @property
+    def native_value(self) -> float:
+        return self._zone.husp
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        _LOGGER.info(LOG_INFO_NUMBER_ASYNC_SET_VALUE, self.__class__.__name__, self._myname, value)
+        try:
+            await self._zone.perform_humidify_setpoint(r_husp=value)
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
+            ) from ex
+
+
+class DehumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
+    """Set the diagnostic level in the S30."""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system, zone: lennox_zone) -> None:
+        super().__init__(manager, system)
+        self._hass = hass
+        self._zone = zone
+        self._myname = f"{system.name}_{zone.name}_dehum_setpoint"
+        self._attr_name = self._myname
+        self._attr_unique_id = (zone.unique_id + UNIQUE_ID_SUFFIX_DEHUM_SETPOINT).replace("-", "")
+        self._attr_device_class = NumberDeviceClass.HUMIDITY
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_native_step = 1
+        self._attr_device_info =  {
+            "identifiers": {(DOMAIN, zone.unique_id)},
+        }
+        _LOGGER.debug("Create DehumidifySetpointNumber myname [%s]", self._myname)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug("async_added_to_hass DehumidifySetpointNumber myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(self.update_callback)
+        await super().async_added_to_hass()
+
+    def update_callback(self) -> None:
+        """Called when state has changed."""
+        _LOGGER.debug("update_callback DehumidifySetpointNumber myname [%s]", self._myname)
+        self.schedule_update_ha_state()
+
+    @property
+    def native_max_value(self) -> float:
+        return self._zone.maxDehumSp
+
+    @property
+    def native_min_value(self) -> float:
+        return self._zone.minDehumSp
+
+    @property
+    def native_value(self) -> float:
+        return self._zone.desp
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        _LOGGER.info(LOG_INFO_NUMBER_ASYNC_SET_VALUE, self.__class__.__name__, self._myname, value)
+        try:
+            await self._zone.perform_humidify_setpoint(r_desp=value)
+        except S30Exception as ex:
+            raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
+        except Exception as ex:
+            raise HomeAssistantError(
+                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             ) from ex

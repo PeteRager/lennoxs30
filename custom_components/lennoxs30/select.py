@@ -5,47 +5,41 @@
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name
 # pylint: disable=abstract-method
-from typing import Any
 import logging
-
+from typing import Any
 
 from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.select import SelectEntity
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from lennoxs30api.s30exception import S30Exception
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from lennoxs30api.lennox_equipment import (
+    LENNOX_EQUIPMENT_PARAMETER_FORMAT_RADIO,
+    lennox_equipment,
+    lennox_equipment_parameter,
+)
 from lennoxs30api.s30api_async import (
-    LENNOX_HUMIDITY_MODE_OFF,
-    LENNOX_HUMIDITY_MODE_HUMIDIFY,
-    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
-    LENNOX_HVAC_EMERGENCY_HEAT,
-    LENNOX_HVAC_HEAT_COOL,
+    LENNOX_DEHUMIDIFICATION_MODE_AUTO,
     LENNOX_DEHUMIDIFICATION_MODE_HIGH,
     LENNOX_DEHUMIDIFICATION_MODE_MEDIUM,
-    LENNOX_DEHUMIDIFICATION_MODE_AUTO,
-    LENNOX_VENTILATION_MODES,
+    LENNOX_HUMIDITY_MODE_BOTH,
+    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_HUMIDITY_MODE_HUMIDIFY,
+    LENNOX_HUMIDITY_MODE_OFF,
+    LENNOX_HVAC_EMERGENCY_HEAT,
+    LENNOX_HVAC_HEAT_COOL,
     LENNOX_VENTILATION_MODE_INSTALLER,
-    LENNOX_VENTILATION_MODE_ON,
     LENNOX_VENTILATION_MODE_OFF,
+    LENNOX_VENTILATION_MODE_ON,
+    LENNOX_VENTILATION_MODES,
     lennox_system,
     lennox_zone,
 )
-from lennoxs30api.lennox_equipment import (
-    LENNOX_EQUIPMENT_PARAMETER_FORMAT_RADIO,
-    lennox_equipment_parameter,
-    lennox_equipment,
-)
+from lennoxs30api.s30exception import S30Exception
 
-from .helpers import (
-    helper_create_equipment_entity_name,
-    helper_get_equipment_device_info,
-    helper_get_parameter_extra_attributes,
-)
-
+from . import DOMAIN, Manager
 from .base_entity import S30BaseEntityMixin
 from .const import (
     LOG_INFO_SELECT_ASYNC_SELECT_OPTION,
@@ -54,8 +48,11 @@ from .const import (
     UNIQUE_ID_SUFFIX_VENTILATION_SELECT,
     UNIQUE_ID_SUFFIX_ZONEMODE_SELECT,
 )
-from . import DOMAIN, Manager
-
+from .helpers import (
+    helper_create_equipment_entity_name,
+    helper_get_equipment_device_info,
+    helper_get_parameter_extra_attributes,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,6 +179,8 @@ class HumidityModeSelect(S30BaseEntityMixin, SelectEntity):
             opt_list.append(LENNOX_HUMIDITY_MODE_DEHUMIDIFY)
         if self._zone.humidificationOption:
             opt_list.append(LENNOX_HUMIDITY_MODE_HUMIDIFY)
+        if self._zone.humidificationOption and self._zone.dehumidificationOption:
+            opt_list.append(LENNOX_HUMIDITY_MODE_BOTH)
         opt_list.append(LENNOX_HUMIDITY_MODE_OFF)
         return opt_list
 

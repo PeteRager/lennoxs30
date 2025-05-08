@@ -6,30 +6,28 @@
 # pylint: disable=line-too-long
 
 from unittest.mock import patch
-import pytest
 
+import pytest
 from homeassistant.const import (
     PERCENTAGE,
 )
-
 from lennoxs30api.s30api_async import (
-    lennox_system,
     LENNOX_CIRCULATE_TIME_MAX,
     LENNOX_CIRCULATE_TIME_MIN,
+    lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.number import (
     CirculateTime,
 )
-
 from tests.conftest import (
     conf_test_exception_handling,
-    conftest_base_entity_availability,
     conf_test_number_info_async_set_native_value,
+    conftest_base_entity_availability,
 )
 
 
