@@ -1106,7 +1106,8 @@ async def test_climate_hvac_action(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False
-    zone: lennox_zone = system.zone_list[1]
+    zone: lennox_zone = system.zone_list[0]
+
     c = S30Climate(hass, manager, system, zone)
 
     zone.systemMode = LENNOX_HVAC_OFF
@@ -1142,6 +1143,11 @@ async def test_climate_hvac_action(hass, manager_mz: Manager):
     zone.tempOperation = LENNOX_TEMP_OPERATION_COOLING
     assert c.hvac_action == HVACAction.COOLING
 
+    zone.systemMode = LENNOX_HVAC_COOL
+    zone.tempOperation = LENNOX_HUMID_OPERATION_WAITING
+    zone.humOperation = LENNOX_HUMID_OPERATION_OFF
+    assert c.hvac_action == HVACAction.IDLE
+    assert c.extra_state_attributes["tempOperation"] == LENNOX_HUMID_OPERATION_WAITING
 
 @pytest.mark.asyncio
 async def test_climate_preset_modes(hass, manager_mz: Manager):

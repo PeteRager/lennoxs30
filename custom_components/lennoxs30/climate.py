@@ -484,6 +484,8 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         """Return the current hvac state/action."""
         to = self._zone.tempOperation
         ho = self._zone.humOperation
+        if to not in HVACAction:
+            return HVACAction.IDLE
         if to != LENNOX_TEMP_OPERATION_OFF:
             return to
         if ho != LENNOX_TEMP_OPERATION_OFF:
