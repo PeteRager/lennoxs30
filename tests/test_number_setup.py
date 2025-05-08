@@ -9,10 +9,12 @@ import pytest
 from custom_components.lennoxs30.const import MANAGER
 
 from custom_components.lennoxs30.number import (
+    DehumidifySetpointNumber,
     DiagnosticLevelNumber,
     DehumidificationOverCooling,
     CirculateTime,
     EquipmentParameterNumber,
+    HumidifySetpointNumber,
     TimedVentilationNumber,
     async_setup_entry,
 )
@@ -38,6 +40,9 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     manager.create_diagnostic_sensors = False
     manager.create_inverter_power = False
     async_add_entities = Mock()
+    for zone in system.zone_list:
+        zone.humidificationOption = False
+        zone.dehumidificationOption = False
 
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
@@ -71,7 +76,32 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 1
     assert isinstance(sensor_list[0], CirculateTime)
 
+    # Circulate time and a zone humidity control should be created
+    system.zone_list[0].humidificationOption = True
+    system.zone_list[0].dehumidificationOption = False
+
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 2
+    assert isinstance(sensor_list[0], CirculateTime)
+    assert isinstance(sensor_list[1], HumidifySetpointNumber)
+
+    # Circulate time and a zone humidity control should be created
+    system.zone_list[0].humidificationOption = False
+    system.zone_list[0].dehumidificationOption = True
+
+    await async_setup_entry(hass, entry, async_add_entities)
+    assert async_add_entities.called == 1
+    sensor_list = async_add_entities.call_args[0][0]
+    assert len(sensor_list) == 2
+    assert isinstance(sensor_list[0], CirculateTime)
+    assert isinstance(sensor_list[1], DehumidifySetpointNumber)
+
+
     # DehumidificationOverCooling and circulate time should be created
+    system.zone_list[0].humidificationOption = False
+    system.zone_list[0].dehumidificationOption = False
     system.api.isLANConnection = False
     system.dehumidifierType = "Dehumidifier"
     system.enhancedDehumidificationOvercoolingF_enable = True

@@ -1,3 +1,4 @@
+"""Tests the humidity mode select."""
 # pylint: disable=too-many-lines
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-function-docstring
@@ -7,32 +8,32 @@
 
 import logging
 from unittest.mock import patch
+
 import pytest
-
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
 from lennoxs30api.s30api_async import (
-    LENNOX_HUMIDITY_MODE_OFF,
-    LENNOX_HUMIDITY_MODE_HUMIDIFY,
+    LENNOX_HUMIDITY_MODE_BOTH,
     LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_HUMIDITY_MODE_HUMIDIFY,
+    LENNOX_HUMIDITY_MODE_OFF,
+    LENNOX_ZONING_MODE_CENTRAL,
     lennox_system,
     lennox_zone,
-    LENNOX_ZONING_MODE_CENTRAL,
 )
 
 from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30.select import HumidityModeSelect
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
+from custom_components.lennoxs30.select import HumidityModeSelect
 from tests.conftest import (
     conf_test_exception_handling,
-    conftest_base_entity_availability,
     conf_test_select_info_async_select_option,
+    conftest_base_entity_availability,
 )
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_unique_id(hass, manager: Manager):
+async def test_humidity_mode_select_unique_id(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
     c = HumidityModeSelect(hass, manager, system, zone)
@@ -41,7 +42,7 @@ async def test_humidity_mode_select_unique_id(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_name(hass, manager: Manager):
+async def test_humidity_mode_select_name(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
     c = HumidityModeSelect(hass, manager, system, zone)
@@ -50,7 +51,7 @@ async def test_humidity_mode_select_name(hass, manager: Manager):
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_current_option(hass, manager_mz: Manager):
+async def test_humidity_mode_select_current_option(hass: HomeAssistant, manager_mz: Manager) -> None:
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
@@ -72,7 +73,7 @@ async def test_humidity_mode_select_current_option(hass, manager_mz: Manager):
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_current_option_z1(hass, manager_mz: Manager):
+async def test_humidity_mode_select_current_option_z1(hass: HomeAssistant, manager_mz: Manager) -> None:
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[1]
@@ -119,7 +120,7 @@ async def test_humidity_mode_select_current_option_z1(hass, manager_mz: Manager)
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_options(hass, manager_mz: Manager):
+async def test_humidity_mode_select_options(hass: HomeAssistant, manager_mz: Manager) -> None:
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
@@ -137,10 +138,11 @@ async def test_humidity_mode_select_options(hass, manager_mz: Manager):
 
     zone.humidificationOption = True
     opt = c.options
-    assert len(opt) == 3
+    assert len(opt) == 4
     assert LENNOX_HUMIDITY_MODE_OFF in opt
     assert LENNOX_HUMIDITY_MODE_DEHUMIDIFY in opt
     assert LENNOX_HUMIDITY_MODE_HUMIDIFY in opt
+    assert LENNOX_HUMIDITY_MODE_BOTH in opt
     assert zone.dehumidificationOption is True
 
     zone.humidificationOption = False
@@ -160,7 +162,7 @@ async def test_humidity_mode_select_options(hass, manager_mz: Manager):
 
 
 @pytest.mark.asyncio
-async def test_humidity_mode_select_async_select_options(hass, manager_mz: Manager, caplog):
+async def test_humidity_mode_select_async_select_options(hass: HomeAssistant, manager_mz: Manager, caplog: pytest.LogCaptureFixture) -> None:
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
@@ -208,7 +210,7 @@ async def test_humidity_mode_select_async_select_options(hass, manager_mz: Manag
 
 
 @pytest.mark.asyncio
-async def test_dehumidifier_mode_mode_select_device_info(hass, manager_mz: Manager):
+async def test_dehumidifier_mode_mode_select_device_info(hass: HomeAssistant, manager_mz: Manager) -> None:
     manager = manager_mz
     await manager.create_devices()
     system: lennox_system = manager.api.system_list[0]

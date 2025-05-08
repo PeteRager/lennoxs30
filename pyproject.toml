@@ -7,6 +7,9 @@ ignore = [
     "PLR0911",
     "TRY003", # Avoid specifying long messages outside the exception class
     "FBT001",
+    "S101",
+    "D103",
+    "PLR2004",
 ]
 
 [tool.ruff]
