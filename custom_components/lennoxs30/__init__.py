@@ -6,47 +6,51 @@
 # pylint: disable=invalid-name
 
 import asyncio
-from asyncio.locks import Event
 import logging
 import re
 import time
-import voluptuous as vol
+from asyncio.locks import Event
 
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
+import voluptuous as vol
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
     CONF_EMAIL,
+    CONF_HOST,
     CONF_HOSTS,
     CONF_PASSWORD,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STOP,
     CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-
-from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import StateInfo
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from lennoxs30api import (
     EC_HTTP_ERR,
     EC_LOGIN,
     EC_UNAUTHORIZED,
     S30Exception,
-    s30api_async,
     lennox_system,
+    s30api_async,
 )
+from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
+
 from .const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
-    CONF_CREATE_INVERTER_POWER,
+    CONF_CLOUD_CONNECTION,
     CONF_CREATE_DIAGNOSTICS_SENSORS,
+    CONF_CREATE_INVERTER_POWER,
     CONF_CREATE_PARAMETERS,
     CONF_CREATE_SENSORS,
-    CONF_FAST_POLL_INTERVAL,
     CONF_FAST_POLL_COUNT,
+    CONF_FAST_POLL_INTERVAL,
     CONF_INIT_WAIT_TIME,
     CONF_LOG_MESSAGES_TO_FILE,
     CONF_MESSAGE_DEBUG_FILE,
@@ -57,7 +61,6 @@ from .const import (
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
     LENNOX_DOMAIN,
-    CONF_CLOUD_CONNECTION,
     MANAGER,
     VENTILATION_EQUIPMENT_ID,
 )
@@ -72,7 +75,6 @@ from .device import (
     S40BleDevice,
 )
 from .util import dict_redact_fields
-
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
@@ -98,6 +100,26 @@ DEFAULT_LOCAL_POLL_INTERVAL: int = 1
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
 MAX_ERRORS = 2
 RETRY_INTERVAL_SECONDS = 60
+
+UNTRACKED_STATE_ATTRIBUTES = StateInfo(
+    {
+    "message_count",
+    "send_count",
+    "receive_count",
+    "bytes_in",
+    "bytes_out",
+    "http_2xx_cnt",
+    "last_receive_time",
+    "last_message_time",
+    "sysUpTime",
+    "diagLevel",
+    "softwareVersion",
+    "hostname",
+    "sibling_id",
+    "sibling_ip",
+    }
+)
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -503,7 +525,8 @@ class Manager(object):
         ):
             self.connected = False
             self.executeConnectionStateCallbacks()
-        self._hass.states.async_set(self.connection_state, state, self.getMetricsList(), force_update=True)
+        self._hass.states.async_set(self.connection_state, state, self.getMetricsList(), force_update=True,
+                                    state_info=UNTRACKED_STATE_ATTRIBUTES)
 
     def registerConnectionStateCallback(self, callbackfunc):
         """Register a callback when the connection state changes"""
