@@ -101,24 +101,24 @@ DEFAULT_FAST_POLL_INTERVAL: float = 0.75
 MAX_ERRORS = 2
 RETRY_INTERVAL_SECONDS = 60
 
-UNTRACKED_STATE_ATTRIBUTES = StateInfo(
-    {
-    "message_count",
-    "send_count",
-    "receive_count",
-    "bytes_in",
-    "bytes_out",
-    "http_2xx_cnt",
-    "last_receive_time",
-    "last_message_time",
-    "sysUpTime",
-    "diagLevel",
-    "softwareVersion",
-    "hostname",
-    "sibling_id",
-    "sibling_ip",
+UNTRACKED_STATE_ATTRIBUTES = {
+    "unrecorded_attributes": {
+        "message_count",
+        "send_count",
+        "receive_count",
+        "bytes_in",
+        "bytes_out",
+        "http_2xx_cnt",
+        "last_receive_time",
+        "last_message_time",
+        "sysUpTime",
+        "diagLevel",
+        "softwareVersion",
+        "hostname",
+        "sibling_id",
+        "sibling_ip",
     }
-)
+}
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -494,11 +494,11 @@ class Manager(object):
         else:
             if ip_address is None:
                 e_name = email.split("@")
-                redacted_email: str = re.sub("[^A-Za-z0-9]","_",e_name[0])
+                redacted_email: str = re.sub("[^A-Za-z0-9]", "_", e_name[0])
                 self.connection_state = "lennoxs30.conn_" + redacted_email
             else:
-                self.connection_state = "lennoxs30.conn_" + re.sub("[^A-Za-z0-9]","_",self._ip_address)
-            self.connection_state = re.sub("_+","_", self.connection_state)
+                self.connection_state = "lennoxs30.conn_" + re.sub("[^A-Za-z0-9]", "_", self._ip_address)
+            self.connection_state = re.sub("_+", "_", self.connection_state)
 
     async def async_shutdown(self, event: Event) -> None:
         """Called when hass shutsdown"""
@@ -525,8 +525,9 @@ class Manager(object):
         ):
             self.connected = False
             self.executeConnectionStateCallbacks()
-        self._hass.states.async_set(self.connection_state, state, self.getMetricsList(), force_update=True,
-                                    state_info=UNTRACKED_STATE_ATTRIBUTES)
+        self._hass.states.async_set(
+            self.connection_state, state, self.getMetricsList(), force_update=True, state_info=UNTRACKED_STATE_ATTRIBUTES
+        )
 
     def registerConnectionStateCallback(self, callbackfunc):
         """Register a callback when the connection state changes"""

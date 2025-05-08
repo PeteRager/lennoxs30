@@ -27,6 +27,6 @@
   "cSpell.enabled": false, 
   "black-formatter.args": ["--line-length", "120"],
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   }  
 }
