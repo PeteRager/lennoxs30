@@ -187,6 +187,10 @@ Cancel Manual Away Mode or Smart Away Mode. The **cancel away mode** preset will
 
 Lennox systems may have humidification and dehumidification capability. If so, you will be able to control the humidity setpoint via the Climate Entity and enable / disable humidification/dehumidification via the [humidity mode select entity](#Humidity-Mode). Lennox has separate setpoints for humidification (husp) and dehumidification (desp); however Home Assistant only support one humidity setpoint. Hence, the **Target Humidity** shown in Thermostat is based on the active humidity mode. If no humidity mode is active for the zone, the Target Humidity will be unavailable.
 
+Lennox systems with a Humidifier and Dehumidifier can be run in a "Humidify + Dehumidify" mode. In HA, this option is labeled "both". When in both mode, the target humidity cannot be set from the HA climate entity because it only has a single setpoint for humidity; whereas the Lennox system has a separate targets for humidify and dehumidify. The integration creates number entities to set the target humidity levels:
+  - `number.<system_name>\_<zone_name>\_hum_setpoint`
+  - `number.<system_name>\_<zone_name>\_dehum_setpoint`
+
 ### Supported Data
 
 The integration provides all of the standard climate attributes, including
