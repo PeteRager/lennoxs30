@@ -13,7 +13,6 @@
       'http_4xx_cnt': 0,
       'http_5xx_cnt': 0,
       'last_error_time': None,
-      'last_message_time': datetime.datetime(2026, 3, 5, 21, 36, 48, 868635, tzinfo=<UTC>),
       'last_receive_time': None,
       'last_reconnect_time': None,
       'message_count': 6,
