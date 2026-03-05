@@ -384,6 +384,7 @@ This sensor captures the current alert level of the Lennox controller; indicatin
 | critical | indicates a serious problem with your equipment             |
 | moderate | indicates a potentially important issue with your equipment |
 | minor    | minor issue                                                 |
+| info     | informational message                                       |
 | none     | no issues are present                                       |
 
 **NOTE** - the above list is probably incomplete it may also contain other values, if you see these please raise an issue so we can update the documentation.
