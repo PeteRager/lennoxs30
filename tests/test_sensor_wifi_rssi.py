@@ -9,7 +9,7 @@ import logging
 from unittest.mock import patch
 import pytest
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorDeviceClass
+from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 from homeassistant.const import UnitOfTemperature,SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 
 from lennoxs30api.s30api_async import lennox_system
@@ -49,14 +49,12 @@ async def test_wifi_rssi_sensor(hass, manager: Manager, caplog):
     assert s.native_unit_of_measurement == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 
     assert s.device_class == SensorDeviceClass.SIGNAL_STRENGTH
-    assert s.state_class == STATE_CLASS_MEASUREMENT
+    assert s.state_class == SensorStateClass.MEASUREMENT
 
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
         assert x[0] == LENNOX_DOMAIN
         assert x[1] == system.unique_id
-
-
 
 @pytest.mark.asyncio
 async def test_wifi_rssi_sensor_subscription(hass, manager: Manager):

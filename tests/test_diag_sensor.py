@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfTime,
     REVOLUTIONS_PER_MINUTE,
 )
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorDeviceClass
+from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
 
 
@@ -60,7 +60,7 @@ async def test_diag_sensor_state(hass, manager: Manager):
     diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[0]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
     assert s.name == f"{system.name}_iu_{diagnostic.name}".replace(" ", "_")
-    assert s.state_class == STATE_CLASS_MEASUREMENT
+    assert s.state_class == SensorStateClass.MEASUREMENT
     assert s.state == "0.0"
     diagnostic.value = "No"
     assert s.state is None
