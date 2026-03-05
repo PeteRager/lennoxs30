@@ -6,7 +6,7 @@ Cloud Connections depending on the device model. We believe these configurations
 | Device Type | Local Connection | Cloud Connection |
 | ----------- | ---------------- | ---------------- |
 | S30         | Yes              | Yes              |
-| S40         | Yes              | Unknown          |
+| S40         | Yes              | No               |
 | E30         | Yes              | Yes              |
 | M30         | No               | Yes              |
 | Armstrong Comfort Sync A3 | Yes | Unknown |
