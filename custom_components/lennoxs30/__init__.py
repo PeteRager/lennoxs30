@@ -555,8 +555,8 @@ class Manager(object):
                 metrics["diagLevel"] = system.diagLevel
                 metrics["softwareVersion"] = system.softwareVersion
                 metrics["hostname"] = self._ip_address
-                metrics["sibling_id"] = system.sibling_identifier
-                metrics["sibling_ip"] = system.sibling_ipAddress
+                metrics["sibling_id"] = {sibling.sibling_identifier for sibling in system.siblings}
+                metrics["sibling_ip"] = {sibling.sibling_ipAddress for sibling in system.siblings}
         return metrics
 
     async def s30_initialize(self):

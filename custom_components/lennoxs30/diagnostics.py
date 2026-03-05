@@ -33,8 +33,8 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, config_entry: 
             "diagLevel": system.diagLevel,
             "cloud_status": system.cloud_status,
             "productType": system.productType,
-            "sibling_identifier": system.sibling_identifier,
-            "sibling_ip": system.sibling_ipAddress,
+            "sibling_identifier": {sibling.sibling_identifier for sibling in system.siblings},
+            "sibling_ip": {sibling.sibling_ipAddress for sibling in system.siblings},
             "softwareVersion": system.softwareVersion,
             "sysUpTime": system.sysUpTime,
         }
