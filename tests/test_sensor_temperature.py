@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.const import UnitOfTemperature
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorDeviceClass
+from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 
 from lennoxs30api.s30api_async import (
     LENNOX_BAD_STATUS,
@@ -47,7 +47,7 @@ async def test_temperature_sensor(hass, manager: Manager, caplog):
     assert s.native_unit_of_measurement == UnitOfTemperature.CELSIUS
 
     assert s.device_class == SensorDeviceClass.TEMPERATURE
-    assert s.state_class == STATE_CLASS_MEASUREMENT
+    assert s.state_class == SensorStateClass.MEASUREMENT
 
     identifiers = s.device_info["identifiers"]
     for x in identifiers:
