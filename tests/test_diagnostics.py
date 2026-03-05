@@ -7,6 +7,7 @@ from custom_components.lennoxs30.const import MANAGER
 from custom_components.lennoxs30.diagnostics import async_get_config_entry_diagnostics
 from homeassistant import config_entries
 from syrupy import SnapshotAssertion
+from syrupy.filters import paths
 
 
 @pytest.mark.asyncio
@@ -19,8 +20,7 @@ async def test_diagnostics_local(snapshot: SnapshotAssertion,
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
     diags = await async_get_config_entry_diagnostics(hass, entry)
-
-    assert snapshot == diags
+    assert snapshot(exclude=paths("comm_metrics.last_message_time")) == diags
 
 
 @pytest.mark.asyncio
