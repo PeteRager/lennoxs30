@@ -777,9 +777,7 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
 
     @property
     def native_value(self):
-        if (val := self._system.alerts_num_active) is None:
-            return 0
-        return val
+        return len(self._system.active_alerts)
 
     @property
     def state_class(self):
