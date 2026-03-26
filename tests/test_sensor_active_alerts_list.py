@@ -53,7 +53,9 @@ async def test_active_alerts_sensor(hass, manager: Manager):
     assert attrs["alerts_last_cleared_id"] == 45
     assert attrs["alerts_num_in_active_array"] == 2
 
-    system.alerts_num_active = None
+    system.active_alerts = []
+    assert sensor.state == 0
+    system.active_alerts = None
     assert sensor.state == 0
 
     system.alerts_num_cleared = None
@@ -80,8 +82,8 @@ async def test_active_alerts_subscription(hass, manager: Manager):
 
     with patch.object(sensor, "schedule_update_ha_state") as update_callback:
         manager.is_metric = False
-        update = {"alerts_num_active": 4}
-        system.attr_updater(update, "alerts_num_active")
+        update = {"active_alerts": ["a","b","c","d"]}
+        system.attr_updater(update, "active_alerts")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1
         assert sensor.state == 4

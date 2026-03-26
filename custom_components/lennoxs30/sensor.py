@@ -741,7 +741,6 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
             [
                 "active_alerts",
                 "alerts_num_cleared",
-                "alerts_num_active",
                 "alerts_last_cleared_id",
                 "alerts_num_in_active_array",
             ],
@@ -777,9 +776,9 @@ class S30ActiveAlertsList(S30BaseEntityMixin, SensorEntity):
 
     @property
     def native_value(self):
-        if (val := self._system.alerts_num_active) is None:
+        if not self._system.active_alerts:
             return 0
-        return val
+        return len(self._system.active_alerts)
 
     @property
     def state_class(self):
