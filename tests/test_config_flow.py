@@ -15,11 +15,8 @@ import logging
 from unittest.mock import patch
 
 import pytest
-
 import voluptuous as vol
-
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_HOST,
@@ -29,41 +26,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
 )
-from homeassistant import config_entries
-
-from lennoxs30api.s30exception import S30Exception, EC_LOGIN, EC_COMMS_ERROR
-
-
-from custom_components.lennoxs30.config_flow import (
-    OptionsFlowHandler,
-    host_valid,
-    Lennoxs30ConfigFlow,
-    STEP_CLOUD,
-    STEP_LOCAL,
-    STEP_ONE,
-)
-from custom_components.lennoxs30.const import (
-    CONF_ALLERGEN_DEFENDER_SWITCH,
-    CONF_CLOUD_CONNECTION,
-    CONF_CREATE_INVERTER_POWER,
-    CONF_CREATE_SENSORS,
-    CONF_FAST_POLL_INTERVAL,
-    CONF_LOCAL_CONNECTION,
-    CONF_MESSAGE_DEBUG_FILE,
-    CONF_MESSAGE_DEBUG_LOGGING,
-    CONF_PII_IN_MESSAGE_LOGS,
-    CONF_APP_ID,
-    DEFAULT_CLOUD_TIMEOUT,
-    LENNOX_DEFAULT_CLOUD_APP_ID,
-    LENNOX_DEFAULT_LOCAL_APP_ID,
-    CONF_FAST_POLL_COUNT,
-    DEFAULT_LOCAL_TIMEOUT,
-    CONF_INIT_WAIT_TIME,
-    CONF_LOG_MESSAGES_TO_FILE,
-    CONF_CREATE_DIAGNOSTICS_SENSORS,
-    CONF_CREATE_PARAMETERS,
-    LENNOX_DOMAIN,
-)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_LOGIN, S30Exception
 
 from custom_components.lennoxs30 import (
     DEFAULT_LOCAL_POLL_INTERVAL,
@@ -73,6 +38,37 @@ from custom_components.lennoxs30 import (
     async_migrate_entry,
     async_setup,
     g_unique_id_update,
+)
+from custom_components.lennoxs30.config_flow import (
+    STEP_CLOUD,
+    STEP_LOCAL,
+    STEP_ONE,
+    Lennoxs30ConfigFlow,
+    OptionsFlowHandler,
+    host_valid,
+    lennox30_entries,
+)
+from custom_components.lennoxs30.const import (
+    CONF_ALLERGEN_DEFENDER_SWITCH,
+    CONF_APP_ID,
+    CONF_CLOUD_CONNECTION,
+    CONF_CREATE_DIAGNOSTICS_SENSORS,
+    CONF_CREATE_INVERTER_POWER,
+    CONF_CREATE_PARAMETERS,
+    CONF_CREATE_SENSORS,
+    CONF_FAST_POLL_COUNT,
+    CONF_FAST_POLL_INTERVAL,
+    CONF_INIT_WAIT_TIME,
+    CONF_LOCAL_CONNECTION,
+    CONF_LOG_MESSAGES_TO_FILE,
+    CONF_MESSAGE_DEBUG_FILE,
+    CONF_MESSAGE_DEBUG_LOGGING,
+    CONF_PII_IN_MESSAGE_LOGS,
+    DEFAULT_CLOUD_TIMEOUT,
+    DEFAULT_LOCAL_TIMEOUT,
+    LENNOX_DEFAULT_CLOUD_APP_ID,
+    LENNOX_DEFAULT_LOCAL_APP_ID,
+    LENNOX_DOMAIN,
 )
 from custom_components.lennoxs30.util import redact_email
 
@@ -1240,3 +1236,24 @@ async def test_async_setup(hass):
     result: bool = await async_setup(hass, config)
     assert result is True
     assert hass.data[LENNOX_DOMAIN] == {}
+
+
+def test_lennox30_entries(hass, caplog):
+    from unittest.mock import MagicMock
+
+    entry_local1 = MagicMock()
+    entry_local1.data = {CONF_HOST: "192.168.1.1"}
+
+    entry_local2 = MagicMock()
+    entry_local2.data = {CONF_HOST: "192.168.1.2"}
+
+    # Cloud entry — no CONF_HOST, should be excluded
+    entry_cloud = MagicMock()
+    entry_cloud.data = {CONF_EMAIL: "pete@example.com"}
+
+    with patch.object(hass.config_entries, "async_entries", return_value=[entry_local1, entry_local2, entry_cloud]) as mock_entries:
+        result = lennox30_entries(hass)
+        mock_entries.assert_called_once_with(DOMAIN)
+
+    assert isinstance(result, set)
+    assert result == {"192.168.1.1", "192.168.1.2"}
