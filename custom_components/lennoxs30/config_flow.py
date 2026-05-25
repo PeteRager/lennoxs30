@@ -105,7 +105,7 @@ def host_valid(hostport: str) -> bool:
 @callback
 def lennox30_entries(hass: HomeAssistant) -> set:
     """Return the hosts already configured."""
-    return set(entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN))
+    return {entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN) if CONF_HOST in entry.data}
 
 
 class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
