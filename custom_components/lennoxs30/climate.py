@@ -11,12 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.climate import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -233,7 +228,13 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
-            return DEFAULT_MIN_TEMP
+            if self._system.single_setpoint_mode:
+                if self._manager.is_metric is False:
+                    return self._zone.minCsp
+                return self._zone.minCspC
+            if self._manager.is_metric is False:
+                return self._zone.minHsp
+            return self._zone.minHspC
         if self._zone.systemMode == LENNOX_HVAC_COOL:
             if self._manager.is_metric is False:
                 return self._zone.minCsp
@@ -260,7 +261,13 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._zone.systemMode == LENNOX_HVAC_OFF or self._zone.systemMode is None or self.is_zone_disabled:
-            return DEFAULT_MAX_TEMP
+            if self._system.single_setpoint_mode:
+                if self._manager.is_metric is False:
+                    return self._zone.maxHsp
+                return self._zone.maxHspC
+            if self._manager.is_metric is False:
+                return self._zone.maxCsp
+            return self._zone.maxCspC
         if self._zone.systemMode == LENNOX_HVAC_COOL:
             if self._manager.is_metric is False:
                 return self._zone.maxCsp

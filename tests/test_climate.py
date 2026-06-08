@@ -17,11 +17,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import UnitOfTemperature
-from homeassistant.components.climate import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.helpers import issue_registry as ir
 
 from lennoxs30api.s30api_async import (
@@ -86,8 +82,8 @@ async def test_climate_min_max_c(hass, manager_mz: Manager):
     assert manager.is_metric is True
     assert c.temperature_unit == UnitOfTemperature.CELSIUS
     zone.systemMode = LENNOX_HVAC_OFF
-    assert c.min_temp == DEFAULT_MIN_TEMP
-    assert c.max_temp == DEFAULT_MAX_TEMP
+    assert c.min_temp == zone.minCspC
+    assert c.max_temp == zone.maxHspC
 
     zone.systemMode = LENNOX_HVAC_COOL
     assert c.min_temp == zone.minCspC
@@ -119,8 +115,8 @@ async def test_climate_min_max_c(hass, manager_mz: Manager):
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     assert c.min_temp == zone.minHspC
     assert c.max_temp == zone.maxCspC
-    assert c1.min_temp == DEFAULT_MIN_TEMP
-    assert c1.max_temp == DEFAULT_MAX_TEMP
+    assert c1.min_temp == zone1.minHspC
+    assert c1.max_temp == zone1.maxCspC
 
 
 @pytest.mark.asyncio
@@ -137,8 +133,8 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     assert manager.is_metric is False
     assert c.temperature_unit == UnitOfTemperature.FAHRENHEIT
     zone.systemMode = LENNOX_HVAC_OFF
-    assert c.min_temp == DEFAULT_MIN_TEMP
-    assert c.max_temp == DEFAULT_MAX_TEMP
+    assert c.min_temp == zone.minCsp
+    assert c.max_temp == zone.maxHsp
 
     zone.systemMode = LENNOX_HVAC_COOL
     assert c.min_temp == zone.minCsp
@@ -170,8 +166,8 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
     assert c.min_temp == zone.minHsp
     assert c.max_temp == zone.maxCsp
-    assert c1.min_temp == DEFAULT_MIN_TEMP
-    assert c1.max_temp == DEFAULT_MAX_TEMP
+    assert c1.min_temp == zone1.minHsp
+    assert c1.max_temp == zone1.maxCsp
     system.zoningMode = LENNOX_ZONING_MODE_ZONED
 
     with caplog.at_level(logging.WARNING):
