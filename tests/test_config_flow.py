@@ -10,7 +10,6 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=protected-access
 
-
 import logging
 from unittest.mock import patch
 
@@ -73,7 +72,7 @@ from custom_components.lennoxs30.const import (
 from custom_components.lennoxs30.util import redact_email
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_migrate_local_config_min(hass, caplog):
     config = {
         DOMAIN: {
@@ -141,7 +140,7 @@ async def test_migrate_local_config_min(hass, caplog):
                 assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_migrate_local_config_full(hass, caplog):
     config = {
         DOMAIN: {
@@ -211,7 +210,7 @@ async def test_migrate_local_config_full(hass, caplog):
                 assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_migrate_local_config_multiple(hass, caplog):
     config = {
         DOMAIN: {
@@ -272,7 +271,7 @@ async def test_migrate_local_config_multiple(hass, caplog):
             assert len(caplog.records) == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_migrate_cloud_config_min(hass, caplog):
     config = {
         DOMAIN: {
@@ -337,7 +336,7 @@ async def test_migrate_cloud_config_min(hass, caplog):
                 assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_migrate_cloud_config_full(hass, caplog):
     config = {
         DOMAIN: {
@@ -403,7 +402,7 @@ async def test_migrate_cloud_config_full(hass, caplog):
                 assert migration_data[CONF_TIMEOUT] == data[CONF_TIMEOUT]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_upgrade_config_v1(hass):
     data = {
         "cloud_connection": False,
@@ -421,8 +420,19 @@ async def test_upgrade_config_v1(hass):
         "log_messages_to_file": False,
         "message_debug_file": "",
     }
-    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}    
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -465,7 +475,18 @@ async def test_upgrade_config_v1(hass):
         "message_debug_file": "",
     }
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -491,7 +512,7 @@ async def test_upgrade_config_v1(hass):
         assert new_data["timeout"] == DEFAULT_CLOUD_TIMEOUT
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_upgrade_config_v2(hass):
     data = {
         "cloud_connection": False,
@@ -511,8 +532,19 @@ async def test_upgrade_config_v2(hass):
         "fast_scan_count": 10,
         "timeout": 30,
     }
-    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}    
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -558,7 +590,18 @@ async def test_upgrade_config_v2(hass):
         "timeout": 30,
     }
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -585,7 +628,7 @@ async def test_upgrade_config_v2(hass):
         assert new_data["create_diagnostic_sensors"] is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_upgrade_config_v3(hass, caplog):
     data = {
         "cloud_connection": False,
@@ -606,8 +649,19 @@ async def test_upgrade_config_v3(hass, caplog):
         "fast_scan_count": 10,
         "timeout": 30,
     }
-    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}    
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -653,7 +707,18 @@ async def test_upgrade_config_v3(hass, caplog):
         "timeout": 30,
     }
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     with patch.object(hass.config_entries, "async_update_entry") as update_entry:
         await async_migrate_entry(hass, config_entry)
         assert update_entry.call_count == 1
@@ -810,7 +875,7 @@ def test_lennoxS30ConfigFlow(manager: Manager, hass, caplog):
     assert si == cv.string  # pylint: disable=W0143
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_lennoxS30ConfigFlow_async_step_user(manager: Manager, hass, caplog):
     cf = Lennoxs30ConfigFlow()
     cf.hass = hass
@@ -863,7 +928,7 @@ async def test_lennoxS30ConfigFlow_async_step_user(manager: Manager, hass, caplo
     assert cf.config_input[CONF_CLOUD_CONNECTION] is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, caplog):
     cf = Lennoxs30ConfigFlow()
     cf.hass = hass
@@ -942,7 +1007,7 @@ async def test_lennoxS30ConfigFlow_async_step_cloud(manager: Manager, hass, capl
                 assert "This is the error" in caplog.text
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, caplog):
     cf = Lennoxs30ConfigFlow()
     cf.hass = hass
@@ -1050,7 +1115,7 @@ async def test_lennoxS30ConfigFlow_async_step_local(manager: Manager, hass, capl
         assert res["errors"][CONF_HOST] == "invalid_hostname"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_lennoxS30ConfigFlow_async_step_advanced(manager: Manager, hass, caplog):
     cf = Lennoxs30ConfigFlow()
     cf.hass = hass
@@ -1067,15 +1132,15 @@ async def test_lennoxS30ConfigFlow_async_step_advanced(manager: Manager, hass, c
         assert cf.config_input["something"] == "x"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_lennoxS30ConfigFlow_async_get_options_flow(manager: Manager, hass, caplog):
     cf = Lennoxs30ConfigFlow().async_get_options_flow(manager.config_entry)
     cf.hass = hass
     assert isinstance(cf, OptionsFlowHandler)
 
 
-@pytest.mark.skip
-@pytest.mark.asyncio
+@pytest.mark.skip()
+@pytest.mark.asyncio()
 async def test_OptionsFlowHandler_async_step_init_local(config_entry_local, hass, caplog):
     cf = OptionsFlowHandler()
     cf._config_entry = config_entry_local
@@ -1104,8 +1169,8 @@ async def test_OptionsFlowHandler_async_step_init_local(config_entry_local, hass
     assert len(schema) == 16
 
 
-@pytest.mark.skip
-@pytest.mark.asyncio
+@pytest.mark.skip()
+@pytest.mark.asyncio()
 async def test_OptionsFlowHandler_async_step_init_cloud(config_entry_cloud, hass, caplog):
     cf = OptionsFlowHandler()
     cf._config_entry = config_entry_cloud
@@ -1133,11 +1198,9 @@ async def test_OptionsFlowHandler_async_step_init_cloud(config_entry_cloud, hass
     assert len(schema) == 13
 
 
-@pytest.mark.skip
-@pytest.mark.asyncio
-async def test_OptionsFlowHandler_async_step_init_cloud_save(
-    config_entry_cloud: config_entries.ConfigEntry, hass, caplog
-):
+@pytest.mark.skip()
+@pytest.mark.asyncio()
+async def test_OptionsFlowHandler_async_step_init_cloud_save(config_entry_cloud: config_entries.ConfigEntry, hass, caplog):
     cf = OptionsFlowHandler()
     cf._config_entry = config_entry_cloud
     cf.hass = hass
@@ -1160,10 +1223,11 @@ async def test_OptionsFlowHandler_async_step_init_cloud_save(
         assert res["type"] == "create_entry"
 
 
-@pytest.mark.skip
-@pytest.mark.asyncio
+@pytest.mark.skip()
+@pytest.mark.asyncio()
 async def test_OptionsFlowHandler_async_step_init_local_save(
-    config_entry_local: config_entries.ConfigEntry, hass,
+    config_entry_local: config_entries.ConfigEntry,
+    hass,
 ):
     cf = OptionsFlowHandler()
     cf._config_entry = config_entry_local
@@ -1187,7 +1251,7 @@ async def test_OptionsFlowHandler_async_step_init_local_save(
         assert res["type"] == "create_entry"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_lennoxS30ConfigFlow_try_to_connect_cloud(manager: Manager, hass, caplog):
     cf = Lennoxs30ConfigFlow()
     cf.config_input = {}
@@ -1210,7 +1274,7 @@ async def test_lennoxS30ConfigFlow_try_to_connect_cloud(manager: Manager, hass, 
             assert cf.manager.api.isLANConnection is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_lennoxS30ConfigFlow_try_to_connect_local(manager: Manager, hass, caplog):
     cf = Lennoxs30ConfigFlow()
     cf.config_input = {}
@@ -1233,7 +1297,7 @@ async def test_lennoxS30ConfigFlow_try_to_connect_local(manager: Manager, hass, 
             assert cf.manager.api._protocol == user_input[CONF_PROTOCOL]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup(hass):
     hass.data[LENNOX_DOMAIN] = {"abc": "abc"}
     config: ConfigType = {}

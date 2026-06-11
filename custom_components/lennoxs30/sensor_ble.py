@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -6,34 +7,29 @@
 # pylint: disable=invalid-name
 import logging
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.components.sensor import (
     SensorEntity,
 )
-
-
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from lennoxs30api import (
-    LennoxBle,
-    lennox_system,
     LENNOX_BLE_COMMSTATUS_AVAILABLE,
     LENNOX_BLE_STATUS_INPUT_AVAILABLE,
+    LennoxBle,
+    lennox_system,
 )
 from lennoxs30api.lennox_ble import LennoxBleInput
 
-
+from . import DOMAIN, Manager
 from .base_entity import S30BaseEntityMixin
 from .const import (
     UNIQUE_ID_SUFFIX_BLE,
 )
 from .device import helper_create_ble_device_id
-
 from .helpers import (
     helper_create_system_unique_id,
     lennox_uom_to_ha_uom,
 )
-
-from . import DOMAIN, Manager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,9 +55,9 @@ class S40BleSensor(S30BaseEntityMixin, SensorEntity):
         self._sensor_value: LennoxBleInput = sensor_value
         self._status_value: LennoxBleInput = status_value
         self._uom: str = sensor_dict.get("uom", lennox_uom_to_ha_uom(sensor_value.unit))
-        self._state_class: str = sensor_dict.get("state_class", None)
-        self._device_class: str = sensor_dict.get("device_class", None)
-        self._entity_category: str = sensor_dict.get("entity_category", None)
+        self._state_class: str = sensor_dict.get("state_class")
+        self._device_class: str = sensor_dict.get("device_class")
+        self._entity_category: str = sensor_dict.get("entity_category")
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

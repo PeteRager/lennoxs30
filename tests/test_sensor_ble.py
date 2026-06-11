@@ -1,25 +1,26 @@
 """Test BLE Sensors"""
+
 # pylint: disable=line-too-long
 import logging
 from unittest.mock import patch
-import pytest
 
+import pytest
 from homeassistant.const import UnitOfTemperature
 from lennoxs30api.s30api_async import (
-    lennox_system,
     LENNOX_BLE_COMMSTATUS_AVAILABLE,
     LENNOX_BLE_STATUS_INPUT_AVAILABLE,
+    lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.sensor import S40BleSensor, lennox_22v25_sensors
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ble_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -68,7 +69,7 @@ async def test_ble_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
         assert "could not convert" in caplog.messages[0]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ble_subscription(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Test the alert sensor subscription"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -133,7 +134,7 @@ async def test_ble_subscription(hass, manager_system_04_furn_ac_zoning_ble: Mana
     conftest_base_entity_availability(manager, system, sensor)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ble_sensor_diag_category(hass, manager_system_04_furn_ac_zoning_ble: Manager):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble

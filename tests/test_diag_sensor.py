@@ -8,31 +8,27 @@ import logging
 from unittest.mock import patch
 
 import pytest
-
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfFrequency,
-    UnitOfElectricCurrent,
-    UnitOfVolumeFlowRate,
-    UnitOfElectricPotential,
-    UnitOfTime,
     REVOLUTIONS_PER_MINUTE,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
-
-
-from lennoxs30api.s30api_async import lennox_system, lennox_equipment_diagnostic
+from lennoxs30api.s30api_async import lennox_equipment_diagnostic, lennox_system
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.sensor import S30DiagSensor
-
 from tests.conftest import conftest_base_entity_availability, loadfile
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_state(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
@@ -66,7 +62,7 @@ async def test_diag_sensor_state(hass, manager: Manager):
     assert s.state is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_async_added_to_hass(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
@@ -82,7 +78,7 @@ async def test_diag_sensor_async_added_to_hass(hass, manager: Manager):
     assert system._callbacks[1]["func"] == s.cloud_status_update_callback  # pylint: disable=comparison-with-callable
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_update_callback(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
@@ -133,7 +129,7 @@ async def test_diag_sensor_update_callback(hass, manager: Manager):
     conftest_base_entity_availability(manager, system, s)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
@@ -143,7 +139,7 @@ async def test_diag_sensor_unique_id(hass, manager: Manager):
     assert s.unique_id == st
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[1]
@@ -208,7 +204,7 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager):
     assert s.device_class is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: Manager):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
@@ -242,7 +238,7 @@ async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: M
         assert x[1] == system.unique_id + "_BT21B13000"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_device_info_no_device_errors(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()
@@ -263,7 +259,7 @@ async def test_diag_sensor_device_info_no_device_errors(hass, manager_system_04_
         assert "No equipment device map found" in caplog.messages[0]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_diag_sensor_device_info_no_device_errors_1(hass, manager_system_04_furn_ac_zoning: Manager, caplog):
     manager = manager_system_04_furn_ac_zoning
     await manager.create_devices()

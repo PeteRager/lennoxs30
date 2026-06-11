@@ -7,45 +7,42 @@
 
 import logging
 from unittest.mock import patch
+
 import pytest
-
 from homeassistant.exceptions import HomeAssistantError
-
 from lennoxs30api.s30api_async import (
+    LENNOX_VENTILATION_CONTROL_MODE_ASHRAE,
+    LENNOX_VENTILATION_MODE_INSTALLER,
     LENNOX_VENTILATION_MODE_OFF,
     LENNOX_VENTILATION_MODE_ON,
-    LENNOX_VENTILATION_MODE_INSTALLER,
-    LENNOX_VENTILATION_CONTROL_MODE_ASHRAE,
     lennox_system,
 )
 
-
 from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30.select import VentilationModeSelect
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
+from custom_components.lennoxs30.select import VentilationModeSelect
 from tests.conftest import (
     conf_test_exception_handling,
-    conftest_base_entity_availability,
     conf_test_select_info_async_select_option,
+    conftest_base_entity_availability,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_select_ventilation_mode_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = VentilationModeSelect(hass, manager, system)
     assert c.unique_id == system.unique_id + "_VENT_SELECT"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_select_ventilation_mode_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = VentilationModeSelect(hass, manager, system)
     assert c.name == system.name + "_ventilation_mode"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_select_ventilation_mode_current_option(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -67,7 +64,7 @@ async def test_select_ventilation_mode_current_option(hass, manager_mz: Manager)
     assert c.available is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_select_ventilation_mode_subscription(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -110,7 +107,7 @@ async def test_select_ventilation_mode_subscription(hass, manager_mz: Manager):
     conftest_base_entity_availability(manager, system, c)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_select_ventilation_mode_options(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -123,7 +120,7 @@ async def test_select_ventilation_mode_options(hass, manager_mz: Manager):
     assert LENNOX_VENTILATION_MODE_OFF in opt
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_select_ventilation_mode_async_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -154,13 +151,11 @@ async def test_select_ventilation_mode_async_select_options(hass, manager_mz: Ma
             msg = str(ex)
             assert "bad_value" in msg
 
-    await conf_test_exception_handling(
-        system, "ventilation_on", c, c.async_select_option, option=LENNOX_VENTILATION_MODE_ON
-    )
+    await conf_test_exception_handling(system, "ventilation_on", c, c.async_select_option, option=LENNOX_VENTILATION_MODE_ON)
     await conf_test_select_info_async_select_option(system, "ventilation_on", c, caplog)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_select_ventilation_mode_device_info(hass, manager_mz: Manager):
     manager = manager_mz
     await manager.create_devices()

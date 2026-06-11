@@ -18,6 +18,29 @@ Cloud Connections depending on the device model. We believe these configurations
 - Home Assistant >= 2023.3.0
 - Thermostat linked to a lennoxicomfort.com account or a Thermostat on local LAN with a static/ DHCP leased IP address
 
+# Development
+
+This repository includes a phased pre-commit configuration with basic file checks, Ruff formatting, and syntax-level linting on commit.
+
+Install and enable it in your local clone:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Run the default (lightweight) hooks on all files any time with:
+
+```bash
+pre-commit run --all-files
+```
+
+Run strict Ruff linting manually when you are ready:
+
+```bash
+pre-commit run ruff-strict-manual --all-files
+```
+
 # Important Information
 
 - Note: Where we mention S30 in this documentation that also applies to S40, E30 and M30
@@ -545,7 +568,7 @@ For example, setting this to 10 - will start ventilation for 10 minutes. After 1
 
 #### switch.<system_name>\_ventilation
 
-The switch will reflect the current state of the ventilation damper and will allow turning the mode on or off.  
+The switch will reflect the current state of the ventilation damper and will allow turning the mode on or off.
 The switch has the following attributes:
 
 | Attribute                | Type | Description                                                                       |

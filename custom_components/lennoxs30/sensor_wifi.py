@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -7,13 +8,10 @@
 import logging
 from typing import Any
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-from homeassistant.helpers.entity import EntityCategory
-
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from lennoxs30api import lennox_system
 
 from . import Manager
@@ -21,6 +19,7 @@ from .base_entity import S30BaseEntityMixin
 from .const import LENNOX_DOMAIN, UNIQUE_ID_SUFFIX_WIFI_RSSI
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class WifiRSSISensor(S30BaseEntityMixin, SensorEntity):
     """Class for Lennox S40 WTEnvSensor Sensors."""
@@ -35,7 +34,17 @@ class WifiRSSISensor(S30BaseEntityMixin, SensorEntity):
         _LOGGER.debug("async_added_to_hass WifiRSSISensor myname [%s]", self._myname)
         self._system.registerOnUpdateCallback(
             self.update_callback,
-            ["wifi_rssi", "wifi_macAddr", "wifi_ssid", "wifi_ip", "wifi_router","wifi_dns","wifi_dns2","wifi_subnetMask","wifi_bitRate"],
+            [
+                "wifi_rssi",
+                "wifi_macAddr",
+                "wifi_ssid",
+                "wifi_ip",
+                "wifi_router",
+                "wifi_dns",
+                "wifi_dns2",
+                "wifi_subnetMask",
+                "wifi_bitRate",
+            ],
         )
         await super().async_added_to_hass()
 
@@ -61,6 +70,7 @@ class WifiRSSISensor(S30BaseEntityMixin, SensorEntity):
         attrs["subnetMask"] = self._system.wifi_subnetMask
         attrs["bitRate"] = self._system.wifi_bitRate
         return attrs
+
     @property
     def name(self):
         return self._myname

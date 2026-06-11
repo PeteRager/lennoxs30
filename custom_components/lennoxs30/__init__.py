@@ -282,7 +282,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     index: int = 1
     if _FIRST_ENTRY_TITLE is None:
         _FIRST_ENTRY_TITLE = entry.title
-    if _FIRST_ENTRY_TITLE == entry.title:
+    if entry.title == _FIRST_ENTRY_TITLE:
         index = 0
 
     is_cloud = entry.data[CONF_CLOUD_CONNECTION]
@@ -406,7 +406,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
 
-class Manager(object):
+class Manager:
     """Manages the connection to cloud or local via API"""
 
     def __init__(

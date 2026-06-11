@@ -8,20 +8,18 @@
 
 from unittest.mock import patch
 
-from lennoxs30api.s30api_async import lennox_zone, LENNOX_NONE_STR
-from homeassistant.helpers import device_registry as dr
 import pytest
+from homeassistant.helpers import device_registry as dr
+from lennoxs30api.s30api_async import LENNOX_NONE_STR, lennox_zone
 
 from custom_components.lennoxs30 import (
     DOMAIN,
     Manager,
 )
-
 from custom_components.lennoxs30.const import (
     LENNOX_MFG,
     VENTILATION_EQUIPMENT_ID,
 )
-
 from custom_components.lennoxs30.device import (
     S30AuxiliaryUnit,
     S30ControllerDevice,
@@ -31,7 +29,7 @@ from custom_components.lennoxs30.device import (
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_devices_multiple_times(hass, manager_2_systems: Manager):
     manager = manager_2_systems
     device_registry = dr.async_get(hass)
@@ -48,7 +46,7 @@ async def test_create_devices_multiple_times(hass, manager_2_systems: Manager):
         assert len(manager.system_equip_device_map) == 2
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_devices(hass, manager_2_systems: Manager):
     manager = manager_2_systems
     device_registry = dr.async_get(hass)
@@ -128,7 +126,7 @@ async def test_create_devices(hass, manager_2_systems: Manager):
         assert elem[1] == zone.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_devices_no_outdoor(hass, manager: Manager):
     device_registry = dr.async_get(hass)
     system = manager.api.system_list[0]
@@ -190,7 +188,7 @@ async def test_create_devices_no_outdoor(hass, manager: Manager):
         assert elem[1] == zone.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_devices_no_indoor(hass, manager: Manager):
     device_registry = dr.async_get(hass)
     system = manager.api.system_list[0]
@@ -252,7 +250,7 @@ async def test_create_devices_no_indoor(hass, manager: Manager):
         assert elem[1] == zone.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zoning_ble: Manager):
     manager: Manager = manager_system_04_furn_ac_zoning_ble
     device_registry = dr.async_get(hass)
@@ -409,7 +407,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
             index += 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning: Manager):
     """Test to make sure we don't crash if no equipment is received"""
     manager = manager_system_04_furn_ac_zoning
@@ -469,7 +467,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert elem[1] == manager.api.system_list[0].unique_id + "_iu"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_S30VentilationUnit_device_model(hass, manager_2_systems: Manager):
     manager = manager_2_systems
     system = manager.api.system_list[1]

@@ -79,12 +79,8 @@ async def async_setup_entry(
 
     for system in manager.api.system_list:
         # We do not support setting diag level from a cloud connection
-        if manager.api.isLANConnection is False or (
-            manager.create_inverter_power is False and manager.create_diagnostic_sensors is False
-        ):
-            _LOGGER.debug(
-                "async_setup_entry - not creating diagnostic level number because inverter power and diagnostics not enabled"
-            )
+        if manager.api.isLANConnection is False or (manager.create_inverter_power is False and manager.create_diagnostic_sensors is False):
+            _LOGGER.debug("async_setup_entry - not creating diagnostic level number because inverter power and diagnostics not enabled")
         else:
             number = DiagnosticLevelNumber(hass, manager, system)
             number_list.append(number)
@@ -180,9 +176,7 @@ class DiagnosticLevelNumber(S30BaseEntityMixin, NumberEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -277,9 +271,7 @@ class DehumidificationOverCooling(S30BaseEntityMixin, NumberEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -353,9 +345,7 @@ class CirculateTime(S30BaseEntityMixin, NumberEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -422,13 +412,9 @@ class TimedVentilationNumber(S30BaseEntityMixin, NumberEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except ValueError as v:
-            raise HomeAssistantError(
-                f"TimedVentilationNumber::async_set_native_value invalid value [{value}] ValueError [{v}]"
-            ) from v
+            raise HomeAssistantError(f"TimedVentilationNumber::async_set_native_value invalid value [{value}] ValueError [{v}]") from v
         except Exception as ex:
-            raise HomeAssistantError(
-                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     @property
     def native_unit_of_measurement(self):
@@ -445,8 +431,26 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
 
     # These parameters are absolute temperatures and will be given a device class.
     absolute_temperature_pids: list[int] = [
-        202, 203, 105, 106, 128, 129, 55, 178, 194,
-        195, 179, 297, 298, 299, 300, 301, 302, 326, 327, 328
+        202,
+        203,
+        105,
+        106,
+        128,
+        129,
+        55,
+        178,
+        194,
+        195,
+        179,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        326,
+        327,
+        328,
     ]
 
     def __init__(
@@ -471,7 +475,6 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
         )
         self._attr_native_unit_of_measurement = lennox_uom_to_ha_uom(self.parameter.unit)
         self._attr_device_class = self._get_device_class()
-
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -501,9 +504,9 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_{self.equipment.equipment_id}_{self.parameter.pid}"
-        ).replace("-", "")
+        return (f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_{self.equipment.equipment_id}_{self.parameter.pid}").replace(
+            "-", ""
+        )
 
     @property
     def name(self):
@@ -537,12 +540,9 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
-
-    def _get_device_class(self)->NumberDeviceClass|None:
+    def _get_device_class(self) -> NumberDeviceClass | None:
         uom = self._attr_native_unit_of_measurement
         if uom in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT):
             # Many of the parameters are temperature offsets, for now we only
@@ -551,7 +551,6 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
             if self.parameter.pid in self.absolute_temperature_pids:
                 return NumberDeviceClass.TEMPERATURE
         return None
-
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -594,6 +593,7 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
                 f"async_set_zonetest_parameter unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             ) from ex
 
+
 class HumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
     """Set the diagnostic level in the S30."""
 
@@ -607,7 +607,7 @@ class HumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
         self._attr_device_class = NumberDeviceClass.HUMIDITY
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_native_step = 1
-        self._attr_device_info =  {
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, zone.unique_id)},
         }
         _LOGGER.debug("Create HumidifySetpointNumber myname [%s]", self._myname)
@@ -643,9 +643,7 @@ class HumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
 
 class DehumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
@@ -661,7 +659,7 @@ class DehumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
         self._attr_device_class = NumberDeviceClass.HUMIDITY
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_native_step = 1
-        self._attr_device_info =  {
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, zone.unique_id)},
         }
         _LOGGER.debug("Create DehumidifySetpointNumber myname [%s]", self._myname)
@@ -697,6 +695,4 @@ class DehumidifySetpointNumber(S30BaseEntityMixin, NumberEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"set_native_value [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"set_native_value unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex

@@ -7,26 +7,24 @@
 
 import logging
 from unittest.mock import patch
+
 import pytest
-
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfTemperature
-
 from lennoxs30api.s30api_async import (
+    LENNOX_BAD_STATUS,
     LENNOX_STATUS_GOOD,
     LENNOX_STATUS_NOT_AVAILABLE,
-    LENNOX_BAD_STATUS,
     lennox_system,
 )
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.sensor import S30OutdoorTempSensor
-
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]
@@ -65,7 +63,7 @@ async def test_outdoor_temperature_sensor(hass, manager: Manager, caplog):
             assert badstatus in msg
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_outdoor_temperature_sensor_subscription(hass, manager: Manager):
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]

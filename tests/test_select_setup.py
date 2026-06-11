@@ -3,23 +3,23 @@
 # pylint: disable=protected-access
 
 from unittest.mock import Mock
+
 import pytest
-
 from lennoxs30api.s30api_async import LENNOX_VENTILATION_2_SPEED_HRV, lennox_system
-from custom_components.lennoxs30 import Manager
 
+from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import MANAGER
 from custom_components.lennoxs30.select import (
     DehumidificationModeSelect,
-    HumidityModeSelect,
     EquipmentParameterSelect,
+    HumidityModeSelect,
     VentilationModeSelect,
     ZoneModeSelect,
     async_setup_entry,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_select_setup_entry(hass, manager: Manager):
     """Test the select setup"""
     system: lennox_system = manager.api.system_list[0]
@@ -91,7 +91,7 @@ async def test_async_select_setup_entry(hass, manager: Manager):
     assert async_add_entities.call_count == 1
     sensor_list = async_add_entities.call_args[0][0]
     assert len(sensor_list) == 15
-    for i in range(0, 15):
+    for i in range(15):
         assert isinstance(sensor_list[i], EquipmentParameterSelect)
 
     # VenitlatioNModeSelect should be created

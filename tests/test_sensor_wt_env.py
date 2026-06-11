@@ -1,22 +1,23 @@
 """Test BLE Sensors"""
+
 # pylint: disable=line-too-long
 import logging
 from unittest.mock import patch
-import pytest
 
+import pytest
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
-from lennoxs30api.s30api_async import lennox_system, LENNOX_PRODUCT_TYPE_S40
+from lennoxs30api.s30api_async import LENNOX_PRODUCT_TYPE_S40, lennox_system
+
 from custom_components.lennoxs30 import (
     Manager,
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.sensor import WTEnvSensor, lennox_wt_env_sensors
 from tests.conftest import conftest_base_entity_availability, loadfile
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_wt_env_sensor_text(hass, manager_system_04_furn_ac_zoning_ble: Manager):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -61,7 +62,7 @@ async def test_wt_env_sensor_text(hass, manager_system_04_furn_ac_zoning_ble: Ma
     assert sensor.available is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_wt_env_sensor_humidity(hass, manager_system_04_furn_ac_zoning_ble: Manager):
     """Test the wt_env sensosr"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -109,7 +110,7 @@ async def test_wt_env_sensor_humidity(hass, manager_system_04_furn_ac_zoning_ble
     assert sensor.available is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_wt_env_subscription(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Test the alert sensor subscription"""
     manager = manager_system_04_furn_ac_zoning_ble

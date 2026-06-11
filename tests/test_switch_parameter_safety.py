@@ -7,24 +7,22 @@
 
 import asyncio
 from unittest.mock import patch
+
 import pytest
-
 from homeassistant.helpers.entity import EntityCategory
-
 from lennoxs30api.s30api_async import lennox_system
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN, UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH
 from custom_components.lennoxs30.switch import S30ParameterSafetySwitch
-
 from tests.conftest import (
-    conftest_base_entity_availability,
     conf_test_switch_info_async_turn_off,
     conf_test_switch_info_async_turn_on,
+    conftest_base_entity_availability,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_parameter_safety_switch_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = S30ParameterSafetySwitch(hass, manager, system)
@@ -33,7 +31,7 @@ async def test_parameter_safety_switch_subscription(hass, manager: Manager):
     conftest_base_entity_availability(manager, system, c)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_parameter_safety_switch(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = S30ParameterSafetySwitch(hass, manager, system)
@@ -57,7 +55,7 @@ async def test_parameter_safety_switch(hass, manager: Manager):
     assert c.is_on is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_parameter_safety_switch_turn_on_off(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = S30ParameterSafetySwitch(hass, manager, system, 0.0)

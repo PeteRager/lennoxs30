@@ -31,7 +31,7 @@ from tests.conftest import (
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_unique_id(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -39,7 +39,7 @@ async def test_zone_dehum_unique_id(hass: HomeAssistant, manager: Manager) -> No
     assert c.unique_id == (zone.unique_id + "_DEHUM_SETPOINT").replace("-", "")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_name(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -48,7 +48,7 @@ async def test_zone_dehum_name(hass: HomeAssistant, manager: Manager) -> None:
     assert c.name == system.name + "_" + zone.name + "_dehum_setpoint"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_unit_of_measure(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -56,7 +56,7 @@ async def test_zone_dehum_unit_of_measure(hass: HomeAssistant, manager: Manager)
     assert c.unit_of_measurement == PERCENTAGE
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_max_value(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -65,7 +65,7 @@ async def test_zone_dehum_max_value(hass: HomeAssistant, manager: Manager) -> No
     assert c.max_value == zone.maxDehumSp
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_min_value(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -74,7 +74,7 @@ async def test_zone_dehum_min_value(hass: HomeAssistant, manager: Manager) -> No
     assert c.min_value == zone.minDehumSp
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_step(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -82,7 +82,7 @@ async def test_zone_dehum_step(hass: HomeAssistant, manager: Manager) -> None:
     assert c.step == 1.0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_value(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -90,7 +90,7 @@ async def test_zone_dehum_value(hass: HomeAssistant, manager: Manager) -> None:
     assert c.value == zone.desp
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_set_value(hass: HomeAssistant, manager: Manager, caplog: pytest.LogCaptureFixture) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -99,13 +99,13 @@ async def test_zone_dehum_set_value(hass: HomeAssistant, manager: Manager, caplo
     with patch.object(zone, "perform_humidify_setpoint") as perform_humidify_setpoint:
         await c.async_set_native_value(66.0)
         assert perform_humidify_setpoint.call_count == 1
-        assert perform_humidify_setpoint.call_args.kwargs["r_desp"]== 66.0
+        assert perform_humidify_setpoint.call_args.kwargs["r_desp"] == 66.0
 
     await conf_test_exception_handling(zone, "perform_humidify_setpoint", c, c.async_set_native_value, value=101)
     await conf_test_number_info_async_set_native_value(zone, "perform_humidify_setpoint", c, caplog)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_device_info(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]
@@ -116,7 +116,7 @@ async def test_zone_dehum_device_info(hass: HomeAssistant, manager: Manager) -> 
         assert x[1] == zone.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_dehum_subscription(hass: HomeAssistant, manager: Manager) -> None:
     system: lennox_system = manager.api.system_list[0]
     zone = system.zone_list[0]

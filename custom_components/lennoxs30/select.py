@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -97,7 +98,6 @@ async def async_setup_entry(
                     zone_emergency_heat = ZoneModeSelect(hass, manager, system, zone)
                     select_list.append(zone_emergency_heat)
 
-
     if len(select_list) != 0:
         async_add_entities(select_list, True)
 
@@ -193,9 +193,7 @@ class HumidityModeSelect(S30BaseEntityMixin, SelectEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"select_option [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"select_option unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"select_option unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -282,9 +280,7 @@ class DehumidificationModeSelect(S30BaseEntityMixin, SelectEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"select_option [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"select_option unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"select_option unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -331,9 +327,9 @@ class EquipmentParameterSelect(S30BaseEntityMixin, SelectEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT}_{self.equipment.equipment_id}_{self.parameter.pid}"
-        ).replace("-", "")
+        return (f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT}_{self.equipment.equipment_id}_{self.parameter.pid}").replace(
+            "-", ""
+        )
 
     @property
     def name(self):
@@ -471,6 +467,7 @@ class VentilationModeSelect(S30BaseEntityMixin, SelectEntity):
         attrs["installer_settings"] = self._system.ventilationControlMode
         return attrs
 
+
 class ZoneModeSelect(S30BaseEntityMixin, SelectEntity):
     """Set the zone hvac mode"""
 
@@ -511,7 +508,6 @@ class ZoneModeSelect(S30BaseEntityMixin, SelectEntity):
                 self._myname,
             )
         self.schedule_update_ha_state()
-
 
     @property
     def unique_id(self) -> str:

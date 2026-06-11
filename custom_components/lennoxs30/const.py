@@ -1,4 +1,5 @@
 """Constants used by the integration."""
+
 from typing import Final
 
 CONF_FAST_POLL_INTERVAL = "fast_scan_interval"

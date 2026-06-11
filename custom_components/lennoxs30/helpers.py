@@ -79,9 +79,7 @@ def helper_get_equipment_device_info(manager: Manager, system: lennox_system, eq
     }
 
 
-def helper_create_equipment_entity_name(
-    system: lennox_system, equipment: lennox_equipment, name: str, prefix: str | None = None
-) -> str:
+def helper_create_equipment_entity_name(system: lennox_system, equipment: lennox_equipment, name: str, prefix: str | None = None) -> str:
     """Create a name for the entity."""
     suffix = str(equipment.equipment_name)
     if equipment.equipment_id == 1:
@@ -110,9 +108,7 @@ def helper_create_system_unique_id(system: lennox_system, suffix: str) -> str:
     return result.replace(" ", "_").replace("-", "").replace(".", "").replace("__", "_")
 
 
-def helper_get_parameter_extra_attributes(
-    equipment: lennox_equipment, parameter: lennox_equipment_parameter
-) -> dict[str, Any]:
+def helper_get_parameter_extra_attributes(equipment: lennox_equipment, parameter: lennox_equipment_parameter) -> dict[str, Any]:
     """Construct extra attributes for equipment."""
     attrs: dict[str, Any] = {}
     attrs["equipment_id"] = equipment.equipment_id

@@ -11,26 +11,22 @@ import logging
 import time
 from unittest import mock
 from unittest.mock import patch
+
 import pytest
-
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, METRIC_SYSTEM
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, device_registry as dr
-
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from lennoxs30api.s30api_async import (
     lennox_system,
 )
-
 from lennoxs30api.s30exception import (
-    S30Exception,
-    EC_LOGIN,
-    EC_CONFIG_TIMEOUT,
     EC_COMMS_ERROR,
-    EC_UNAUTHORIZED,
+    EC_CONFIG_TIMEOUT,
     EC_HTTP_ERR,
+    EC_LOGIN,
+    EC_UNAUTHORIZED,
+    S30Exception,
 )
-
 
 from custom_components.lennoxs30 import (
     DS_CONNECTED,
@@ -41,10 +37,9 @@ from custom_components.lennoxs30 import (
     RETRY_INTERVAL_SECONDS,
     Manager,
 )
-from custom_components.lennoxs30.const import LENNOX_DOMAIN
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_configuration_initialization_cloud_offline(manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     system.cloud_status = "offline"
@@ -58,7 +53,7 @@ async def test_manager_configuration_initialization_cloud_offline(manager: Manag
             assert "offline" in caplog.messages[0]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_configuration_initialization_cloud_online(manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     system.cloud_status = "online"
@@ -70,7 +65,7 @@ async def test_manager_configuration_initialization_cloud_online(manager: Manage
             assert len(caplog.records) == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_configuration_initialization(manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     system.cloud_status = "online"
@@ -83,16 +78,10 @@ async def test_manager_configuration_initialization(manager: Manager, caplog):
                     caplog.clear()
                     await manager.configuration_initialization()
                     assert len(caplog.records) == 3
-                    assert (
-                        "configuration_initialization waiting for zone config to arrive host"
-                        in caplog.records[0].message
-                    )
+                    assert "configuration_initialization waiting for zone config to arrive host" in caplog.records[0].message
                     assert manager._ip_address in caplog.records[0].message
 
-                    assert (
-                        "configuration_initialization waiting for zone config to arrive host"
-                        in caplog.records[1].message
-                    )
+                    assert "configuration_initialization waiting for zone config to arrive host" in caplog.records[1].message
                     assert manager._ip_address in caplog.records[1].message
 
                     assert sleep.call_count == 1
@@ -132,7 +121,7 @@ class CloudPresence:
             self.system.cloud_status = "offline"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_update_cloud_presence(manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     system.cloud_status = "online"
@@ -274,10 +263,7 @@ async def test_manager_update_cloud_presence(manager: Manager, caplog):
                 assert update_system_online_cloud.call_count == 0
                 assert mock_subscribe.call_count == 0
                 assert manager.last_cloud_presence_poll is not None
-                assert (
-                    manager.last_cloud_presence_poll < time.time()
-                    and manager.last_cloud_presence_poll > time.time() - 10.0
-                )
+                assert manager.last_cloud_presence_poll < time.time() and manager.last_cloud_presence_poll > time.time() - 10.0
                 assert len(caplog.records) == 0
                 assert manager._reinitialize is False
 
@@ -292,27 +278,24 @@ async def test_manager_update_cloud_presence(manager: Manager, caplog):
                 assert update_system_online_cloud.call_count == 1
                 assert mock_subscribe.call_count == 0
                 assert manager.last_cloud_presence_poll is not None
-                assert (
-                    manager.last_cloud_presence_poll < time.time()
-                    and manager.last_cloud_presence_poll > time.time() - 10.0
-                )
+                assert manager.last_cloud_presence_poll < time.time() and manager.last_cloud_presence_poll > time.time() - 10.0
                 assert len(caplog.records) == 0
                 assert manager._reinitialize is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_metric_units(hass: HomeAssistant, manager: Manager):
     assert hass.config.units is METRIC_SYSTEM
     assert manager.is_metric is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_us_customary_units(hass: HomeAssistant, manager_us_customary_units: Manager):
     assert hass.config.units is US_CUSTOMARY_SYSTEM
     assert manager_us_customary_units.is_metric is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_s30_initialize(hass: HomeAssistant, manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     with patch.object(manager, "updateState") as update_state:
@@ -343,7 +326,7 @@ async def test_manager_s30_initialize(hass: HomeAssistant, manager_us_customary_
                             assert forward_entry_setups.call_count == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_s30_initialize_retry_task(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     with patch.object(manager, "updateState") as update_state:
@@ -398,7 +381,7 @@ async def test_manager_s30_initialize_retry_task(manager_us_customary_units: Man
                 assert sleep.mock_calls[1].args[0] == RETRY_INTERVAL_SECONDS
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_connect(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     with patch.object(manager.api, "serverConnect") as server_connect:
@@ -407,7 +390,7 @@ async def test_manager_connect(manager_us_customary_units: Manager):
         assert len(server_connect.mock_calls[0].args) == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_connect_subscribe(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     system: lennox_system = manager.api.system_list[0]
@@ -422,7 +405,7 @@ async def test_manager_connect_subscribe(manager_us_customary_units: Manager):
             assert subscribe.mock_calls[0].args[0] == system
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_reinitialize_task(manager_us_customary_units: Manager, caplog):
     manager = manager_us_customary_units
     with caplog.at_level(logging.DEBUG):
@@ -491,7 +474,7 @@ async def test_manager_reinitialize_task(manager_us_customary_units: Manager, ca
                     assert update_state.mock_calls[0].args[0] == DS_CONNECTING
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_messagePump_task(manager_us_customary_units: Manager, caplog):
     manager = manager_us_customary_units
     with caplog.at_level(logging.DEBUG):
@@ -793,7 +776,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                                         assert manager._ip_address in caplog.records[0].message
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_messagePump(manager_us_customary_units: Manager, caplog):
     manager = manager_us_customary_units
     manager._err_cnt = 1
@@ -923,7 +906,7 @@ async def test_manager_messagePump(manager_us_customary_units: Manager, caplog):
                 assert manager._ip_address in caplog.records[0].message
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_get_reinitialize(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     manager._reinitialize = False
@@ -932,7 +915,7 @@ async def test_manager_get_reinitialize(manager_us_customary_units: Manager):
     assert manager.get_reinitialize() is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_async_shutdown_s30_initialize(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     manager._climate_entities_initialized = True
@@ -956,7 +939,7 @@ async def test_manager_async_shutdown_s30_initialize(manager_us_customary_units:
         assert ex is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_async_shutdown_reinitialize(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
     manager._climate_entities_initialized = True
@@ -980,7 +963,7 @@ async def test_manager_async_shutdown_reinitialize(manager_us_customary_units: M
         assert ex is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_unique_id_update_nop(manager_us_customary_units: Manager):
     manager = manager_us_customary_units
 
@@ -1002,14 +985,12 @@ async def test_manager_unique_id_update_nop(manager_us_customary_units: Manager)
         assert patch__update_entity_unique_ids.call_count == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manager_unique_id_update_errors(manager_us_customary_units: Manager, caplog):
     manager = manager_us_customary_units
     system = manager.api.system_list[0]
     system.productType = "S40"
-    with caplog.at_level(logging.ERROR), patch.object(
-        manager, "_update_device_unique_ids"
-    ) as patch_update_device_unique_ids, patch.object(
+    with caplog.at_level(logging.ERROR), patch.object(manager, "_update_device_unique_ids") as patch_update_device_unique_ids, patch.object(
         manager, "_update_entity_unique_ids"
     ) as patch__update_entity_unique_ids:
         caplog.clear()
@@ -1022,9 +1003,7 @@ async def test_manager_unique_id_update_errors(manager_us_customary_units: Manag
         assert "this is the error" in caplog.messages[0]
         assert "Failed to update entity unique_ids" in caplog.messages[0]
 
-    with caplog.at_level(logging.ERROR), patch.object(
-        manager, "_update_device_unique_ids"
-    ) as patch_update_device_unique_ids, patch.object(
+    with caplog.at_level(logging.ERROR), patch.object(manager, "_update_device_unique_ids") as patch_update_device_unique_ids, patch.object(
         manager, "_update_entity_unique_ids"
     ) as patch_update_entity_unique_ids:
         caplog.clear()

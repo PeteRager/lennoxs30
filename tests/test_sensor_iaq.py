@@ -1,21 +1,21 @@
 """Test BLE Sensors"""
+
 # pylint: disable=line-too-long
 import logging
 from unittest.mock import patch
+
 import pytest
-
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-
 from lennoxs30api.s30api_async import lennox_system
+
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.sensor import S40IAQSensor, lennox_iaq_sensors
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_iaq_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -61,7 +61,7 @@ async def test_iaq_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
     assert sensor.native_value == system.iaq_mitigation_action
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_iaq_subscription(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Test the alert sensor subscription"""
     manager = manager_system_04_furn_ac_zoning_ble

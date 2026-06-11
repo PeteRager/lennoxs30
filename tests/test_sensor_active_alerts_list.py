@@ -1,22 +1,23 @@
 """Test Sensor Alert"""
-from unittest.mock import patch
-import pytest
 
+from unittest.mock import patch
+
+import pytest
 from lennoxs30api.s30api_async import (
     lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.sensor import (
     S30ActiveAlertsList,
 )
 from tests.conftest import conftest_base_entity_availability, loadfile
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_active_alerts_sensor(hass, manager: Manager):
     """Test the alert sensor"""
     manager.is_metric = False
@@ -73,7 +74,7 @@ async def test_active_alerts_sensor(hass, manager: Manager):
         assert ids[1] == system.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_active_alerts_subscription(hass, manager: Manager):
     """Test the alert sensor subscription"""
     system: lennox_system = manager.api.system_list[0]
@@ -82,7 +83,7 @@ async def test_active_alerts_subscription(hass, manager: Manager):
 
     with patch.object(sensor, "schedule_update_ha_state") as update_callback:
         manager.is_metric = False
-        update = {"active_alerts": ["a","b","c","d"]}
+        update = {"active_alerts": ["a", "b", "c", "d"]}
         system.attr_updater(update, "active_alerts")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1

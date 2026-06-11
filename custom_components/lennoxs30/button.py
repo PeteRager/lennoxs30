@@ -123,7 +123,7 @@ class ResetSmartHubButton(S30BaseEntityMixin, ButtonEntity):
         return helper_create_system_unique_id(self._system, UNIQUE_ID_SUFFIX_RESET_SMART_HUB)
 
     @property
-    def name(self) ->str:
+    def name(self) -> str:
         """Return entity name."""
         return self._myname
 
@@ -141,7 +141,7 @@ class ResetSmartHubButton(S30BaseEntityMixin, ButtonEntity):
             err = f"Unable ResetSmartHub [{self._myname}] [{ex.as_string()}]"
             raise HomeAssistantError(err) from ex
         except Exception as ex:
-            err = f"ResetSmartHubButton::async_press unexpected exception, please log issue, [{self._myname}] exception [{ex}]"  # noqa: E501
+            err = f"ResetSmartHubButton::async_press unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             raise HomeAssistantError(err) from ex
 
     @property

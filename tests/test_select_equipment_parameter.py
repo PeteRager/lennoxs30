@@ -8,26 +8,23 @@
 
 import logging
 from unittest.mock import patch
+
 import pytest
-
 from homeassistant.exceptions import HomeAssistantError
-
 from lennoxs30api.s30api_async import lennox_system
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.select import EquipmentParameterSelect
-
-
 from tests.conftest import (
     conf_test_exception_handling,
+    conf_test_select_info_async_select_option,
     conftest_base_entity_availability,
     conftest_parameter_extra_attributes,
-    conf_test_select_info_async_select_option,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_select_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -36,7 +33,7 @@ async def test_equipment_parameter_select_unique_id(hass, manager: Manager):
     assert c.unique_id == f"{system.unique_id}_EPS_{equipment.equipment_id}_{parameter.pid}".replace("-", "")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_select_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -45,7 +42,7 @@ async def test_equipment_parameter_select_name(hass, manager: Manager):
     assert c.name == "South_Moetown_par_Smooth_Setback_Recovery"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_select_current_option(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -73,7 +70,7 @@ async def test_equipment_parameter_select_current_option(hass, manager: Manager,
         assert "Disabled" in caplog.messages[0]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_select_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -89,7 +86,7 @@ async def test_equipment_parameter_select_subscription(hass, manager: Manager):
     conftest_base_entity_availability(manager, system, c)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_select_options(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -103,7 +100,7 @@ async def test_equipment_parameter_select_options(hass, manager_mz: Manager):
     assert "Disabled" in opt
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_select_async_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -157,13 +154,11 @@ async def test_equipment_parameter_select_async_select_options(hass, manager_mz:
             assert "unexpected" in msg
             assert c.name in msg
 
-    await conf_test_exception_handling(
-        system, "set_equipment_parameter_value", c, c.async_select_option, option="bad_value"
-    )
+    await conf_test_exception_handling(system, "set_equipment_parameter_value", c, c.async_select_option, option="bad_value")
     await conf_test_select_info_async_select_option(system, "set_equipment_parameter_value", c, caplog)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_select_device_info(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     await manager.create_devices()

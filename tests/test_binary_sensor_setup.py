@@ -1,35 +1,36 @@
 """Tests binary sensor setup"""
+
 # pylint: disable=protected-access
 import logging
 from unittest.mock import Mock
-import pytest
 
+import pytest
 from lennoxs30api.s30api_async import (
-    lennox_system,
-    LENNOX_OUTDOOR_UNIT_HP,
     LENNOX_OUTDOOR_UNIT_AC,
+    LENNOX_OUTDOOR_UNIT_HP,
+    lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
-from custom_components.lennoxs30.binary_sensor_ble import BleBinarySensor, BleCommStatusBinarySensor
-from custom_components.lennoxs30.const import MANAGER
-
 from custom_components.lennoxs30.binary_sensor import (
     S30AuxheatHighAmbientLockout,
+    S30CloudConnectedStatus,
     S30HeatpumpLowAmbientLockout,
     S30HomeStateBinarySensor,
     S30InternetStatus,
     S30RelayServerStatus,
-    S30CloudConnectedStatus,
     async_setup_entry,
 )
+from custom_components.lennoxs30.binary_sensor_ble import BleBinarySensor, BleCommStatusBinarySensor
+from custom_components.lennoxs30.const import MANAGER
 from tests.conftest import loadfile
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
-    """test the binary sensor setup"""
+    """Test the binary sensor setup"""
     system: lennox_system = manager.api.system_list[0]
     entry = manager.config_entry
     hass.data["lennoxs30"] = {}

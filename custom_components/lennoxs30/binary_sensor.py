@@ -95,9 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                             )
                             continue
                         status_value = ble_device.inputs[sensor_dict["status_id"]]
-                    sensor_list.append(
-                        BleBinarySensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict)
-                    )
+                    sensor_list.append(BleBinarySensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict))
             else:
                 _LOGGER.error(
                     "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
@@ -110,9 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         async_add_entities(sensor_list, update_before_add=True)
         _LOGGER.debug("binary_sensor:async_setup_platform exit - created [%d] entitites", len(sensor_list))
     else:
-        _LOGGER.warning(
-            "binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen"
-        )
+        _LOGGER.warning("binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen")
     return True
 
 

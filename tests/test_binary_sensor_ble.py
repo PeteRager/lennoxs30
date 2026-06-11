@@ -1,25 +1,26 @@
 """Test BLE Sensors"""
+
 # pylint: disable=line-too-long
 import logging
 from unittest.mock import patch
-import pytest
 
+import pytest
 from lennoxs30api.s30api_async import (
-    lennox_system,
     LENNOX_BLE_COMMSTATUS_AVAILABLE,
     LENNOX_BLE_STATUS_INPUT_AVAILABLE,
+    lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
-from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.binary_sensor import BleBinarySensor
 from custom_components.lennoxs30.ble_device_22v25 import lennox_22v25_binary_sensors
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ble_binary_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -57,7 +58,7 @@ async def test_ble_binary_sensor(hass, manager_system_04_furn_ac_zoning_ble: Man
     assert sensor.available is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ble_binary_sensorsubscription(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Test the alert sensor subscription"""
     manager = manager_system_04_furn_ac_zoning_ble
