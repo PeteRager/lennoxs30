@@ -12,10 +12,10 @@ import pytest
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
-    FREQUENCY_HERTZ,
-    ELECTRIC_CURRENT_AMPERE,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    ELECTRIC_POTENTIAL_VOLT,
+    UnitOfFrequency,
+    UnitOfElectricCurrent,
+    UnitOfVolumeFlowRate,
+    UnitOfElectricPotential,
     UnitOfTime,
     REVOLUTIONS_PER_MINUTE,
 )
@@ -181,25 +181,25 @@ async def test_diag_sensor_unit_of_measure_device_class(hass, manager: Manager):
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[16]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.unit_of_measurement == FREQUENCY_HERTZ
+    assert s.unit_of_measurement == UnitOfFrequency.HERTZ
     assert s.device_class == SensorDeviceClass.FREQUENCY
 
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[20]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.unit_of_measurement == ELECTRIC_CURRENT_AMPERE
+    assert s.unit_of_measurement == UnitOfElectricCurrent.AMPERE
     assert s.device_class == SensorDeviceClass.CURRENT
 
     equipment = system.equipment[1]
     diagnostic = equipment.diagnostics[21]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT
+    assert s.unit_of_measurement == UnitOfElectricPotential.VOLT
     assert s.device_class == SensorDeviceClass.VOLTAGE
 
     equipment = system.equipment[2]
     diagnostic: lennox_equipment_diagnostic = equipment.diagnostics[1]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.unit_of_measurement == VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE
+    assert s.unit_of_measurement == UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE
     assert s.device_class is None
 
     diagnostic.unit = "my_custom_unit"
@@ -225,7 +225,7 @@ async def test_diag_sensor_device_info(hass, manager_system_04_furn_ac_zoning: M
     equipment = system.equipment[2]
     diagnostic = equipment.diagnostics[1]
     s = S30DiagSensor(hass, manager, system, equipment, diagnostic)
-    assert s.unit_of_measurement == VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE
+    assert s.unit_of_measurement == UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE
     assert s.device_class is None
 
     identifiers = s.device_info["identifiers"]
