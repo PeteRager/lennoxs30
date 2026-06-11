@@ -38,7 +38,7 @@ pre-commit run --all-files
 Run strict Ruff linting manually when you are ready:
 
 ```bash
-pre-commit run ruff-strict-manual --all-files
+ruff check .
 ```
 
 # Important Information
