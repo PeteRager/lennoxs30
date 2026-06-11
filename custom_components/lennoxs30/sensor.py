@@ -722,6 +722,11 @@ class S30ZoneDemandSensor(S30BaseEntityMixin, SensorEntity):
             "identifiers": {(DOMAIN, self._zone.unique_id)},
         }
 
+    @property
+    def native_unit_of_measurement(self):
+        """Return native unit of measurement."""
+        return PERCENTAGE
+
 
 class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
     """Class for Lennox S30 inverter power."""

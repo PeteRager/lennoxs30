@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from homeassistant.const import PERCENTAGE
 
 from lennoxs30api.s30api_async import lennox_system, lennox_zone
 from custom_components.lennoxs30 import Manager
@@ -31,6 +32,7 @@ async def test_zone_runtime_sensors_init(hass, manager: Manager):
 
     assert humidity_operation.entity_category == "diagnostic"
     assert air_demand.entity_category == "diagnostic"
+    assert air_demand.native_unit_of_measurement == PERCENTAGE
 
     zone.humOperation = "dehumidifying"
     zone.demand = 42.5
