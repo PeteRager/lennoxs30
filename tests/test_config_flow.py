@@ -1073,6 +1073,7 @@ async def test_lennoxS30ConfigFlow_async_get_options_flow(manager: Manager, hass
     cf.hass = hass
     assert isinstance(cf, OptionsFlowHandler)
 
+
 @pytest.mark.skip
 @pytest.mark.asyncio
 async def test_OptionsFlowHandler_async_step_init_local(config_entry_local, hass, caplog):
@@ -1101,6 +1102,7 @@ async def test_OptionsFlowHandler_async_step_init_local(config_entry_local, hass
     si = schema[CONF_LOG_MESSAGES_TO_FILE]
     si = schema[CONF_MESSAGE_DEBUG_FILE]
     assert len(schema) == 16
+
 
 @pytest.mark.skip
 @pytest.mark.asyncio
