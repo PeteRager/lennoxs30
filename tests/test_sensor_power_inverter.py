@@ -1,4 +1,3 @@
-from distutils.log import warn
 import logging
 from lennoxs30api.s30api_async import (
     LENNOX_STATUS_NOT_EXIST,
@@ -17,7 +16,7 @@ from custom_components.lennoxs30.sensor import (
     S30InverterPowerSensor,
 )
 
-from homeassistant.const import POWER_WATT
+from homeassistant.const import UnitOfPower
 
 from homeassistant.components.sensor import (
     SensorStateClass, SensorDeviceClass
@@ -66,7 +65,7 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
         assert len(caplog.records) == 1
         assert "NAN" in caplog.messages[0]
 
-    assert s.unit_of_measurement == POWER_WATT
+    assert s.unit_of_measurement == UnitOfPower.WATT
 
     assert s.device_class == SensorDeviceClass.POWER
     assert s.state_class == SensorStateClass.MEASUREMENT
