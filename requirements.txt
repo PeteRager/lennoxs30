@@ -1,2 +1,4 @@
- pytest-homeassistant-custom-component
- setuptools
+pytest-homeassistant-custom-component==0.13.338
+syrupy==5.2.0
+setuptools
+lennoxs30api==0.2.23

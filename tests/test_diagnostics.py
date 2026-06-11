@@ -3,8 +3,6 @@
 # pylint: disable=line-too-long
 import pytest
 from homeassistant import config_entries
-from syrupy import SnapshotAssertion
-from syrupy.filters import paths
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import MANAGER
@@ -12,16 +10,103 @@ from custom_components.lennoxs30.diagnostics import async_get_config_entry_diagn
 
 
 @pytest.mark.asyncio()
-async def test_diagnostics_local(
-    snapshot: SnapshotAssertion, hass, manager_system_04_furn_ac_zoning_ble: Manager, config_entry_local: config_entries.ConfigEntry
-):
+async def test_diagnostics_local(hass, manager_system_04_furn_ac_zoning_ble: Manager, config_entry_local: config_entries.ConfigEntry):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
     entry = manager.config_entry = config_entry_local
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
     diags = await async_get_config_entry_diagnostics(hass, entry)
-    assert snapshot(exclude=paths("comm_metrics.last_message_time")) == diags
+
+    # last_message_time is expected to vary, so compare all other diagnostics fields.
+    diags["comm_metrics"].pop("last_message_time", None)
+    assert diags == {
+        "comm_metrics": {
+            "bytes_in": 0,
+            "bytes_out": 0,
+            "client_response_errors": 0,
+            "connection_errors": 0,
+            "diagLevel": None,
+            "error_count": 0,
+            "hostname": "10.0.0.1",
+            "http_2xx_cnt": 0,
+            "http_4xx_cnt": 0,
+            "http_5xx_cnt": 0,
+            "last_error_time": None,
+            "last_receive_time": None,
+            "last_reconnect_time": None,
+            "message_count": 6,
+            "receive_count": 0,
+            "send_count": 0,
+            "sender_message_drop": 0,
+            "server_disconnects": 0,
+            "sibling_id": set(),
+            "sibling_ip": set(),
+            "sibling_message_drop": 0,
+            "softwareVersion": "3.81.207",
+            "sysUpTime": 107460,
+            "timeouts": 0,
+        },
+        "config": {
+            "allergen_defender_switch": True,
+            "app_id": "ha_prod",
+            "cloud_connection": False,
+            "create_diagnostic_sensors": True,
+            "create_inverter_power": True,
+            "create_parameters": True,
+            "create_sensors": True,
+            "fast_scan_count": 5,
+            "fast_scan_interval": 1.0,
+            "host": "10.0.0.1",
+            "init_wait_time": 30,
+            "log_messages_to_file": False,
+            "message_debug_file": "",
+            "message_debug_logging": False,
+            "pii_in_message_logs": False,
+            "protocol": "https",
+            "scan_interval": 10,
+            "timeout": 30,
+        },
+        "system": {
+            "0000000-0000-0000-0000-000000000001": {
+                "cloud_status": None,
+                "diagLevel": None,
+                "equipment": {
+                    0: {
+                        "eqType": 0,
+                        "eqTypeName": "System",
+                        "model": "105081-07",
+                        "name": "Subnet controller",
+                    },
+                    1: {
+                        "eqType": 18,
+                        "eqTypeName": "Air Conditioner",
+                        "model": "EL18XCVS036-230A01",
+                        "name": "Outdoor Unit",
+                    },
+                    2: {
+                        "eqType": 16,
+                        "eqTypeName": "Furnace",
+                        "model": "SLP99UH110XV60C-01",
+                        "name": "Furnace",
+                    },
+                    3: {
+                        "eqType": 22,
+                        "eqTypeName": "Zoning Controller (zone 1 to 4)",
+                        "model": "103916-03",
+                        "name": "Zoning Controller (zone 1 to 4)",
+                    },
+                },
+                "internet": None,
+                "productType": "S30",
+                "relayServer": None,
+                "sibling_identifier": set(),
+                "sibling_ip": set(),
+                "softwareVersion": "3.81.207",
+                "sysUpTime": 107460,
+            }
+        },
+    }
 
 
 @pytest.mark.asyncio()
