@@ -1,18 +1,16 @@
-import logging
+from unittest.mock import Mock
+
+import pytest
 from lennoxs30api.s30api_async import (
     LENNOX_NONE_STR,
     LENNOX_VENTILATION_DAMPER,
     lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
-import pytest
 from custom_components.lennoxs30.const import MANAGER
-
-
-from unittest.mock import Mock
-
 from custom_components.lennoxs30.switch import (
     S30AllergenDefenderSwitch,
     S30ManualAwayModeSwitch,
@@ -24,7 +22,7 @@ from custom_components.lennoxs30.switch import (
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_switch_setup_entry(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     entry = manager.config_entry

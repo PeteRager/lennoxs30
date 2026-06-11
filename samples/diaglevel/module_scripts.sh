@@ -14,4 +14,3 @@ build_template()
    sed "s/SYSTEM_NAME/$1/g" lennoxs30_diag_level_template_package.yaml > $TARGET/packages/lennoxs30_diagmode_template_$1_package.yaml
    sed "s/SYSTEM_NAME/$1/g" lennoxs30_diag_level_template_automation.yaml > $TARGET/automation/lennoxs30_diagmode_template_$1_automation.yaml
 }
-

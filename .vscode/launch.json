@@ -23,7 +23,7 @@
         "presentation": {
             "hidden": true, // keep original launch order in 'run and debug' tab
         }
-    }      
+    }
   ],
   "version": "0.2.0"
 }

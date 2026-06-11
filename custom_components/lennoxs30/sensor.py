@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -7,36 +8,37 @@
 import logging
 from typing import Any
 
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    UnitOfPower,
-    UnitOfTemperature,
-    UnitOfFrequency,
+    REVOLUTIONS_PER_MINUTE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    REVOLUTIONS_PER_MINUTE,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.components.sensor import (
-    SensorStateClass,
-    SensorEntity,
-    SensorDeviceClass,
-)
-
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from lennoxs30api import (
-    lennox_system,
-    lennox_zone,
-    lennox_equipment,
-    lennox_equipment_diagnostic,
     LENNOX_BAD_STATUS,
     LENNOX_STATUS_NOT_EXIST,
+    lennox_equipment,
+    lennox_equipment_diagnostic,
+    lennox_system,
+    lennox_zone,
 )
 
 from . import Manager
 from .base_entity import S30BaseEntityMixin
+from .ble_device_21p02 import lennox_21p02_sensors, lennox_iaq_sensors
+from .ble_device_22v25 import lennox_22v25_sensors
 from .const import (
     MANAGER,
     UNIQUE_ID_SUFFIX_ACTIVE_ALERTS_SENSOR,
@@ -44,12 +46,10 @@ from .const import (
     UNIQUE_ID_SUFFIX_DIAG_SENSOR,
 )
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
-from .ble_device_22v25 import lennox_22v25_sensors
-from .ble_device_21p02 import lennox_21p02_sensors, lennox_iaq_sensors
 from .sensor_ble import S40BleSensor
 from .sensor_iaq import S40IAQSensor
 from .sensor_wifi import WifiRSSISensor
-from .sensor_wt_env import lennox_wt_env_sensors, WTEnvSensor, lennox_wt_env_sensors_metric, lennox_wt_env_sensors_us
+from .sensor_wt_env import WTEnvSensor, lennox_wt_env_sensors, lennox_wt_env_sensors_metric, lennox_wt_env_sensors_us
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,9 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if manager.create_inverter_power:
             _LOGGER.debug("Create S30InverterPowerSensor system [%s]", system.sysId)
             if system.diagLevel != 2:
-                _LOGGER.warning(
-                    "Power Inverter Sensor requires S30 to be in diagLevel 2, currently in [%s]", system.diagLevel
-                )
+                _LOGGER.warning("Power Inverter Sensor requires S30 to be in diagLevel 2, currently in [%s]", system.diagLevel)
             if system.internetStatus or system.relayServerConnected:
                 _LOGGER.warning(
                     "To prevent S30 instability - Power Inverter Sensor requires S30 to be isolated from internet - internetStatus [%s] relayServerConnected [%s] - https://github.com/PeteRager/lennoxs30/blob/master/docs/diagnostics.md",
@@ -164,9 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                             )
                             continue
                         status_value = ble_device.inputs[sensor_dict["status_id"]]
-                    sensor_list.append(
-                        S40BleSensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict)
-                    )
+                    sensor_list.append(S40BleSensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict))
             else:
                 _LOGGER.error(
                     "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
@@ -269,9 +265,9 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
-        return (
-            f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_DIAG_SENSOR}_{self._equipment.equipment_id}_{self._diagnostic.name}"
-        ).replace("-", "")
+        return (f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_DIAG_SENSOR}_{self._equipment.equipment_id}_{self._diagnostic.name}").replace(
+            "-", ""
+        )
 
     @property
     def name(self):
@@ -284,9 +280,7 @@ class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
     @property
     def device_class(self):
         uom = self.native_unit_of_measurement
-        if uom == UnitOfTemperature.FAHRENHEIT:
-            return SensorDeviceClass.TEMPERATURE
-        elif uom == UnitOfTemperature.CELSIUS:
+        if uom == UnitOfTemperature.FAHRENHEIT or uom == UnitOfTemperature.CELSIUS:
             return SensorDeviceClass.TEMPERATURE
         elif uom == UnitOfElectricPotential.VOLT:
             return SensorDeviceClass.VOLTAGE
@@ -635,10 +629,7 @@ class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
         if self._system.diagInverterInputVoltage is None or self._system.diagInverterInputCurrent is None:
             _LOGGER.debug("Values are None for diagnostic sensors  [%s]", self._myname)
             return None
-        if (
-            self._system.diagInverterInputVoltage == "waiting..."
-            or self._system.diagInverterInputCurrent == "waiting..."
-        ):
+        if self._system.diagInverterInputVoltage == "waiting..." or self._system.diagInverterInputCurrent == "waiting...":
             _LOGGER.debug("System is waiting for values for diagnostic sensors [%s]", self._myname)
             return None
         try:

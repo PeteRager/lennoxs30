@@ -1,34 +1,24 @@
 import logging
+from unittest.mock import patch
+
+import pytest
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfPower
 from lennoxs30api.s30api_async import (
-    LENNOX_STATUS_NOT_EXIST,
-    LENNOX_STATUS_GOOD,
-    LENNOX_STATUS_NOT_AVAILABLE,
     lennox_system,
-    lennox_zone,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
-import pytest
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.sensor import (
     S30InverterPowerSensor,
 )
-
-from homeassistant.const import UnitOfPower
-
-from homeassistant.components.sensor import (
-    SensorStateClass, SensorDeviceClass
-)
-
-
-from unittest.mock import patch
-
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_power_inverter_sensor(hass, manager: Manager, caplog):
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]
@@ -76,7 +66,7 @@ async def test_power_inverter_sensor(hass, manager: Manager, caplog):
         assert x[1] == system.unique_id + "_ou"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_power_inverter_sensor_subscription(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     system.diagLevel = 2

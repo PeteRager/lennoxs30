@@ -224,7 +224,6 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return UnitOfTemperature.FAHRENHEIT
         return UnitOfTemperature.CELSIUS
 
-
     @property
     def _min_heat_cool_temp(self) -> float:
         if self._system.single_setpoint_mode:
@@ -233,7 +232,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return self._zone.minCspC
         if self._manager.is_metric is False:
             return self._zone.minHsp
-        return self._zone.minHspC        
+        return self._zone.minHspC
 
     @property
     def min_temp(self) -> float:
@@ -250,9 +249,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return self._zone.minHspC
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
             return self._min_heat_cool_temp
-        _LOGGER.warning(
-            "min_temp - unexpected system mode [%s] returning default - please raise an issue", self._zone.systemMode
-        )
+        _LOGGER.warning("min_temp - unexpected system mode [%s] returning default - please raise an issue", self._zone.systemMode)
         return super().min_temp
 
     @property
@@ -263,7 +260,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return self._zone.maxHspC
         if self._manager.is_metric is False:
             return self._zone.maxCsp
-        return self._zone.maxCspC        
+        return self._zone.maxCspC
 
     @property
     def max_temp(self) -> float:
@@ -280,9 +277,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return self._zone.maxHspC
         if self._zone.systemMode == LENNOX_HVAC_HEAT_COOL:
             return self._max_heat_cool_temp
-        _LOGGER.warning(
-            "max_temp - unexpected system mode [%s] returning default - please raise an issue", self._zone.systemMode
-        )
+        _LOGGER.warning("max_temp - unexpected system mode [%s] returning default - please raise an issue", self._zone.systemMode)
         return super().max_temp
 
     @property
@@ -324,9 +319,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return None
         if self._manager.is_metric is False:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug(
-                    "climate:target_temperature_high name [%s] temperature [%s] F", self._myname, self._zone.csp
-                )
+                _LOGGER.debug("climate:target_temperature_high name [%s] temperature [%s] F", self._myname, self._zone.csp)
             return self._zone.csp
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("climate:target_temperature_high name [%s] temperature [%s] C", self._myname, self._zone.cspC)
@@ -341,9 +334,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return None
         if self._manager.is_metric is False:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug(
-                    "climate:target_temperature_low name [%s] temperature [%s] F", self._myname, self._zone.hsp
-                )
+                _LOGGER.debug("climate:target_temperature_low name [%s] temperature [%s] F", self._myname, self._zone.hsp)
             return self._zone.hsp
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("climate:target_temperature_low name [%s] temperature [%s] C", self._myname, self._zone.hspC)
@@ -480,7 +471,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
         except Exception as ex:
             err = f"set_hvac_mode unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
             raise HomeAssistantError(err) from ex
-        
+
     def async_turn_off(self) -> None:
         """Turn off the zone."""
         _LOGGER.info("climate:async_turn_off name [%s]", self._myname)
@@ -654,16 +645,14 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
 
         # If single setpoint mode, then must specify r_temperature and not high and low
         if self._zone.system.single_setpoint_mode and r_temperature is None:
-            err = f"climate:async_set_temperature - zone in single setpoint mode must provide [{ATTR_TEMPERATURE}] - zone [{self._myname}]"  # noqa: E501
+            err = f"climate:async_set_temperature - zone in single setpoint mode must provide [{ATTR_TEMPERATURE}] - zone [{self._myname}]"
             raise HomeAssistantError(err)
 
         try:
             # If an HVAC mode is requested; and we are not in that mode, then the first step
             # is to switch the zone into that mode before setting the temperature
             if r_hvac_mode is not None and r_hvac_mode != self.hvac_mode:
-                _LOGGER.debug(
-                    "climate:async_set_temperature zone [%s] setting hvacMode [%s]", self._myname, r_hvac_mode
-                )
+                _LOGGER.debug("climate:async_set_temperature zone [%s] setting hvacMode [%s]", self._myname, r_hvac_mode)
                 await self.async_set_hvac_mode(r_hvac_mode)
 
             if r_hvac_mode is None:

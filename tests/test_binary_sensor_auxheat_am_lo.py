@@ -3,20 +3,20 @@
 # pylint: disable=missing-function-docstring
 
 from unittest.mock import patch
+
 import pytest
-
-
 from lennoxs30api.s30api_async import lennox_system
+
 from custom_components.lennoxs30 import Manager
+from custom_components.lennoxs30.binary_sensor import S30AuxheatHighAmbientLockout
 from custom_components.lennoxs30.const import (
     LENNOX_DOMAIN,
     UNIQUE_ID_SUFFIX_AUX_HI_AMBIENT_LOCKOUT,
 )
-from custom_components.lennoxs30.binary_sensor import S30AuxheatHighAmbientLockout
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_auxheat_lockout_init(hass, manager: Manager):
     """Test the binary sensor"""
     system: lennox_system = manager.api.system_list[0]
@@ -40,7 +40,7 @@ async def test_auxheat_lockout_init(hass, manager: Manager):
         assert ids[1] == system.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hauxheat_lockout_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     sensor = S30AuxheatHighAmbientLockout(hass, manager, system)

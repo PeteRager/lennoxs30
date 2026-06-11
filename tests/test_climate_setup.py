@@ -1,23 +1,22 @@
 import logging
+from unittest.mock import Mock
+
+import pytest
 from lennoxs30api.s30api_async import (
     lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
-import pytest
-from custom_components.lennoxs30.const import MANAGER
-
 from custom_components.lennoxs30.climate import (
     S30Climate,
     async_setup_entry,
 )
+from custom_components.lennoxs30.const import MANAGER
 
 
-from unittest.mock import Mock
-
-
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup_entry_mz(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -30,13 +29,13 @@ async def test_async_setup_entry_mz(hass, manager_mz: Manager, caplog):
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
     assert len(sensor_list) == 4
-    for i in range(0, 4):
+    for i in range(4):
         assert isinstance(sensor_list[i], S30Climate)
         c: S30Climate = sensor_list[i]
         assert c._zone == system.zone_list[i]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup_entry(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     entry = manager.config_entry
@@ -53,7 +52,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     assert c._zone == system.zone_list[0]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup_entry_no_zones(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     system.zone_list = []

@@ -64,9 +64,7 @@ class BleCommStatusBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Create unique id for entity."""
-        return helper_create_system_unique_id(
-            self._system, f"{UNIQUE_ID_SUFFIX_BLE_COMMSTATUS}_{self._ble_device.ble_id}"
-        )
+        return helper_create_system_unique_id(self._system, f"{UNIQUE_ID_SUFFIX_BLE_COMMSTATUS}_{self._ble_device.ble_id}")
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:

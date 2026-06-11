@@ -7,44 +7,41 @@
 
 import logging
 from unittest.mock import patch
+
 import pytest
-
 from homeassistant.exceptions import HomeAssistantError
-
 from lennoxs30api.s30api_async import (
+    LENNOX_DEHUMIDIFICATION_MODE_AUTO,
     LENNOX_DEHUMIDIFICATION_MODE_HIGH,
     LENNOX_DEHUMIDIFICATION_MODE_MEDIUM,
-    LENNOX_DEHUMIDIFICATION_MODE_AUTO,
     lennox_system,
 )
 
-
 from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30.select import DehumidificationModeSelect
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
+from custom_components.lennoxs30.select import DehumidificationModeSelect
 from tests.conftest import (
     conf_test_exception_handling,
-    conftest_base_entity_availability,
     conf_test_select_info_async_select_option,
+    conftest_base_entity_availability,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_dehumidifier_mode_mode_select_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = DehumidificationModeSelect(hass, manager, system)
     assert c.unique_id == system.unique_id + "_DHMS"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_dehumidifier_mode_mode_select_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     c = DehumidificationModeSelect(hass, manager, system)
     assert c.name == system.name + "_dehumidification_mode"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_dehumidifier_mode_mode_select_current_option(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -67,7 +64,7 @@ async def test_dehumidifier_mode_mode_select_current_option(hass, manager_mz: Ma
     assert c.available is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_dehumidifier_mode_mode_select_subscription(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -102,7 +99,7 @@ async def test_dehumidifier_mode_mode_select_subscription(hass, manager_mz: Mana
     conftest_base_entity_availability(manager, system, c)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_dehumidifier_mode_mode_select_options(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -115,7 +112,7 @@ async def test_dehumidifier_mode_mode_select_options(hass, manager_mz: Manager):
     assert "climate IQ" in opt
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_dehumidifier_mode_mode_select_async_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -159,7 +156,7 @@ async def test_dehumidifier_mode_mode_select_async_select_options(hass, manager_
     await conf_test_select_info_async_select_option(system, "set_dehumidificationMode", c, caplog)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_dehumidifier_mode_mode_select_device_info(hass, manager_mz: Manager):
     manager = manager_mz
     await manager.create_devices()

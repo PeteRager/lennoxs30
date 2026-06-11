@@ -6,17 +6,13 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant.exceptions import HomeAssistantError
-
 from lennoxs30api.s30api_async import (
     lennox_system,
 )
 
 from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.button import EquipmentParameterUpdateButton
-
-
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from tests.conftest import (
     conf_test_button_info_async_press,
     conf_test_exception_handling,
@@ -24,21 +20,21 @@ from tests.conftest import (
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_button_parameter_update_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     button = EquipmentParameterUpdateButton(hass, manager, system)
     assert button.unique_id == f"{system.unique_id}_BUT_PU".replace("-", "")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_button_parameter_update_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     button = EquipmentParameterUpdateButton(hass, manager, system)
     assert button.name == "South Moetown_parameter_update"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_button_parameter_update_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     button = EquipmentParameterUpdateButton(hass, manager, system)
@@ -46,7 +42,7 @@ async def test_button_parameter_update_subscription(hass, manager: Manager):
     conftest_base_entity_availability(manager, system, button)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_button_parameter_update_async_press(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -84,7 +80,7 @@ async def test_button_parameter_update_async_press(hass, manager_mz: Manager, ca
     await conf_test_button_info_async_press(system, "set_parameter_value", button, caplog)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_button_parameter_update_device_info(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     await manager.create_devices()

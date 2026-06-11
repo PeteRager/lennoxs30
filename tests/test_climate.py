@@ -7,38 +7,36 @@
 
 import logging
 from unittest.mock import patch
-import pytest
 
+import pytest
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_NONE,
     HVACAction,
     HVACMode,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import UnitOfTemperature
-from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.helpers import issue_registry as ir
-
+from homeassistant.exceptions import HomeAssistantError
 from lennoxs30api.s30api_async import (
+    LENNOX_BAD_STATUS,
+    LENNOX_HUMID_OPERATION_DEHUMID,
+    LENNOX_HUMID_OPERATION_OFF,
+    LENNOX_HUMID_OPERATION_WAITING,
+    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_HUMIDITY_MODE_HUMIDIFY,
+    LENNOX_HUMIDITY_MODE_OFF,
     LENNOX_HVAC_COOL,
+    LENNOX_HVAC_EMERGENCY_HEAT,
     LENNOX_HVAC_HEAT,
     LENNOX_HVAC_HEAT_COOL,
     LENNOX_HVAC_OFF,
-    LENNOX_SA_STATE_DISABLED,
     LENNOX_SA_SETPOINT_STATE_AWAY,
-    LENNOX_TEMP_OPERATION_OFF,
-    LENNOX_HUMID_OPERATION_OFF,
-    LENNOX_HUMID_OPERATION_DEHUMID,
-    LENNOX_TEMP_OPERATION_COOLING,
-    LENNOX_HUMID_OPERATION_WAITING,
-    LENNOX_HVAC_EMERGENCY_HEAT,
     LENNOX_SA_SETPOINT_STATE_HOME,
-    LENNOX_HUMIDITY_MODE_OFF,
-    LENNOX_HUMIDITY_MODE_HUMIDIFY,
-    LENNOX_HUMIDITY_MODE_DEHUMIDIFY,
+    LENNOX_SA_STATE_DISABLED,
     LENNOX_STATUS_GOOD,
-    LENNOX_BAD_STATUS,
+    LENNOX_TEMP_OPERATION_COOLING,
+    LENNOX_TEMP_OPERATION_OFF,
     LENNOX_ZONING_MODE_CENTRAL,
     LENNOX_ZONING_MODE_ZONED,
     lennox_system,
@@ -48,7 +46,6 @@ from lennoxs30api.s30api_async import (
 from custom_components.lennoxs30 import (
     Manager,
 )
-
 from custom_components.lennoxs30.climate import (
     PRESET_CANCEL_AWAY_MODE,
     PRESET_CANCEL_HOLD,
@@ -59,7 +56,7 @@ from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from tests.conftest import conf_test_exception_handling, conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_unique_id(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -69,7 +66,7 @@ async def test_climate_unique_id(hass, manager_mz: Manager):
     assert c.name == system.name + "_" + zone.name
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_min_max_c(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -119,7 +116,7 @@ async def test_climate_min_max_c(hass, manager_mz: Manager):
     assert c1.max_temp == zone1.maxCspC
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     manager: Manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -178,7 +175,7 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
         assert len(caplog.records) == 2
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_target_temperature_f(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = False
@@ -197,7 +194,7 @@ async def test_climate_target_temperature_f(hass, manager_mz: Manager):
     assert c1.target_temperature is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_target_temperature_c(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = True
@@ -216,7 +213,7 @@ async def test_climate_target_temperature_c(hass, manager_mz: Manager):
     assert c1.target_temperature is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_target_temperature_high_f(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = False
@@ -251,7 +248,7 @@ async def test_climate_target_temperature_high_f(hass, manager_mz: Manager):
     assert c1.target_temperature_high is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_target_temperature_high_c(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = True
@@ -286,7 +283,7 @@ async def test_climate_target_temperature_high_c(hass, manager_mz: Manager):
     assert c1.target_temperature_high is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_target_temperature_low_f(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = False
@@ -321,7 +318,7 @@ async def test_climate_target_temperature_low_f(hass, manager_mz: Manager):
     assert c1.target_temperature_low is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_target_temperature_low_c(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = True
@@ -356,7 +353,7 @@ async def test_climate_target_temperature_low_c(hass, manager_mz: Manager):
     assert c1.target_temperature_low is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_system_subscription(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -401,7 +398,7 @@ async def test_climate_system_subscription(hass, manager_mz: Manager):
         assert update_callback.call_count == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_preset_mode(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -445,7 +442,7 @@ async def test_climate_preset_mode(hass, manager_mz: Manager):
     assert c.preset_mode == PRESET_NONE
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -566,7 +563,7 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
         assert zone_set_manual_mode.call_count == 1
 
     with pytest.raises(HomeAssistantError) as hae:
-        await c.async_set_preset_mode(PRESET_SCHEDULE_OVERRIDE)    
+        await c.async_set_preset_mode(PRESET_SCHEDULE_OVERRIDE)
     assert PRESET_SCHEDULE_OVERRIDE in str(hae.value)
 
     system.manualAwayMode = False
@@ -599,7 +596,7 @@ async def test_climate_set_preset_mode(hass, manager_mz: Manager, caplog):
             assert "invalid_preset" in str(ex)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_extra_state_attributes(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -701,7 +698,7 @@ async def test_climate_extra_state_attributes(hass, manager_mz: Manager):
     assert attrs["zoningMode"] == system.zoningMode
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_supported_features(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -759,7 +756,7 @@ async def test_climate_supported_features(hass, manager_mz: Manager):
     assert feat != 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_target_max_min_humidity(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -797,7 +794,7 @@ async def test_target_max_min_humidity(hass, manager_mz: Manager):
     assert c.min_humidity == zone.minHumSp
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -877,7 +874,7 @@ async def test_climate_set_humidity(hass, manager_mz: Manager, caplog):
     await conf_test_exception_handling(zone, "perform_humidify_setpoint", c, c.async_set_humidity, humidity=60)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_current_humidity(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -913,7 +910,7 @@ async def test_climate_current_humidity(hass, manager_mz: Manager, caplog):
             assert bad_status in msg
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_current_temperature_f(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -947,7 +944,7 @@ async def test_climate_current_temperature_f(hass, manager_mz: Manager, caplog):
             assert bad_status in msg
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_current_temperature_c(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -982,7 +979,7 @@ async def test_climate_current_temperature_c(hass, manager_mz: Manager, caplog):
             assert bad_status in msg
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_hvac_mode(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1005,7 +1002,7 @@ async def test_climate_hvac_mode(hass, manager_mz: Manager):
     assert c1.hvac_mode == HVACMode.COOL
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_target_temperature_step(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1018,7 +1015,7 @@ async def test_climate_target_temperature_step(hass, manager_mz: Manager):
     assert c.target_temperature_step == 1.0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_hvac_modes(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1049,7 +1046,7 @@ async def test_climate_hvac_modes(hass, manager_mz: Manager):
     assert len(modes) == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_set_hvac_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1101,7 +1098,7 @@ async def test_climate_set_hvac_mode(hass, manager_mz: Manager, caplog):
             assert "disabled" in str(ex)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_hvac_action(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1149,7 +1146,8 @@ async def test_climate_hvac_action(hass, manager_mz: Manager):
     assert c.hvac_action == HVACAction.IDLE
     assert c.extra_state_attributes["tempOperation"] == LENNOX_HUMID_OPERATION_WAITING
 
-@pytest.mark.asyncio
+
+@pytest.mark.asyncio()
 async def test_climate_preset_modes(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1175,7 +1173,7 @@ async def test_climate_preset_modes(hass, manager_mz: Manager):
     assert len(presets) == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_fan_mode(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1187,7 +1185,7 @@ async def test_climate_fan_mode(hass, manager_mz: Manager):
     assert c.fan_mode is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_fan_modes(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1205,7 +1203,7 @@ async def test_climate_fan_modes(hass, manager_mz: Manager):
     assert len(modes) == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_set_fan_mode(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1236,7 +1234,7 @@ async def test_climate_set_fan_mode(hass, manager_mz: Manager, caplog):
             assert "disabled" in str(ex)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_device_info(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1249,7 +1247,7 @@ async def test_climate_device_info(hass, manager_mz: Manager):
         assert x[1] == zone.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -1433,7 +1431,7 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
                 assert ex is not None
                 assert "System Mode is [off]" in str(ex)
     system.single_setpoint_mode = False
- 
+
     zone.systemMode = "cool"
     with patch.object(c, "async_set_hvac_mode") as async_set_hvac_mode:
         with patch.object(zone, "perform_setpoint") as perform_setpoint:
@@ -1488,7 +1486,8 @@ async def test_climate_set_temperature(hass, manager_mz: Manager, caplog):
 
     await conf_test_exception_handling(zone, "perform_setpoint", c, c.async_set_temperature, temperature=20)
 
-@pytest.mark.asyncio
+
+@pytest.mark.asyncio()
 async def test_climate_turn_off(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]

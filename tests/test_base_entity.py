@@ -1,18 +1,16 @@
+from unittest.mock import patch
+
+import pytest
+from homeassistant.helpers.entity import Entity
+from lennoxs30api import lennox_system
+
 from custom_components.lennoxs30 import (
     DS_CONNECTED,
     DS_LOGIN_FAILED,
     DS_RETRY_WAIT,
     Manager,
 )
-
-import pytest
 from custom_components.lennoxs30.base_entity import S30BaseEntityMixin
-from lennoxs30api import lennox_system
-
-
-from unittest.mock import patch
-
-from homeassistant.helpers.entity import Entity
 
 
 # Need to have a derived class the inherits from both in order to have super() call works that need Entity
@@ -21,7 +19,7 @@ class TestEntity(S30BaseEntityMixin, Entity):
         super().__init__(manager, system)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_s30_base_entity_init(hass, manager: Manager, caplog):
     system = manager.api.system_list[0]
     c = TestEntity(manager, system)
@@ -32,7 +30,7 @@ async def test_s30_base_entity_init(hass, manager: Manager, caplog):
     assert c.update() == True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_s30_base_entity_subscription(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     assert manager.connected == True

@@ -1,22 +1,23 @@
 """Test Sensor Alert"""
-from unittest.mock import patch
-import pytest
 
+from unittest.mock import patch
+
+import pytest
 from lennoxs30api.s30api_async import (
     lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
 from custom_components.lennoxs30.sensor import (
     S30AlertSensor,
 )
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_alert_sensor(hass, manager: Manager):
     """Test the alert sensor"""
     manager.is_metric = False
@@ -40,7 +41,7 @@ async def test_alert_sensor(hass, manager: Manager):
         assert ids[1] == system.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_alert_subscription(hass, manager: Manager):
     """Test the alert sensor subscription"""
     system: lennox_system = manager.api.system_list[0]

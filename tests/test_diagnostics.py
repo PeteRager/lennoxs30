@@ -1,18 +1,19 @@
 """Test the diagnostics"""
+
 # pylint: disable=line-too-long
 import pytest
-
-from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30.const import MANAGER
-from custom_components.lennoxs30.diagnostics import async_get_config_entry_diagnostics
 from homeassistant import config_entries
 from syrupy import SnapshotAssertion
 from syrupy.filters import paths
 
+from custom_components.lennoxs30 import Manager
+from custom_components.lennoxs30.const import MANAGER
+from custom_components.lennoxs30.diagnostics import async_get_config_entry_diagnostics
 
-@pytest.mark.asyncio
-async def test_diagnostics_local(snapshot: SnapshotAssertion,
-    hass, manager_system_04_furn_ac_zoning_ble: Manager, config_entry_local: config_entries.ConfigEntry
+
+@pytest.mark.asyncio()
+async def test_diagnostics_local(
+    snapshot: SnapshotAssertion, hass, manager_system_04_furn_ac_zoning_ble: Manager, config_entry_local: config_entries.ConfigEntry
 ):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -23,10 +24,8 @@ async def test_diagnostics_local(snapshot: SnapshotAssertion,
     assert snapshot(exclude=paths("comm_metrics.last_message_time")) == diags
 
 
-@pytest.mark.asyncio
-async def test_diagnostics_cloud(
-    hass, manager_system_04_furn_ac_zoning_ble: Manager, config_entry_cloud: config_entries.ConfigEntry
-):
+@pytest.mark.asyncio()
+async def test_diagnostics_cloud(hass, manager_system_04_furn_ac_zoning_ble: Manager, config_entry_cloud: config_entries.ConfigEntry):
     """Test the alert sensor"""
     manager = manager_system_04_furn_ac_zoning_ble
     entry = manager.config_entry = config_entry_cloud

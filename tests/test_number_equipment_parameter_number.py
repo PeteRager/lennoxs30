@@ -6,17 +6,12 @@
 # pylint: disable=line-too-long
 
 from unittest.mock import patch
-import pytest
 
+import pytest
+from homeassistant.components.number import NumberDeviceClass
 from homeassistant.const import UnitOfTemperature, UnitOfVolumeFlowRate
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.components.number import NumberDeviceClass
-
-from homeassistant.util.unit_system import (
-    METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
-)
-
-
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from lennoxs30api.s30api_async import lennox_system
 
 from custom_components.lennoxs30 import Manager
@@ -27,16 +22,15 @@ from custom_components.lennoxs30.const import (
 from custom_components.lennoxs30.number import (
     EquipmentParameterNumber,
 )
-
 from tests.conftest import (
     conf_test_exception_handling,
+    conf_test_number_info_async_set_native_value,
     conftest_base_entity_availability,
     conftest_parameter_extra_attributes,
-    conf_test_number_info_async_set_native_value,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -45,7 +39,7 @@ async def test_equipment_parameter_number_unique_id(hass, manager: Manager):
     assert c.unique_id == (f"{system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_0_72").replace("-", "")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -54,7 +48,7 @@ async def test_equipment_parameter_number_name(hass, manager: Manager):
     assert c.name == f"{system.name}_par_{parameter.name}".replace(" ", "_")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_uom_device_class(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -96,7 +90,7 @@ async def test_equipment_parameter_number_uom_device_class(hass, manager: Manage
     assert c.device_class is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_max_value(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -107,7 +101,7 @@ async def test_equipment_parameter_number_max_value(hass, manager: Manager):
     assert c.max_value == float(parameter.range_max)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_min_value(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -119,7 +113,7 @@ async def test_equipment_parameter_number_min_value(hass, manager: Manager):
     assert c.min_value == float(parameter.range_min)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_step(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -128,7 +122,7 @@ async def test_equipment_parameter_number_step(hass, manager: Manager):
     assert c.step == float(parameter.range_inc)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_value(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -150,7 +144,7 @@ async def test_equipment_parameter_number_value(hass, manager: Manager):
     assert c.value == 21.1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_set_value(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -190,7 +184,7 @@ async def test_equipment_parameter_number_set_value(hass, manager: Manager, capl
     await conf_test_number_info_async_set_native_value(system, "set_equipment_parameter_value", c, caplog)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_device_info(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -203,7 +197,7 @@ async def test_equipment_parameter_number_device_info(hass, manager: Manager):
         assert x[1] == manager.system_equip_device_map[system.sysId][0].unique_name
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     equipment = system.equipment[0]
@@ -243,7 +237,7 @@ def test_equipment_parameter_select_extra_attributes(hass, manager: Manager):
     conftest_parameter_extra_attributes(c.extra_state_attributes, equipment, parameter)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_equipment_parameter_number_set_zonetest_parameter(hass, manager_system_04_furn_ac_zoning: Manager):
     manager = manager_system_04_furn_ac_zoning
     system: lennox_system = manager.api.system_list[0]

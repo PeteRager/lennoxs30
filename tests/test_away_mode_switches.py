@@ -6,23 +6,22 @@
 # pylint: disable=line-too-long
 
 from unittest.mock import patch
-import pytest
 
+import pytest
 from lennoxs30api.s30api_async import lennox_system
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.switch import S30ManualAwayModeSwitch, S30SmartAwayEnableSwitch
-
 from tests.conftest import (
     conf_test_exception_handling,
-    conftest_base_entity_availability,
     conf_test_switch_info_async_turn_off,
     conf_test_switch_info_async_turn_on,
+    conftest_base_entity_availability,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manual_away_mode_switch_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False
@@ -38,7 +37,7 @@ async def test_manual_away_mode_switch_subscription(hass, manager: Manager):
     conftest_base_entity_availability(manager, system, c)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_manual_away_mode_switch(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False
@@ -81,7 +80,7 @@ async def test_manual_away_mode_switch(hass, manager: Manager, caplog):
     await conf_test_switch_info_async_turn_on(system, "set_manual_away_mode", c, caplog)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_smart_away_enabled_switch_subscription(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False
@@ -97,7 +96,7 @@ async def test_smart_away_enabled_switch_subscription(hass, manager: Manager):
     conftest_base_entity_availability(manager, system, c)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_smart_away_enabled_switch(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False

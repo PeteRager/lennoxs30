@@ -5,21 +5,20 @@
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name
 
-import logging
 import asyncio
+import logging
 from typing import Any
 
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from lennoxs30api import lennox_system
 from lennoxs30api.s30exception import S30Exception
 
+from . import Manager
 from .base_entity import S30BaseEntityMixin
 from .const import (
     LOG_INFO_SWITCH_ASYNC_TURN_OFF,
@@ -28,7 +27,6 @@ from .const import (
     UNIQUE_ID_SUFFIX_PARAMETER_SAFETY_SWITCH,
     VENTILATION_EQUIPMENT_ID,
 )
-from . import Manager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,9 +151,7 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
@@ -174,9 +170,7 @@ class S30VentilationSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
 
 class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -238,9 +232,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
@@ -250,9 +242,7 @@ class S30AllergenDefenderSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
 
 class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -308,9 +298,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
@@ -320,9 +308,7 @@ class S30ManualAwayModeSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
 
 class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -385,9 +371,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
@@ -397,9 +381,7 @@ class S30SmartAwayEnableSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
 
 class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
@@ -462,9 +444,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_on [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_on unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
     async def async_turn_off(self, **kwargs):
         _LOGGER.info(LOG_INFO_SWITCH_ASYNC_TURN_OFF, self.__class__.__name__, self._myname)
@@ -474,9 +454,7 @@ class S30ZoningSwitch(S30BaseEntityMixin, SwitchEntity):
         except S30Exception as ex:
             raise HomeAssistantError(f"async_turn_off [{self._myname}] [{ex.as_string()}]") from ex
         except Exception as ex:
-            raise HomeAssistantError(
-                f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]"
-            ) from ex
+            raise HomeAssistantError(f"async_turn_off unexpected exception, please log issue, [{self._myname}] exception [{ex}]") from ex
 
 
 class S30ParameterSafetySwitch(S30BaseEntityMixin, SwitchEntity):

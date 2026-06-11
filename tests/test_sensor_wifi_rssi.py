@@ -5,23 +5,20 @@
 # pylint: disable=protected-access
 # pylint: disable=line-too-long
 
-import logging
 from unittest.mock import patch
+
 import pytest
-
-from homeassistant.components.sensor import SensorStateClass, SensorDeviceClass
-from homeassistant.const import UnitOfTemperature,SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from lennoxs30api.s30api_async import lennox_system
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.sensor_wifi import WifiRSSISensor
-
 from tests.conftest import conftest_base_entity_availability, loadfile
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_wifi_rssi_sensor(hass, manager: Manager, caplog):
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]
@@ -56,7 +53,8 @@ async def test_wifi_rssi_sensor(hass, manager: Manager, caplog):
         assert x[0] == LENNOX_DOMAIN
         assert x[1] == system.unique_id
 
-@pytest.mark.asyncio
+
+@pytest.mark.asyncio()
 async def test_wifi_rssi_sensor_subscription(hass, manager: Manager):
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]
@@ -122,7 +120,7 @@ async def test_wifi_rssi_sensor_subscription(hass, manager: Manager):
         assert s.extra_state_attributes["subnetMask"] == "255.255.255.0"
 
     with patch.object(s, "schedule_update_ha_state") as update_callback:
-        update_set = {"wifi_bitRate": 10 }
+        update_set = {"wifi_bitRate": 10}
         system.attr_updater(update_set, "wifi_bitRate")
         system.executeOnUpdateCallbacks()
         assert update_callback.call_count == 1

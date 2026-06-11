@@ -1,16 +1,16 @@
 """Tests the setup of sensors"""
+
 # pylint: disable=consider-using-enumerate
 import logging
 from unittest.mock import Mock
+
 import pytest
-
 from homeassistant.const import UnitOfTemperature
-
 from lennoxs30api.s30api_async import (
-    LENNOX_STATUS_NOT_EXIST,
-    LENNOX_STATUS_GOOD,
-    lennox_system,
     LENNOX_PRODUCT_TYPE_S40,
+    LENNOX_STATUS_GOOD,
+    LENNOX_STATUS_NOT_EXIST,
+    lennox_system,
 )
 
 from custom_components.lennoxs30 import Manager
@@ -21,19 +21,18 @@ from custom_components.lennoxs30.sensor import (
     S30DiagSensor,
     S30HumiditySensor,
     S30InverterPowerSensor,
+    S30OutdoorTempSensor,
     S30TempSensor,
     async_setup_entry,
-    S30OutdoorTempSensor,
 )
 from custom_components.lennoxs30.sensor_ble import S40BleSensor
 from custom_components.lennoxs30.sensor_iaq import S40IAQSensor
 from custom_components.lennoxs30.sensor_wifi import WifiRSSISensor
 from custom_components.lennoxs30.sensor_wt_env import WTEnvSensor
-
 from tests.conftest import loadfile
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup_entry(hass, manager: Manager, caplog):
     """Tests the sensor setup"""
     system: lennox_system = manager.api.system_list[0]
@@ -168,7 +167,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
         assert len(sensor_list) == 2 * system.numberOfZones
-        for i in range(0, system.numberOfZones):
+        for i in range(system.numberOfZones):
             assert isinstance(sensor_list[i * 2], S30TempSensor)
             assert isinstance(sensor_list[(i * 2) + 1], S30HumiditySensor)
         assert len(caplog.records) == 0
@@ -186,7 +185,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
         assert len(sensor_list) == 47
-        for i in range(0, len(sensor_list)):
+        for i in range(len(sensor_list)):
             assert isinstance(sensor_list[i], S30DiagSensor)
         assert len(caplog.records) == 0
 
@@ -207,7 +206,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
         assert len(sensor_list) == 47
-        for i in range(0, len(sensor_list)):
+        for i in range(len(sensor_list)):
             assert isinstance(sensor_list[i], S30DiagSensor)
         assert len(caplog.records) == 1
         assert "internetStatus" in caplog.messages[0]
@@ -229,7 +228,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
         assert len(sensor_list) == 47
-        for i in range(0, len(sensor_list)):
+        for i in range(len(sensor_list)):
             assert isinstance(sensor_list[i], S30DiagSensor)
         assert len(caplog.records) == 1
         assert "diagLevel 2" in caplog.messages[0]
@@ -261,7 +260,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
     assert len(sensor_list) == 34
-    for index in range(0, 34):
+    for index in range(34):
         assert isinstance(sensor_list[index], S40BleSensor | S40IAQSensor)
 
     with caplog.at_level(logging.ERROR):
@@ -320,7 +319,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
 
     sensor_list = async_add_entities.call_args[0][0]
     assert len(sensor_list) == 10
-    for index in range(0, 10):
+    for index in range(10):
         sensor = sensor_list[index]
         assert isinstance(sensor, WTEnvSensor)
         assert sensor.native_value is not None
@@ -334,7 +333,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     sensor_list = async_add_entities.call_args[0][0]
     assert len(sensor_list) == 10
-    for index in range(0, 10):
+    for index in range(10):
         assert isinstance(sensor_list[index], WTEnvSensor)
 
     sensor: WTEnvSensor = sensor_list[9]

@@ -46,11 +46,11 @@
           "message_debug_file" : "Optional file for message logging",
           "log_messages_to_file": "Log S30 message to separate file"
         }
-      }      
+      }
     },
     "error": {
       "select_cloud_or_local": "Select a cloud or local connection",
-      "already_configured": "Device is already configured", 
+      "already_configured": "Device is already configured",
       "invalid_hostname" : "Invalid ip address or hostname",
       "unable_to_connect_local" : "Unable to connect to S30, please check IP address",
       "unable_to_connect_login" : "Email / password combination is invalid",
@@ -75,7 +75,7 @@
               "scan_interval": "Message scan interval seconds.",
               "fast_scan_interval": "Fast scan interval seconds. 0.75 recommended",
               "fast_scan_count" : "Number of fast scans",
-              "timeout" : "Communication Timeout (seconds)",    
+              "timeout" : "Communication Timeout (seconds)",
               "init_wait_time": "Configuration Wait time in seconds",
               "pii_in_message_logs" : "Personal information in log files",
               "message_debug_logging" : "Debug logging logs messages",
@@ -86,5 +86,5 @@
             "title": "Options"
         }
     }
-  }  
+  }
 }

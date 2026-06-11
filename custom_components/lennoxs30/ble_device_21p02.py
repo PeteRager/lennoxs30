@@ -1,4 +1,5 @@
 """Lennox BLE Air Quality Sensor."""
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,

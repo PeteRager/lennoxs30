@@ -12,7 +12,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_HOST,
@@ -130,18 +130,12 @@ class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             timeout = DEFAULT_LOCAL_TIMEOUT
         return vol.Schema(
             {
-                vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
-                    vol.Coerce(int), vol.Range(min=1, max=300)
-                ),
+                vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
                 vol.Optional(CONF_FAST_POLL_INTERVAL, default=DEFAULT_FAST_POLL_INTERVAL): vol.All(
                     vol.Coerce(float), vol.Range(min=0.25, max=300.0)
                 ),
-                vol.Optional(CONF_FAST_POLL_COUNT, default=DEFAULT_FAST_POLL_COUNT): vol.All(
-                    vol.Coerce(int), vol.Range(min=1, max=100)
-                ),
-                vol.Optional(CONF_INIT_WAIT_TIME, default=conf_wait_time): vol.All(
-                    vol.Coerce(int), vol.Range(min=1, max=300)
-                ),
+                vol.Optional(CONF_FAST_POLL_COUNT, default=DEFAULT_FAST_POLL_COUNT): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                vol.Optional(CONF_INIT_WAIT_TIME, default=conf_wait_time): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
                 vol.Optional(CONF_TIMEOUT, default=timeout): vol.All(vol.Coerce(int), vol.Range(min=15, max=300)),
                 vol.Optional(CONF_PII_IN_MESSAGE_LOGS, default=False): cv.boolean,
                 vol.Optional(CONF_MESSAGE_DEBUG_LOGGING, default=True): cv.boolean,
@@ -310,9 +304,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if user_input[CONF_LOG_MESSAGES_TO_FILE] is False:
                 user_input[CONF_MESSAGE_DEBUG_FILE] = ""
 
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=user_input, options=self.config_entry.options
-            )
+            self.hass.config_entries.async_update_entry(self.config_entry, data=user_input, options=self.config_entry.options)
             return self.async_create_entry(title="", data={})
 
         if self.config_entry.data[CONF_CLOUD_CONNECTION] is False:

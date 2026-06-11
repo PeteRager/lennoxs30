@@ -1,4 +1,5 @@
 """Support for Lennoxs30 outdoor temperature sensor"""
+
 # pylint: disable=global-statement
 # pylint: disable=broad-except
 # pylint: disable=unused-argument
@@ -6,11 +7,10 @@
 # pylint: disable=invalid-name
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.components.sensor import SensorEntity
-
-from lennoxs30api import lennox_system, LennoxBle
+from lennoxs30api import LennoxBle, lennox_system
 
 from . import Manager
 from .base_entity import S30BaseEntityMixin
@@ -39,10 +39,10 @@ class S40IAQSensor(S30BaseEntityMixin, SensorEntity):
         self._sensor_dict: dict = sensor_dict
         self._system_attr: str = sensor_dict["input"]
         self._status_attr: str = sensor_dict.get("status")
-        self._uom: str = sensor_dict.get("uom", None)
-        self._state_class: str = sensor_dict.get("state_class", None)
-        self._device_class: str = sensor_dict.get("device_class", None)
-        self._entity_category: str = sensor_dict.get("entity_category", None)
+        self._uom: str = sensor_dict.get("uom")
+        self._state_class: str = sensor_dict.get("state_class")
+        self._device_class: str = sensor_dict.get("device_class")
+        self._entity_category: str = sensor_dict.get("entity_category")
         self._precision: int = sensor_dict.get("precision", 1)
 
     async def async_added_to_hass(self) -> None:

@@ -1,12 +1,12 @@
 """Test for BLE device commstatus"""
+
 # pylint: disable=line-too-long
 import logging
 from unittest.mock import patch
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from lennoxs30api.s30api_async import lennox_system, LENNOX_BLE_COMMSTATUS_AVAILABLE, LennoxBle
 import pytest
-
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from lennoxs30api.s30api_async import LENNOX_BLE_COMMSTATUS_AVAILABLE, LennoxBle, lennox_system
 
 from custom_components.lennoxs30 import (
     DS_CONNECTED,
@@ -18,7 +18,7 @@ from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_binary_sensor_ble_commstatus(hass, manager_system_04_furn_ac_zoning_ble: Manager):
     """Test the binary sensor properties"""
     manager = manager_system_04_furn_ac_zoning_ble
@@ -53,7 +53,7 @@ async def test_binary_sensor_ble_commstatus(hass, manager_system_04_furn_ac_zoni
         assert element[1] == system.unique_id + "_ble_513"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_binary_sensor_ble_commstatus_subscription(hass, manager_system_04_furn_ac_zoning_ble: Manager, caplog):
     """Tests the binary sensor subscription"""
     manager = manager_system_04_furn_ac_zoning_ble

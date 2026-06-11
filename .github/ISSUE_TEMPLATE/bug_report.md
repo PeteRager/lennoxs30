@@ -22,7 +22,7 @@ If applicable, add screenshots to help explain your problem.
 **Version**
  - Home Assistant:
  - This Integration:
- 
+
 
 **Integration Configuration **
 - Cloud or Local Connection:

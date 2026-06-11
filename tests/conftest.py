@@ -1,4 +1,5 @@
 """template conftest."""
+
 # pylint: disable=logging-not-lazy
 # pylint: disable=logging-fstring-interpolation
 # pylint: disable=global-statement
@@ -14,39 +15,35 @@ import os
 from unittest.mock import patch
 
 import pytest
-
-from lennoxs30api.s30api_async import (
-    lennox_system,
-)
-from lennoxs30api.lennox_equipment import (
-    lennox_equipment_parameter,
-    lennox_equipment,
-)
-from lennoxs30api.s30exception import S30Exception
-
-from homeassistant.helpers import device_registry as dr
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant import config_entries
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.setup import async_setup_component
-from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_HOST,
     CONF_EMAIL,
+    CONF_HOST,
     CONF_PASSWORD,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, METRIC_SYSTEM
-
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from lennoxs30api.lennox_equipment import (
+    lennox_equipment,
+    lennox_equipment_parameter,
+)
+from lennoxs30api.s30api_async import (
+    lennox_system,
+)
+from lennoxs30api.s30exception import S30Exception
 from pytest_homeassistant_custom_component.common import (
     assert_setup_component,
     async_mock_service,
 )
-
 
 from custom_components.lennoxs30 import (
     DOMAIN,
@@ -54,30 +51,29 @@ from custom_components.lennoxs30 import (
     DS_RETRY_WAIT,
     Manager,
 )
-
-
 from custom_components.lennoxs30.const import (
     CONF_ALLERGEN_DEFENDER_SWITCH,
     CONF_APP_ID,
     CONF_CLOUD_CONNECTION,
-    CONF_CREATE_INVERTER_POWER,
     CONF_CREATE_DIAGNOSTICS_SENSORS,
+    CONF_CREATE_INVERTER_POWER,
+    CONF_CREATE_PARAMETERS,
     CONF_CREATE_SENSORS,
-    CONF_FAST_POLL_INTERVAL,
     CONF_FAST_POLL_COUNT,
+    CONF_FAST_POLL_INTERVAL,
     CONF_INIT_WAIT_TIME,
     CONF_LOG_MESSAGES_TO_FILE,
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
-    CONF_CREATE_PARAMETERS,
 )
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
+
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
-    yield
+    return
 
 
 @pytest.fixture(autouse=True)
@@ -87,13 +83,13 @@ def disable_device_registry(hass):
         yield
 
 
-@pytest.fixture
+@pytest.fixture()
 def calls(hass):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
-@pytest.fixture
+@pytest.fixture()
 async def start_ha(hass, domains, caplog):
     """Do setup of integration."""
     for domain, value in domains.items():
@@ -108,10 +104,10 @@ async def start_ha(hass, domains, caplog):
     await hass.async_block_till_done()
 
 
-@pytest.fixture
+@pytest.fixture()
 async def caplog_setup_text(caplog):
     """Return setup log of integration."""
-    yield caplog.text
+    return caplog.text
 
 
 def loadfile(name: str, sysId: str = None) -> json:
@@ -124,10 +120,21 @@ def loadfile(name: str, sysId: str = None) -> json:
     return data
 
 
-@pytest.fixture
+@pytest.fixture()
 def config_entry_local() -> config_entries.ConfigEntry:
     config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}
-    config = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="10.0.0.1",
+        data={},
+        source="User",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     data = {}
     data[CONF_CLOUD_CONNECTION] = False
     data[CONF_HOST] = "10.0.0.1"
@@ -151,14 +158,24 @@ def config_entry_local() -> config_entries.ConfigEntry:
 
     config.data = data
 
-
     return config
 
 
-@pytest.fixture
+@pytest.fixture()
 def config_entry_cloud() -> config_entries.ConfigEntry:
-    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}    
-    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entries.UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {}
+    config = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="10.0.0.1",
+        data={},
+        source="User",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     config.data = {}
     config.data[CONF_CLOUD_CONNECTION] = True
     config.data[CONF_EMAIL] = "pete.rage@rage.com"
@@ -179,7 +196,7 @@ def config_entry_cloud() -> config_entries.ConfigEntry:
     return config
 
 
-@pytest.fixture
+@pytest.fixture()
 def manager(hass: HomeAssistant, config_entry_local) -> Manager:
     config = config_entry_local
     hass.config.units = METRIC_SYSTEM
@@ -223,7 +240,7 @@ def manager(hass: HomeAssistant, config_entry_local) -> Manager:
     return manager_to_return
 
 
-@pytest.fixture
+@pytest.fixture()
 def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manager:
     config = config_entry_local
     hass.config.units = US_CUSTOMARY_SYSTEM
@@ -267,9 +284,20 @@ def manager_us_customary_units(hass: HomeAssistant, config_entry_local) -> Manag
     return manager_to_return
 
 
-@pytest.fixture
+@pytest.fixture()
 def manager_2_systems(hass) -> Manager:
-    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="10.0.0.1",
+        data={},
+        source="User",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     manager_to_return = Manager(
         hass=hass,
@@ -322,9 +350,20 @@ def manager_2_systems(hass) -> Manager:
     return manager_to_return
 
 
-@pytest.fixture
+@pytest.fixture()
 def manager_mz(hass) -> Manager:
-    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="10.0.0.1",
+        data={},
+        source="User",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     manager_to_return = Manager(
         hass=hass,
         config=config,
@@ -365,9 +404,20 @@ def manager_mz(hass) -> Manager:
     return manager_to_return
 
 
-@pytest.fixture
+@pytest.fixture()
 def manager_system_04_furn_ac_zoning(hass) -> Manager:
-    config = config_entries.ConfigEntry(version=1, minor_version = 0, domain=DOMAIN, title="10.0.0.1", data={}, source="User", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="10.0.0.1",
+        data={},
+        source="User",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
     manager_to_return = Manager(
         hass=hass,
         config=config,
@@ -415,7 +465,7 @@ def manager_system_04_furn_ac_zoning(hass) -> Manager:
     return manager_to_return
 
 
-@pytest.fixture
+@pytest.fixture()
 def manager_system_04_furn_ac_zoning_ble(manager_system_04_furn_ac_zoning: Manager) -> Manager:
     api = manager_system_04_furn_ac_zoning.api
     data = loadfile("system_04_furn_ac_zoning_ble.json", "0000000-0000-0000-0000-000000000001")

@@ -5,41 +5,33 @@
 # pylint: disable=protected-access
 # pylint: disable=line-too-long
 
-import logging
 from unittest.mock import patch
+
 import pytest
-
-
 from homeassistant.components.climate.const import HVACMode
 from homeassistant.exceptions import HomeAssistantError
-
 from lennoxs30api.s30api_async import (
-    LENNOX_VENTILATION_MODE_OFF,
-    LENNOX_VENTILATION_MODE_ON,
-    LENNOX_VENTILATION_MODE_INSTALLER,
-    LENNOX_ZONING_MODE_CENTRAL,
-    LENNOX_HVAC_OFF,
     LENNOX_HVAC_COOL,
+    LENNOX_HVAC_EMERGENCY_HEAT,
     LENNOX_HVAC_HEAT,
     LENNOX_HVAC_HEAT_COOL,
-    LENNOX_HVAC_EMERGENCY_HEAT,
+    LENNOX_HVAC_OFF,
+    LENNOX_ZONING_MODE_CENTRAL,
     lennox_system,
     lennox_zone,
 )
 
-
 from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30.select import ZoneModeSelect
 from custom_components.lennoxs30.const import LENNOX_DOMAIN, UNIQUE_ID_SUFFIX_ZONEMODE_SELECT
-
+from custom_components.lennoxs30.select import ZoneModeSelect
 from tests.conftest import (
     conf_test_exception_handling,
-    conftest_base_entity_availability,
     conf_test_select_info_async_select_option,
+    conftest_base_entity_availability,
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_mode_select_mode_unique_id(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
@@ -47,22 +39,26 @@ async def test_zone_mode_select_mode_unique_id(hass, manager: Manager):
     assert c.unique_id == zone.unique_id + UNIQUE_ID_SUFFIX_ZONEMODE_SELECT
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_mode_select_mode_name(hass, manager: Manager):
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
     c = ZoneModeSelect(hass, manager, system, zone)
     assert c.name == system.name + "_" + zone.name + "_hvac_mode"
 
-@pytest.mark.parametrize("lennox_mode,ha_mode", 
-        [(LENNOX_HVAC_HEAT, HVACMode.HEAT), 
+
+@pytest.mark.parametrize(
+    "lennox_mode,ha_mode",
+    [
+        (LENNOX_HVAC_HEAT, HVACMode.HEAT),
         (LENNOX_HVAC_COOL, HVACMode.COOL),
         (LENNOX_HVAC_HEAT_COOL, HVACMode.HEAT_COOL),
         (LENNOX_HVAC_OFF, HVACMode.OFF),
-        (LENNOX_HVAC_EMERGENCY_HEAT,LENNOX_HVAC_EMERGENCY_HEAT),
-    ])
-@pytest.mark.asyncio
-async def test_zone_mode_select_mode_current_option(hass, manager_mz: Manager, lennox_mode:str, ha_mode):
+        (LENNOX_HVAC_EMERGENCY_HEAT, LENNOX_HVAC_EMERGENCY_HEAT),
+    ],
+)
+@pytest.mark.asyncio()
+async def test_zone_mode_select_mode_current_option(hass, manager_mz: Manager, lennox_mode: str, ha_mode):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     zone: lennox_zone = system.zone_list[0]
@@ -72,7 +68,7 @@ async def test_zone_mode_select_mode_current_option(hass, manager_mz: Manager, l
     assert c.current_option == ha_mode
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_mode_select_mode_subscription(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -108,7 +104,7 @@ async def test_zone_mode_select_mode_subscription(hass, manager_mz: Manager):
     conftest_base_entity_availability(manager, system, c)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_mode_select_mode_options(hass, manager_mz: Manager):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
@@ -150,11 +146,11 @@ async def test_zone_mode_select_mode_options(hass, manager_mz: Manager):
     assert HVACMode.OFF in opt
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_zone_mode_select_mode_async_select_options(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
-    zone: lennox_zone = system.zone_list[1]    
+    zone: lennox_zone = system.zone_list[1]
     c = ZoneModeSelect(hass, manager, system, zone)
 
     with patch.object(zone, "setHVACMode") as set_hvac_mode:
@@ -167,9 +163,7 @@ async def test_zone_mode_select_mode_async_select_options(hass, manager_mz: Mana
         assert set_hvac_mode.call_count == 1
         set_hvac_mode.assert_called_once_with(LENNOX_HVAC_HEAT_COOL)
 
-    await conf_test_exception_handling(
-        zone, "setHVACMode", c, c.async_select_option, option=LENNOX_HVAC_HEAT_COOL
-    )
+    await conf_test_exception_handling(zone, "setHVACMode", c, c.async_select_option, option=LENNOX_HVAC_HEAT_COOL)
     await conf_test_select_info_async_select_option(zone, "setHVACMode", c, caplog)
 
     with patch.object(zone, "setHVACMode") as set_hvac_mode:
@@ -179,7 +173,8 @@ async def test_zone_mode_select_mode_async_select_options(hass, manager_mz: Mana
         assert set_hvac_mode.call_count == 0
         assert "is disabled" in str(hae.value)
 
-@pytest.mark.asyncio
+
+@pytest.mark.asyncio()
 async def test_zone_mode_select_mode_device_info(hass, manager_mz: Manager):
     manager = manager_mz
     await manager.create_devices()

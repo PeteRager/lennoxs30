@@ -1,17 +1,19 @@
 """Tests button setup"""
+
 from unittest.mock import Mock
+
 import pytest
 
 from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30.const import MANAGER
 from custom_components.lennoxs30.button import (
     EquipmentParameterUpdateButton,
     ResetSmartHubButton,
     async_setup_entry,
 )
+from custom_components.lennoxs30.const import MANAGER
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_button_setup_entry(hass, manager: Manager):
     """Test button setup"""
     entry = manager.config_entry

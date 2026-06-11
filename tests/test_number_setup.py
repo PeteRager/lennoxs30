@@ -1,32 +1,28 @@
+from unittest.mock import Mock, patch
+
+import pytest
 from lennoxs30api.s30api_async import (
     LENNOX_VENTILATION_DAMPER,
     lennox_system,
 )
+
 from custom_components.lennoxs30 import (
     Manager,
 )
-import pytest
 from custom_components.lennoxs30.const import MANAGER
-
 from custom_components.lennoxs30.number import (
+    CirculateTime,
+    DehumidificationOverCooling,
     DehumidifySetpointNumber,
     DiagnosticLevelNumber,
-    DehumidificationOverCooling,
-    CirculateTime,
     EquipmentParameterNumber,
     HumidifySetpointNumber,
     TimedVentilationNumber,
     async_setup_entry,
 )
 
-from homeassistant.helpers import entity_platform
 
-from unittest.mock import patch
-
-from unittest.mock import Mock, patch
-
-
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     entry = manager.config_entry
@@ -97,7 +93,6 @@ async def test_async_number_setup_entry(hass, manager: Manager, caplog):
     assert len(sensor_list) == 2
     assert isinstance(sensor_list[0], CirculateTime)
     assert isinstance(sensor_list[1], DehumidifySetpointNumber)
-
 
     # DehumidificationOverCooling and circulate time should be created
     system.zone_list[0].humidificationOption = False

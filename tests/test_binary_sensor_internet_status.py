@@ -1,25 +1,22 @@
-from lennoxs30api.s30api_async import (
-    lennox_system,
-)
-from custom_components.lennoxs30 import (
-    Manager,
-)
-
-from custom_components.lennoxs30.const import LENNOX_DOMAIN
-
-import pytest
-from custom_components.lennoxs30.binary_sensor import S30InternetStatus
-
 from unittest.mock import patch
 
+import pytest
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
+from lennoxs30api.s30api_async import (
+    lennox_system,
+)
 
+from custom_components.lennoxs30 import (
+    Manager,
+)
+from custom_components.lennoxs30.binary_sensor import S30InternetStatus
+from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from tests.conftest import conftest_base_entity_availability
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_internet_status_init(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = S30InternetStatus(hass, manager, system)
@@ -39,7 +36,7 @@ async def test_internet_status_init(hass, manager: Manager, caplog):
         assert x[1] == system.unique_id
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_internet_status_subscription(hass, manager: Manager, caplog):
     system: lennox_system = manager.api.system_list[0]
     c = S30InternetStatus(hass, manager, system)

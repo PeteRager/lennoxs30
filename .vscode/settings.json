@@ -24,7 +24,7 @@
     "setpoints",
     "sysuptime"
   ],
-  "cSpell.enabled": false, 
+  "cSpell.enabled": false,
   "black-formatter.args": ["--line-length", "120"],
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"

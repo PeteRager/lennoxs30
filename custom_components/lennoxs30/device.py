@@ -10,7 +10,7 @@ from lennoxs30api.s30api_async import LennoxBle, lennox_equipment, lennox_system
 from .const import LENNOX_DOMAIN, LENNOX_MFG
 
 
-class Device(object):
+class Device:
     """Represent a HASS device."""
 
     def __init__(self, equipment: lennox_equipment) -> None:

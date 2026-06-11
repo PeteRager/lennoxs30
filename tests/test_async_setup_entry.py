@@ -10,37 +10,33 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=protected-access
 
-
 import logging
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.const import CONF_TIMEOUT
 from homeassistant import config_entries
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT, EC_LOGIN, S30Exception
 
-from lennoxs30api.s30exception import S30Exception, EC_LOGIN, EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
-
-
+from custom_components.lennoxs30 import (
+    DOMAIN,
+    DOMAIN_STATE,
+    DS_LOGIN_FAILED,
+    PLATFORMS,
+    Manager,
+    async_setup_entry,
+    async_unload_entry,
+)
 from custom_components.lennoxs30.const import (
     CONF_FAST_POLL_COUNT,
     LENNOX_DOMAIN,
     MANAGER,
 )
-from custom_components.lennoxs30 import (
-    DOMAIN,
-    DOMAIN_STATE,
-    PLATFORMS,
-    Manager,
-    async_setup_entry,
-    DS_LOGIN_FAILED,
-    async_unload_entry,
-)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup_entry_local(hass: HomeAssistant, caplog):
     data = {
         "cloud_connection": False,
@@ -64,7 +60,18 @@ async def test_async_setup_entry_local(hass: HomeAssistant, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -158,7 +165,7 @@ async def test_async_setup_entry_local(hass: HomeAssistant, caplog):
                     assert "connection will be retried" in record.message
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup_entry_cloud(hass, caplog):
     data = {
         "cloud_connection": True,
@@ -182,7 +189,18 @@ async def test_async_setup_entry_cloud(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -212,7 +230,7 @@ async def test_async_setup_entry_cloud(hass, caplog):
         assert manager.connection_state == DOMAIN_STATE
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_setup_entry_multiple(hass, caplog):
     data = {
         "cloud_connection": False,
@@ -236,7 +254,18 @@ async def test_async_setup_entry_multiple(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -286,7 +315,18 @@ async def test_async_setup_entry_multiple(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test1", data = data, source="my_source", unique_id="123456", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test1",
+        data=data,
+        source="my_source",
+        unique_id="123456",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -337,7 +377,18 @@ async def test_async_setup_entry_multiple(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test2", data = data, source="my_source", unique_id="1234567", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test2",
+        data=data,
+        source="my_source",
+        unique_id="1234567",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
         res = await async_setup_entry(hass, config_entry)
@@ -367,7 +418,7 @@ async def test_async_setup_entry_multiple(hass, caplog):
         assert manager.connection_state == "lennoxs30.conn_pete_rage"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_unload_entry_success(hass, caplog):
     data = {
         "cloud_connection": False,
@@ -391,7 +442,18 @@ async def test_async_unload_entry_success(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     with patch("custom_components.lennoxs30.Manager.s30_initialize") as _:
         res = await async_setup_entry(hass, config_entry)
@@ -413,7 +475,7 @@ async def test_async_unload_entry_success(hass, caplog):
                 assert res is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_unload_entry_unload_fail(hass, caplog):
     data = {
         "cloud_connection": False,
@@ -437,7 +499,18 @@ async def test_async_unload_entry_unload_fail(hass, caplog):
     }
     hass.data[LENNOX_DOMAIN] = {}
 
-    config_entry = config_entries.ConfigEntry(version=1, minor_version=0, domain=DOMAIN, title = "Test", data = data, source="my_source", unique_id="12345", discovery_keys={}, options=None, subentries_data=[])
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain=DOMAIN,
+        title="Test",
+        data=data,
+        source="my_source",
+        unique_id="12345",
+        discovery_keys={},
+        options=None,
+        subentries_data=[],
+    )
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
