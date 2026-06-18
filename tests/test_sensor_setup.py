@@ -51,21 +51,15 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     manager.api.isLANConnection = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
-    assert async_add_entities.called == 1
-    sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 2
-    assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-    assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
+    assert async_add_entities.called == 0
 
     manager.api.isLANConnection = True
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 3
-    assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-    assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
-    assert isinstance(sensor_list[2], WifiRSSISensor)
+    assert len(sensor_list) == 1
+    assert isinstance(sensor_list[0], WifiRSSISensor)
     manager.api.isLANConnection = False
 
     # Outdoor Temperature Sensor
@@ -78,10 +72,8 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 3
-    assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-    assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
-    assert isinstance(sensor_list[2], S30OutdoorTempSensor)
+    assert len(sensor_list) == 1
+    assert isinstance(sensor_list[0], S30OutdoorTempSensor)
 
     # Inverter Power Sensor
     with caplog.at_level(logging.WARNING):
@@ -99,10 +91,8 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 3
-        assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-        assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
-        assert isinstance(sensor_list[2], S30InverterPowerSensor)
+        assert len(sensor_list) == 1
+        assert isinstance(sensor_list[0], S30InverterPowerSensor)
         assert len(caplog.records) == 1
         assert "diagLevel" in caplog.messages[0]
         assert "2" in caplog.messages[0]
@@ -123,10 +113,8 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 3
-        assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-        assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
-        assert isinstance(sensor_list[2], S30InverterPowerSensor)
+        assert len(sensor_list) == 1
+        assert isinstance(sensor_list[0], S30InverterPowerSensor)
         assert len(caplog.records) == 1
         assert "relayServerConnected" in caplog.messages[0]
 
@@ -146,10 +134,8 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 3
-        assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-        assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
-        assert isinstance(sensor_list[2], S30InverterPowerSensor)
+        assert len(sensor_list) == 1
+        assert isinstance(sensor_list[0], S30InverterPowerSensor)
         assert len(caplog.records) == 1
         assert "internetStatus" in caplog.messages[0]
 
@@ -167,10 +153,8 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 3
-        assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-        assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
-        assert isinstance(sensor_list[2], S30InverterPowerSensor)
+        assert len(sensor_list) == 1
+        assert isinstance(sensor_list[0], S30InverterPowerSensor)
         assert len(caplog.records) == 0
 
     # Tempereature and Humidity Sensors
@@ -263,11 +247,9 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 4
-    assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-    assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
-    assert isinstance(sensor_list[2], S30AlertSensor)
-    assert isinstance(sensor_list[3], S30ActiveAlertsList)
+    assert len(sensor_list) == 2
+    assert isinstance(sensor_list[0], S30AlertSensor)
+    assert isinstance(sensor_list[1], S30ActiveAlertsList)
 
     # BLE Sensors
     message = loadfile("system_04_furn_ac_zoning_ble.json", system.sysId)
@@ -293,7 +275,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 34
+        assert len(sensor_list) == 32
         assert len(caplog.records) == 2
 
         assert system.ble_devices[512].deviceName in caplog.messages[0]
@@ -313,11 +295,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         system.ble_devices.pop(576)
         async_add_entities = Mock()
         await async_setup_entry(hass, entry, async_add_entities)
-        assert async_add_entities.called == 1
-        sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 2
-        assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-        assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
+        assert async_add_entities.called == 0
         assert len(caplog.records) == 1
 
         assert system.ble_devices[513].deviceName in caplog.messages[0]
@@ -336,11 +314,7 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
     # Weather only supported on S40
     assert not system.is_s40
     await async_setup_entry(hass, entry, async_add_entities)
-    assert async_add_entities.called == 1
-    sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 2
-    assert isinstance(sensor_list[0], S30ZoneHumidityOperationSensor)
-    assert isinstance(sensor_list[1], S30ZoneAirDemandSensor)
+    assert async_add_entities.called == 0
 
     system.productType = LENNOX_PRODUCT_TYPE_S40
     assert system.is_s40
