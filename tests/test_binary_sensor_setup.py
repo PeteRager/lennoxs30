@@ -2,6 +2,7 @@
 
 # pylint: disable=protected-access
 import logging
+from collections import Counter
 from unittest.mock import Mock
 
 import pytest
@@ -28,8 +29,18 @@ from custom_components.lennoxs30.binary_sensor import (
     async_setup_entry,
 )
 from custom_components.lennoxs30.binary_sensor_ble import BleBinarySensor, BleCommStatusBinarySensor
+from custom_components.lennoxs30.ble_device_21p02 import lennox_21p02_binary_sensors
+from custom_components.lennoxs30.ble_device_22v25 import lennox_22v25_binary_sensors
 from custom_components.lennoxs30.const import MANAGER
 from tests.conftest import loadfile
+
+
+def assert_type_counts(sensor_list, expected_counts) -> Counter[type]:
+    """Assert entity counts by type."""
+    type_counts = Counter(type(entity) for entity in sensor_list)
+    for entity_type, expected_count in expected_counts.items():
+        assert type_counts[entity_type] == expected_count
+    return type_counts
 
 
 @pytest.mark.asyncio()
@@ -39,6 +50,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     entry = manager.config_entry
     hass.data["lennoxs30"] = {}
     hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
+    active_zones = sum(1 for zone in system.zone_list if zone.is_zone_active())
 
     assert system.outdoorUnitType != LENNOX_OUTDOOR_UNIT_HP
     manager.api.isLANConnection = True
@@ -46,42 +58,54 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 7
-    assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
-    assert isinstance(sensor_list[1], S30ZoneAllergenDefenderActiveBinarySensor)
-    assert isinstance(sensor_list[2], S30ZoneFanRunningBinarySensor)
-    assert isinstance(sensor_list[3], S30ZoneAuxiliaryHeatBinarySensor)
-    assert isinstance(sensor_list[4], S30ZoneDefrostBinarySensor)
-    assert isinstance(sensor_list[5], S30InternetStatus)
-    assert isinstance(sensor_list[6], S30RelayServerStatus)
+    assert_type_counts(
+        sensor_list,
+        {
+            S30HomeStateBinarySensor: 1,
+            S30ZoneAllergenDefenderActiveBinarySensor: active_zones,
+            S30ZoneFanRunningBinarySensor: active_zones,
+            S30ZoneAuxiliaryHeatBinarySensor: active_zones,
+            S30ZoneDefrostBinarySensor: active_zones,
+            S30InternetStatus: 1,
+            S30RelayServerStatus: 1,
+        },
+    )
 
     manager.api.isLANConnection = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 6
-    assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
-    assert isinstance(sensor_list[1], S30ZoneAllergenDefenderActiveBinarySensor)
-    assert isinstance(sensor_list[2], S30ZoneFanRunningBinarySensor)
-    assert isinstance(sensor_list[3], S30ZoneAuxiliaryHeatBinarySensor)
-    assert isinstance(sensor_list[4], S30ZoneDefrostBinarySensor)
-    assert isinstance(sensor_list[5], S30CloudConnectedStatus)
+    assert_type_counts(
+        sensor_list,
+        {
+            S30HomeStateBinarySensor: 1,
+            S30ZoneAllergenDefenderActiveBinarySensor: active_zones,
+            S30ZoneFanRunningBinarySensor: active_zones,
+            S30ZoneAuxiliaryHeatBinarySensor: active_zones,
+            S30ZoneDefrostBinarySensor: active_zones,
+            S30CloudConnectedStatus: 1,
+        },
+    )
 
     system.outdoorUnitType = LENNOX_OUTDOOR_UNIT_HP
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 8
-    assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
-    assert isinstance(sensor_list[1], S30ZoneAllergenDefenderActiveBinarySensor)
-    assert isinstance(sensor_list[2], S30ZoneFanRunningBinarySensor)
-    assert isinstance(sensor_list[3], S30ZoneAuxiliaryHeatBinarySensor)
-    assert isinstance(sensor_list[4], S30ZoneDefrostBinarySensor)
-    assert isinstance(sensor_list[5], S30CloudConnectedStatus)
-    assert isinstance(sensor_list[6], S30HeatpumpLowAmbientLockout)
-    assert isinstance(sensor_list[7], S30AuxheatHighAmbientLockout)
+    assert_type_counts(
+        sensor_list,
+        {
+            S30HomeStateBinarySensor: 1,
+            S30ZoneAllergenDefenderActiveBinarySensor: active_zones,
+            S30ZoneFanRunningBinarySensor: active_zones,
+            S30ZoneAuxiliaryHeatBinarySensor: active_zones,
+            S30ZoneDefrostBinarySensor: active_zones,
+            S30CloudConnectedStatus: 1,
+            S30HeatpumpLowAmbientLockout: 1,
+            S30AuxheatHighAmbientLockout: 1,
+        },
+    )
 
     # BLE Sensors
     message = loadfile("system_04_furn_ac_zoning_ble.json", system.sysId)
@@ -91,25 +115,25 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 18
-    assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
-    assert isinstance(sensor_list[1], S30ZoneAllergenDefenderActiveBinarySensor)
-    assert isinstance(sensor_list[2], S30ZoneFanRunningBinarySensor)
-    assert isinstance(sensor_list[3], S30ZoneAuxiliaryHeatBinarySensor)
-    assert isinstance(sensor_list[4], S30ZoneDefrostBinarySensor)
-    assert isinstance(sensor_list[5], S30CloudConnectedStatus)
-    assert isinstance(sensor_list[6], BleCommStatusBinarySensor)
-    assert isinstance(sensor_list[7], BleBinarySensor)
-    assert isinstance(sensor_list[8], BleBinarySensor)
-    assert isinstance(sensor_list[9], BleBinarySensor)
-    assert isinstance(sensor_list[10], BleCommStatusBinarySensor)
-    assert isinstance(sensor_list[11], BleBinarySensor)
-    assert isinstance(sensor_list[12], BleBinarySensor)
-    assert isinstance(sensor_list[13], BleBinarySensor)
-    assert isinstance(sensor_list[14], BleCommStatusBinarySensor)
-    assert isinstance(sensor_list[15], BleBinarySensor)
-    assert isinstance(sensor_list[16], BleBinarySensor)
-    assert isinstance(sensor_list[17], BleBinarySensor)
+    non_tstat_ble_devices = sum(1 for ble_device in system.ble_devices.values() if ble_device.deviceType != "tstat")
+    baseline_counts = assert_type_counts(
+        sensor_list,
+        {
+            S30HomeStateBinarySensor: 1,
+            S30ZoneAllergenDefenderActiveBinarySensor: active_zones,
+            S30ZoneFanRunningBinarySensor: active_zones,
+            S30ZoneAuxiliaryHeatBinarySensor: active_zones,
+            S30ZoneDefrostBinarySensor: active_zones,
+            S30CloudConnectedStatus: 1,
+            BleCommStatusBinarySensor: non_tstat_ble_devices,
+        },
+    )
+    assert baseline_counts[BleBinarySensor] == sum(
+        1
+        for ble_device in system.ble_devices.values()
+        if ble_device.deviceType != "tstat" and ble_device.controlModelNumber in {"22V25", "21P02"}
+        for _ in (lennox_22v25_binary_sensors if ble_device.controlModelNumber == "22V25" else lennox_21p02_binary_sensors)
+    )
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -119,7 +143,9 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 16
+        error_counts = Counter(type(entity) for entity in sensor_list)
+        assert error_counts[BleCommStatusBinarySensor] == baseline_counts[BleCommStatusBinarySensor]
+        assert error_counts[BleBinarySensor] == baseline_counts[BleBinarySensor] - 2
         assert len(caplog.records) == 2
 
         assert system.ble_devices[512].deviceName in caplog.messages[0]
@@ -140,7 +166,15 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 11
+        unknown_model_counts = Counter(type(entity) for entity in sensor_list)
+        assert unknown_model_counts[S30HomeStateBinarySensor] == 1
+        assert unknown_model_counts[S30ZoneAllergenDefenderActiveBinarySensor] == active_zones
+        assert unknown_model_counts[S30ZoneFanRunningBinarySensor] == active_zones
+        assert unknown_model_counts[S30ZoneAuxiliaryHeatBinarySensor] == active_zones
+        assert unknown_model_counts[S30ZoneDefrostBinarySensor] == active_zones
+        assert unknown_model_counts[S30CloudConnectedStatus] == 1
+        assert unknown_model_counts[BleCommStatusBinarySensor] == 2
+        assert unknown_model_counts[BleBinarySensor] == len(lennox_21p02_binary_sensors)
         assert len(caplog.records) == 1
 
         assert system.ble_devices[513].deviceName in caplog.messages[0]
