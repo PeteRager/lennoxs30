@@ -1,24 +1,18 @@
 """Test BLE Sensors"""
 
 # pylint: disable=line-too-long
-import importlib.util
 import logging
-from types import SimpleNamespace
 from unittest.mock import patch
 
-import homeassistant.const
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfDensity, UnitOfRatio
 from lennoxs30api.s30api_async import lennox_system
 
 from custom_components.lennoxs30 import Manager
-from custom_components.lennoxs30 import ble_device_21p02
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
 from custom_components.lennoxs30.sensor import S40IAQSensor, lennox_21p02_sensors, lennox_iaq_sensors
 from tests.conftest import conftest_base_entity_availability
-
-UNIT_MICROGRAMS_PER_CUBIC_METER = "μg/m³"
-UNIT_PARTS_PER_MILLION = "ppm"
 
 
 @pytest.mark.asyncio()
@@ -41,7 +35,7 @@ async def test_iaq_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
     assert sensor.extra_state_attributes is None
     assert sensor.native_value == round(system.iaq_pm25_lta, sensor_dict["precision"])
     assert sensor.entity_category is None
-    assert sensor.native_unit_of_measurement == UNIT_MICROGRAMS_PER_CUBIC_METER
+    assert sensor.native_unit_of_measurement == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 
     system.iaq_pm25_lta_valid = False
     assert sensor.available is False
@@ -70,43 +64,15 @@ async def test_iaq_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
 def test_air_quality_sensor_units():
     """Test air quality sensor units on supported Home Assistant versions."""
     ble_sensors = {sensor["name"]: sensor for sensor in lennox_21p02_sensors}
-    assert ble_sensors["pm25"]["uom"] == UNIT_MICROGRAMS_PER_CUBIC_METER
-    assert ble_sensors["voc"]["uom"] == UNIT_MICROGRAMS_PER_CUBIC_METER
-    assert ble_sensors["co2"]["uom"] == UNIT_PARTS_PER_MILLION
+    assert ble_sensors["pm25"]["uom"] == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+    assert ble_sensors["voc"]["uom"] == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+    assert ble_sensors["co2"]["uom"] == UnitOfRatio.PARTS_PER_MILLION
 
     iaq_sensors = {sensor["name"]: sensor for sensor in lennox_iaq_sensors}
     for name in ("pm25 sta", "pm25 lta", "voc sta", "voc lta"):
-        assert iaq_sensors[name]["uom"] == UNIT_MICROGRAMS_PER_CUBIC_METER
+        assert iaq_sensors[name]["uom"] == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     for name in ("co2 sta", "co2 lta"):
-        assert iaq_sensors[name]["uom"] == UNIT_PARTS_PER_MILLION
-
-
-def test_air_quality_sensor_modern_units(monkeypatch):
-    """Test that newer Home Assistant unit enums are preferred when available."""
-    modern_density_unit = "modern-density-unit"
-    modern_ratio_unit = "modern-ratio-unit"
-    monkeypatch.setattr(
-        homeassistant.const,
-        "UnitOfDensity",
-        SimpleNamespace(MICROGRAMS_PER_CUBIC_METER=modern_density_unit),
-        raising=False,
-    )
-    monkeypatch.setattr(
-        homeassistant.const,
-        "UnitOfRatio",
-        SimpleNamespace(PARTS_PER_MILLION=modern_ratio_unit),
-        raising=False,
-    )
-
-    spec = importlib.util.spec_from_file_location("lennoxs30_ble_device_modern_test", ble_device_21p02.__file__)
-    assert spec is not None
-    assert spec.loader is not None
-    modern_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(modern_module)
-
-    ble_sensors = {sensor["name"]: sensor for sensor in modern_module.lennox_21p02_sensors}
-    assert ble_sensors["pm25"]["uom"] == modern_density_unit
-    assert ble_sensors["co2"]["uom"] == modern_ratio_unit
+        assert iaq_sensors[name]["uom"] == UnitOfRatio.PARTS_PER_MILLION
 
 
 @pytest.mark.asyncio()

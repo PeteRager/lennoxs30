@@ -1,22 +1,12 @@
 """Lennox BLE Air Quality Sensor."""
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfDensity,
+    UnitOfRatio,
+)
 from homeassistant.helpers.entity import EntityCategory
-
-try:
-    from homeassistant.const import UnitOfDensity, UnitOfRatio
-except ImportError:
-    from homeassistant.const import (
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_MILLION,
-    )
-
-    UNIT_MICROGRAMS_PER_CUBIC_METER = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    UNIT_PARTS_PER_MILLION = CONCENTRATION_PARTS_PER_MILLION
-else:
-    UNIT_MICROGRAMS_PER_CUBIC_METER = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
-    UNIT_PARTS_PER_MILLION = UnitOfRatio.PARTS_PER_MILLION
 
 lennox_21p02_sensors = [
     {
@@ -48,7 +38,7 @@ lennox_21p02_sensors = [
         "name": "pm25",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.PM25,
-        "uom": UNIT_MICROGRAMS_PER_CUBIC_METER,
+        "uom": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     },
     {
         "input_id": 4103,
@@ -56,7 +46,7 @@ lennox_21p02_sensors = [
         "name": "co2",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.CO2,
-        "uom": UNIT_PARTS_PER_MILLION,
+        "uom": UnitOfRatio.PARTS_PER_MILLION,
     },
     {
         "input_id": 4105,
@@ -64,7 +54,7 @@ lennox_21p02_sensors = [
         "name": "voc",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        "uom": UNIT_MICROGRAMS_PER_CUBIC_METER,
+        "uom": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "precision": 2,
     },
 ]
@@ -94,7 +84,7 @@ lennox_iaq_sensors = [
         "name": "pm25 sta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.PM25,
-        "uom": UNIT_MICROGRAMS_PER_CUBIC_METER,
+        "uom": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "precision": 4,
     },
     {
@@ -103,7 +93,7 @@ lennox_iaq_sensors = [
         "name": "pm25 lta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.PM25,
-        "uom": UNIT_MICROGRAMS_PER_CUBIC_METER,
+        "uom": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "precision": 4,
     },
     {
@@ -116,7 +106,7 @@ lennox_iaq_sensors = [
         "name": "voc sta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        "uom": UNIT_MICROGRAMS_PER_CUBIC_METER,
+        "uom": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "precision": 2,
     },
     {
@@ -125,7 +115,7 @@ lennox_iaq_sensors = [
         "name": "voc lta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        "uom": UNIT_MICROGRAMS_PER_CUBIC_METER,
+        "uom": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "precision": 2,
     },
     {
@@ -138,7 +128,7 @@ lennox_iaq_sensors = [
         "name": "co2 lta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.CO2,
-        "uom": UNIT_PARTS_PER_MILLION,
+        "uom": UnitOfRatio.PARTS_PER_MILLION,
         "precision": 1,
     },
     {
@@ -147,7 +137,7 @@ lennox_iaq_sensors = [
         "name": "co2 sta",
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.CO2,
-        "uom": UNIT_PARTS_PER_MILLION,
+        "uom": UnitOfRatio.PARTS_PER_MILLION,
         "precision": 1,
     },
     {
