@@ -23,6 +23,7 @@ from custom_components.lennoxs30.sensor import (
     S30InverterPowerSensor,
     S30OutdoorTempSensor,
     S30TempSensor,
+    S30ZoneDemandSensor,
     async_setup_entry,
 )
 from custom_components.lennoxs30.sensor_ble import S40BleSensor
@@ -166,10 +167,11 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 2 * system.numberOfZones
+        assert len(sensor_list) == 3 * system.numberOfZones
         for i in range(system.numberOfZones):
-            assert isinstance(sensor_list[i * 2], S30TempSensor)
-            assert isinstance(sensor_list[(i * 2) + 1], S30HumiditySensor)
+            assert isinstance(sensor_list[i * 3], S30TempSensor)
+            assert isinstance(sensor_list[(i * 3) + 1], S30HumiditySensor)
+            assert isinstance(sensor_list[(i * 3) + 2], S30ZoneDemandSensor)
         assert len(caplog.records) == 0
 
     # Diagnostic Sensors
@@ -338,3 +340,38 @@ async def test_async_setup_entry(hass, manager: Manager, caplog):
 
     sensor: WTEnvSensor = sensor_list[9]
     assert sensor.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+
+
+@pytest.mark.asyncio()
+async def test_zone_demand_sensor_skipped_when_no_demand(hass, manager: Manager):
+    """A demand sensor must NOT be created for zones that do not report CFM demand.
+
+    Staged / single-stage / non-variable-capacity units leave zone.demand == None,
+    so only temperature and humidity sensors should be created for those zones.
+    """
+    system: lennox_system = manager.api.system_list[0]
+    entry = manager.config_entry
+    hass.data["lennoxs30"] = {}
+    hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
+
+    system.outdoorTemperatureStatus = LENNOX_STATUS_NOT_EXIST
+    manager.create_inverter_power = False
+    manager.create_sensors = True
+    manager.create_diagnostic_sensors = False
+    manager.create_alert_sensors = False
+    manager.api.isLANConnection = False
+
+    # Simulate non-variable equipment: no zone reports a CFM demand
+    for zone in system.zone_list:
+        zone.demand = None
+
+    async_add_entities = Mock()
+    await async_setup_entry(hass, entry, async_add_entities)
+    sensor_list = async_add_entities.call_args[0][0]
+
+    assert not any(isinstance(s, S30ZoneDemandSensor) for s in sensor_list)
+    # Temp + humidity are still created for each active zone (2 per zone, no demand sensor)
+    assert len(sensor_list) == 2 * system.numberOfZones
+    for i in range(system.numberOfZones):
+        assert isinstance(sensor_list[i * 2], S30TempSensor)
+        assert isinstance(sensor_list[(i * 2) + 1], S30HumiditySensor)
