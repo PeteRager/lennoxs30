@@ -44,6 +44,7 @@ from .const import (
     UNIQUE_ID_SUFFIX_ACTIVE_ALERTS_SENSOR,
     UNIQUE_ID_SUFFIX_ALERT_SENSOR,
     UNIQUE_ID_SUFFIX_DIAG_SENSOR,
+    UNIQUE_ID_SUFFIX_ZONE_HUMIDITY_OPERATION,
 )
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
 from .sensor_ble import S40BleSensor
@@ -121,6 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if manager.create_sensors:
             for zone in system.zone_list:
                 if zone.is_zone_active():
+                    sensor_list.append(S30ZoneHumidityOperationSensor(hass, manager, system, zone))
                     _LOGGER.debug("Create S30TempSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30TempSensor(hass, manager, system, zone))
                     _LOGGER.debug("Create S30HumSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
@@ -572,6 +574,69 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
         return {
             "identifiers": {(DOMAIN, self._zone.unique_id)},
         }
+
+
+class S30ZoneRuntimeSensor(S30BaseEntityMixin, SensorEntity):
+    """Base class for zone runtime sensors."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _zone_update_fields: list[str] = []
+    _unique_id_suffix: str = ""
+    _name_suffix: str = ""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system, zone: lennox_zone):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._zone = zone
+        self._myname = f"{self._zone.system.name}_{self._zone.name}_{self._name_suffix}"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._zone.registerOnUpdateCallback(self.update_callback, self._zone_update_fields)
+        await super().async_added_to_hass()
+
+    def update_callback(self) -> None:
+        """Callback to execute on data change."""
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback %s myname [%s]", self.__class__.__name__, self._myname)
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique_id."""
+        return (self._zone.unique_id + self._unique_id_suffix).replace("-", "")
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {}
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+        }
+
+
+class S30ZoneHumidityOperationSensor(S30ZoneRuntimeSensor):
+    """Zone humidity operation sensor."""
+
+    _zone_update_fields = ["humOperation"]
+    _unique_id_suffix = UNIQUE_ID_SUFFIX_ZONE_HUMIDITY_OPERATION
+    _name_suffix = "humidity_operation"
+
+    @property
+    def native_value(self):
+        """Return native value of the sensor."""
+        value = self._zone.humOperation
+        if isinstance(value, str):
+            return value
+        return None
 
 
 class S30InverterPowerSensor(S30BaseEntityMixin, SensorEntity):
