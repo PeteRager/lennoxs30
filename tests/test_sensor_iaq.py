@@ -6,12 +6,12 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+from homeassistant.const import UnitOfDensity, UnitOfRatio
 from lennoxs30api.s30api_async import lennox_system
 
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import LENNOX_DOMAIN
-from custom_components.lennoxs30.sensor import S40IAQSensor, lennox_iaq_sensors
+from custom_components.lennoxs30.sensor import S40IAQSensor, lennox_21p02_sensors, lennox_iaq_sensors
 from tests.conftest import conftest_base_entity_availability
 
 
@@ -35,7 +35,7 @@ async def test_iaq_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
     assert sensor.extra_state_attributes is None
     assert sensor.native_value == round(system.iaq_pm25_lta, sensor_dict["precision"])
     assert sensor.entity_category is None
-    assert sensor.native_unit_of_measurement == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    assert sensor.native_unit_of_measurement == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 
     system.iaq_pm25_lta_valid = False
     assert sensor.available is False
@@ -59,6 +59,20 @@ async def test_iaq_sensor(hass, manager_system_04_furn_ac_zoning_ble: Manager, c
     sensor_dict = lennox_iaq_sensors[0]
     sensor = S40IAQSensor(hass, manager, system, ble_device, sensor_dict)
     assert sensor.native_value == system.iaq_mitigation_action
+
+
+def test_air_quality_sensor_units():
+    """Test air quality sensor units on supported Home Assistant versions."""
+    ble_sensors = {sensor["name"]: sensor for sensor in lennox_21p02_sensors}
+    assert ble_sensors["pm25"]["uom"] == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+    assert ble_sensors["voc"]["uom"] == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+    assert ble_sensors["co2"]["uom"] == UnitOfRatio.PARTS_PER_MILLION
+
+    iaq_sensors = {sensor["name"]: sensor for sensor in lennox_iaq_sensors}
+    for name in ("pm25 sta", "pm25 lta", "voc sta", "voc lta"):
+        assert iaq_sensors[name]["uom"] == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+    for name in ("co2 sta", "co2 lta"):
+        assert iaq_sensors[name]["uom"] == UnitOfRatio.PARTS_PER_MILLION
 
 
 @pytest.mark.asyncio()
