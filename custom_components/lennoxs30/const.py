@@ -17,6 +17,8 @@ CONF_MESSAGE_DEBUG_FILE = "message_debug_file"
 CONF_CLOUD_CONNECTION = "cloud_connection"
 CONF_LOCAL_CONNECTION = "local_connection"
 CONF_CREATE_PARAMETERS = "create_parameters"
+CONF_THERMOSTAT_ID = "thermostat_id"
+CONF_MDNS_PORT = "mdns_port"
 
 DEFAULT_CLOUD_TIMEOUT = 60
 DEFAULT_LOCAL_TIMEOUT = 30

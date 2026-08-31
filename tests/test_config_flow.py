@@ -11,7 +11,7 @@
 # pylint: disable=protected-access
 
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -70,6 +70,13 @@ from custom_components.lennoxs30.const import (
     LENNOX_DOMAIN,
 )
 from custom_components.lennoxs30.util import redact_email
+
+
+@pytest.fixture(autouse=True)
+def mock_shared_zeroconf(mock_async_zeroconf):
+    """Prevent legacy setup tests from opening the shared mDNS socket."""
+    mock_async_zeroconf.async_add_service_listener = AsyncMock()
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock()
 
 
 @pytest.mark.asyncio()
@@ -1303,7 +1310,7 @@ async def test_async_setup(hass):
     config: ConfigType = {}
     result: bool = await async_setup(hass, config)
     assert result is True
-    assert hass.data[LENNOX_DOMAIN] == {}
+    assert "mdns_listener" in hass.data[LENNOX_DOMAIN]
 
 
 def test_lennox30_entries(hass, caplog):
