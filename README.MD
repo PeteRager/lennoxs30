@@ -498,6 +498,22 @@ Local Connections Only.  Reports the WIFI signal strength, this sensor can be us
 | subnetMask | string       | LAN subnet mask                                 |
 | bitrate | float       | WIFI connection bitrate                                  |
 
+### reminder\_\<kind\>
+
+One sensor per maintenance reminder slot on the thermostat (filter1, filter2, uvBulb, humidifiedPad, pureAir, maintenance, ventilationMaintenance, ventilationFilter). The state is the percent of the reminder interval remaining, as reported by the thermostat. Only reminders enabled on the thermostat are enabled by default; the others are created disabled and report no value unless enabled on the thermostat.
+
+| Attribute     | Type   | Description                                                                 |
+| ------------- | ------ | --------------------------------------------------------------------------- |
+| kind          | string | Reminder type                                                               |
+| enabled       | bool   | Reminder is enabled on the thermostat                                       |
+| expired       | bool   | Reminder has expired (maintenance is due)                                   |
+| expiry_type   | string | systemRunTime (counts equipment run time) or systemCalendarTime             |
+| reminder_time | int    | Reminder interval in seconds                                                |
+| set_time      | int    | Time the reminder was last reset, as reported by the thermostat             |
+| expiry_time   | int    | Time the reminder will expire, as reported by the thermostat                |
+| expired_time  | int    | Time the reminder expired, as reported by the thermostat                    |
+| viewed        | bool   | Reminder has been viewed on the thermostat                                  |
+
 ## Select Entities
 
 ### HVAC Mode

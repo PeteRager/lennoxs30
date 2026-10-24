@@ -48,6 +48,7 @@ from .const import (
 from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
 from .sensor_ble import S40BleSensor
 from .sensor_iaq import S40IAQSensor
+from .sensor_reminder import S30ReminderSensor
 from .sensor_wifi import WifiRSSISensor
 from .sensor_wt_env import WTEnvSensor, lennox_wt_env_sensors, lennox_wt_env_sensors_metric, lennox_wt_env_sensors_us
 
@@ -173,6 +174,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
         if manager.api.isLANConnection:
             sensor_list.append(WifiRSSISensor(hass, manager, system))
+
+        for reminder in system.reminders.values():
+            if reminder.kind is not None:
+                _LOGGER.debug("Create S30ReminderSensor system [%s] kind [%s]", system.sysId, reminder.kind)
+                sensor_list.append(S30ReminderSensor(hass, manager, system, reminder))
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)

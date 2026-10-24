@@ -1,0 +1,177 @@
+{
+    "MessageId": 0,
+    "SenderID": "LCC",
+    "TargetID": "homeassistant",
+    "MessageType": "PropertyChange",
+    "Data": {
+        "reminders": [
+            {
+                "id": 0,
+                "maxItems": 8,
+                "writeAccess": "remote",
+                "config": {
+                    "kind": "filter1",
+                    "enabled": true,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemRunTime",
+                    "viewed": false,
+                    "reminderTime": 15724800
+                },
+                "status": {
+                    "isValid": true,
+                    "reminderExpired": false,
+                    "reminderExpiredTime": "0",
+                    "reminderExpiryTime": "15724800",
+                    "reminderSetTime": "0",
+                    "reminderRemainingPct": 100
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 1,
+                "config": {
+                    "kind": "filter2",
+                    "enabled": false,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemCalendarTime",
+                    "viewed": false
+                },
+                "status": {
+                    "isValid": true,
+                    "reminderExpired": false
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 2,
+                "config": {
+                    "kind": "uvBulb",
+                    "enabled": false,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemCalendarTime",
+                    "viewed": false
+                },
+                "status": {
+                    "isValid": true,
+                    "reminderExpired": false
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 3,
+                "config": {
+                    "kind": "humidifiedPad",
+                    "enabled": false,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemCalendarTime",
+                    "viewed": false
+                },
+                "status": {
+                    "isValid": true,
+                    "reminderExpired": false
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 4,
+                "config": {
+                    "kind": "pureAir",
+                    "enabled": false,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemCalendarTime",
+                    "viewed": false
+                },
+                "status": {
+                    "isValid": true,
+                    "reminderExpired": false
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 5,
+                "config": {
+                    "kind": "maintenance",
+                    "enabled": false,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemCalendarTime",
+                    "viewed": false
+                },
+                "status": {
+                    "isValid": true,
+                    "reminderExpired": false
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 6,
+                "config": {
+                    "kind": "ventilationMaintenance",
+                    "enabled": false,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemCalendarTime",
+                    "viewed": false
+                },
+                "status": {
+                    "isValid": false,
+                    "reminderExpired": false,
+                    "reminderExpiredTime": "0",
+                    "reminderExpiryTime": "0",
+                    "reminderSetTime": "0",
+                    "reminderRemainingPct": 0
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            },
+            {
+                "id": 7,
+                "config": {
+                    "kind": "ventilationFilter",
+                    "enabled": false,
+                    "writeAccess": "remote",
+                    "reminderExpiryType": "systemCalendarTime",
+                    "viewed": false
+                },
+                "status": {
+                    "isValid": false,
+                    "reminderExpired": false,
+                    "reminderExpiredTime": "0",
+                    "reminderExpiryTime": "0",
+                    "reminderSetTime": "0",
+                    "reminderRemainingPct": 0
+                },
+                "publisher": {
+                    "publisherName": "unknown",
+                    "doNotPersist": true,
+                    "writeAccess": "openAll"
+                }
+            }
+        ]
+    }
+}
