@@ -500,7 +500,7 @@ Local Connections Only.  Reports the WIFI signal strength, this sensor can be us
 
 ### reminder\_\<kind\>
 
-One sensor per maintenance reminder slot on the thermostat (filter1, filter2, uvBulb, humidifiedPad, pureAir, maintenance, ventilationMaintenance, ventilationFilter). The state is the percent of the reminder interval remaining, as reported by the thermostat. Only reminders enabled on the thermostat are enabled by default; the others are created disabled and report no value unless enabled on the thermostat.
+One sensor per maintenance reminder slot on the thermostat (filter1, filter2, uvBulb, humidifiedPad, pureAir, maintenance, ventilationMaintenance, ventilationFilter). The state is the percent of the reminder interval remaining, as reported by the thermostat. Only reminders enabled on the thermostat are enabled by default; the others are created disabled and report no value unless enabled on the thermostat. Only `enabled` and `expired` are recorded in history.
 
 | Attribute     | Type   | Description                                                                 |
 | ------------- | ------ | --------------------------------------------------------------------------- |
@@ -509,9 +509,10 @@ One sensor per maintenance reminder slot on the thermostat (filter1, filter2, uv
 | expired       | bool   | Reminder has expired (maintenance is due)                                   |
 | expiry_type   | string | systemRunTime (counts equipment run time) or systemCalendarTime             |
 | reminder_time | int    | Reminder interval in seconds                                                |
-| set_time      | int    | Time the reminder was last reset, as reported by the thermostat             |
-| expiry_time   | int    | Time the reminder will expire, as reported by the thermostat                |
-| expired_time  | int    | Time the reminder expired, as reported by the thermostat                    |
+| remaining_runtime | int | systemRunTime only. Estimated hours of system run time left (percent remaining x interval, so it moves in steps of 1% of the interval) |
+| set_time      | datetime | systemCalendarTime only. When the reminder was last reset (UTC)        |
+| expiry_time   | datetime | systemCalendarTime only. When the reminder will expire (UTC)           |
+| expired_time  | datetime | systemCalendarTime only. When the reminder expired (UTC)               |
 | viewed        | bool   | Reminder has been viewed on the thermostat                                  |
 
 ## Select Entities
