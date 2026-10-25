@@ -131,5 +131,7 @@ async def test_reminder_sensor_setup(hass, manager: Manager):
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     sensor_list = [x for x in async_add_entities.call_args[0][0] if isinstance(x, S30ReminderSensor)]
-    assert len(sensor_list) == 8
+    # The two ventilation slots are marked invalid on this system (no ventilator)
+    assert len(sensor_list) == 6
+    assert all(x._reminder.is_valid for x in sensor_list)  # pylint: disable=protected-access
     assert [x.name for x in sensor_list if x.entity_registry_enabled_default] == [system.name + "_reminder_filter1"]

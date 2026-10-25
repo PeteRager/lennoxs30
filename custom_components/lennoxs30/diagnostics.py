@@ -48,6 +48,18 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, config_entry: 
                 "model": equipment.unit_model_number,
             }
             system_data["equipment"][eq_id] = element
+
+        system_data["reminders"] = {}
+        for reminder_id, reminder in system.reminders.items():
+            system_data["reminders"][reminder_id] = {
+                "kind": reminder.kind,
+                "expiry_type": reminder.expiry_type,
+                "enabled": reminder.enabled,
+                "is_valid": reminder.is_valid,
+                "expired": reminder.expired,
+                "remaining_pct": reminder.remaining_pct,
+                "reminder_time": reminder.reminder_time,
+            }
         data["system"][system.sysId] = system_data
 
     data["comm_metrics"] = manager.getMetricsList()

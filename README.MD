@@ -500,7 +500,7 @@ Local Connections Only.  Reports the WIFI signal strength, this sensor can be us
 
 ### reminder\_\<kind\>
 
-One sensor per maintenance reminder slot on the thermostat (filter1, filter2, uvBulb, humidifiedPad, pureAir, maintenance, ventilationMaintenance, ventilationFilter). The state is the percent of the reminder interval remaining, as reported by the thermostat. Only reminders enabled on the thermostat are enabled by default; the others are created disabled and report no value unless enabled on the thermostat. Only `enabled` and `expired` are recorded in history.
+One sensor per maintenance reminder slot on the thermostat (filter1, filter2, uvBulb, humidifiedPad, pureAir, maintenance, ventilationMaintenance, ventilationFilter). The state is the percent of the reminder interval remaining, as reported by the thermostat. Slots the thermostat reports as not valid for the system (e.g. ventilation reminders without a ventilator) are not created. Only reminders enabled on the thermostat are enabled by default; the others are created disabled and report no value unless enabled on the thermostat. Only `enabled` and `expired` are recorded in history.
 
 | Attribute     | Type   | Description                                                                 |
 | ------------- | ------ | --------------------------------------------------------------------------- |

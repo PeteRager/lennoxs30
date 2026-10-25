@@ -176,7 +176,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             sensor_list.append(WifiRSSISensor(hass, manager, system))
 
         for reminder in system.reminders.values():
-            if reminder.kind is not None:
+            # Slots the thermostat marks invalid (e.g. ventilation reminders without a ventilator) are skipped
+            if reminder.kind is not None and reminder.is_valid is not False:
                 _LOGGER.debug("Create S30ReminderSensor system [%s] kind [%s]", system.sysId, reminder.kind)
                 sensor_list.append(S30ReminderSensor(hass, manager, system, reminder))
 
