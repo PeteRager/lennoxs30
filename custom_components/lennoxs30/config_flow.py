@@ -23,6 +23,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from lennoxs30api.s30exception import EC_LOGIN, S30Exception
 
 from . import Manager
@@ -41,13 +43,23 @@ from .const import (
     CONF_LOG_MESSAGES_TO_FILE,
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
+    CONF_MDNS_PORT,
     CONF_PII_IN_MESSAGE_LOGS,
+    CONF_THERMOSTAT_ID,
     DEFAULT_CLOUD_TIMEOUT,
     DEFAULT_LOCAL_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
     LENNOX_DEFAULT_LOCAL_APP_ID,
+    MANAGER,
 )
 from .util import dict_redact_fields, redact_email
+from .discovery import (
+    ZEROCONF_SERVICE,
+    advertised_identity,
+    discovered_host,
+    discovered_port,
+    is_lennox_service,
+)
 
 DEFAULT_POLL_INTERVAL: int = 10
 DEFAULT_FAST_POLL_INTERVAL: float = 0.75
@@ -56,6 +68,60 @@ MAX_ERRORS = 5
 RETRY_INTERVAL_SECONDS = 60
 DOMAIN = "lennoxs30"
 _LOGGER = logging.getLogger(__name__)
+
+
+def _stable_unique_id(identity: str | None) -> str | None:
+    """Return the config-entry unique ID for a discovered thermostat."""
+    return f"{DOMAIN}_{identity}" if identity else None
+
+
+def _update_discovered_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+    identity: str | None,
+) -> None:
+    """Update discovery data and promote a stable thermostat identity."""
+    update_kwargs: dict[str, Any] = {"data": data, "title": data[CONF_HOST]}
+    unique_id = _stable_unique_id(identity)
+    if unique_id and entry.unique_id != unique_id:
+        collision = any(
+            other.entry_id != entry.entry_id and other.unique_id == unique_id for other in hass.config_entries.async_entries(DOMAIN)
+        )
+        if not collision:
+            update_kwargs["unique_id"] = unique_id
+    hass.config_entries.async_update_entry(entry, **update_kwargs)
+
+
+async def async_migrate_zeroconf_entry(hass: HomeAssistant, discovery_info: ZeroconfServiceInfo) -> bool:
+    """Migrate an existing local entry from an IP address to mDNS data."""
+    if not is_lennox_service(discovery_info.type, discovery_info.name):
+        return False
+
+    flow = Lennoxs30ConfigFlow()
+    flow.hass = hass
+    hostname = discovered_host(discovery_info)
+    port = discovered_port(discovery_info)
+    identity = advertised_identity(discovery_info)
+    if identity is None:
+        return False
+
+    existing = flow._find_discovered_entry(hostname, discovery_info.host, identity)
+    if existing is None:
+        return False
+
+    data = {
+        **existing.data,
+        CONF_HOST: hostname,
+        CONF_MDNS_PORT: port,
+        CONF_THERMOSTAT_ID: identity,
+    }
+    manager = hass.data.get(DOMAIN, {}).get(existing.unique_id, {}).get(MANAGER)
+    _update_discovered_entry(hass, existing, data, identity)
+    if manager:
+        manager.async_update_connection_target(hostname, discovery_info.host, port)
+    _LOGGER.info("Migrated Lennox entry %s to mDNS hostname %s", existing.entry_id, hostname)
+    return True
 
 
 STEP_ONE = vol.Schema(
@@ -205,6 +271,83 @@ class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = "unable_to_connect_local"
         return self.async_show_form(step_id="local", data_schema=STEP_LOCAL, errors=errors)
 
+    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
+        """Handle a Lennox thermostat discovered by mDNS."""
+        if not is_lennox_service(discovery_info.type, discovery_info.name):
+            return self.async_abort(reason="not_lennox")
+        hostname = discovered_host(discovery_info)
+        port = discovered_port(discovery_info)
+        identity = advertised_identity(discovery_info)
+        existing = self._find_discovered_entry(hostname, discovery_info.host, identity)
+        if existing is None and identity is None:
+            identity = await self._probe_discovered_identity(discovery_info, port)
+            existing = self._find_discovered_entry(hostname, discovery_info.host, identity)
+        if existing is not None:
+            data = {**existing.data, CONF_HOST: hostname, CONF_MDNS_PORT: port}
+            if identity:
+                data[CONF_THERMOSTAT_ID] = identity
+            manager = self.hass.data.get(DOMAIN, {}).get(existing.unique_id, {}).get(MANAGER)
+            _update_discovered_entry(self.hass, existing, data, identity)
+            if manager:
+                manager.async_update_connection_target(hostname, discovery_info.host, port)
+            return self.async_abort(reason="already_configured")
+
+        self.config_input = {
+            CONF_CLOUD_CONNECTION: False,
+            CONF_HOST: hostname,
+            CONF_MDNS_PORT: port,
+            CONF_APP_ID: LENNOX_DEFAULT_LOCAL_APP_ID,
+            CONF_CREATE_SENSORS: True,
+            CONF_ALLERGEN_DEFENDER_SWITCH: False,
+            CONF_CREATE_INVERTER_POWER: False,
+            CONF_CREATE_DIAGNOSTICS_SENSORS: False,
+            CONF_CREATE_PARAMETERS: False,
+            CONF_PROTOCOL: "https",
+        }
+        if identity:
+            self.config_input[CONF_THERMOSTAT_ID] = identity
+        self._discovery_unique_id = f"{DOMAIN}_{identity or hostname}"
+        await self.async_set_unique_id(self._discovery_unique_id)
+        self._abort_if_unique_id_configured()
+        return await self.async_step_advanced()
+
+    async def _probe_discovered_identity(self, discovery_info: ZeroconfServiceInfo, port: int) -> str | None:
+        """Best-effort identity probe used to migrate IP-only entries."""
+        probe_input = {
+            CONF_HOST: f"{discovery_info.host}:{port}",
+            CONF_APP_ID: LENNOX_DEFAULT_LOCAL_APP_ID,
+            CONF_PROTOCOL: "https",
+        }
+        self.config_input = {CONF_CLOUD_CONNECTION: False}
+        try:
+            await self.try_to_connect(probe_input)
+        except Exception:
+            _LOGGER.debug("Unable to probe Lennox identity at %s", discovery_info.host, exc_info=True)
+            return None
+        systems = getattr(self.manager.api, "system_list", ())
+        return systems[0].unique_id if len(systems) == 1 else None
+
+    def _find_discovered_entry(self, hostname: str, ip_address: str, identity: str | None):
+        """Find an existing local entry represented by an mDNS result."""
+        device_registry = dr.async_get(self.hass)
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            data = entry.data
+            if data.get(CONF_CLOUD_CONNECTION) is not False or CONF_HOST not in data:
+                continue
+            configured_host = str(data[CONF_HOST]).split(":", 1)[0].rstrip(".").lower()
+            if configured_host in {hostname, ip_address.lower()} or (identity and data.get(CONF_THERMOSTAT_ID) == identity):
+                return entry
+            manager = self.hass.data.get(DOMAIN, {}).get(entry.unique_id, {}).get(MANAGER)
+            if manager and any(system.unique_id == identity for system in manager.api.system_list):
+                return entry
+            if identity:
+                for device in device_registry.devices.values():
+                    if entry.entry_id not in device.config_entries:
+                        continue
+                    if any(domain == DOMAIN and identifier == identity for domain, identifier in device.identifiers):
+                        return entry
+        return None
+
     async def async_step_advanced(self, user_input: None | dict[str, Any] = None) -> ConfigFlowResult:
         """Handle advanced configuration."""
         errors = {}
@@ -225,7 +368,7 @@ class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title = redact_email(self.config_input[CONF_EMAIL])
         else:
             title = self.config_input[CONF_HOST]
-        await self.async_set_unique_id(DOMAIN + "_" + title)
+        await self.async_set_unique_id(getattr(self, "_discovery_unique_id", None) or DOMAIN + "_" + title)
         self._abort_if_unique_id_configured()
         if self.config_input[CONF_LOG_MESSAGES_TO_FILE] is False:
             self.config_input[CONF_MESSAGE_DEBUG_FILE] = ""

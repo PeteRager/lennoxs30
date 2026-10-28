@@ -12,7 +12,9 @@ import time
 from asyncio.locks import Event
 
 import voluptuous as vol
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.zeroconf.discovery import info_from_service
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_HOST,
@@ -31,6 +33,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import StateInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from zeroconf import const as zeroconf_const
+from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 from lennoxs30api import (
     EC_HTTP_ERR,
     EC_LOGIN,
@@ -53,9 +57,11 @@ from .const import (
     CONF_FAST_POLL_INTERVAL,
     CONF_INIT_WAIT_TIME,
     CONF_LOG_MESSAGES_TO_FILE,
+    CONF_MDNS_PORT,
     CONF_MESSAGE_DEBUG_FILE,
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
+    CONF_THERMOSTAT_ID,
     DEFAULT_CLOUD_TIMEOUT,
     DEFAULT_LOCAL_TIMEOUT,
     LENNOX_DEFAULT_CLOUD_APP_ID,
@@ -76,6 +82,7 @@ from .device import (
 )
 from .helpers import helper_create_zone_entity_name
 from .util import dict_redact_fields
+from .discovery import HTTP_SERVICE, LennoxServiceListener, ZEROCONF_SERVICE
 
 DOMAIN = LENNOX_DOMAIN
 DOMAIN_STATE = "lennoxs30.state"
@@ -152,9 +159,25 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Import config as config entry."""
     hass.data[DOMAIN] = {}
+    aiozc = await zeroconf.async_get_async_instance(hass)
+    await _async_migrate_cached_zeroconf_entries(hass, aiozc)
+    # Zeroconf keeps one browser per listener object, so use separate listener
+    # objects to support both the correct and malformed Lennox advertisements.
+    mdns_listeners = (
+        (ZEROCONF_SERVICE, LennoxServiceListener(hass, aiozc)),
+        (HTTP_SERVICE, LennoxServiceListener(hass, aiozc)),
+    )
+    for service_type, listener in mdns_listeners:
+        await aiozc.async_add_service_listener(service_type, listener)
+    hass.data[DOMAIN]["mdns_listener"] = (aiozc, mdns_listeners)
+
+    async def _async_stop_mdns_listener(_event) -> None:
+        for _service_type, listener in mdns_listeners:
+            await aiozc.async_remove_service_listener(listener)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_mdns_listener)
     if config.get(DOMAIN) is None:
         return True
-
     _LOGGER.warning(
         "Configuration of the LennoxS30 platform in YAML is deprecated "
         "and will be removed; Your existing configuration "
@@ -213,6 +236,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         _upgrade_config(migration_data, 1)
         create_migration_task(hass, migration_data)
     return True
+
+
+async def _async_migrate_cached_zeroconf_entries(hass: HomeAssistant, aiozc: AsyncZeroconf) -> None:
+    """Migrate local entries for services already present in mDNS cache."""
+    from .config_flow import async_migrate_zeroconf_entry
+
+    for service_type in (ZEROCONF_SERVICE, HTTP_SERVICE):
+        for record in aiozc.zeroconf.cache.async_all_by_details(
+            service_type,
+            zeroconf_const._TYPE_PTR,
+            zeroconf_const._CLASS_IN,
+        ):
+            service = AsyncServiceInfo(service_type, record.alias)
+            if not service.load_from_cache(aiozc.zeroconf):
+                continue
+            info = info_from_service(service)
+            if info:
+                await async_migrate_zeroconf_entry(hass, info)
 
 
 def create_migration_task(hass, migration_data):
@@ -299,6 +340,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password = entry.data[CONF_PASSWORD]
     else:
         host_name = entry.data[CONF_HOST]
+        if entry.data.get(CONF_MDNS_PORT):
+            host_name = f"{host_name}:{entry.data[CONF_MDNS_PORT]}"
         email: str = None
         password: str = None
         create_inverter_power: bool = entry.data[CONF_CREATE_INVERTER_POWER]
@@ -447,6 +490,8 @@ class Manager:
         self._fast_poll_count: int = fast_poll_count
         self._protocol = protocol
         self._ip_address = ip_address
+        self._durable_host = config.data.get(CONF_HOST) if config else ip_address
+        self._resolved_ip = None
         self._pii_message_log = pii_message_logs
         self._message_debug_logging = message_debug_logging
         self._message_logging_file = message_logging_file
@@ -511,6 +556,33 @@ class Manager:
         await self.api.shutdown()
         _LOGGER.debug("async_shutdown complete [%s]", self._ip_address)
 
+    def async_update_connection_target(self, hostname: str, ip_address: str, port: int) -> None:
+        """Update a LAN manager after mDNS reports a new address."""
+        if not self.api.isLANConnection:
+            return
+        self._durable_host = hostname
+        self._resolved_ip = ip_address
+        self._ip_address = f"{hostname}:{port}"
+        self.api.ip = f"{ip_address}:{port}"
+        self.api.initialize_urls_local()
+        self._reinitialize = True
+        self.mp_wakeup_event.set()
+
+    def _store_thermostat_identity(self) -> None:
+        """Persist the API identity for later mDNS deduplication."""
+        if not self.api.isLANConnection or len(self.api.system_list) != 1 or not self.config_entry:
+            return
+        identity = self.api.system_list[0].unique_id
+        if identity and self.config_entry.data.get(CONF_THERMOSTAT_ID) != identity:
+            try:
+                self._hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={**self.config_entry.data, CONF_THERMOSTAT_ID: identity},
+                )
+            except HomeAssistantError:
+                # Unit-test managers may not be registered in ConfigEntries yet.
+                _LOGGER.debug("Unable to persist thermostat identity for unregistered entry", exc_info=True)
+
     def updateState(self, state: int) -> None:
         """Updates the connection state"""
         if state == DS_CONNECTED and self.connected is False:
@@ -571,6 +643,7 @@ class Manager:
         self._retrieve_task = asyncio.create_task(self.messagePump_task())
         # Since there is no change detection implemented to update device attributes like SW version - alwayas reinit
         await self.create_devices()
+        self._store_thermostat_identity()
         # Only add entities the first time, on reconnect we do not need to add them again
         if self._climate_entities_initialized is False:
             await self._hass.config_entries.async_forward_entry_setups(self._config, PLATFORMS)
