@@ -498,6 +498,23 @@ Local Connections Only.  Reports the WIFI signal strength, this sensor can be us
 | subnetMask | string       | LAN subnet mask                                 |
 | bitrate | float       | WIFI connection bitrate                                  |
 
+### reminder\_\<kind\>
+
+One sensor per maintenance reminder slot on the thermostat (filter1, filter2, uvBulb, humidifiedPad, pureAir, maintenance, ventilationMaintenance, ventilationFilter). The state is the percent of the reminder interval remaining, as reported by the thermostat. Slots the thermostat reports as not valid for the system (e.g. ventilation reminders without a ventilator) are not created. Only reminders enabled on the thermostat are enabled by default; the others are created disabled and report no value unless enabled on the thermostat. Only `enabled` and `expired` are recorded in history.
+
+| Attribute     | Type   | Description                                                                 |
+| ------------- | ------ | --------------------------------------------------------------------------- |
+| kind          | string | Reminder type                                                               |
+| enabled       | bool   | Reminder is enabled on the thermostat                                       |
+| expired       | bool   | Reminder has expired (maintenance is due)                                   |
+| expiry_type   | string | systemRunTime (counts equipment run time) or systemCalendarTime             |
+| reminder_time | int    | Reminder interval in seconds                                                |
+| remaining_runtime | int | systemRunTime only. Estimated hours of system run time left (percent remaining x interval, so it moves in steps of 1% of the interval) |
+| set_time      | datetime | systemCalendarTime only. When the reminder was last reset (UTC)        |
+| expiry_time   | datetime | systemCalendarTime only. When the reminder will expire (UTC)           |
+| expired_time  | datetime | systemCalendarTime only. When the reminder expired (UTC)               |
+| viewed        | bool   | Reminder has been viewed on the thermostat                                  |
+
 ## Select Entities
 
 ### HVAC Mode

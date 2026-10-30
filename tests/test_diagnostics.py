@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from custom_components.lennoxs30 import Manager
 from custom_components.lennoxs30.const import MANAGER
 from custom_components.lennoxs30.diagnostics import async_get_config_entry_diagnostics
+from tests.conftest import loadfile
 
 
 @pytest.mark.asyncio()
@@ -100,6 +101,7 @@ async def test_diagnostics_local(hass, manager_system_04_furn_ac_zoning_ble: Man
                 "internet": None,
                 "productType": "S30",
                 "relayServer": None,
+                "reminders": {},
                 "sibling_identifier": set(),
                 "sibling_ip": set(),
                 "softwareVersion": "3.81.207",
@@ -127,3 +129,29 @@ async def test_diagnostics_cloud(hass, manager_system_04_furn_ac_zoning_ble: Man
     assert len(system["equipment"]) == 4
     assert "comm_metrics" in diags
     assert diags["comm_metrics"]["message_count"] == 6
+
+
+@pytest.mark.asyncio()
+async def test_diagnostics_reminders(hass, manager_system_04_furn_ac_zoning_ble: Manager, config_entry_local: config_entries.ConfigEntry):
+    """Test reminders in the diagnostics"""
+    manager = manager_system_04_furn_ac_zoning_ble
+    entry = manager.config_entry = config_entry_local
+    hass.data["lennoxs30"] = {}
+    hass.data["lennoxs30"][entry.unique_id] = {MANAGER: manager}
+    system = manager.api.system_list[0]
+    system.processMessage(loadfile("reminders.json", system.sysId))
+    diags = await async_get_config_entry_diagnostics(hass, entry)
+
+    reminders = diags["system"][system.sysId]["reminders"]
+    assert len(reminders) == 8
+    assert reminders[0] == {
+        "kind": "filter1",
+        "expiry_type": "systemRunTime",
+        "enabled": True,
+        "is_valid": True,
+        "expired": False,
+        "remaining_pct": 100,
+        "reminder_time": 15724800,
+    }
+    assert reminders[7]["kind"] == "ventilationFilter"
+    assert reminders[7]["is_valid"] is False
