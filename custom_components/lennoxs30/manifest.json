@@ -9,6 +9,6 @@
   "issue_tracker" : "https://github.com/PeteRager/lennoxs30/issues",
   "loggers": ["lennoxs30api"],
   "quality_scale": "platinum",
-  "requirements": ["lennoxs30api==0.2.24"],
+  "requirements": ["lennoxs30api==0.2.25"],
   "version": "2026.8.0"
 }
