@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from lennoxs30api import LENNOX_OUTDOOR_UNIT_HP, lennox_system
+from lennoxs30api import LENNOX_OUTDOOR_UNIT_HP, lennox_system, lennox_zone
 
 from custom_components.lennoxs30.binary_sensor_ble import BleBinarySensor
 
@@ -33,6 +33,10 @@ from .const import (
     UNIQUE_ID_SUFFIX_HP_LOW_AMBIENT_LOCKOUT,
     UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR,
     UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR,
+    UNIQUE_ID_SUFFIX_ZONE_ALLERGEN_DEFENDER_ACTIVE,
+    UNIQUE_ID_SUFFIX_ZONE_AUXILIARY_HEAT,
+    UNIQUE_ID_SUFFIX_ZONE_DEFROST,
+    UNIQUE_ID_SUFFIX_ZONE_FAN_RUNNING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +53,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         _LOGGER.debug("Create S30HomeStateBinarySensor binary_sensor system [%s]", system.sysId)
         sensor = S30HomeStateBinarySensor(hass, manager, system)
         sensor_list.append(sensor)
+
+        for zone in system.zone_list:
+            if not zone.is_zone_active():
+                continue
+            sensor_list.append(S30ZoneAllergenDefenderActiveBinarySensor(hass, manager, system, zone))
+            sensor_list.append(S30ZoneFanRunningBinarySensor(hass, manager, system, zone))
+            sensor_list.append(S30ZoneAuxiliaryHeatBinarySensor(hass, manager, system, zone))
+            sensor_list.append(S30ZoneDefrostBinarySensor(hass, manager, system, zone))
 
         if manager.api.isLANConnection:
             sensor = S30InternetStatus(hass, manager, system)
@@ -182,6 +194,116 @@ class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
     def device_class(self) -> BinarySensorDeviceClass:
         """Return device_class."""
         return BinarySensorDeviceClass.PRESENCE
+
+
+class S30ZoneRuntimeBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
+    """Base class for zone runtime binary sensors."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _zone_update_fields: list[str] = []
+    _unique_id_suffix: str = ""
+    _name_suffix: str = ""
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system, zone: lennox_zone) -> None:
+        super().__init__(manager, system)
+        self._hass = hass
+        self._zone = zone
+        self._myname = f"{self._zone.system.name}_{self._zone.name}_{self._name_suffix}"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._zone.registerOnUpdateCallback(self.update_callback, self._zone_update_fields)
+        await super().async_added_to_hass()
+
+    def update_callback(self) -> None:
+        """Process updates."""
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("update_callback %s myname [%s]", self.__class__.__name__, self._myname)
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        """Return entity unique_id."""
+        return (self._zone.unique_id + self._unique_id_suffix).replace("-", "")
+
+    @property
+    def name(self) -> str:
+        """Return entity name."""
+        return self._myname
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+        }
+
+
+class S30ZoneAllergenDefenderActiveBinarySensor(S30ZoneRuntimeBinarySensor):
+    """Zone allergen defender active runtime sensor."""
+
+    _zone_update_fields = ["allergenDefender"]
+    _unique_id_suffix = UNIQUE_ID_SUFFIX_ZONE_ALLERGEN_DEFENDER_ACTIVE
+    _name_suffix = "allergen_defender_active"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return entity state."""
+        value = self._zone.allergenDefender
+        if isinstance(value, bool):
+            return value
+        return None
+
+
+class S30ZoneFanRunningBinarySensor(S30ZoneRuntimeBinarySensor):
+    """Zone fan running runtime sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.RUNNING
+    _zone_update_fields = ["fan"]
+    _unique_id_suffix = UNIQUE_ID_SUFFIX_ZONE_FAN_RUNNING
+    _name_suffix = "fan_running"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return entity state."""
+        value = self._zone.fan
+        if value == "on" or value is True:
+            return True
+        if value == "off" or value is False:
+            return False
+        return None
+
+
+class S30ZoneAuxiliaryHeatBinarySensor(S30ZoneRuntimeBinarySensor):
+    """Zone auxiliary heat runtime sensor."""
+
+    _zone_update_fields = ["aux"]
+    _unique_id_suffix = UNIQUE_ID_SUFFIX_ZONE_AUXILIARY_HEAT
+    _name_suffix = "auxiliary_heat"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return entity state."""
+        value = self._zone.aux
+        if isinstance(value, bool):
+            return value
+        return None
+
+
+class S30ZoneDefrostBinarySensor(S30ZoneRuntimeBinarySensor):
+    """Zone defrost runtime sensor."""
+
+    _zone_update_fields = ["defrost"]
+    _unique_id_suffix = UNIQUE_ID_SUFFIX_ZONE_DEFROST
+    _name_suffix = "defrost"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return entity state."""
+        value = self._zone.defrost
+        if isinstance(value, bool):
+            return value
+        return None
 
 
 class S30InternetStatus(S30BaseEntityMixin, BinarySensorEntity):
