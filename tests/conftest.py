@@ -9,10 +9,11 @@
 # pylint: disable=invalid-name
 # pylint: disable=missing-function-docstring
 # pylint: disable=protected-access
+import asyncio
 import json
 import logging
 import os
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 
 import pytest
 from homeassistant import config_entries
@@ -69,6 +70,13 @@ from custom_components.lennoxs30.const import (
 )
 
 pytest_plugins = "pytest_homeassistant_custom_component"
+
+
+def conftest_close_coroutine(coro, *args, **kwargs):
+    """Side effect for a patched asyncio.create_task that closes the coroutine to avoid never-awaited warnings."""
+    if asyncio.iscoroutine(coro):
+        coro.close()
+    return DEFAULT
 
 
 @pytest.fixture(autouse=True)

@@ -34,6 +34,7 @@ from custom_components.lennoxs30.const import (
     LENNOX_DOMAIN,
     MANAGER,
 )
+from tests.conftest import conftest_close_coroutine
 
 
 @pytest.mark.asyncio()
@@ -118,7 +119,7 @@ async def test_async_setup_entry_local(hass: HomeAssistant, caplog):
         caplog.clear()
         with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
             with patch("custom_components.lennoxs30.Manager.updateState") as update_state:
-                with patch("asyncio.create_task") as create_task:
+                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                     s30_initialize.side_effect = S30Exception("Timeout waiting for config", EC_CONFIG_TIMEOUT, 0)
                     ex: HomeAssistantError = None
                     res = await async_setup_entry(hass, config_entry)
@@ -143,7 +144,7 @@ async def test_async_setup_entry_local(hass: HomeAssistant, caplog):
         caplog.clear()
         with patch("custom_components.lennoxs30.Manager.s30_initialize") as s30_initialize:
             with patch("custom_components.lennoxs30.Manager.updateState") as update_state:
-                with patch("asyncio.create_task") as create_task:
+                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                     s30_initialize.side_effect = S30Exception("Transport Error", EC_COMMS_ERROR, 0)
                     ex: HomeAssistantError = None
                     res = await async_setup_entry(hass, config_entry)
