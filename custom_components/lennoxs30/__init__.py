@@ -10,6 +10,7 @@ import logging
 import re
 import time
 from asyncio.locks import Event
+from functools import partial
 
 import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -339,28 +340,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         timeout,
     )
 
-    manager = Manager(
-        hass=hass,
-        config=entry,
-        email=email,
-        password=password,
-        poll_interval=poll_interval,
-        fast_poll_interval=fast_poll_interval,
-        fast_poll_count=fast_poll_count,
-        timeout=timeout,
-        allergen_defender_switch=allergen_defender_switch,
-        app_id=app_id,
-        conf_init_wait_time=conf_init_wait_time,
-        ip_address=host_name,
-        create_sensors=create_sensors,
-        create_inverter_power=create_inverter_power,
-        protocol=conf_protocol,
-        index=index,
-        pii_message_logs=conf_pii_in_message_logs,
-        message_debug_logging=conf_message_debug_logging,
-        message_logging_file=conf_message_debug_file,
-        create_diagnostic_sensors=create_diagnostic_sensors,
-        create_equipment_parameters=create_parameters,
+    # Manager creates the API object, which may open the message log file, so construct it off the event loop.
+    manager: Manager = await hass.async_add_executor_job(
+        partial(
+            Manager,
+            hass=hass,
+            config=entry,
+            email=email,
+            password=password,
+            poll_interval=poll_interval,
+            fast_poll_interval=fast_poll_interval,
+            fast_poll_count=fast_poll_count,
+            timeout=timeout,
+            allergen_defender_switch=allergen_defender_switch,
+            app_id=app_id,
+            conf_init_wait_time=conf_init_wait_time,
+            ip_address=host_name,
+            create_sensors=create_sensors,
+            create_inverter_power=create_inverter_power,
+            protocol=conf_protocol,
+            index=index,
+            pii_message_logs=conf_pii_in_message_logs,
+            message_debug_logging=conf_message_debug_logging,
+            message_logging_file=conf_message_debug_file,
+            create_diagnostic_sensors=create_diagnostic_sensors,
+            create_equipment_parameters=create_parameters,
+        )
     )
     try:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_shutdown)
