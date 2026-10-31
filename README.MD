@@ -231,7 +231,7 @@ In addition the following extra attributes are provided, to allow for a more det
 | allergenDefender  | Indicates if this is enabled on the zone                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | aux               | Auxiliary Heating is On when True, off when False. Typically this means the hest pump is disabled and the furnace is running instead.                                                                                                                                                                                                                                                                                                                                                                        |
 | balancePoint      | This is related to heatpump lockout, details / values are not well known yet - if you know let us know!                                                                                                                                                                                                                                                                                                                                                                                                      |
-| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in heating mode and has turned off to coast to the desired temperature                                                                                                                                                                                                                                                                                                              |
+| coolCoast         | This will only appear in non-zoning systems and it indicates the system is set to a single setpoint mode, the system was in cooling mode and has turned off to coast to the desired temperature                                                                                                                                                                                                                                                                                                               |
 | damper            | Position of damper - range 0-100. Observationally values are either 0 or 100; where 100 = damper open.                                                                                                                                                                                                                                                                                                                                                                                                       |
 | defrost           | Defrost is active                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | demand            | % of maximum CFM of air demand for the zone. Value is 0-100                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -694,6 +694,21 @@ binary_sensor.<system_name>\_relay_server
 This sensor indicates if the thermostat is "Online" in the Lennox Cloud. The state should be connected. A **disconnected** state indicates that the integration is able to communicate to the Lennox Cloud but the thermostat is not able to. Typically this indicates a Wifi config issue with the thermostat.
 
 During testing, turning off the wifi router the S30 was connected caused this sensor to become **disconnected** after 5 minutes. The sensor is configured to be updated every 10 minutes.
+
+### coasting
+
+One entity per zone, created when the system is not using iHarmony zoning (Perfect Temp is a non-zoning feature). On means the panel has stopped running the equipment and is letting the indoor temperature drift to the set point. The S40 home screen shows this as "Coasting to perfect temperature", with a red up or blue down arrow.
+
+While coasting the zone reports `hvac_action: idle`, `demand: 0` and `tempOperation: "off"` even though the set point is unmet. Without this sensor, that is indistinguishable from a system that has reached its set point.
+
+binary_sensor.<system_name>\_<zone_name>\_coasting
+
+| Attribute | Type    | Description                                            |
+| --------- | ------- | ------------------------------------------------------ |
+| heatCoast | boolean | True when the system stopped heating to coast          |
+| coolCoast | boolean | True when the system stopped cooling to coast          |
+
+The state is on when either attribute is true. Coasting follows from the Single Setpoint Mode equipment parameter (pid 525); there is no command to cancel a coast in progress.
 
 ## Number Entities
 
