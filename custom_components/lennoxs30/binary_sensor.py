@@ -17,7 +17,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from lennoxs30api import LENNOX_OUTDOOR_UNIT_HP, lennox_system
+from lennoxs30api import (
+    LENNOX_OUTDOOR_UNIT_HP,
+    LENNOX_ZONING_MODE_ZONED,
+    lennox_system,
+    lennox_zone,
+)
 
 from custom_components.lennoxs30.binary_sensor_ble import BleBinarySensor
 
@@ -30,6 +35,7 @@ from .const import (
     MANAGER,
     UNIQUE_ID_SUFFIX_AUX_HI_AMBIENT_LOCKOUT,
     UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR,
+    UNIQUE_ID_SUFFIX_COAST_SENSOR,
     UNIQUE_ID_SUFFIX_HP_LOW_AMBIENT_LOCKOUT,
     UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR,
     UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR,
@@ -62,6 +68,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if system.outdoorUnitType == LENNOX_OUTDOOR_UNIT_HP:
             sensor_list.append(S30HeatpumpLowAmbientLockout(hass, manager, system))
             sensor_list.append(S30AuxheatHighAmbientLockout(hass, manager, system))
+
+        if system.zoningMode != LENNOX_ZONING_MODE_ZONED:
+            # Single set point mode, and therefore coasting, is only available
+            # when the system is not zoned.
+            for zone in system.zone_list:
+                _LOGGER.debug("Create S30CoastBinarySensor binary_sensor system [%s] zone [%s]", system.sysId, zone.id)
+                sensor_list.append(S30CoastBinarySensor(hass, manager, system, zone))
 
         for ble_device in system.ble_devices.values():
             if ble_device.deviceType == "tstat":
@@ -110,6 +123,84 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     else:
         _LOGGER.warning("binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen")
     return True
+
+
+class S30CoastBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
+    """Coasting binary sensor.
+
+    When the system is in "Perfect Temp" (single set point) mode the S30/S40 will
+    stop running the equipment and let the indoor temperature drift to the set
+    point - the panel shows "Coasting to perfect temperature" on the home screen.
+    The zone status carries the machine readable equivalent of that message in the
+    heatCoast / coolCoast flags, which this sensor exposes on/off.
+    Single set point mode is not available on zoned systems, so this sensor is only
+    created when zoning is off.
+    """
+
+    def __init__(self, hass: HomeAssistant, manager: Manager, system: lennox_system, zone: lennox_zone) -> None:
+        """Create object."""
+        super().__init__(manager, system)
+        self._hass = hass
+        self._zone = zone
+        self._myname = self._zone.system.name + "_" + self._zone.name + "_coasting"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug("async_added_to_hass S30CoastBinarySensor myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(
+            self.update_callback,
+            [
+                "heatCoast",
+                "coolCoast",
+            ],
+        )
+        await super().async_added_to_hass()
+
+    def update_callback(self) -> None:
+        """Handle update callbacks."""
+        _LOGGER.debug(
+            "update_callback S30CoastBinarySensor myname [%s]",
+            self._myname,
+        )
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        """Return Unique ID string."""
+        # HA fails with dashes in IDs
+        return (self._zone.system.unique_id + "_" + str(self._zone.id)).replace("-", "") + UNIQUE_ID_SUFFIX_COAST_SENSOR
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return self._myname
+
+    @property
+    def available(self) -> bool:
+        """Return False if the zone status does not carry the coast flags."""
+        if self._zone.heatCoast is None and self._zone.coolCoast is None:
+            return False
+        return super().available
+
+    @property
+    def is_on(self) -> bool:
+        """Return True when the system has stopped to coast to the set point."""
+        return self._zone.heatCoast is True or self._zone.coolCoast is True
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the underlying panel flags."""
+        return {
+            "heatCoast": self._zone.heatCoast,
+            "coolCoast": self._zone.coolCoast,
+        }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+        }
 
 
 class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
