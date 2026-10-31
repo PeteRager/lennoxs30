@@ -37,6 +37,7 @@ from custom_components.lennoxs30 import (
     RETRY_INTERVAL_SECONDS,
     Manager,
 )
+from tests.conftest import conftest_close_coroutine
 
 
 @pytest.mark.asyncio()
@@ -320,7 +321,7 @@ async def test_manager_s30_initialize(hass: HomeAssistant, manager_us_customary_
     with patch.object(manager, "updateState") as update_state:
         with patch.object(manager, "connect_subscribe") as connect_subscribe:
             with patch.object(manager, "configuration_initialization") as configuration_initialization:
-                with patch("asyncio.create_task") as create_task:
+                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                     create_task.return_value = "AWAITABLE_TASK"
                     with patch.object(hass.config_entries, "async_forward_entry_setups") as forward_entry_setups:
                         with patch.object(manager, "create_devices") as create_devices:
@@ -432,7 +433,7 @@ async def test_manager_reinitialize_task(manager_us_customary_units: Manager, ca
         with patch.object(manager, "updateState") as update_state:
             with patch.object(manager, "connect_subscribe") as connect_subscribe:
                 with patch.object(manager, "messagePump_task") as messagePump_task:
-                    with patch("asyncio.create_task") as create_task:
+                    with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                         create_task.return_value = "AWAITABLE_TASK"
                         await manager.reinitialize_task()
                         assert connect_subscribe.call_count == 1
@@ -450,7 +451,7 @@ async def test_manager_reinitialize_task(manager_us_customary_units: Manager, ca
             with patch.object(manager, "messagePump_task") as messagePump_task:
                 with patch.object(manager, "connect_subscribe") as connect_subscribe:
                     connect_subscribe.side_effect = [S30Exception("Network Error", EC_COMMS_ERROR, 0), mock.DEFAULT]
-                    with patch("asyncio.create_task") as create_task:
+                    with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                         with patch("asyncio.sleep") as sleep:
                             await manager.reinitialize_task()
                             assert connect_subscribe.call_count == 2
@@ -477,7 +478,7 @@ async def test_manager_reinitialize_task(manager_us_customary_units: Manager, ca
         with patch.object(manager, "updateState") as update_state:
             with patch.object(manager, "connect_subscribe") as connect_subscribe:
                 connect_subscribe.side_effect = S30Exception("Bad Login", EC_LOGIN, 0)
-                with patch("asyncio.create_task") as create_task:
+                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                     ex: HomeAssistantError = None
                     try:
                         await manager.reinitialize_task()
@@ -507,7 +508,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, True, True]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 1
@@ -543,7 +544,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, True, True]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 1
@@ -580,7 +581,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, True, True]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 1
@@ -616,7 +617,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, False, True, True]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 2
@@ -655,7 +656,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, True, True]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 1
@@ -696,7 +697,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, True, True]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 1
@@ -733,7 +734,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, False, False, False, False, False, True, True]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 5
@@ -774,7 +775,7 @@ async def test_manager_messagePump_task(manager_us_customary_units: Manager, cap
                         with patch.object(manager, "get_reinitialize") as get_reinitialize:
                             get_reinitialize.side_effect = [False, True, False]
                             with patch.object(manager, "reinitialize_task") as reinitialize_task:
-                                with patch("asyncio.create_task") as create_task:
+                                with patch("asyncio.create_task", side_effect=conftest_close_coroutine) as create_task:
                                     with patch.object(manager, "updateState") as update_state:
                                         await manager.messagePump_task()
                                         assert sleep.call_count == 1

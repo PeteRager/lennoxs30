@@ -15,6 +15,8 @@ from custom_components.lennoxs30.base_entity import S30BaseEntityMixin
 
 # Need to have a derived class the inherits from both in order to have super() call works that need Entity
 class TestEntity(S30BaseEntityMixin, Entity):
+    __test__ = False
+
     def __init__(self, manager: Manager, system: lennox_system):
         super().__init__(manager, system)
 
