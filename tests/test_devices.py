@@ -84,8 +84,7 @@ async def test_create_devices(hass, manager_2_systems: Manager):
         assert call.kwargs["model"] == "XP20-036-230B04"
         assert call.kwargs["hw_version"] == "5821D09999"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -102,8 +101,7 @@ async def test_create_devices(hass, manager_2_systems: Manager):
         assert call.kwargs["model"] == "CBA38MV-036-230-02"
         assert call.kwargs["hw_version"] == "1621B25999"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -119,8 +117,7 @@ async def test_create_devices(hass, manager_2_systems: Manager):
         assert call.kwargs["name"] == manager.api.system_list[0].name + "_" + zone.name
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -163,8 +160,7 @@ async def test_create_devices_no_outdoor(hass, manager: Manager):
         assert call.kwargs["model"] == "CBA38MV-036-230-02"
         assert call.kwargs["hw_version"] == "1621B25999"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -181,8 +177,7 @@ async def test_create_devices_no_outdoor(hass, manager: Manager):
         assert call.kwargs["name"] == manager.api.system_list[0].name + "_" + zone.name
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -226,8 +221,7 @@ async def test_create_devices_no_indoor(hass, manager: Manager):
         assert call.kwargs["model"] == "XP20-036-230B04"
         assert call.kwargs["hw_version"] == "5821D09999"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -243,8 +237,7 @@ async def test_create_devices_no_indoor(hass, manager: Manager):
         assert call.kwargs["name"] == manager.api.system_list[0].name + "_" + zone.name
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -283,8 +276,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["model"] == "EL18XCVS036-230A01"
         assert call.kwargs["hw_version"] == "5821E06000"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -302,8 +294,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["model"] == "SLP99UH110XV60C-01"
         assert call.kwargs["hw_version"] == "5920H11000"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -321,8 +312,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["model"] == "103916-03"
         assert call.kwargs["hw_version"] == "BT21B13000"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -338,8 +328,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["name"] == manager.api.system_list[0].name + " Ventilator"
         assert call.kwargs["model"] == "2_stage_hrv"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
         device = manager.system_equip_device_map[system.sysId][VENTILATION_EQUIPMENT_ID]
         assert isinstance(device, S30VentilationUnit)
 
@@ -350,8 +339,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["name"] == manager.api.system_list[0].name + "_" + zone.name
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -365,8 +353,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["name"] == manager.api.system_list[0].name + "_" + zone.name
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -380,8 +367,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
         assert call.kwargs["name"] == manager.api.system_list[0].name + "_" + zone.name
         assert call.kwargs["model"] == "thermostat"
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
         for elem in identifiers:
             break
@@ -399,8 +385,7 @@ async def test_create_devices_furn_ac_zoning(hass, manager_system_04_furn_ac_zon
             assert call.kwargs["model"] == ble_device.controlModelNumber
             assert call.kwargs["sw_version"] == ble_device.controlSoftwareVersion
             assert call.kwargs["hw_version"] == ble_device.controlHardwareVersion
-            assert call.kwargs["via_device"][0] == DOMAIN
-            assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+            assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
 
             for elem in identifiers:
                 break
@@ -446,8 +431,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert call.kwargs["model"] == "air conditioner"
         assert call.kwargs["hw_version"] is None
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
@@ -461,8 +445,7 @@ async def test_create_device_no_equipment(hass, manager_system_04_furn_ac_zoning
         assert call.kwargs["model"] == "furnace"
         assert call.kwargs["hw_version"] is None
         assert "sw_version" not in call.kwargs
-        assert call.kwargs["via_device"][0] == DOMAIN
-        assert call.kwargs["via_device"][1] == manager.api.system_list[0].unique_id
+        assert call.kwargs["via_device_id"] == mock_create_device.return_value.id
         for elem in identifiers:
             break
         assert elem[0] == DOMAIN
