@@ -730,7 +730,7 @@ class Manager:
         self._registered_ble_devices.add((system.sysId, ble_device.ble_id))
 
     def _ble_devices_updated(self, system: lennox_system) -> None:
-        """Called by the API when BLE devices are discovered; registers new devices and signals the platforms"""
+        """Called after config initialization or by the API when BLE devices are discovered; registers new devices and signals the platforms"""
         for ble_device in system.ble_devices.values():
             if (system.sysId, ble_device.ble_id) not in self._registered_ble_devices and helper_ble_device_ready(ble_device):
                 _LOGGER.debug(
