@@ -29,6 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import StateInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -40,6 +41,7 @@ from lennoxs30api import (
     lennox_system,
     s30api_async,
 )
+from lennoxs30api.lennox_ble import LennoxBle
 from lennoxs30api.s30exception import EC_COMMS_ERROR, EC_CONFIG_TIMEOUT
 
 from .const import (
@@ -63,6 +65,7 @@ from .const import (
     LENNOX_DEFAULT_LOCAL_APP_ID,
     LENNOX_DOMAIN,
     MANAGER,
+    SIGNAL_BLE_DEVICES_UPDATED,
     VENTILATION_EQUIPMENT_ID,
 )
 from .device import (
@@ -75,7 +78,7 @@ from .device import (
     S30ZoneThermostat,
     S40BleDevice,
 )
-from .helpers import helper_create_zone_entity_name
+from .helpers import helper_ble_device_ready, helper_create_zone_entity_name
 from .util import dict_redact_fields
 
 DOMAIN = LENNOX_DOMAIN
@@ -495,6 +498,8 @@ class Manager:
 
         self._cs_callbacks = []
         self.system_equip_device_map: dict[str, dict[int, Device]] = {}
+        self._system_controller_devices: dict[str, S30ControllerDevice] = {}
+        self._registered_ble_devices: set[tuple[str, int]] = set()
         if index == 0:
             self.connection_state = DOMAIN_STATE
         else:
@@ -580,6 +585,10 @@ class Manager:
         if self._climate_entities_initialized is False:
             await self._hass.config_entries.async_forward_entry_setups(self._config, PLATFORMS)
             self._climate_entities_initialized = True
+            # BLE device data can arrive after the platforms are setup, so add those entities when it does
+            for system in self.api.system_list:
+                system.registerOnUpdateCallback(partial(self._ble_devices_updated, system), ["ble_devices"])
+                self._ble_devices_updated(system)
         self.updateState(DS_CONNECTED)
 
     async def unique_id_updates(self):
@@ -669,6 +678,7 @@ class Manager:
                 self.system_equip_device_map[system.sysId] = equip_device_map
             s30: S30ControllerDevice = S30ControllerDevice(self._hass, self.config_entry, system)
             s30.register_device()
+            self._system_controller_devices[system.sysId] = s30
             if s30.equipment is not None:
                 equip_device_map[s30.equipment.equipment_id] = s30
 
@@ -709,9 +719,30 @@ class Manager:
                     z.register_device()
 
             for ble_device in system.ble_devices.values():
-                if ble_device.deviceType != "tstat":
-                    ble: S40BleDevice = S40BleDevice(self._hass, self.config_entry, system, ble_device, s30)
-                    ble.register_device()
+                if helper_ble_device_ready(ble_device):
+                    self._register_ble_device(system, ble_device)
+
+    def _register_ble_device(self, system: lennox_system, ble_device: LennoxBle) -> None:
+        """Registers a BLE device with HASS"""
+        s30: S30ControllerDevice = self._system_controller_devices[system.sysId]
+        ble: S40BleDevice = S40BleDevice(self._hass, self.config_entry, system, ble_device, s30)
+        ble.register_device()
+        self._registered_ble_devices.add((system.sysId, ble_device.ble_id))
+
+    def _ble_devices_updated(self, system: lennox_system) -> None:
+        """Called by the API when BLE devices are discovered; registers new devices and signals the platforms"""
+        for ble_device in system.ble_devices.values():
+            if (system.sysId, ble_device.ble_id) not in self._registered_ble_devices and helper_ble_device_ready(ble_device):
+                _LOGGER.debug(
+                    "_ble_devices_updated host [%s] sysId [%s] registering ble_id [%s] name [%s] model [%s]",
+                    self._ip_address,
+                    system.sysId,
+                    ble_device.ble_id,
+                    ble_device.deviceName,
+                    ble_device.controlModelNumber,
+                )
+                self._register_ble_device(system, ble_device)
+        async_dispatcher_send(self._hass, SIGNAL_BLE_DEVICES_UPDATED.format(self.config_entry.entry_id), system)
 
     async def initialize_retry_task(self):
         """Retries the connection on failure"""

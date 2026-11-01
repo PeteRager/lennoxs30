@@ -53,7 +53,7 @@ ruff check .
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 - Adjusting the fan CFM in a single zone system causes some diagnostics to stop updating. Changing the diag_level to 0 and back to 2 solves the issue. A script is available [here](./samples/set_fan_cfm)
 - A power outage to the Lennox Controller causes the diag_level to be reset to 0 on reboot. An automation/package is available [here](./samples/diaglevel) to automatically reset.
-- If you add new equipment (BLE Sensors), restart HA in order for the integration to pickup the new equipment.
+- If you add new equipment, restart HA in order for the integration to pickup the new equipment. BLE Sensors are the exception, they are added automatically when the thermostat reports them.
 
 # Planning your install
 

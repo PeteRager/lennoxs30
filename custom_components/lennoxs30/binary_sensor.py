@@ -14,10 +14,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from lennoxs30api import LENNOX_OUTDOOR_UNIT_HP, lennox_system
+from lennoxs30api.lennox_ble import LennoxBle
 
 from custom_components.lennoxs30.binary_sensor_ble import BleBinarySensor
 
@@ -28,12 +30,14 @@ from .ble_device_21p02 import lennox_21p02_binary_sensors
 from .ble_device_22v25 import lennox_22v25_binary_sensors
 from .const import (
     MANAGER,
+    SIGNAL_BLE_DEVICES_UPDATED,
     UNIQUE_ID_SUFFIX_AUX_HI_AMBIENT_LOCKOUT,
     UNIQUE_ID_SUFFIX_CLOUD_CONNECTED_SENSOR,
     UNIQUE_ID_SUFFIX_HP_LOW_AMBIENT_LOCKOUT,
     UNIQUE_ID_SUFFIX_INTENET_STATUS_SENSOR,
     UNIQUE_ID_SUFFIX_RELAY_STATUS_SENSOR,
 )
+from .helpers import helper_ble_device_ready
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +47,7 @@ DOMAIN = "lennoxs30"
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     """Set up the binary entities."""
     sensor_list = []
+    created_ble_devices: set[tuple[str, int]] = set()
 
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager.api.system_list:
@@ -63,46 +68,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             sensor_list.append(S30HeatpumpLowAmbientLockout(hass, manager, system))
             sensor_list.append(S30AuxheatHighAmbientLockout(hass, manager, system))
 
-        for ble_device in system.ble_devices.values():
-            if ble_device.deviceType == "tstat":
-                continue
-            sensor_list.append(BleCommStatusBinarySensor(hass, manager, system, ble_device))
+        sensor_list.extend(_create_new_ble_binary_sensors(hass, manager, system, created_ble_devices))
 
-            ble_sensors: dict = None
-            if ble_device.controlModelNumber == "22V25":
-                ble_sensors = lennox_22v25_binary_sensors
-            elif ble_device.controlModelNumber == "21P02":
-                ble_sensors = lennox_21p02_binary_sensors
-            if ble_sensors:
-                for sensor_dict in ble_sensors:
-                    if sensor_dict["input_id"] not in ble_device.inputs:
-                        _LOGGER.error(
-                            "Error BleBinarySensor name [%s] sensor_name [%s] no input_id [%d]",
-                            ble_device.deviceName,
-                            sensor_dict["name"],
-                            sensor_dict["input_id"],
-                        )
-                        continue
-                    sensor_value = ble_device.inputs[sensor_dict["input_id"]]
-                    status_value = None
-                    if "status_id" in sensor_dict:
-                        if sensor_dict["status_id"] not in ble_device.inputs:
-                            _LOGGER.error(
-                                "Error BleBinarySensor name [%s] sensor_name [%s] no status_id [%d]",
-                                ble_device.deviceName,
-                                sensor_dict["name"],
-                                sensor_dict["status_id"],
-                            )
-                            continue
-                        status_value = ble_device.inputs[sensor_dict["status_id"]]
-                    sensor_list.append(BleBinarySensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict))
-            else:
-                _LOGGER.error(
-                    "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
-                    ble_device.deviceName,
-                    ble_device.deviceType,
-                    ble_device.controlModelNumber,
-                )
+    @callback
+    def async_add_ble_binary_sensors(system: lennox_system) -> None:
+        """Add binary sensors for BLE devices discovered after setup"""
+        new_sensors = _create_new_ble_binary_sensors(hass, manager, system, created_ble_devices)
+        if len(new_sensors) != 0:
+            _LOGGER.debug("binary_sensor:async_add_ble_binary_sensors system [%s] adding [%d] sensors", system.sysId, len(new_sensors))
+            async_add_entities(new_sensors, update_before_add=True)
+
+    entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_BLE_DEVICES_UPDATED.format(entry.entry_id), async_add_ble_binary_sensors))
 
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, update_before_add=True)
@@ -110,6 +86,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     else:
         _LOGGER.warning("binary_sensor:async_setup_platform exit - no S30HomeStateBinarySensor found - this should not happen")
     return True
+
+
+def _create_new_ble_binary_sensors(
+    hass: HomeAssistant, manager: Manager, system: lennox_system, created_ble_devices: set[tuple[str, int]]
+) -> list:
+    """Create binary sensors for ready BLE devices that do not have binary sensors yet"""
+    sensor_list = []
+    for ble_device in system.ble_devices.values():
+        key = (system.sysId, ble_device.ble_id)
+        if key in created_ble_devices or not helper_ble_device_ready(ble_device):
+            continue
+        created_ble_devices.add(key)
+        sensor_list.extend(_create_ble_binary_sensors(hass, manager, system, ble_device))
+    return sensor_list
+
+
+def _create_ble_binary_sensors(hass: HomeAssistant, manager: Manager, system: lennox_system, ble_device: LennoxBle) -> list:
+    """Create the binary sensors for a BLE device"""
+    sensor_list = [BleCommStatusBinarySensor(hass, manager, system, ble_device)]
+    ble_sensors: dict = None
+    if ble_device.controlModelNumber == "22V25":
+        ble_sensors = lennox_22v25_binary_sensors
+    elif ble_device.controlModelNumber == "21P02":
+        ble_sensors = lennox_21p02_binary_sensors
+    if ble_sensors:
+        for sensor_dict in ble_sensors:
+            if sensor_dict["input_id"] not in ble_device.inputs:
+                _LOGGER.error(
+                    "Error BleBinarySensor name [%s] sensor_name [%s] no input_id [%d]",
+                    ble_device.deviceName,
+                    sensor_dict["name"],
+                    sensor_dict["input_id"],
+                )
+                continue
+            sensor_value = ble_device.inputs[sensor_dict["input_id"]]
+            status_value = None
+            if "status_id" in sensor_dict:
+                if sensor_dict["status_id"] not in ble_device.inputs:
+                    _LOGGER.error(
+                        "Error BleBinarySensor name [%s] sensor_name [%s] no status_id [%d]",
+                        ble_device.deviceName,
+                        sensor_dict["name"],
+                        sensor_dict["status_id"],
+                    )
+                    continue
+                status_value = ble_device.inputs[sensor_dict["status_id"]]
+            sensor_list.append(BleBinarySensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict))
+    else:
+        _LOGGER.error(
+            "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
+            ble_device.deviceName,
+            ble_device.deviceType,
+            ble_device.controlModelNumber,
+        )
+    return sensor_list
 
 
 class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
