@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from lennoxs30api import lennox_system, lennox_zone
+from lennoxs30api.lennox_ble import LennoxBle
 from lennoxs30api.lennox_equipment import lennox_equipment, lennox_equipment_parameter
 
 from .const import LENNOX_DOMAIN
@@ -109,6 +110,14 @@ def helper_create_system_unique_id(system: lennox_system, suffix: str) -> str:
     """Construct a unique name for a system entity."""
     result = system.unique_id + suffix
     return result.replace(" ", "_").replace("-", "").replace(".", "").replace("__", "_")
+
+
+def helper_ble_device_ready(ble_device: LennoxBle) -> bool:
+    """Return True when a BLE accessory has received the config needed to create its entities."""
+    if ble_device.deviceType == "tstat":
+        return False
+    # Status-only updates can create the device before the full BLE config message supplies these
+    return ble_device.controlModelNumber is not None and ble_device.deviceName is not None
 
 
 def helper_create_zone_entity_name(system: lennox_system, zone: lennox_zone) -> str:
