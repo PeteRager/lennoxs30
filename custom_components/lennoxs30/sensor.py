@@ -41,6 +41,7 @@ from . import Manager
 from .base_entity import S30BaseEntityMixin
 from .ble_device_21p02 import lennox_21p02_sensors, lennox_iaq_sensors
 from .ble_device_22v25 import lennox_22v25_sensors
+from .ble_device_22v26 import lennox_22v26_sensors
 from .const import (
     MANAGER,
     SIGNAL_BLE_DEVICES_UPDATED,
@@ -182,6 +183,8 @@ def _create_ble_sensors(hass: HomeAssistant, manager: Manager, system: lennox_sy
     ble_sensors: dict = None
     if ble_device.controlModelNumber == "22V25":
         ble_sensors = lennox_22v25_sensors
+    elif ble_device.controlModelNumber == "22V26":
+        ble_sensors = lennox_22v26_sensors
     elif ble_device.controlModelNumber == "21P02":
         for sensor_item in lennox_iaq_sensors:
             sensor_list.append(S40IAQSensor(hass, manager, system, ble_device, sensor_item))

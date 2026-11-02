@@ -28,6 +28,7 @@ from .base_entity import S30BaseEntityMixin
 from .binary_sensor_ble import BleCommStatusBinarySensor
 from .ble_device_21p02 import lennox_21p02_binary_sensors
 from .ble_device_22v25 import lennox_22v25_binary_sensors
+from .ble_device_22v26 import lennox_22v26_binary_sensors
 from .const import (
     MANAGER,
     SIGNAL_BLE_DEVICES_UPDATED,
@@ -108,6 +109,8 @@ def _create_ble_binary_sensors(hass: HomeAssistant, manager: Manager, system: le
     ble_sensors: dict = None
     if ble_device.controlModelNumber == "22V25":
         ble_sensors = lennox_22v25_binary_sensors
+    elif ble_device.controlModelNumber == "22V26":
+        ble_sensors = lennox_22v26_binary_sensors
     elif ble_device.controlModelNumber == "21P02":
         ble_sensors = lennox_21p02_binary_sensors
     if ble_sensors:
