@@ -5,7 +5,7 @@
 import logging
 
 import pytest
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfTime
 from homeassistant.helpers.entity import EntityCategory
 from lennoxs30api.s30api_async import lennox_system
 
@@ -55,6 +55,7 @@ async def test_ble_22v26_sensors(hass, repeater_manager: Manager, caplog):
     assert sensor.unique_id == (system.unique_id + f"_BLE_{REPEATER_WDN}_4003").replace("-", "")
     assert sensor.native_value == 12891840
     assert sensor.device_class == "duration"
+    assert sensor.native_unit_of_measurement == UnitOfTime.SECONDS
     assert sensor.entity_category == EntityCategory.DIAGNOSTIC
 
     for sensor in sensors:

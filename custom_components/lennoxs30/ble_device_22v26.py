@@ -1,7 +1,7 @@
 """Lennox BLE Repeater."""
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfTime
 from homeassistant.helpers.entity import EntityCategory
 
 lennox_22v26_sensors = [
@@ -19,6 +19,8 @@ lennox_22v26_sensors = [
         "state_class": SensorStateClass.MEASUREMENT,
         "device_class": SensorDeviceClass.DURATION,
         "entity_category": EntityCategory.DIAGNOSTIC,
+        # The repeater reports this input with unit "none"
+        "uom": UnitOfTime.SECONDS,
     },
     {
         "input_id": 4004,
