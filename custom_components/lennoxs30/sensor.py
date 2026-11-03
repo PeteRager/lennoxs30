@@ -125,6 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     sensor_list.append(S30TempSensor(hass, manager, system, zone))
                     _LOGGER.debug("Create S30HumSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30HumiditySensor(hass, manager, system, zone))
+                    _LOGGER.debug("Create S30ZoneDemandSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
+                    sensor_list.append(S30ZoneDemandSensor(hass, manager, system, zone))
 
         if manager.create_alert_sensors:
             sensor_list.append(S30AlertSensor(hass, manager, system))
@@ -565,6 +567,57 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
     @property
     def state_class(self):
         return SensorStateClass.MEASUREMENT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+        }
+
+
+class S30ZoneDemandSensor(S30BaseEntityMixin, SensorEntity):
+    """Class for Lennox S30 zone demand - the CFM demand from the zone as a percentage."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+        zone: lennox_zone,
+    ):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._zone = zone
+        self._myname = self._zone.system.name + "_" + self._zone.name + "_demand"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug("async_added_to_hass S30ZoneDemandSensor myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(self.update_callback, ["demand"])
+        await super().async_added_to_hass()
+
+    def update_callback(self):
+        """Callback to execute on data change"""
+        _LOGGER.debug("update_callback S30ZoneDemandSensor myname [%s]", self._myname)
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._zone.system.unique_id + "_" + str(self._zone.id)).replace("-", "") + "_D"
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def native_value(self):
+        return self._zone.demand
 
     @property
     def device_info(self) -> DeviceInfo:
