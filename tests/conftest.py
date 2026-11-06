@@ -41,7 +41,7 @@ from lennoxs30api.s30api_async import (
     lennox_system,
 )
 from lennoxs30api.s30exception import S30Exception
-from pytest_homeassistant_custom_component.common import (
+from pytest_homeassistant.common import (
     assert_setup_component,
     async_mock_service,
 )
@@ -68,8 +68,6 @@ from custom_components.lennoxs30.const import (
     CONF_MESSAGE_DEBUG_LOGGING,
     CONF_PII_IN_MESSAGE_LOGS,
 )
-
-pytest_plugins = "pytest_homeassistant_custom_component"
 
 
 def conftest_close_coroutine(coro, *args, **kwargs):
