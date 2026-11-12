@@ -939,8 +939,9 @@ async def test_climate_current_temperature_f(hass, manager_mz: Manager, caplog):
         with caplog.at_level(logging.WARNING):
             zone.temperatureStatus = bad_status
             assert c.current_temperature is None
-            assert len(caplog.records) == 1
-            msg = caplog.messages[0]
+            warnings = [record for record in caplog.records if "has bad data quality" in record.message]
+            assert len(warnings) == 1
+            msg = warnings[0].message
             assert bad_status in msg
 
 
@@ -974,9 +975,44 @@ async def test_climate_current_temperature_c(hass, manager_mz: Manager, caplog):
         with caplog.at_level(logging.WARNING):
             zone.temperatureStatus = bad_status
             assert c.current_temperature is None
-            assert len(caplog.records) == 1
-            msg = caplog.messages[0]
+            warnings = [record for record in caplog.records if "has bad data quality" in record.message]
+            assert len(warnings) == 1
+            msg = warnings[0].message
             assert bad_status in msg
+
+
+@pytest.mark.asyncio()
+async def test_climate_native_temperature_properties_f(hass, manager_mz: Manager):
+    manager = manager_mz
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
+    zone: lennox_zone = system.zone_list[0]
+    c = S30Climate(hass, manager, system, zone)
+    system.single_setpoint_mode = False
+    zone.systemMode = LENNOX_HVAC_HEAT_COOL
+
+    assert c.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
+    assert c.native_current_temperature == zone.temperature
+    assert c.native_target_temperature == zone.getTargetTemperatureF()
+    assert c.native_target_temperature_high == zone.csp
+    assert c.native_target_temperature_low == zone.hsp
+
+
+@pytest.mark.asyncio()
+async def test_climate_native_temperature_properties_c(hass, manager_mz: Manager):
+    manager = manager_mz
+    manager.is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    zone: lennox_zone = system.zone_list[0]
+    c = S30Climate(hass, manager, system, zone)
+    system.single_setpoint_mode = False
+    zone.systemMode = LENNOX_HVAC_HEAT_COOL
+
+    assert c.native_temperature_unit == UnitOfTemperature.CELSIUS
+    assert c.native_current_temperature == zone.temperatureC
+    assert c.native_target_temperature == zone.getTargetTemperatureC()
+    assert c.native_target_temperature_high == zone.cspC
+    assert c.native_target_temperature_low == zone.hspC
 
 
 @pytest.mark.asyncio()
