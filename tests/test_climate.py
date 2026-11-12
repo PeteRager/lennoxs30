@@ -77,7 +77,7 @@ async def test_climate_min_max_c(hass, manager_mz: Manager):
 
     # Metric Tests
     assert manager.is_metric is True
-    assert c.native_temperature_unit == UnitOfTemperature.CELSIUS
+    assert c.temperature_unit == UnitOfTemperature.CELSIUS
     zone.systemMode = LENNOX_HVAC_OFF
     assert c.min_temp == zone.minCspC
     assert c.max_temp == zone.maxHspC
@@ -128,7 +128,7 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
     manager.is_metric = False
 
     assert manager.is_metric is False
-    assert c.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
+    assert c.temperature_unit == UnitOfTemperature.FAHRENHEIT
     zone.systemMode = LENNOX_HVAC_OFF
     assert c.min_temp == zone.minCsp
     assert c.max_temp == zone.maxHsp
@@ -176,7 +176,7 @@ async def test_climate_min_max_f(hass, manager_mz: Manager, caplog):
 
 
 @pytest.mark.asyncio()
-async def test_climate_native_target_temperature_f(hass, manager_mz: Manager):
+async def test_climate_target_temperature_f(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]
@@ -185,17 +185,17 @@ async def test_climate_native_target_temperature_f(hass, manager_mz: Manager):
     zone1: lennox_zone = system.zone_list[1]
     c1 = S30Climate(hass, manager, system, zone1)
 
-    assert c.native_target_temperature == zone.getTargetTemperatureF()
-    assert c1.native_target_temperature == zone1.getTargetTemperatureF()
+    assert c.target_temperature == zone.getTargetTemperatureF()
+    assert c1.target_temperature == zone1.getTargetTemperatureF()
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
 
-    assert c.native_target_temperature == zone.getTargetTemperatureF()
-    assert c1.native_target_temperature is None
+    assert c.target_temperature == zone.getTargetTemperatureF()
+    assert c1.target_temperature is None
 
 
 @pytest.mark.asyncio()
-async def test_climate_native_target_temperature_c(hass, manager_mz: Manager):
+async def test_climate_target_temperature_c(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = True
     system: lennox_system = manager.api.system_list[0]
@@ -204,87 +204,17 @@ async def test_climate_native_target_temperature_c(hass, manager_mz: Manager):
     zone1: lennox_zone = system.zone_list[1]
     c1 = S30Climate(hass, manager, system, zone1)
 
-    assert c.native_target_temperature == zone.getTargetTemperatureC()
-    assert c1.native_target_temperature == zone1.getTargetTemperatureC()
+    assert c.target_temperature == zone.getTargetTemperatureC()
+    assert c1.target_temperature == zone1.getTargetTemperatureC()
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
 
-    assert c.native_target_temperature == zone.getTargetTemperatureC()
-    assert c1.native_target_temperature is None
+    assert c.target_temperature == zone.getTargetTemperatureC()
+    assert c1.target_temperature is None
 
 
 @pytest.mark.asyncio()
-async def test_climate_native_target_temperature_high_f(hass, manager_mz: Manager):
-    manager: Manager = manager_mz
-    manager.is_metric = False
-    system: lennox_system = manager.api.system_list[0]
-    zone: lennox_zone = system.zone_list[0]
-    c = S30Climate(hass, manager, system, zone)
-    zone1: lennox_zone = system.zone_list[1]
-    c1 = S30Climate(hass, manager, system, zone1)
-
-    assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_high is None
-    assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_high is None
-
-    system.single_setpoint_mode = False
-    assert zone.systemMode == LENNOX_HVAC_HEAT
-    assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_high is None
-    assert zone1.systemMode == LENNOX_HVAC_COOL
-    assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_high is None
-
-    zone.systemMode = LENNOX_HVAC_HEAT_COOL
-    zone1.systemMode = LENNOX_HVAC_HEAT_COOL
-
-    assert c.is_single_setpoint_active() is False
-    assert c.native_target_temperature_high == zone.csp
-    assert c1.native_target_temperature_high == zone1.csp
-
-    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.native_target_temperature_high == zone.csp
-    assert c1.native_target_temperature_high is None
-
-
-@pytest.mark.asyncio()
-async def test_climate_native_target_temperature_high_c(hass, manager_mz: Manager):
-    manager: Manager = manager_mz
-    manager.is_metric = True
-    system: lennox_system = manager.api.system_list[0]
-    zone: lennox_zone = system.zone_list[0]
-    c = S30Climate(hass, manager, system, zone)
-    zone1: lennox_zone = system.zone_list[1]
-    c1 = S30Climate(hass, manager, system, zone1)
-
-    assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_high is None
-    assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_high is None
-
-    system.single_setpoint_mode = False
-    assert zone.systemMode == LENNOX_HVAC_HEAT
-    assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_high is None
-    assert zone1.systemMode == LENNOX_HVAC_COOL
-    assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_high is None
-
-    zone.systemMode = LENNOX_HVAC_HEAT_COOL
-    zone1.systemMode = LENNOX_HVAC_HEAT_COOL
-
-    assert c.is_single_setpoint_active() is False
-    assert c.native_target_temperature_high == zone.cspC
-    assert c1.native_target_temperature_high == zone1.cspC
-
-    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.native_target_temperature_high == zone.cspC
-    assert c1.native_target_temperature_high is None
-
-
-@pytest.mark.asyncio()
-async def test_climate_native_target_temperature_low_f(hass, manager_mz: Manager):
+async def test_climate_target_temperature_high_f(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = False
     system: lennox_system = manager.api.system_list[0]
@@ -294,32 +224,32 @@ async def test_climate_native_target_temperature_low_f(hass, manager_mz: Manager
     c1 = S30Climate(hass, manager, system, zone1)
 
     assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_low is None
+    assert c.target_temperature_high is None
     assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_low is None
+    assert c1.target_temperature_high is None
 
     system.single_setpoint_mode = False
     assert zone.systemMode == LENNOX_HVAC_HEAT
     assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_low is None
+    assert c.target_temperature_high is None
     assert zone1.systemMode == LENNOX_HVAC_COOL
     assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_low is None
+    assert c1.target_temperature_high is None
 
     zone.systemMode = LENNOX_HVAC_HEAT_COOL
     zone1.systemMode = LENNOX_HVAC_HEAT_COOL
 
     assert c.is_single_setpoint_active() is False
-    assert c.native_target_temperature_low == zone.hsp
-    assert c1.native_target_temperature_low == zone1.hsp
+    assert c.target_temperature_high == zone.csp
+    assert c1.target_temperature_high == zone1.csp
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.native_target_temperature_low == zone.hsp
-    assert c1.native_target_temperature_low is None
+    assert c.target_temperature_high == zone.csp
+    assert c1.target_temperature_high is None
 
 
 @pytest.mark.asyncio()
-async def test_climate_native_target_temperature_low_c(hass, manager_mz: Manager):
+async def test_climate_target_temperature_high_c(hass, manager_mz: Manager):
     manager: Manager = manager_mz
     manager.is_metric = True
     system: lennox_system = manager.api.system_list[0]
@@ -329,28 +259,98 @@ async def test_climate_native_target_temperature_low_c(hass, manager_mz: Manager
     c1 = S30Climate(hass, manager, system, zone1)
 
     assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_low is None
+    assert c.target_temperature_high is None
     assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_low is None
+    assert c1.target_temperature_high is None
 
     system.single_setpoint_mode = False
     assert zone.systemMode == LENNOX_HVAC_HEAT
     assert c.is_single_setpoint_active() is True
-    assert c.native_target_temperature_low is None
+    assert c.target_temperature_high is None
     assert zone1.systemMode == LENNOX_HVAC_COOL
     assert c1.is_single_setpoint_active() is True
-    assert c1.native_target_temperature_low is None
+    assert c1.target_temperature_high is None
 
     zone.systemMode = LENNOX_HVAC_HEAT_COOL
     zone1.systemMode = LENNOX_HVAC_HEAT_COOL
 
     assert c.is_single_setpoint_active() is False
-    assert c.native_target_temperature_low == zone.hspC
-    assert c1.native_target_temperature_low == zone1.hspC
+    assert c.target_temperature_high == zone.cspC
+    assert c1.target_temperature_high == zone1.cspC
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
-    assert c.native_target_temperature_low == zone.hspC
-    assert c1.native_target_temperature_low is None
+    assert c.target_temperature_high == zone.cspC
+    assert c1.target_temperature_high is None
+
+
+@pytest.mark.asyncio()
+async def test_climate_target_temperature_low_f(hass, manager_mz: Manager):
+    manager: Manager = manager_mz
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
+    zone: lennox_zone = system.zone_list[0]
+    c = S30Climate(hass, manager, system, zone)
+    zone1: lennox_zone = system.zone_list[1]
+    c1 = S30Climate(hass, manager, system, zone1)
+
+    assert c.is_single_setpoint_active() is True
+    assert c.target_temperature_low is None
+    assert c1.is_single_setpoint_active() is True
+    assert c1.target_temperature_low is None
+
+    system.single_setpoint_mode = False
+    assert zone.systemMode == LENNOX_HVAC_HEAT
+    assert c.is_single_setpoint_active() is True
+    assert c.target_temperature_low is None
+    assert zone1.systemMode == LENNOX_HVAC_COOL
+    assert c1.is_single_setpoint_active() is True
+    assert c1.target_temperature_low is None
+
+    zone.systemMode = LENNOX_HVAC_HEAT_COOL
+    zone1.systemMode = LENNOX_HVAC_HEAT_COOL
+
+    assert c.is_single_setpoint_active() is False
+    assert c.target_temperature_low == zone.hsp
+    assert c1.target_temperature_low == zone1.hsp
+
+    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
+    assert c.target_temperature_low == zone.hsp
+    assert c1.target_temperature_low is None
+
+
+@pytest.mark.asyncio()
+async def test_climate_target_temperature_low_c(hass, manager_mz: Manager):
+    manager: Manager = manager_mz
+    manager.is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    zone: lennox_zone = system.zone_list[0]
+    c = S30Climate(hass, manager, system, zone)
+    zone1: lennox_zone = system.zone_list[1]
+    c1 = S30Climate(hass, manager, system, zone1)
+
+    assert c.is_single_setpoint_active() is True
+    assert c.target_temperature_low is None
+    assert c1.is_single_setpoint_active() is True
+    assert c1.target_temperature_low is None
+
+    system.single_setpoint_mode = False
+    assert zone.systemMode == LENNOX_HVAC_HEAT
+    assert c.is_single_setpoint_active() is True
+    assert c.target_temperature_low is None
+    assert zone1.systemMode == LENNOX_HVAC_COOL
+    assert c1.is_single_setpoint_active() is True
+    assert c1.target_temperature_low is None
+
+    zone.systemMode = LENNOX_HVAC_HEAT_COOL
+    zone1.systemMode = LENNOX_HVAC_HEAT_COOL
+
+    assert c.is_single_setpoint_active() is False
+    assert c.target_temperature_low == zone.hspC
+    assert c1.target_temperature_low == zone1.hspC
+
+    system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
+    assert c.target_temperature_low == zone.hspC
+    assert c1.target_temperature_low is None
 
 
 @pytest.mark.asyncio()
@@ -911,7 +911,7 @@ async def test_climate_current_humidity(hass, manager_mz: Manager, caplog):
 
 
 @pytest.mark.asyncio()
-async def test_climate_native_current_temperature_f(hass, manager_mz: Manager, caplog):
+async def test_climate_current_temperature_f(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = False
@@ -921,16 +921,16 @@ async def test_climate_native_current_temperature_f(hass, manager_mz: Manager, c
     c1 = S30Climate(hass, manager, system, zone1)
 
     assert zone.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c.native_current_temperature == zone.temperature
+    assert c.current_temperature == zone.temperature
     assert zone1.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c1.native_current_temperature == zone1.temperature
+    assert c1.current_temperature == zone1.temperature
 
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
 
     assert zone.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c.native_current_temperature == zone.temperature
+    assert c.current_temperature == zone.temperature
     assert zone1.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c1.native_current_temperature == zone1.temperature
+    assert c1.current_temperature == zone1.temperature
 
     system.zoningMode = LENNOX_ZONING_MODE_ZONED
 
@@ -938,14 +938,15 @@ async def test_climate_native_current_temperature_f(hass, manager_mz: Manager, c
         caplog.clear()
         with caplog.at_level(logging.WARNING):
             zone.temperatureStatus = bad_status
-            assert c.native_current_temperature is None
-            assert len(caplog.records) == 1
-            msg = caplog.messages[0]
+            assert c.current_temperature is None
+            warnings = [record for record in caplog.records if "has bad data quality" in record.message]
+            assert len(warnings) == 1
+            msg = warnings[0].message
             assert bad_status in msg
 
 
 @pytest.mark.asyncio()
-async def test_climate_native_current_temperature_c(hass, manager_mz: Manager, caplog):
+async def test_climate_current_temperature_c(hass, manager_mz: Manager, caplog):
     manager = manager_mz
     system: lennox_system = manager.api.system_list[0]
     manager.is_metric = True
@@ -955,17 +956,17 @@ async def test_climate_native_current_temperature_c(hass, manager_mz: Manager, c
     c1 = S30Climate(hass, manager, system, zone1)
 
     assert zone.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c.native_current_temperature == zone.temperatureC
+    assert c.current_temperature == zone.temperatureC
     assert zone1.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c1.native_current_temperature == zone1.temperatureC
+    assert c1.current_temperature == zone1.temperatureC
 
     # Should have no affect
     system.zoningMode = LENNOX_ZONING_MODE_CENTRAL
 
     assert zone.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c.native_current_temperature == zone.temperatureC
+    assert c.current_temperature == zone.temperatureC
     assert zone1.temperatureStatus == LENNOX_STATUS_GOOD
-    assert c1.native_current_temperature == zone1.temperatureC
+    assert c1.current_temperature == zone1.temperatureC
 
     system.zoningMode = LENNOX_ZONING_MODE_ZONED
 
@@ -973,10 +974,45 @@ async def test_climate_native_current_temperature_c(hass, manager_mz: Manager, c
         caplog.clear()
         with caplog.at_level(logging.WARNING):
             zone.temperatureStatus = bad_status
-            assert c.native_current_temperature is None
-            assert len(caplog.records) == 1
-            msg = caplog.messages[0]
+            assert c.current_temperature is None
+            warnings = [record for record in caplog.records if "has bad data quality" in record.message]
+            assert len(warnings) == 1
+            msg = warnings[0].message
             assert bad_status in msg
+
+
+@pytest.mark.asyncio()
+async def test_climate_native_temperature_properties_f(hass, manager_mz: Manager):
+    manager = manager_mz
+    manager.is_metric = False
+    system: lennox_system = manager.api.system_list[0]
+    zone: lennox_zone = system.zone_list[0]
+    c = S30Climate(hass, manager, system, zone)
+    system.single_setpoint_mode = False
+    zone.systemMode = LENNOX_HVAC_HEAT_COOL
+
+    assert c.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
+    assert c.native_current_temperature == zone.temperature
+    assert c.native_target_temperature == zone.getTargetTemperatureF()
+    assert c.native_target_temperature_high == zone.csp
+    assert c.native_target_temperature_low == zone.hsp
+
+
+@pytest.mark.asyncio()
+async def test_climate_native_temperature_properties_c(hass, manager_mz: Manager):
+    manager = manager_mz
+    manager.is_metric = True
+    system: lennox_system = manager.api.system_list[0]
+    zone: lennox_zone = system.zone_list[0]
+    c = S30Climate(hass, manager, system, zone)
+    system.single_setpoint_mode = False
+    zone.systemMode = LENNOX_HVAC_HEAT_COOL
+
+    assert c.native_temperature_unit == UnitOfTemperature.CELSIUS
+    assert c.native_current_temperature == zone.temperatureC
+    assert c.native_target_temperature == zone.getTargetTemperatureC()
+    assert c.native_target_temperature_high == zone.cspC
+    assert c.native_target_temperature_low == zone.hspC
 
 
 @pytest.mark.asyncio()
