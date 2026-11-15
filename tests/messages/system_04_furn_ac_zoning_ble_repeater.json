@@ -1,0 +1,417 @@
+{
+    "MessageId": "0",
+    "SenderID": "0000000-0000-0000-0000-000000000001",
+    "TargetID": "homeassistant",
+    "MessageType": "PropertyChange",
+    "Data": {
+        "ble": {
+            "devices": [
+                {
+                    "id": 3,
+                    "device": {
+                        "deviceName": "Kitchen Lennox Ext",
+                        "cfStatus": "configured",
+                        "uiRasSettings": {
+                            "senBasedParticpt": "off",
+                            "enableState": "enabled",
+                            "writeAccess": "internal",
+                            "sleepSetting": {
+                                "scheduleFrom": "",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "scheduleTill": ""
+                            },
+                            "enableAvg": "enabled",
+                            "isBackup": false
+                        },
+                        "wdn": 640,
+                        "zId": 255,
+                        "deviceType": "repeater",
+                        "config": {
+                            "powerType": "linePowered",
+                            "features": [
+                                {
+                                    "id": 0,
+                                    "feature": {
+                                        "name": "Control Model Number",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "22V26"
+                                            }
+                                        ],
+                                        "fid": 3000,
+                                        "unit": "",
+                                        "format": "nts"
+                                    }
+                                },
+                                {
+                                    "id": 1,
+                                    "feature": {
+                                        "name": "Control Serial Number",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "XX00X00000"
+                                            }
+                                        ],
+                                        "fid": 3001
+                                    }
+                                },
+                                {
+                                    "id": 2,
+                                    "feature": {
+                                        "name": "Control Hardware Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "A"
+                                            }
+                                        ],
+                                        "fid": 3002
+                                    }
+                                },
+                                {
+                                    "id": 3,
+                                    "feature": {
+                                        "name": "Control Software Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "04.00.0312"
+                                            }
+                                        ],
+                                        "fid": 3003
+                                    }
+                                },
+                                {
+                                    "id": 4,
+                                    "feature": {
+                                        "name": "Node Information",
+                                        "format": "uint8",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "55"
+                                            }
+                                        ],
+                                        "fid": 3004
+                                    }
+                                },
+                                {
+                                    "id": 5,
+                                    "feature": {
+                                        "name": "Control Bootloader Version",
+                                        "format": "nts",
+                                        "szValues": 1,
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "01.10.0004"
+                                            }
+                                        ],
+                                        "fid": 3005
+                                    }
+                                }
+                            ],
+                            "parameters": [
+                                {
+                                    "parameter": {
+                                        "name": "Equipment Name",
+                                        "pid": 2000,
+                                        "defaultValue": "\u0002",
+                                        "enabled": true,
+                                        "szValues": 8,
+                                        "value": "Repeater",
+                                        "range": {
+                                            "max": "",
+                                            "min": "",
+                                            "inc": ""
+                                        },
+                                        "radio": {
+                                            "max": "",
+                                            "texts": [
+                                                {
+                                                    "text": "",
+                                                    "id": 0
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value",
+                                        "string": {
+                                            "max": "100"
+                                        },
+                                        "format": "nts",
+                                        "descriptor": "string"
+                                    },
+                                    "id": 0
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "TX Power",
+                                        "format": "int16",
+                                        "pid": 2001,
+                                        "defaultValue": "17",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "-21999",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "20",
+                                            "min": "10",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 1
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Status Update Transmission Frequency",
+                                        "format": "uint16",
+                                        "pid": 2002,
+                                        "defaultValue": "1800",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "0",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "1800",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 2
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Enable or Disable Diagnostic Data In Device Status Message",
+                                        "format": "uint8",
+                                        "pid": 2003,
+                                        "defaultValue": "0",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 3
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Enable or Disable Logging",
+                                        "format": "uint8",
+                                        "pid": 2004,
+                                        "defaultValue": "0",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "0",
+                                        "descriptor": "radio",
+                                        "radio": {
+                                            "max": "1",
+                                            "texts": [
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 0
+                                                },
+                                                {
+                                                    "text": "<unknown>",
+                                                    "id": 1
+                                                }
+                                            ]
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 4
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Low RSSI Threshold Value",
+                                        "format": "int16",
+                                        "pid": 2005,
+                                        "defaultValue": "65450",
+                                        "enabled": true,
+                                        "szValues": 2,
+                                        "value": "1450",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "65456",
+                                            "min": "65436",
+                                            "inc": "1"
+                                        },
+                                        "unit": "DBM"
+                                    },
+                                    "id": 5
+                                },
+                                {
+                                    "parameter": {
+                                        "name": "Low RSSI Detection Counter",
+                                        "format": "uint8",
+                                        "pid": 2006,
+                                        "defaultValue": "5",
+                                        "enabled": true,
+                                        "szValues": 1,
+                                        "value": "5",
+                                        "descriptor": "range",
+                                        "range": {
+                                            "max": "10",
+                                            "min": "5",
+                                            "inc": "1"
+                                        },
+                                        "unit": "Min value"
+                                    },
+                                    "id": 6
+                                }
+                            ],
+                            "szFeatures": 6,
+                            "szParameters": 7,
+                            "writeAccess": "internal",
+                            "notification": {
+                                "installerNote": "unknown",
+                                "writeAccess": "internal",
+                                "doNotPersist": true
+                            }
+                        },
+                        "writeAccess": "internal",
+                        "deviceProvAddress": 8197,
+                        "devStatus": {
+                            "szStatus": 5,
+                            "doNotPersist": true,
+                            "inputsStatus": [
+                                {
+                                    "status": {
+                                        "name": "rssi",
+                                        "vid": 4000,
+                                        "szValues": 0,
+                                        "writeAccess": "internal",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "-47"
+                                            }
+                                        ],
+                                        "doNotPersist": true,
+                                        "unit": "none",
+                                        "format": "int8"
+                                    },
+                                    "doNotPersist": true,
+                                    "writeAccess": "internal",
+                                    "id": 0
+                                },
+                                {
+                                    "status": {
+                                        "name": "Alarm status",
+                                        "vid": 4001,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "1"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 1
+                                },
+                                {
+                                    "status": {
+                                        "name": "Device State",
+                                        "vid": 4002,
+                                        "format": "uint8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "1"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 2
+                                },
+                                {
+                                    "status": {
+                                        "name": "Total Powered Time in Secs",
+                                        "vid": 4003,
+                                        "format": "uint32",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "12891840"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 3
+                                },
+                                {
+                                    "status": {
+                                        "name": "S40_BLE_RSSI",
+                                        "vid": 4004,
+                                        "format": "int8",
+                                        "values": [
+                                            {
+                                                "id": 0,
+                                                "value": "-47"
+                                            }
+                                        ],
+                                        "unit": "none"
+                                    },
+                                    "id": 4
+                                }
+                            ],
+                            "writeAccess": "internal",
+                            "commStatus": "active"
+                        },
+                        "userEdited": {
+                            "writeAccess": "openAll",
+                            "iaq": {
+                                "writeAccess": "openAll",
+                                "doNotPersist": true
+                            },
+                            "ras": {
+                                "scheduleFrom": "",
+                                "doNotPersist": true,
+                                "enableState": "unknown",
+                                "enableAvg": "unknown",
+                                "isBackup": false,
+                                "senBasedParticpt": "unknown",
+                                "writeAccess": "openAll",
+                                "sleep": "off",
+                                "followMe": "unknown",
+                                "scheduleTill": ""
+                            },
+                            "doNotPersist": true
+                        },
+                        "rasStatus": {
+                            "isParticipating": false,
+                            "writeAccess": "internal",
+                            "doNotPersist": true
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -43,19 +43,22 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 7
+    assert len(sensor_list) == 4
     assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
     assert isinstance(sensor_list[1], S30InternetStatus)
     assert isinstance(sensor_list[2], S30RelayServerStatus)
-    # Non-zoned system, one coast sensor per zone
-    assert len([s for s in sensor_list if isinstance(s, S30CoastBinarySensor)]) == 4
+    # Non-zoned system: one coast sensor for the zone the panel reports a
+    # temperature for - the three placeholder slots get no entity.
+    coast_sensors = [s for s in sensor_list if isinstance(s, S30CoastBinarySensor)]
+    assert len(coast_sensors) == 1
+    assert coast_sensors[0].name.endswith("_coasting")
 
     manager.api.isLANConnection = False
     async_add_entities = Mock()
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 6
+    assert len(sensor_list) == 3
     assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
     assert isinstance(sensor_list[1], S30CloudConnectedStatus)
     assert isinstance(sensor_list[2], S30CoastBinarySensor)
@@ -65,7 +68,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 8
+    assert len(sensor_list) == 5
     assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
     assert isinstance(sensor_list[1], S30CloudConnectedStatus)
     assert isinstance(sensor_list[2], S30HeatpumpLowAmbientLockout)
@@ -80,26 +83,23 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
     await async_setup_entry(hass, entry, async_add_entities)
     assert async_add_entities.called == 1
     sensor_list = async_add_entities.call_args[0][0]
-    assert len(sensor_list) == 18
+    assert len(sensor_list) == 15
     assert isinstance(sensor_list[0], S30HomeStateBinarySensor)
     assert isinstance(sensor_list[1], S30CloudConnectedStatus)
     # Coast sensors follow the non-zoned system check, before the BLE devices
     assert isinstance(sensor_list[2], S30CoastBinarySensor)
-    assert isinstance(sensor_list[3], S30CoastBinarySensor)
-    assert isinstance(sensor_list[4], S30CoastBinarySensor)
-    assert isinstance(sensor_list[5], S30CoastBinarySensor)
-    assert isinstance(sensor_list[6], BleCommStatusBinarySensor)
-    assert isinstance(sensor_list[7], BleBinarySensor)
+    assert isinstance(sensor_list[3], BleCommStatusBinarySensor)
+    assert isinstance(sensor_list[4], BleBinarySensor)
+    assert isinstance(sensor_list[5], BleBinarySensor)
+    assert isinstance(sensor_list[6], BleBinarySensor)
+    assert isinstance(sensor_list[7], BleCommStatusBinarySensor)
     assert isinstance(sensor_list[8], BleBinarySensor)
     assert isinstance(sensor_list[9], BleBinarySensor)
-    assert isinstance(sensor_list[10], BleCommStatusBinarySensor)
-    assert isinstance(sensor_list[11], BleBinarySensor)
+    assert isinstance(sensor_list[10], BleBinarySensor)
+    assert isinstance(sensor_list[11], BleCommStatusBinarySensor)
     assert isinstance(sensor_list[12], BleBinarySensor)
     assert isinstance(sensor_list[13], BleBinarySensor)
-    assert isinstance(sensor_list[14], BleCommStatusBinarySensor)
-    assert isinstance(sensor_list[15], BleBinarySensor)
-    assert isinstance(sensor_list[16], BleBinarySensor)
-    assert isinstance(sensor_list[17], BleBinarySensor)
+    assert isinstance(sensor_list[14], BleBinarySensor)
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
@@ -109,7 +109,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 16
+        assert len(sensor_list) == 13
         assert len(caplog.records) == 2
 
         assert system.ble_devices[512].deviceName in caplog.messages[0]
@@ -130,7 +130,7 @@ async def test_async_binary_sensor_setup_entry(hass, manager: Manager, caplog):
         await async_setup_entry(hass, entry, async_add_entities)
         assert async_add_entities.called == 1
         sensor_list = async_add_entities.call_args[0][0]
-        assert len(sensor_list) == 11
+        assert len(sensor_list) == 8
         assert len(caplog.records) == 1
 
         assert system.ble_devices[513].deviceName in caplog.messages[0]

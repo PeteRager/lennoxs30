@@ -23,7 +23,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from lennoxs30api import (
@@ -34,18 +35,21 @@ from lennoxs30api import (
     lennox_system,
     lennox_zone,
 )
+from lennoxs30api.lennox_ble import LennoxBle
 
 from . import Manager
 from .base_entity import S30BaseEntityMixin
 from .ble_device_21p02 import lennox_21p02_sensors, lennox_iaq_sensors
 from .ble_device_22v25 import lennox_22v25_sensors
+from .ble_device_22v26 import lennox_22v26_sensors
 from .const import (
     MANAGER,
+    SIGNAL_BLE_DEVICES_UPDATED,
     UNIQUE_ID_SUFFIX_ACTIVE_ALERTS_SENSOR,
     UNIQUE_ID_SUFFIX_ALERT_SENSOR,
     UNIQUE_ID_SUFFIX_DIAG_SENSOR,
 )
-from .helpers import helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
+from .helpers import helper_ble_device_ready, helper_create_system_unique_id, helper_get_equipment_device_info, lennox_uom_to_ha_uom
 from .sensor_ble import S40BleSensor
 from .sensor_iaq import S40IAQSensor
 from .sensor_reminder import S30ReminderSensor
@@ -60,6 +64,7 @@ DOMAIN = "lennoxs30"
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> bool:
     """Setup the home assistant entities"""
     sensor_list = []
+    created_ble_devices: set[tuple[str, int]] = set()
     manager: Manager = hass.data[DOMAIN][entry.unique_id][MANAGER]
     for system in manager.api.system_list:
         if system.outdoorTemperatureStatus != LENNOX_STATUS_NOT_EXIST:
@@ -126,51 +131,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     sensor_list.append(S30TempSensor(hass, manager, system, zone))
                     _LOGGER.debug("Create S30HumSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30HumiditySensor(hass, manager, system, zone))
+                    _LOGGER.debug("Create S30ZoneDemandSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
+                    sensor_list.append(S30ZoneDemandSensor(hass, manager, system, zone))
 
         if manager.create_alert_sensors:
             sensor_list.append(S30AlertSensor(hass, manager, system))
             sensor_list.append(S30ActiveAlertsList(hass, manager, system))
 
-        for ble_device in system.ble_devices.values():
-            if ble_device.deviceType == "tstat":
-                continue
-            ble_sensors: dict = None
-            if ble_device.controlModelNumber == "22V25":
-                ble_sensors = lennox_22v25_sensors
-            elif ble_device.controlModelNumber == "21P02":
-                for sensor_item in lennox_iaq_sensors:
-                    sensor_list.append(S40IAQSensor(hass, manager, system, ble_device, sensor_item))
-                ble_sensors = lennox_21p02_sensors
-            if ble_sensors:
-                for sensor_dict in ble_sensors:
-                    if sensor_dict["input_id"] not in ble_device.inputs:
-                        _LOGGER.error(
-                            "Error S40BleSensor name [%s] sensor_name [%s] no input_id [%d]",
-                            ble_device.deviceName,
-                            sensor_dict["name"],
-                            sensor_dict["input_id"],
-                        )
-                        continue
-                    sensor_value = ble_device.inputs[sensor_dict["input_id"]]
-                    status_value = None
-                    if "status_id" in sensor_dict:
-                        if sensor_dict["status_id"] not in ble_device.inputs:
-                            _LOGGER.error(
-                                "Error S40BleSensor name [%s] sensor_name [%s] no status_id [%d]",
-                                ble_device.deviceName,
-                                sensor_dict["name"],
-                                sensor_dict["status_id"],
-                            )
-                            continue
-                        status_value = ble_device.inputs[sensor_dict["status_id"]]
-                    sensor_list.append(S40BleSensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict))
-            else:
-                _LOGGER.error(
-                    "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
-                    ble_device.deviceName,
-                    ble_device.deviceType,
-                    ble_device.controlModelNumber,
-                )
+        sensor_list.extend(_create_new_ble_sensors(hass, manager, system, created_ble_devices))
 
         if manager.api.isLANConnection:
             sensor_list.append(WifiRSSISensor(hass, manager, system))
@@ -181,10 +149,79 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 _LOGGER.debug("Create S30ReminderSensor system [%s] kind [%s]", system.sysId, reminder.kind)
                 sensor_list.append(S30ReminderSensor(hass, manager, system, reminder))
 
+    @callback
+    def async_add_ble_sensors(system: lennox_system) -> None:
+        """Add sensors for BLE devices discovered after setup"""
+        new_sensors = _create_new_ble_sensors(hass, manager, system, created_ble_devices)
+        if len(new_sensors) != 0:
+            _LOGGER.debug("sensor:async_add_ble_sensors system [%s] adding [%d] sensors", system.sysId, len(new_sensors))
+            async_add_entities(new_sensors, True)
+
+    entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_BLE_DEVICES_UPDATED.format(entry.entry_id), async_add_ble_sensors))
+
     if len(sensor_list) != 0:
         async_add_entities(sensor_list, True)
         return True
     return False
+
+
+def _create_new_ble_sensors(
+    hass: HomeAssistant, manager: Manager, system: lennox_system, created_ble_devices: set[tuple[str, int]]
+) -> list:
+    """Create sensors for ready BLE devices that do not have sensors yet"""
+    sensor_list = []
+    for ble_device in system.ble_devices.values():
+        key = (system.sysId, ble_device.ble_id)
+        if key in created_ble_devices or not helper_ble_device_ready(ble_device):
+            continue
+        created_ble_devices.add(key)
+        sensor_list.extend(_create_ble_sensors(hass, manager, system, ble_device))
+    return sensor_list
+
+
+def _create_ble_sensors(hass: HomeAssistant, manager: Manager, system: lennox_system, ble_device: LennoxBle) -> list:
+    """Create the sensors for a BLE device"""
+    sensor_list = []
+    ble_sensors: dict = None
+    if ble_device.controlModelNumber == "22V25":
+        ble_sensors = lennox_22v25_sensors
+    elif ble_device.controlModelNumber == "22V26":
+        ble_sensors = lennox_22v26_sensors
+    elif ble_device.controlModelNumber == "21P02":
+        for sensor_item in lennox_iaq_sensors:
+            sensor_list.append(S40IAQSensor(hass, manager, system, ble_device, sensor_item))
+        ble_sensors = lennox_21p02_sensors
+    if ble_sensors:
+        for sensor_dict in ble_sensors:
+            if sensor_dict["input_id"] not in ble_device.inputs:
+                _LOGGER.error(
+                    "Error S40BleSensor name [%s] sensor_name [%s] no input_id [%d]",
+                    ble_device.deviceName,
+                    sensor_dict["name"],
+                    sensor_dict["input_id"],
+                )
+                continue
+            sensor_value = ble_device.inputs[sensor_dict["input_id"]]
+            status_value = None
+            if "status_id" in sensor_dict:
+                if sensor_dict["status_id"] not in ble_device.inputs:
+                    _LOGGER.error(
+                        "Error S40BleSensor name [%s] sensor_name [%s] no status_id [%d]",
+                        ble_device.deviceName,
+                        sensor_dict["name"],
+                        sensor_dict["status_id"],
+                    )
+                    continue
+                status_value = ble_device.inputs[sensor_dict["status_id"]]
+            sensor_list.append(S40BleSensor(hass, manager, system, ble_device, sensor_value, status_value, sensor_dict))
+    else:
+        _LOGGER.error(
+            "Error unknown BLE sensor name [%s] deviceType [%s] controlModelNumber [%s]- please raise an issue",
+            ble_device.deviceName,
+            ble_device.deviceType,
+            ble_device.controlModelNumber,
+        )
+    return sensor_list
 
 
 class S30DiagSensor(S30BaseEntityMixin, SensorEntity):
@@ -572,6 +609,57 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
     @property
     def state_class(self):
         return SensorStateClass.MEASUREMENT
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._zone.unique_id)},
+        }
+
+
+class S30ZoneDemandSensor(S30BaseEntityMixin, SensorEntity):
+    """Class for Lennox S30 zone demand - the CFM demand from the zone as a percentage."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        manager: Manager,
+        system: lennox_system,
+        zone: lennox_zone,
+    ):
+        super().__init__(manager, system)
+        self._hass = hass
+        self._zone = zone
+        self._myname = self._zone.system.name + "_" + self._zone.name + "_demand"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        _LOGGER.debug("async_added_to_hass S30ZoneDemandSensor myname [%s]", self._myname)
+        self._zone.registerOnUpdateCallback(self.update_callback, ["demand"])
+        await super().async_added_to_hass()
+
+    def update_callback(self):
+        """Callback to execute on data change"""
+        _LOGGER.debug("update_callback S30ZoneDemandSensor myname [%s]", self._myname)
+        self.schedule_update_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        # HA fails with dashes in IDs
+        return (self._zone.system.unique_id + "_" + str(self._zone.id)).replace("-", "") + "_D"
+
+    @property
+    def name(self):
+        return self._myname
+
+    @property
+    def native_value(self):
+        return self._zone.demand
 
     @property
     def device_info(self) -> DeviceInfo:

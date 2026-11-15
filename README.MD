@@ -53,7 +53,7 @@ ruff check .
 - Passwords with special characters are not properly supported by the Lennox Cloud API and may not work. Known special characters that cause issues are & and ^. If your password contains these characters you may need to change it prior to using the integration.
 - Adjusting the fan CFM in a single zone system causes some diagnostics to stop updating. Changing the diag_level to 0 and back to 2 solves the issue. A script is available [here](./samples/set_fan_cfm)
 - A power outage to the Lennox Controller causes the diag_level to be reset to 0 on reboot. An automation/package is available [here](./samples/diaglevel) to automatically reset.
-- If you add new equipment (BLE Sensors), restart HA in order for the integration to pickup the new equipment.
+- If you add new equipment, restart HA in order for the integration to pickup the new equipment. BLE Sensors are the exception, they are added automatically when the thermostat reports them.
 
 # Planning your install
 
@@ -359,6 +359,12 @@ When the **create_sensors** configuration parameter is set, humidity and tempera
 sensor.<system_name>\_<zone_name>\_temperature
 
 sensor.<system_name>\_<zone_name>\_humidity
+
+### Zone Demand
+
+When the **create_sensors** configuration parameter is set, a demand sensor is also created for each zone. It reports the zone's CFM demand as a percentage and is attached to the Thermostat Device. This sensor is disabled by default; enable it in Home Assistant if you want to use it.
+
+sensor.<system_name>\_<zone_name>\_demand
 
 ### Outdoor Temperature
 
@@ -699,6 +705,8 @@ During testing, turning off the wifi router the S30 was connected caused this se
 
 One entity per zone, created when the system is not using iHarmony zoning (Perfect Temp is a non-zoning feature). On means the panel has stopped running the equipment and is letting the indoor temperature drift to the set point. The S40 home screen shows this as "Coasting to perfect temperature", with a red up or blue down arrow.
 
+Note: the sensors are created from the zoning state the integration saw when it loaded. If zoning is turned on or off on the panel, the coasting sensors do not appear or disappear until the integration is reloaded - this matches how the climate and select platforms handle zones. Only active zones get a sensor, so an empty zone slot on the panel does not produce an entity.
+
 While coasting the zone reports `hvac_action: idle`, `demand: 0` and `tempOperation: "off"` even though the set point is unmet. Without this sensor, that is indistinguishable from a system that has reached its set point.
 
 binary_sensor.<system_name>\_<zone_name>\_coasting
@@ -782,7 +790,7 @@ This section documents the detailed configuration parameters, that are editable 
 | timeout                  | int     | optional    | 30 seconds local connections; 60 seconds cloud connections. | Number of seconds to wait for network calls to complete before declaring a timeout. Use of defaults is recommended.                                                                                                                                                                                                                                                                                                                                                                                                               |
 | init_wait_time           | int     | optional    | 30                                                          | Amount of time to wait for configuration to arrive from Lennox during integration startup. Increase this value if you see initialization timeouts                                                                                                                                                                                                                                                                                                                                                                                 |
 | app_id                   | string  | optional    | uniquely generated                                          | Specify the unique application id to use. For Cloud connections, Lennox is very particular - please use this string - mapp0793723676444670468270xx - and replace xx with a value from 00 - 99. Note that each instance of your integration (e.g. prod system, test system) must use a different value for xx. For local connections use a string like ha_dev or ha_prod - must be unique for each connection                                                                                                                      |
-| create_sensors           | bool    | optional    | false                                                       | Creates temperature and humidity sensors for each zone                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| create_sensors           | bool    | optional    | false                                                       | Creates temperature, humidity and demand sensors for each zone                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | create_inverter_power    | bool    | optional    | false                                                       | Creates a sensor representing the inverter power usage. This requires configuring the Lennox LCC diagnostic mode to be 2, as opposed to the default value of 0. Use the number.diagnostic_level entity to set this,.                                                                                                                                                                                                                                                                                                              |
 | protocol                 | string  | optional    | https                                                       | Selects the protocol to use. The only reason to use this is when developing using the S30 simulator, in which case this should be set to HTTP                                                                                                                                                                                                                                                                                                                                                                                     |
 | message_debug_logging    | boolean | optional    | True                                                        | When True messages are logged when debug is enabled. Setting to False omits the message from the debug log file.                                                                                                                                                                                                                                                                                                                                                                                                                  |

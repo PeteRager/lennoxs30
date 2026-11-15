@@ -29,6 +29,9 @@ MANAGER = "manager"
 LENNOX_DOMAIN = "lennoxs30"
 LENNOX_MFG = "Lennox"
 
+# Dispatcher signal sent when BLE devices are discovered, formatted with the config entry id
+SIGNAL_BLE_DEVICES_UPDATED: Final = "lennoxs30_ble_devices_updated_{}"
+
 UNIQUE_ID_SUFFIX_DIAG_SENSOR: Final = "DS"
 UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER: Final = "EPN"
 UNIQUE_ID_SUFFIX_EQ_PARAM_SELECT: Final = "EPS"

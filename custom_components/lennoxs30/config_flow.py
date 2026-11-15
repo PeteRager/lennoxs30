@@ -112,7 +112,6 @@ class Lennoxs30ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Lennox S30 configflow."""
 
     VERSION = 5
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
