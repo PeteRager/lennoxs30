@@ -227,9 +227,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def temperature_unit(self) -> UnitOfTemperature:
         """Return the unit of measurement."""
-        if self._manager.is_metric is False:
-            return UnitOfTemperature.FAHRENHEIT
-        return UnitOfTemperature.CELSIUS
+        return self.native_temperature_unit
 
     @property
     def _min_heat_cool_temp(self) -> float:
@@ -300,12 +298,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.is_zone_disabled:
-            return None
-
-        if self._manager.is_metric is False:
-            return self._zone.getTargetTemperatureF()
-        return self._zone.getTargetTemperatureC()
+        return self.native_target_temperature
 
     @property
     def native_current_temperature(self) -> float | None:
@@ -330,22 +323,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self._zone.temperatureStatus in LENNOX_BAD_STATUS:
-            _LOGGER.warning(
-                "climate:current_temperature name [%s] has bad data quality - temperatureStatus [%s] returning None",
-                self._myname,
-                self._zone.temperatureStatus,
-            )
-            return None
-        if self._manager.is_metric is False:
-            t = self._zone.getTemperature()
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("climate:current_temperature name [%s] temperature [%s] F", self._myname, t)
-        else:
-            t = self._zone.getTemperatureC()
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("climate:current_temperature name [%s] temperature [%s] C", self._myname, t)
-        return t
+        return self.native_current_temperature
 
     @property
     def native_target_temperature_high(self) -> float | None:
@@ -365,17 +343,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        if self.is_zone_disabled:
-            return None
-        if self.is_single_setpoint_active():
-            return None
-        if self._manager.is_metric is False:
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("climate:target_temperature_high name [%s] temperature [%s] F", self._myname, self._zone.csp)
-            return self._zone.csp
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("climate:target_temperature_high name [%s] temperature [%s] C", self._myname, self._zone.cspC)
-        return self._zone.cspC
+        return self.native_target_temperature_high
 
     @property
     def native_target_temperature_low(self) -> float | None:
@@ -395,17 +363,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        if self.is_zone_disabled:
-            return None
-        if self.is_single_setpoint_active():
-            return None
-        if self._manager.is_metric is False:
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("climate:target_temperature_low name [%s] temperature [%s] F", self._myname, self._zone.hsp)
-            return self._zone.hsp
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("climate:target_temperature_low name [%s] temperature [%s] C", self._myname, self._zone.hspC)
-        return self._zone.hspC
+        return self.native_target_temperature_low
 
     @property
     def current_humidity(self) -> float | None:
