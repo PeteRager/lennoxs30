@@ -224,6 +224,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return UnitOfTemperature.FAHRENHEIT
         return UnitOfTemperature.CELSIUS
 
+    # TODO: Remove in 2027.3.0; compatibility for Home Assistant < 2026.11.0.
     @property
     def temperature_unit(self) -> UnitOfTemperature:
         """Return the unit of measurement."""
@@ -295,6 +296,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             return self._zone.getTargetTemperatureF()
         return self._zone.getTargetTemperatureC()
 
+    # TODO: Remove in 2027.3.0; compatibility for Home Assistant < 2026.11.0.
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
@@ -320,6 +322,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
                 _LOGGER.debug("climate:native_current_temperature name [%s] temperature [%s] C", self._myname, t)
         return t
 
+    # TODO: Remove in 2027.3.0; compatibility for Home Assistant < 2026.11.0.
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -340,6 +343,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             _LOGGER.debug("climate:native_target_temperature_high name [%s] temperature [%s] C", self._myname, self._zone.cspC)
         return self._zone.cspC
 
+    # TODO: Remove in 2027.3.0; compatibility for Home Assistant < 2026.11.0.
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
@@ -360,6 +364,7 @@ class S30Climate(S30BaseEntityMixin, ClimateEntity):
             _LOGGER.debug("climate:native_target_temperature_low name [%s] temperature [%s] C", self._myname, self._zone.hspC)
         return self._zone.hspC
 
+    # TODO: Remove in 2027.3.0; compatibility for Home Assistant < 2026.11.0.
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
