@@ -366,8 +366,9 @@ async def test_zone_demand_sensor_created_when_no_demand(hass, manager: Manager)
     await async_setup_entry(hass, entry, async_add_entities)
     sensor_list = async_add_entities.call_args[0][0]
 
-    assert len(sensor_list) == 3 * system.numberOfZones
+    assert len(sensor_list) == 4 * system.numberOfZones
     for i in range(system.numberOfZones):
-        assert isinstance(sensor_list[i * 3], S30TempSensor)
-        assert isinstance(sensor_list[(i * 3) + 1], S30HumiditySensor)
-        assert isinstance(sensor_list[(i * 3) + 2], S30ZoneDemandSensor)
+        assert isinstance(sensor_list[i * 4], S30TempSensor)
+        assert isinstance(sensor_list[(i * 4) + 1], S30HumiditySensor)
+        assert isinstance(sensor_list[(i * 4) + 2], S30ZoneHumidityOperationSensor)
+        assert isinstance(sensor_list[(i * 4) + 3], S30ZoneDemandSensor)

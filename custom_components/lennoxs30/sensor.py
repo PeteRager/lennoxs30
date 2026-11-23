@@ -128,11 +128,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         if manager.create_sensors:
             for zone in system.zone_list:
                 if zone.is_zone_active():
-                    sensor_list.append(S30ZoneHumidityOperationSensor(hass, manager, system, zone))
                     _LOGGER.debug("Create S30TempSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30TempSensor(hass, manager, system, zone))
                     _LOGGER.debug("Create S30HumSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30HumiditySensor(hass, manager, system, zone))
+                    sensor_list.append(S30ZoneHumidityOperationSensor(hass, manager, system, zone))
                     _LOGGER.debug("Create S30ZoneDemandSensor sensor system [%s] zone [%s]", system.sysId, zone.id)
                     sensor_list.append(S30ZoneDemandSensor(hass, manager, system, zone))
 
