@@ -623,7 +623,7 @@ class S30HumiditySensor(S30BaseEntityMixin, SensorEntity):
 class S30ZoneRuntimeSensor(S30BaseEntityMixin, SensorEntity):
     """Base class for zone runtime sensors."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
     _zone_update_fields: list[str] = []
     _unique_id_suffix: str = ""
     _name_suffix: str = ""

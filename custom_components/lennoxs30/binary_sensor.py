@@ -233,7 +233,7 @@ class S30HomeStateBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
 class S30ZoneRuntimeBinarySensor(S30BaseEntityMixin, BinarySensorEntity):
     """Base class for zone runtime binary sensors."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
     _zone_update_fields: list[str] = []
     _unique_id_suffix: str = ""
     _name_suffix: str = ""
@@ -305,6 +305,7 @@ class S30ZoneFanRunningBinarySensor(S30ZoneRuntimeBinarySensor):
 class S30ZoneAuxiliaryHeatBinarySensor(S30ZoneRuntimeBinarySensor):
     """Zone auxiliary heat runtime sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.HEAT
     _zone_update_fields = ["aux"]
     _unique_id_suffix = UNIQUE_ID_SUFFIX_ZONE_AUXILIARY_HEAT
     _name_suffix = "auxiliary_heat"
@@ -322,6 +323,11 @@ class S30ZoneDefrostBinarySensor(S30ZoneRuntimeBinarySensor):
     _zone_update_fields = ["defrost"]
     _unique_id_suffix = UNIQUE_ID_SUFFIX_ZONE_DEFROST
     _name_suffix = "defrost"
+
+    @property
+    def icon(self) -> str:
+        """Return the state-specific icon."""
+        return "mdi:snowflake-melt" if self.is_on else "mdi:radiobox-blank"
 
     @property
     def is_on(self) -> bool | None:

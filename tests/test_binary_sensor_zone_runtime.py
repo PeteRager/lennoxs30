@@ -40,11 +40,17 @@ async def test_zone_runtime_binary_sensors_init(hass, manager: Manager):
     assert aux.unique_id == (zone.unique_id + UNIQUE_ID_SUFFIX_ZONE_AUXILIARY_HEAT).replace("-", "")
     assert defrost.unique_id == (zone.unique_id + UNIQUE_ID_SUFFIX_ZONE_DEFROST).replace("-", "")
 
-    assert allergen.entity_category == "diagnostic"
-    assert fan.entity_category == "diagnostic"
-    assert aux.entity_category == "diagnostic"
-    assert defrost.entity_category == "diagnostic"
+    assert allergen.entity_category is None
+    assert fan.entity_category is None
+    assert aux.entity_category is None
+    assert defrost.entity_category is None
+    assert allergen.entity_registry_enabled_default is False
+    assert fan.entity_registry_enabled_default is False
+    assert aux.entity_registry_enabled_default is False
+    assert defrost.entity_registry_enabled_default is False
     assert fan.device_class == BinarySensorDeviceClass.RUNNING
+    assert aux.device_class == BinarySensorDeviceClass.HEAT
+    assert defrost.icon == "mdi:radiobox-blank"
 
     zone.allergenDefender = True
     zone.fan = "on"
@@ -54,6 +60,7 @@ async def test_zone_runtime_binary_sensors_init(hass, manager: Manager):
     assert fan.is_on is True
     assert aux.is_on is True
     assert defrost.is_on is False
+    assert defrost.icon == "mdi:radiobox-blank"
 
     zone.allergenDefender = None
     zone.fan = "unexpected"

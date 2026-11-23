@@ -23,7 +23,8 @@ async def test_zone_runtime_sensors_init(hass, manager: Manager):
     humidity_operation = S30ZoneHumidityOperationSensor(hass, manager, system, zone)
 
     assert humidity_operation.unique_id == (zone.unique_id + UNIQUE_ID_SUFFIX_ZONE_HUMIDITY_OPERATION).replace("-", "")
-    assert humidity_operation.entity_category == "diagnostic"
+    assert humidity_operation.entity_category is None
+    assert humidity_operation.entity_registry_enabled_default is False
 
     zone.humOperation = "dehumidifying"
     assert humidity_operation.native_value == "dehumidifying"
