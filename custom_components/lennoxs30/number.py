@@ -502,6 +502,13 @@ class EquipmentParameterNumber(S30BaseEntityMixin, NumberEntity):
         self.schedule_update_ha_state()
 
     @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        if self.parameter.enabled is False:
+            return False
+        return super().available
+
+    @property
     def unique_id(self) -> str:
         # HA fails with dashes in IDs
         return (f"{self._system.unique_id}_{UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER}_{self.equipment.equipment_id}_{self.parameter.pid}").replace(

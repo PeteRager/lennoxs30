@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from lennoxs30api.s30api_async import lennox_system
 
-from custom_components.lennoxs30 import Manager
+from custom_components.lennoxs30 import DS_CONNECTED, DS_RETRY_WAIT, Manager
 from custom_components.lennoxs30.const import (
     LENNOX_DOMAIN,
     UNIQUE_ID_SUFFIX_EQ_PARAM_NUMBER,
@@ -211,6 +211,46 @@ async def test_equipment_parameter_number_subscription(hass, manager: Manager):
         assert c.available is True
 
     conftest_base_entity_availability(manager, system, c)
+
+
+@pytest.mark.asyncio()
+async def test_equipment_parameter_number_available_parameter_enabled(hass, manager: Manager):
+    system: lennox_system = manager.api.system_list[0]
+    equipment = system.equipment[0]
+    parameter = equipment.parameters[72]
+    c = EquipmentParameterNumber(hass, manager, system, equipment, parameter)
+    await c.async_added_to_hass()
+    assert parameter.enabled is True
+    assert c.available is True
+
+    # The S30 reports the parameter as disabled, the entity becomes unavailable
+    message = {
+        "SenderID": system.sysId,
+        "Data": {"equipments": [{"id": 0, "equipment": {"parameters": [{"parameter": {"pid": 72, "enabled": False}}]}}]},
+    }
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.api.processMessage(message)
+        assert update_callback.call_count == 1
+        assert parameter.enabled is False
+        assert c.available is False
+
+    # The S30 reports the parameter as enabled again, the entity becomes available
+    message["Data"]["equipments"][0]["equipment"]["parameters"][0]["parameter"]["enabled"] = True
+    with patch.object(c, "schedule_update_ha_state") as update_callback:
+        manager.api.processMessage(message)
+        assert update_callback.call_count == 1
+        assert parameter.enabled is True
+        assert c.available is True
+
+    # A disabled parameter stays unavailable when the connection is lost and restored
+    parameter.enabled = False
+    with patch.object(c, "schedule_update_ha_state"):
+        manager.updateState(DS_RETRY_WAIT)
+        assert c.available is False
+        manager.updateState(DS_CONNECTED)
+        assert c.available is False
+    parameter.enabled = True
+    assert c.available is True
 
 
 def test_equipment_parameter_number_entity_category(hass, manager: Manager):

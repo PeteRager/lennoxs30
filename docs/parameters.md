@@ -70,6 +70,15 @@ Select.\<systemName\>\_par\_\<ParameterName\>
 
 Select entities are created for numeric equipment parameters. The selections available should be the same as the S30 panel.
 
+### Disabled Parameters
+
+The S30 reports each parameter as enabled or disabled. A parameter is disabled when it does not apply to the current configuration, the panel hides it or shows it greyed out. For example, the balance point temperatures are disabled while **Balance Point Control** is set to Disabled.
+
+- Entities are only created for parameters that are enabled when the integration starts. If a parameter becomes enabled later, reload the integration to create its entity.
+- If the S30 reports that a parameter with an entity has become disabled, the entity becomes **unavailable**. It becomes available again when the S30 reports the parameter as enabled.
+
+A parameter entity that is unexpectedly unavailable while the rest of the system is available can be used to detect a problem. For example, after a power outage a zoning controller may report its zone parameters as disabled until **Reset Zoning Control** is run from the panel.
+
 ## Services
 
 ### Set Zone Test Parameter
